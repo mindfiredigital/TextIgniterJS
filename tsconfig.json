@@ -13,6 +13,6 @@
     "rootDir": "./src",
     "moduleResolution": "node"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/editor.ts"],
   "exclude": ["node_modules", "dist"]
 }

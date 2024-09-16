@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rich Text Editor</title>
+    <style>
+      .rich-text-editor {
+        border: 1px solid #ccc;
+        min-height: 200px;
+        padding: 10px;
+      }
+      .toolbar {
+        margin-bottom: 10px;
+      }
+      .toolbar button {
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+ 
+    <div id="editor"></div>
+
+   
+    <script src="dist/index.js"></script>
+
+    <script>
+      // Initialize the RichTextEditor with specific features
+      const config = {
+        features: ["bold", "italic", "underline"],
+      };
+      const editor = new RichTextEditor("editor", config);
+
+      // Example usage of getHtml and getJson methods
+      function getEditorContent() {
+        console.log("HTML content:", editor.getHtml());
+        console.log("JSON content:", editor.getJson());
+      }
+
+      const contentButton = document.createElement("button");
+      contentButton.innerText = "Get Content";
+      contentButton.onclick = getEditorContent;
+      document.body.appendChild(contentButton);
+    </script>
+  </body>
+</html>
