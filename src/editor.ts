@@ -28,12 +28,33 @@ class RichTextEditor {
   private createToolbar() {
     const toolbar = document.createElement("div");
     toolbar.classList.add("toolbar");
+  
+    const featureIcons: { [key: string]: string } = {
+      bold: '<i title="Bold" class="fa fa-bold"></i>',
+      italic: '<i title="Italic" class="fa fa-italic"></i>',
+      underline: '<i title="Underline" class="fa fa-underline"></i>',
+      subscript: '<i title="Subscript" class="fa fa-subscript"></i>',
+      superscript: '<i title="Superscript" class="fa fa-superscript"></i>',
+      left_align: '<i title="Left Align" class="fa fa-align-left"></i>',
+      center_align: '<i title="Center Align" class="fa fa-align-center"></i>',
+      right_align: '<i title="Right Align" class="fa fa-align-right"></i>',
+      justify: '<i title="Justify" class="fa fa-align-justify"></i>',
+      bullet_list: '<i title="Bullet List" class="fa fa-list-ul"></i>',
+      numbered_list: '<i title="Numbered List" class="fa fa-list-ol"></i>',
+      insert_table: '<i title="Insert Table" class="fa fa-table"></i>',
+      insert_layout: '<i title="Insert Layout" class="fa fa-columns"></i>',
+      heading: '<i title="Heading" class="fa fa-header"></i>',
+      hyperlink: '<i title="Hyperlink" class="fa fa-link"></i>',
+      image : '<i title="Image" class="fa fa-picture-o"></i>'
+    };
+  
     this.config.features.forEach((feature) => {
       const button = document.createElement("button");
-      button.innerText = feature.charAt(0).toUpperCase() + feature.slice(1);
+      button.innerHTML = featureIcons[feature]; // Use the icon instead of text
       button.onclick = () => this.format(feature);
       toolbar.appendChild(button);
     });
+  
     document.body.insertBefore(toolbar, this.editor);
   }
 
@@ -43,6 +64,19 @@ class RichTextEditor {
         bold: "bold",
         italic: "italic",
         underline: "underline",
+        subscript: "subscript",
+        superscript: "superscript",
+        left_aligh: "left_aligh",
+        center_align: "center_align",
+        right_align: "right_align",
+        justify: "justify",
+        bullet_list: "bullet_list",
+        numbered_list: "numbered_list",
+        insert_table: "insert_table",
+        insert_layout: "insert_layout",
+        heading: "heading",
+        hyperlink: "hyperlink",
+        image: "image"
       };
       const execCommand = commands[command];
       if (execCommand) {
