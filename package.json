@@ -2,12 +2,14 @@
   "name": "@mindfiredigital/textigniterjs",
   "version": "1.0.0-development",
   "description": "TextIgniter JS is a lightweight, powerful, and intuitive HTML editor built using TypeScript.",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "typings": "./dist/index.d.ts",
+  "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && rollup -c",
-    "dev": "tsc && rollup -c -w"
+    "build": "rollup -c",
+    "dev": "rollup -c -w"
   },
   "keywords": [
     "rich-text-editor",
@@ -31,5 +33,8 @@
     "rollup-plugin-dts": "^6.1.1",
     "tslib": "^2.7.0",
     "typescript": "^5.6.2"
+  },
+  "dependencies": {
+    "rollup-plugin-postcss": "^4.0.2"
   }
 }
