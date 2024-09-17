@@ -51,11 +51,23 @@ class RichTextEditor {
     this.config.features.forEach((feature) => {
       const button = document.createElement("button");
       button.innerHTML = featureIcons[feature]; // Use the icon instead of text
+      button.setAttribute('data-command', feature); // Set the data-command attribute
       button.onclick = () => this.format(feature);
       toolbar.appendChild(button);
     });
   
     document.body.insertBefore(toolbar, this.editor);
+  }
+
+  private updateButtonState(command: string) {
+    const button = document.querySelector(`button[data-command='${command}']`);
+    if (button) {
+      if (document.queryCommandState(command)) {
+        button.classList.add("active");
+      } else {
+        button.classList.remove("active");
+      }
+    }
   }
 
   public format(command: string) {
@@ -82,6 +94,8 @@ class RichTextEditor {
       if (execCommand) {
         if (document.queryCommandSupported(execCommand)) {
           const success = document.execCommand(execCommand, false, "");
+          // Update button states after formatting
+          this.updateButtonState(execCommand);
           if (!success) {
             console.warn(`The command '${command}' could not be executed.`);
           }
