@@ -66,17 +66,17 @@ class RichTextEditor {
         underline: "underline",
         subscript: "subscript",
         superscript: "superscript",
-        left_aligh: "left_aligh",
-        center_align: "center_align",
-        right_align: "right_align",
-        justify: "justify",
-        bullet_list: "bullet_list",
-        numbered_list: "numbered_list",
-        insert_table: "insert_table",
-        insert_layout: "insert_layout",
-        heading: "heading",
-        hyperlink: "hyperlink",
-        image: "image"
+        left_align: "justifyLeft", 
+        center_align: "justifyCenter",
+        right_align: "justifyRight", 
+        justify: "justifyFull",
+        bullet_list: "insertUnorderedList",
+        numbered_list: "insertOrderedList",
+        insert_table: "insertTable",
+        insert_layout: "insertLayout",
+        heading: "formatBlock",
+        hyperlink: "createLink",
+        image: "insertImage"
       };
       const execCommand = commands[command];
       if (execCommand) {
