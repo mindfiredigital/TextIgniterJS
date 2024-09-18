@@ -15,6 +15,7 @@ class RichTextEditor {
     this.config = config;
     this.init();
     this.createToolbar();
+    this.addKeyboardShortcuts();
   }
 
   private init() {
@@ -68,6 +69,21 @@ class RichTextEditor {
         button.classList.remove("active");
       }
     }
+  }
+
+  private addKeyboardShortcuts() {
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && e.key === "b") {
+        e.preventDefault();
+        this.format("bold");
+      }else if(e.ctrlKey && e.key === "i"){
+        e.preventDefault();
+        this.format("italic");
+      }else if(e.ctrlKey && e.key === "u"){
+        e.preventDefault();
+        this.format("underline");
+      }
+    });
   }
 
   public format(command: string) {
