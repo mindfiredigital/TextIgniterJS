@@ -3,42 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="font_awesome/css/font-awesome.min.css"
-    />
+    <link rel="stylesheet" href="font_awesome/css/font-awesome.min.css" />
     <title>Rich Text Editor</title>
-    <style>
-      .rich-text-editor {
-        border: 1px solid #ccc;
-        min-height: 200px;
-        padding: 10px;
-      }
-      .toolbar {
-        margin-bottom: 10px;
-      }
-      .toolbar button {
-        margin-right: 5px;
-      }
-      button.active {
-        background-color: #36454F;
-        color: #fff;
-      }
-    </style>
+    <link rel="stylesheet" href="./src/styles/text-igniter.css" />
+
+    <style></style>
   </head>
   <body>
- 
     <div id="editor"></div>
 
-   
     <script src="dist/index.js"></script>
 
     <script>
       // Initialize the RichTextEditor with specific features
       const config = {
         features: [
-          "bold", 
-          "italic", 
+          "bold",
+          "italic",
           "underline",
           "subscript",
           "superscript",
@@ -52,7 +33,7 @@
           "insert_layout",
           "heading",
           "hyperlink",
-          "image"
+          "image",
         ],
       };
       const editor = new RichTextEditor("editor", config);
