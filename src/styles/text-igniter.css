@@ -34,6 +34,11 @@
 }
 
 button.active {
-    background-color: #36454f;
-    color: #fff;
+    background-color: #9ba0a3;
+    border: solid #9ba0a3;
+    margin: 0.1rem;
+}
+
+button {
+    margin: 0.1rem;
 }

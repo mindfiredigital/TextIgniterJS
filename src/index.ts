@@ -1,3 +1,4 @@
+import {icons} from './assets/icons'
 interface EditorConfig {
   features: string[];
 }
@@ -43,22 +44,22 @@ class RichTextEditor {
     toolbar.classList.add("toolbar");
 
     const featureIcons: { [key: string]: string } = {
-      bold: '<i title="Bold" class="fa fa-bold"></i>',
-      italic: '<i title="Italic" class="fa fa-italic"></i>',
-      underline: '<i title="Underline" class="fa fa-underline"></i>',
-      subscript: '<i title="Subscript" class="fa fa-subscript"></i>',
-      superscript: '<i title="Superscript" class="fa fa-superscript"></i>',
-      left_align: '<i title="Left Align" class="fa fa-align-left"></i>',
-      center_align: '<i title="Center Align" class="fa fa-align-center"></i>',
-      right_align: '<i title="Right Align" class="fa fa-align-right"></i>',
-      justify: '<i title="Justify" class="fa fa-align-justify"></i>',
-      bullet_list: '<i title="Bullet List" class="fa fa-list-ul"></i>',
-      numbered_list: '<i title="Numbered List" class="fa fa-list-ol"></i>',
-      insert_table: '<i title="Insert Table" class="fa fa-table"></i>',
-      insert_layout: '<i title="Insert Layout" class="fa fa-columns"></i>',
-      heading: '<i title="Heading" class="fa fa-header"></i>',
-      hyperlink: '<i title="Hyperlink" class="fa fa-link"></i>',
-      image: '<i title="Image" class="fa fa-picture-o"></i>',
+      bold: icons.bold,
+      italic: icons.italic,
+      underline: icons.underline,
+      subscript: icons.subscript,
+      superscript: icons.superscript,
+      left_align: icons.left_align,
+      center_align: icons.center_align,
+      right_align: icons.right_align,
+      justify: icons.justify,
+      bullet_list: icons.bullet_list,
+      numbered_list: icons.numbered_list,
+      insert_table: icons.insert_table,
+      insert_layout: icons.insert_layout,
+      heading: icons.heading,
+      hyperlink: icons.hyperlink,
+      image : icons.image
     };
 
     this.config.features.forEach((feature) => {
