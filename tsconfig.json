@@ -4,7 +4,7 @@
     "module": "esnext",
     "lib": ["dom", "es6"],
     "declaration": true,
-    "declarationDir": "./dist/dts",
+    "declarationDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -13,6 +13,6 @@
     "rootDir": "./src",
     "moduleResolution": "node"
   },
-  "include": ["src/**/*", "src/editor.ts"],
+  "include": ["src/**/*", "src/index.ts"],
   "exclude": ["node_modules", "dist"]
 }
