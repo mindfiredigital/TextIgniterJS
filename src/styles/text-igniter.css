@@ -35,10 +35,11 @@
 
 button.active {
     background-color: #9ba0a3;
-    border: solid #9ba0a3;
-    margin: 0.1rem;
+    border: none;
+    margin: 2px;
 }
 
 button {
-    margin: 0.1rem;
+    margin: 2px;
+    padding: 5px;
 }
