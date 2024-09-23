@@ -37,6 +37,8 @@ class RichTextEditor {
   private init() {
     this.editor.contentEditable = "true";
     this.editor.classList.add("editor");
+    this.addSelectionListener();
+    this.editor.focus();
   }
 
   private createToolbar() {
@@ -67,23 +69,33 @@ class RichTextEditor {
       button.innerHTML = featureIcons[feature];
       button.setAttribute("data-command", feature);
       button.onclick = () => this.format(feature);
+
+      if (feature === "left_align") {
+        button.classList.add("active");
+      }
+      
       toolbar.appendChild(button);
     });
 
     this.container.insertBefore(toolbar, this.editor);
   }
 
-  private updateButtonState(command: string) {
-    const button = this.container.querySelector(
-      `button[data-command='${command}']`
-    );
-    if (button) {
-      if (document.queryCommandState(command)) {
-        button.classList.add("active");
-      } else {
+  private deactivateAlignmentButtons() {
+    const alignmentButtons = ["left_align", "center_align", "right_align", "justify"];
+    
+    alignmentButtons.forEach((alignment) => {
+      const button = this.container.querySelector(`button[data-command='${alignment}']`);
+      if (button) {
         button.classList.remove("active");
       }
-    }
+    });
+  }
+
+  private addSelectionListener() {
+    document.addEventListener('selectionchange', () => {
+      this.updateSubSuperButtonState();
+      this.updateListButtonState();
+    });
   }
 
   private addKeyboardShortcuts() {
@@ -123,10 +135,44 @@ class RichTextEditor {
       };
       const execCommand = commands[command];
       if (execCommand) {
+        // If the command is an alignment command, deactivate other alignment buttons
+        if (["left_align", "center_align", "right_align", "justify"].includes(command)) {
+          this.deactivateAlignmentButtons(); // Deactivate all alignment buttons
+        }
+
+        // Handle mutual exclusivity for subscript and superscript
+        if (command === 'subscript') {
+          // If superscript is currently active, remove it before applying subscript
+          if (document.queryCommandState('superscript')) {
+            document.execCommand('superscript', false, '');
+          }
+        } else if (command === 'superscript') {
+          // If subscript is currently active, remove it before applying superscript
+          if (document.queryCommandState('subscript')) {
+            document.execCommand('subscript', false, '');
+          }
+        }
+
+         // Handle mutual exclusivity for bullet and numbered lists
+        if (command === 'bullet_list') {
+          // If numbered list is currently active, remove it before applying bullet list
+          if (document.queryCommandState('insertOrderedList')) {
+            document.execCommand('insertOrderedList', false, '');
+          }
+        } else if (command === 'numbered_list') {
+          // If bullet list is currently active, remove it before applying numbered list
+          if (document.queryCommandState('insertUnorderedList')) {
+            document.execCommand('insertUnorderedList', false, '');
+          }
+        }
+
         if (document.queryCommandSupported(execCommand)) {
           const success = document.execCommand(execCommand, false, "");
-          this.updateButtonState(execCommand);
-          if (!success) {
+          if (success) {
+            this.updateButtonState(command);
+            this.updateSubSuperButtonState();
+            this.updateListButtonState();
+          }else{
             console.warn(`The command '${command}' could not be executed.`);
           }
         } else {
@@ -137,6 +183,86 @@ class RichTextEditor {
       }
     } catch (error) {
       console.error(`Error executing command '${command}':`, error);
+    }
+  }
+
+  private updateButtonState(command: string) {
+    if (["left_align", "center_align", "right_align", "justify"].includes(command)) {
+      // For alignment commands, deactivate all buttons first
+      this.deactivateAlignmentButtons();
+    }
+  
+    const button = this.container.querySelector(`button[data-command='${command}']`);
+    if (button) {
+      let isActive = false;
+  
+      // Handle alignment button's states
+      if (["left_align", "center_align", "right_align", "justify"].includes(command)) {
+        button.classList.add("active");
+      } else {
+        // For non-alignment commands like bold, italic, underline etc
+        isActive = document.queryCommandState(command);
+        if (isActive) {
+          button.classList.add("active");
+        } else {
+          button.classList.remove("active");
+        }
+      }
+    }
+  }  
+
+  // New method to update both subscript and superscript
+  private updateSubSuperButtonState() {
+    const subscriptButton = this.container.querySelector(
+      `button[data-command='subscript']`
+    );
+    const superscriptButton = this.container.querySelector(
+      `button[data-command='superscript']`
+    );
+    
+    // Check if subscript is active
+    if (subscriptButton) {
+      if (document.queryCommandState('subscript')) {
+        subscriptButton.classList.add("active");
+      } else {
+        subscriptButton.classList.remove("active");
+      }
+    }
+
+    // Check if superscript is active
+    if (superscriptButton) {
+      if (document.queryCommandState('superscript')) {
+        superscriptButton.classList.add("active");
+      } else {
+        superscriptButton.classList.remove("active");
+      }
+    }
+  }
+  // New method to update both Bullet and numbered list
+  private updateListButtonState() {
+    const bulletListButton = this.container.querySelector(
+      `button[data-command='bullet_list']`
+    );
+    const numberedListButton = this.container.querySelector(
+      `button[data-command='numbered_list']`
+    );
+  
+    // Check if bullet list is active
+    if (bulletListButton) {
+      if (document.queryCommandState('insertUnorderedList')) {
+        bulletListButton.classList.add("active");
+      } else {
+        bulletListButton.classList.remove("active");
+      }
+    }
+  
+    // Check if numbered list is active
+    if (numberedListButton) {
+      if (document.queryCommandState('insertOrderedList')) {
+        numberedListButton.classList.add("active");
+      } else {
+        numberedListButton.classList.remove("active");
+      }
     }
   }
 
