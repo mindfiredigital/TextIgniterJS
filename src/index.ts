@@ -1,4 +1,6 @@
 import {icons} from './assets/icons'
+import { ImageHandler } from './insertImage';
+import { HyperLinkHandler } from './hyperLink';
 interface EditorConfig {
   features: string[];
 }
@@ -13,6 +15,8 @@ class RichTextEditor {
   private editor: HTMLDivElement;
   private config: EditorConfig;
   private container!: HTMLDivElement;
+  private imageHandler!: ImageHandler;
+  private hyperlinkHandler: HyperLinkHandler;
 
   constructor(editorId: string, config: EditorConfig) {
     const editor = document.getElementById(editorId);
@@ -21,6 +25,9 @@ class RichTextEditor {
     }
     this.editor = editor;
     this.config = config;
+    this.imageHandler = new ImageHandler(this.editor);
+    this.hyperlinkHandler = new HyperLinkHandler(this.editor);
+    
     this.createContainer();
     this.init();
     this.createToolbar();
@@ -135,6 +142,11 @@ class RichTextEditor {
       };
       const execCommand = commands[command];
       if (execCommand) {
+        if (command === "image") {
+          this.imageHandler.insertImage(); // Use the image handler
+        }else if(command === 'hyperlink') {
+          this.hyperlinkHandler.insertHyperlink(); // Call the hyperlink handler
+        }
         // If the command is an alignment command, deactivate other alignment buttons
         if (["left_align", "center_align", "right_align", "justify"].includes(command)) {
           this.deactivateAlignmentButtons(); // Deactivate all alignment buttons
