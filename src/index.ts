@@ -2,6 +2,7 @@ import {icons} from './assets/icons'
 import { ImageHandler } from './insertImage';
 import { HyperLinkHandler } from './hyperLink';
 import { TextHeadingHandler } from './textHeading';
+import { InsertTableHandler } from './insertTable';
 interface EditorConfig {
   features: string[];
 }
@@ -19,6 +20,7 @@ class RichTextEditor {
   private imageHandler!: ImageHandler;
   private hyperlinkHandler: HyperLinkHandler;
   private textHeadingHandler: TextHeadingHandler;
+  private insertTableHandler: InsertTableHandler;
 
   constructor(editorId: string, config: EditorConfig) {
     const editor = document.getElementById(editorId);
@@ -30,7 +32,8 @@ class RichTextEditor {
     this.imageHandler = new ImageHandler(this.editor);
     this.hyperlinkHandler = new HyperLinkHandler(this.editor);
     this.textHeadingHandler = new TextHeadingHandler(this.editor);
-    
+    this.insertTableHandler = new InsertTableHandler(this.editor);
+
     this.createContainer();
     this.init();
     this.createToolbar();
@@ -81,7 +84,13 @@ class RichTextEditor {
         button.setAttribute("data-command", feature);
         button.onclick = () => this.textHeadingHandler.openHeadingModal(); // Open modal
         toolbar.appendChild(button);
-      }else{
+      }else if (feature === "insert_table") {
+        const button = document.createElement("button");
+        button.innerHTML = icons.insert_table;
+        button.onclick = () => this.insertTableHandler.openTableModal(); // Open table modal
+        toolbar.appendChild(button);
+      }
+      else{
         const button = document.createElement("button");
         button.innerHTML = featureIcons[feature];
         button.setAttribute("data-command", feature);
