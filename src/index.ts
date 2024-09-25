@@ -1,6 +1,7 @@
 import {icons} from './assets/icons'
 import { ImageHandler } from './insertImage';
 import { HyperLinkHandler } from './hyperLink';
+import { TextHeadingHandler } from './textHeading';
 interface EditorConfig {
   features: string[];
 }
@@ -17,6 +18,7 @@ class RichTextEditor {
   private container!: HTMLDivElement;
   private imageHandler!: ImageHandler;
   private hyperlinkHandler: HyperLinkHandler;
+  private textHeadingHandler: TextHeadingHandler;
 
   constructor(editorId: string, config: EditorConfig) {
     const editor = document.getElementById(editorId);
@@ -27,6 +29,7 @@ class RichTextEditor {
     this.config = config;
     this.imageHandler = new ImageHandler(this.editor);
     this.hyperlinkHandler = new HyperLinkHandler(this.editor);
+    this.textHeadingHandler = new TextHeadingHandler(this.editor);
     
     this.createContainer();
     this.init();
@@ -72,16 +75,24 @@ class RichTextEditor {
     };
 
     this.config.features.forEach((feature) => {
-      const button = document.createElement("button");
-      button.innerHTML = featureIcons[feature];
-      button.setAttribute("data-command", feature);
-      button.onclick = () => this.format(feature);
+      if (feature === "heading") {
+        const button = document.createElement("button");
+        button.innerHTML = icons.heading;
+        button.setAttribute("data-command", feature);
+        button.onclick = () => this.textHeadingHandler.openHeadingModal(); // Open modal
+        toolbar.appendChild(button);
+      }else{
+        const button = document.createElement("button");
+        button.innerHTML = featureIcons[feature];
+        button.setAttribute("data-command", feature);
+        button.onclick = () => this.format(feature);
 
-      if (feature === "left_align") {
-        button.classList.add("active");
+        if (feature === "left_align") {
+          button.classList.add("active");
+        }
+        
+        toolbar.appendChild(button);
       }
-      
-      toolbar.appendChild(button);
     });
 
     this.container.insertBefore(toolbar, this.editor);
