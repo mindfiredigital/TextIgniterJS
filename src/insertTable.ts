@@ -46,7 +46,6 @@ export class InsertTableHandler {
       modal.style.transform = "translate(-30%, -30%)";
       modal.style.padding = "10px";
       modal.style.backgroundColor = "white";
-      // modal.style.border = "1px solid #ccc";
       modal.style.boxShadow = "0px 0px 10px rgba(0,0,0,0.1)";
   
       document.body.appendChild(modal);
@@ -63,7 +62,7 @@ export class InsertTableHandler {
         for (let c = 0; c < cols; c++) {
           const cell = row.insertCell();
           cell.style.border = "1px solid #ccc";
-          cell.style.padding = "8px";
+          cell.style.padding = "20px";
           cell.contentEditable = "true"; // Make cells editable
           cell.innerText = " ";
         }
