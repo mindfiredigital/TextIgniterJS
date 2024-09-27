@@ -43,3 +43,22 @@ button {
     margin: 2px;
     padding: 5px;
 }
+
+.hyperlink-modal {
+    position: fixed;
+    transform: translate(-30%, -30%);
+    background-color: #fff;
+    background: var(--overlay-bg);
+    padding: 20px;
+    z-index: 1000;
+    width: 40%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .hyperlink-input {
+    display: block;
+    margin: 10px 0;
+    padding: 8px;
+    width: 95%;
+  }
+  

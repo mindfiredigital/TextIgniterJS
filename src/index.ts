@@ -1,9 +1,9 @@
 import {icons} from './assets/icons'
 import { ImageHandler } from './insertImage';
-import { HyperLinkHandler } from './hyperLink';
 import { TextHeadingHandler } from './textHeading';
 import { InsertTableHandler } from './insertTable';
 import { InsertLayoutHandler } from './insertLayout';
+import { HyperlinkHandler } from './hyperLink';
 interface EditorConfig {
   features: string[];
 }
@@ -19,10 +19,10 @@ class RichTextEditor {
   private config: EditorConfig;
   private container!: HTMLDivElement;
   private imageHandler!: ImageHandler;
-  private hyperlinkHandler: HyperLinkHandler;
   private textHeadingHandler: TextHeadingHandler;
   private insertTableHandler: InsertTableHandler;
   private insertLayoutHandler: InsertLayoutHandler;
+  private hyperlinkHandler: HyperlinkHandler;
 
   constructor(editorId: string, config: EditorConfig) {
     const editor = document.getElementById(editorId);
@@ -32,10 +32,10 @@ class RichTextEditor {
     this.editor = editor;
     this.config = config;
     this.imageHandler = new ImageHandler(this.editor);
-    this.hyperlinkHandler = new HyperLinkHandler(this.editor);
     this.textHeadingHandler = new TextHeadingHandler(this.editor);
     this.insertTableHandler = new InsertTableHandler(this.editor);
     this.insertLayoutHandler = new InsertLayoutHandler(this.editor);
+    this.hyperlinkHandler = new HyperlinkHandler(this.editor);
 
     this.createContainer();
     this.init();
@@ -96,6 +96,11 @@ class RichTextEditor {
         const button = document.createElement("button");
         button.innerHTML = icons.insert_layout;
         button.onclick = () => this.insertLayoutHandler.openLayoutModal(); // Open layout modal
+        toolbar.appendChild(button);
+      }else if (feature === "hyperlink") {
+        const button = document.createElement("button");
+        button.innerHTML = icons.hyperlink;
+        button.onclick = () => this.hyperlinkHandler.openHyperlinkModal(); // Open hyperlink modal
         toolbar.appendChild(button);
       }else{
         const button = document.createElement("button");
@@ -171,8 +176,6 @@ class RichTextEditor {
       if (execCommand) {
         if (command === "image") {
           this.imageHandler.insertImage(); // Use the image handler
-        }else if(command === 'hyperlink') {
-          this.hyperlinkHandler.insertHyperlink(); // Call the hyperlink handler
         }
         // If the command is an alignment command, deactivate other alignment buttons
         if (["left_align", "center_align", "right_align", "justify"].includes(command)) {
