@@ -3,6 +3,7 @@ import { ImageHandler } from './insertImage';
 import { HyperLinkHandler } from './hyperLink';
 import { TextHeadingHandler } from './textHeading';
 import { InsertTableHandler } from './insertTable';
+import { InsertLayoutHandler } from './insertLayout';
 interface EditorConfig {
   features: string[];
 }
@@ -21,6 +22,7 @@ class RichTextEditor {
   private hyperlinkHandler: HyperLinkHandler;
   private textHeadingHandler: TextHeadingHandler;
   private insertTableHandler: InsertTableHandler;
+  private insertLayoutHandler: InsertLayoutHandler;
 
   constructor(editorId: string, config: EditorConfig) {
     const editor = document.getElementById(editorId);
@@ -33,6 +35,7 @@ class RichTextEditor {
     this.hyperlinkHandler = new HyperLinkHandler(this.editor);
     this.textHeadingHandler = new TextHeadingHandler(this.editor);
     this.insertTableHandler = new InsertTableHandler(this.editor);
+    this.insertLayoutHandler = new InsertLayoutHandler(this.editor);
 
     this.createContainer();
     this.init();
@@ -89,8 +92,12 @@ class RichTextEditor {
         button.innerHTML = icons.insert_table;
         button.onclick = () => this.insertTableHandler.openTableModal(); // Open table modal
         toolbar.appendChild(button);
-      }
-      else{
+      }else if (feature === "insert_layout") {
+        const button = document.createElement("button");
+        button.innerHTML = icons.insert_layout;
+        button.onclick = () => this.insertLayoutHandler.openLayoutModal(); // Open layout modal
+        toolbar.appendChild(button);
+      }else{
         const button = document.createElement("button");
         button.innerHTML = featureIcons[feature];
         button.setAttribute("data-command", feature);
