@@ -1,15 +1,32 @@
 {
   "name": "@mindfiredigital/textigniterjs",
-  "version": "1.0.0-development",
+  "version": "1.0.0",
   "description": "TextIgniter JS is a lightweight, powerful, and intuitive HTML editor built using TypeScript.",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
   "files": [
     "dist"
   ],
-  "typings": "./dist/index.d.ts",
+  "types": "dist/index.d.ts",
   "main": "dist/index.js",
   "scripts": {
     "build": "rollup -c",
-    "dev": "rollup -c -w"
+    "dev": "rollup -c -w",
+    "check": "rollup -c --verbose"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "keywords": [
     "rich-text-editor",
@@ -29,12 +46,23 @@
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^22.5.4",
     "rollup": "^4.21.2",
-    "rollup-plugin-css-only": "^4.5.2",
     "rollup-plugin-dts": "^6.1.1",
+    "rollup-plugin-postcss": "^4.0.2",
     "tslib": "^2.7.0",
     "typescript": "^5.6.2"
   },
-  "dependencies": {
-    "rollup-plugin-postcss": "^4.0.2"
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "release": {
+    "repositoryUrl": "https://github.com/mindfiredigital/TextIgniterJS.git",
+    "branches": [
+      "main",
+      "next",
+      {
+        "name": "beta",
+        "prerelease": true
+      }
+    ]
   }
 }
