@@ -1,12 +1,11 @@
-interface EditorConfig {
+import "./styles/text-igniter.css";
+export interface EditorConfig {
     features: string[];
 }
-interface NodeJson {
+export interface NodeJson {
     type: string;
     attributes: {
         [key: string]: string;
     };
     children: (NodeJson | string)[];
 }
-
-export type { EditorConfig, NodeJson };
