@@ -77,7 +77,6 @@ npm install @mindfiredigital/textigniterjs
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rich Text Editor</title>
-    <link rel="stylesheet" href="node_modules/@mindfiredigital/textigniterjs/dist/index.css" />
     <style></style>
   </head>
   <body>
@@ -86,7 +85,7 @@ npm install @mindfiredigital/textigniterjs
     <script src="node_modules/@mindfiredigital/textigniterjs/dist/index.js"></script>
 
     <script>
-      // Initialize the RichTextEditor with specific features
+      // Initialize the TextIgniter with specific features
       const config = {
         features: [
           "bold",
@@ -107,7 +106,7 @@ npm install @mindfiredigital/textigniterjs
           "image",
         ],
       };
-      const editor = new RichTextEditor("editor", config);
+      const editor = new TextIgniter("editor", config);
 
       // Example usage of getHtml and getJson methods
       function getEditorContent() {

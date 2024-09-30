@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rich Text Editor</title>
-    <link rel="stylesheet" href="dist/index.css" />
     <style></style>
   </head>
   <body>
@@ -34,7 +33,7 @@
           "image",
         ],
       };
-      const editor = new RichTextEditor("editor", config);
+      const editor = new TextIgniter("editor", config);
 
       // Example usage of getHtml and getJson methods
       function getEditorContent() {
