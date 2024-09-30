@@ -4,11 +4,11 @@ import { TextHeadingHandler } from './textHeading';
 import { InsertTableHandler } from './insertTable';
 import { InsertLayoutHandler } from './insertLayout';
 import { HyperlinkHandler } from './hyperLink';
-interface EditorConfig {
+export interface EditorConfig {
   features: string[];
 }
 
-interface NodeJson {
+export interface NodeJson {
   type: string;
   attributes: { [key: string]: string };
   children: (NodeJson | string)[];

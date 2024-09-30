@@ -4,6 +4,7 @@ const commonjs = require("@rollup/plugin-commonjs");
 const { babel } = require("@rollup/plugin-babel");
 const terser = require("@rollup/plugin-terser");
 const postcss = require("rollup-plugin-postcss");
+const { dts } = require("rollup-plugin-dts");
 
 module.exports = [
   {
@@ -18,11 +19,14 @@ module.exports = [
       commonjs(),
       postcss({
         extensions: [".css"],
-        extract: true,
-        minimize: true,
+        extract: false,
+        modules: true,
+        inject: true,
       }),
       typescript({
         tsconfig: "./tsconfig.json",
+        declaration: true,
+        declarationDir: "./dist",
       }),
       babel({
         babelHelpers: "bundled",
@@ -30,5 +34,10 @@ module.exports = [
       }),
       terser(),
     ],
+  },
+  {
+    input: "src/index.ts",
+    output: [{ file: "dist/index.d.ts", format: "es" }],
+    plugins: [dts()],
   },
 ];
