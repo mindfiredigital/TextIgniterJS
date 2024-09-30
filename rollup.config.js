@@ -19,14 +19,17 @@ module.exports = [
       commonjs(),
       postcss({
         extensions: [".css"],
-        extract: false,
-        modules: true,
-        inject: true,
+        extract: true,
+        minimize: true,
       }),
       typescript({
         tsconfig: "./tsconfig.json",
         declaration: true,
         declarationDir: "./dist",
+        compilerOptions: {
+          outDir: "./dist",
+          declarationDir: "./dist",
+        },
       }),
       babel({
         babelHelpers: "bundled",
@@ -38,6 +41,17 @@ module.exports = [
   {
     input: "src/index.ts",
     output: [{ file: "dist/index.d.ts", format: "es" }],
-    plugins: [dts()],
+    plugins: [
+      dts(),
+      // Exclude CSS files from the declaration bundle
+      {
+        name: "exclude-css",
+        load(id) {
+          if (id.endsWith(".css")) {
+            return ""; // Ignore CSS files
+          }
+        },
+      },
+    ],
   },
 ];

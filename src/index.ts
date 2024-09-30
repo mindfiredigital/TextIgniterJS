@@ -4,6 +4,7 @@ import { TextHeadingHandler } from './textHeading';
 import { InsertTableHandler } from './insertTable';
 import { InsertLayoutHandler } from './insertLayout';
 import { HyperlinkHandler } from './hyperLink';
+import "./styles/text-igniter.css"
 export interface EditorConfig {
   features: string[];
 }
@@ -14,7 +15,7 @@ export interface NodeJson {
   children: (NodeJson | string)[];
 }
 
-class RichTextEditor {
+class TextIgniter {
   private editor: HTMLDivElement;
   private config: EditorConfig;
   private container!: HTMLDivElement;
@@ -347,4 +348,4 @@ class RichTextEditor {
   }
 }
 
-(window as any).RichTextEditor = RichTextEditor;
+(window as any).TextIgniter = TextIgniter;

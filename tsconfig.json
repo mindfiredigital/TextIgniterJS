@@ -12,7 +12,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "moduleResolution": "node",
-"allowSyntheticDefaultImports": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*", "src/index.ts"],
   "exclude": ["node_modules", "dist"]
