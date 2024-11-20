@@ -2,6 +2,23 @@
 
 We welcome and appreciate your contribution to TextIgniter JS. These guidelines will help ensure a smooth and collaborative process for everyone.
 
+## How Can You Run Project Locally?
+
+### Step 1: Install dependencies
+```bash
+npm i
+```
+
+### Step 2: Make build File in dev mode
+```bash
+npm run dev
+```
+
+### Step 3: Run index.html file
+```bash
+Press go live button
+```
+
 ## How Can You Contribute?
 
 Here are some ways you can contribute to the project:

@@ -21,6 +21,7 @@ module.exports = [
         extensions: [".css"],
         extract: true,
         minimize: true,
+        inject:true
       }),
       typescript({
         tsconfig: "./tsconfig.json",

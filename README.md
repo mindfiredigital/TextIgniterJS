@@ -15,13 +15,13 @@ The `@mindfiredigital/textigniterjs` is a tool that allows developers to integra
   <!-- <img alt="Screenshot of the React Text Igniter" src="https://res.cloudinary.com/dxf1kplcx/image/upload/v1725448061/react-text-igniter-screenshot_c4dq9c.png"\>
 </p> -->
 
-<!-- ## Live Demo
+## Live Demo
 
 Click the button below to open the project on StackBlitz.
 
-<a href="https://stackblitz.com/edit/vitejs-vite-9nstpc?file=src%2Findex.css" target="_blank">
+<a href="https://stackblitz.com/edit/stackblitz-starters-kezevu?file=index.html" target="_blank">
   <img src="https://developer.stackblitz.com/img/open_in_stackblitz.svg" alt="Open in StackBlitz">
-</a> -->
+</a>
 
 ## Table of Contents
 
@@ -76,9 +76,7 @@ npm install @mindfiredigital/textigniterjs
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rich Text Editor</title>
-    <link rel="stylesheet" href="node_modules/@mindfiredigital/textigniterjs/dist/index.css" />
-    <style></style>
+    <title>TextIgniterJS</title>
   </head>
   <body>
     <div id="editor"></div>
@@ -89,39 +87,40 @@ npm install @mindfiredigital/textigniterjs
       // Initialize the RichTextEditor with specific features
       const config = {
         features: [
-          "bold",
-          "italic",
-          "underline",
-          "subscript",
-          "superscript",
-          "left_align",
-          "center_align",
-          "right_align",
-          "justify",
-          "bullet_list",
-          "numbered_list",
-          "insert_table",
-          "insert_layout",
-          "heading",
-          "hyperlink",
-          "image",
+          'bold',
+          'italic',
+          'underline',
+          'subscript',
+          'superscript',
+          'left_align',
+          'center_align',
+          'right_align',
+          'justify',
+          'bullet_list',
+          'numbered_list',
+          'insert_table',
+          'insert_layout',
+          'heading',
+          'hyperlink',
+          'image',
         ],
       };
-      const editor = new RichTextEditor("editor", config);
+      const editor = new TextIgniter('editor', config);
 
       // Example usage of getHtml and getJson methods
       function getEditorContent() {
-        console.log("HTML content:", editor.getHtml());
-        console.log("JSON content:", editor.getJson());
+        console.log('HTML content:', editor.getHtml());
+        console.log('JSON content:', editor.getJson());
       }
 
-      const contentButton = document.createElement("button");
-      contentButton.innerText = "Get Content";
+      const contentButton = document.createElement('button');
+      contentButton.innerText = 'Get Content';
       contentButton.onclick = getEditorContent;
       document.body.appendChild(contentButton);
     </script>
   </body>
 </html>
+
 
 ```
 
