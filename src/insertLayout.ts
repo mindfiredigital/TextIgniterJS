@@ -8,7 +8,7 @@ export class InsertLayoutHandler {
     // Open a modal to choose the layout type
     public openLayoutModal() {
       const modal = document.createElement("div");
-      modal.classList.add("layout-modal");
+      modal.classList.add("modal");
   
       // Buttons for different layout options
       const oneColButton = document.createElement("button");
@@ -57,16 +57,7 @@ export class InsertLayoutHandler {
       modal.appendChild(sixtyFortyButton);
       modal.appendChild(fortySixtyButton);
       modal.appendChild(closeButton);
-  
-      // Style the modal (you can modify these styles)
-      modal.style.position = "fixed";
-      modal.style.top = "10%";
-      modal.style.left = "50%";
-      modal.style.transform = "translate(-20%, -20%)";
-      modal.style.padding = "10px";
-      modal.style.backgroundColor = "white";
-      modal.style.border = "1px solid #ccc";
-      modal.style.boxShadow = "0px 0px 10px rgba(0,0,0,0.1)";
+
   
       document.body.appendChild(modal);
     }
