@@ -1,3 +1,0 @@
-# Ignore everything except the dist folder
-*
-!dist/

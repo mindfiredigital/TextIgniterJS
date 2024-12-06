@@ -1,68 +1,46 @@
 {
-  "name": "@mindfiredigital/textigniterjs",
-  "version": "1.0.0",
-  "description": "TextIgniter JS is a lightweight, powerful, and intuitive HTML editor built using TypeScript.",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
-  },
-  "files": [
-    "dist"
-  ],
-  "types": "dist/index.d.ts",
-  "main": "dist/index.js",
+  "name": "textigniterjs",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
-    "check": "rollup -c --verbose"
+    "docusaurus": "docusaurus",
+    "start": "docusaurus start",
+    "build": "docusaurus build",
+    "swizzle": "docusaurus swizzle",
+    "deploy": "docusaurus deploy",
+    "clear": "docusaurus clear",
+    "serve": "docusaurus serve",
+    "write-translations": "docusaurus write-translations",
+    "write-heading-ids": "docusaurus write-heading-ids"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.5.2",
+    "@docusaurus/preset-classic": "3.5.2",
+    "@mdx-js/react": "^3.0.0",
+    "@mindfiredigital/react-text-igniter": "^1.2.11",
+    "clsx": "^2.0.0",
+    "lucide-react": "^0.468.0",
+    "prism-react-renderer": "^2.3.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "3.5.2",
+    "@docusaurus/types": "3.5.2"
   },
   "browserslist": {
     "production": [
-      ">0.2%",
+      ">0.5%",
       "not dead",
       "not op_mini all"
     ],
     "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
+      "last 3 chrome version",
+      "last 3 firefox version",
+      "last 5 safari version"
     ]
-  },
-  "keywords": [
-    "rich-text-editor",
-    "html-editor",
-    "typescript",
-    "npm-package"
-  ],
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@babel/preset-env": "^7.25.4",
-    "@rollup/plugin-babel": "^6.0.4",
-    "@rollup/plugin-commonjs": "^26.0.1",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^11.1.6",
-    "@types/node": "^22.5.4",
-    "rollup": "^4.21.2",
-    "rollup-plugin-dts": "^6.1.1",
-    "rollup-plugin-postcss": "^4.0.2",
-    "tslib": "^2.7.0",
-    "typescript": "^5.6.2"
   },
   "engines": {
-    "node": ">=12.0.0"
-  },
-  "release": {
-    "repositoryUrl": "https://github.com/mindfiredigital/TextIgniterJS.git",
-    "branches": [
-      "main",
-      "next",
-      {
-        "name": "beta",
-        "prerelease": true
-      }
-    ]
+    "node": ">=18.0"
   }
 }
