@@ -1,8 +1,6 @@
 :root {
   
     /* Additional Design Variables */
-    --text-color-primary: #333;
-    --text-color-secondary: #666;
     --spacing-small: 0.5rem;
     --spacing-medium: 1rem;
     --spacing-large: 2rem;
@@ -16,9 +14,6 @@
     box-sizing: border-box;
   }
   
-  body {
-    background-color: var(--background-home);
-  }
   
   .docs-container {
     padding: var(--spacing-large);

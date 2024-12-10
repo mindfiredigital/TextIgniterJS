@@ -41,7 +41,7 @@
 
 .container{
   background: none !important;
-  align-items: left !important;
+  align-items: flex-start !important;
   justify-content: left !important;
 }
 
