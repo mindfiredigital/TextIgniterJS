@@ -1,0 +1,24 @@
+{
+  "id": "javascript",
+  "title": "Javascript",
+  "description": "- Initialization: Follow these steps to initialize and configure TextIgniterJS in your project.",
+  "source": "@site/docs/javascript.md",
+  "sourceDirName": ".",
+  "slug": "/javascript",
+  "permalink": "/TextIgniterJS/docs/javascript",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/mindfiredigital/TextIgniterJS/edit/main/docs/javascript.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Installation",
+    "permalink": "/TextIgniterJS/docs/installation"
+  },
+  "next": {
+    "title": "React",
+    "permalink": "/TextIgniterJS/docs/react"
+  }
+}

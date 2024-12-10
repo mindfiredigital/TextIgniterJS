@@ -1,0 +1,24 @@
+{
+  "id": "installation",
+  "title": "Installation",
+  "description": "To install and use TextIgniterJS:",
+  "source": "@site/docs/installation.md",
+  "sourceDirName": ".",
+  "slug": "/installation",
+  "permalink": "/TextIgniterJS/docs/installation",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/mindfiredigital/TextIgniterJS/edit/main/docs/installation.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Introduction",
+    "permalink": "/TextIgniterJS/docs/introduction"
+  },
+  "next": {
+    "title": "Javascript",
+    "permalink": "/TextIgniterJS/docs/javascript"
+  }
+}

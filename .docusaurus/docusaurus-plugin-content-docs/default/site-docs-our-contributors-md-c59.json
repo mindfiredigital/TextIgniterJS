@@ -1,0 +1,20 @@
+{
+  "id": "our-contributors",
+  "title": "Our Contributors",
+  "description": "We want to extend our heartfelt gratitude to the contributors who have made @mindfiredigital/TextIgniterJS possible.",
+  "source": "@site/docs/our-contributors.md",
+  "sourceDirName": ".",
+  "slug": "/our-contributors",
+  "permalink": "/TextIgniterJS/docs/our-contributors",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/mindfiredigital/TextIgniterJS/edit/main/docs/our-contributors.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Contributing",
+    "permalink": "/TextIgniterJS/docs/contributing"
+  }
+}

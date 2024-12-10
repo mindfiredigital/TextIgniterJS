@@ -1,0 +1,24 @@
+{
+  "id": "react",
+  "title": "React",
+  "description": "to be released",
+  "source": "@site/docs/react.md",
+  "sourceDirName": ".",
+  "slug": "/react",
+  "permalink": "/TextIgniterJS/docs/react",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/mindfiredigital/TextIgniterJS/edit/main/docs/react.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Javascript",
+    "permalink": "/TextIgniterJS/docs/javascript"
+  },
+  "next": {
+    "title": "Angular",
+    "permalink": "/TextIgniterJS/docs/angular"
+  }
+}

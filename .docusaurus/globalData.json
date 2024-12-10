@@ -1,0 +1,63 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/TextIgniterJS/docs",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/TextIgniterJS/docs",
+          "mainDocId": "introduction",
+          "docs": [
+            {
+              "id": "angular",
+              "path": "/TextIgniterJS/docs/angular",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "contributing",
+              "path": "/TextIgniterJS/docs/contributing",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "installation",
+              "path": "/TextIgniterJS/docs/installation",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "introduction",
+              "path": "/TextIgniterJS/docs/introduction",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "javascript",
+              "path": "/TextIgniterJS/docs/javascript",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "our-contributors",
+              "path": "/TextIgniterJS/docs/our-contributors",
+              "sidebar": "docsSidebar"
+            },
+            {
+              "id": "react",
+              "path": "/TextIgniterJS/docs/react",
+              "sidebar": "docsSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "docsSidebar": {
+              "link": {
+                "path": "/TextIgniterJS/docs/introduction",
+                "label": "introduction"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

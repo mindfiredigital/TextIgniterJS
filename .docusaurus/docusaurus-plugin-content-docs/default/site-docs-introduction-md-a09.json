@@ -1,0 +1,20 @@
+{
+  "id": "introduction",
+  "title": "Introduction",
+  "description": "TextIgniterJS a lightweight and efficient rich text editor built entirely with pure TypeScript. Designed to prioritize minimal bundle size, this editor eliminates dependency on external third-party libraries, making it an ideal choice for modern web applications where performance and simplicity are key.",
+  "source": "@site/docs/introduction.md",
+  "sourceDirName": ".",
+  "slug": "/introduction",
+  "permalink": "/TextIgniterJS/docs/introduction",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/mindfiredigital/TextIgniterJS/edit/main/docs/introduction.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "next": {
+    "title": "Installation",
+    "permalink": "/TextIgniterJS/docs/installation"
+  }
+}

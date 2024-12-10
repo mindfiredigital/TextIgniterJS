@@ -1,0 +1,24 @@
+{
+  "id": "angular",
+  "title": "Angular",
+  "description": "to be released",
+  "source": "@site/docs/angular.md",
+  "sourceDirName": ".",
+  "slug": "/angular",
+  "permalink": "/TextIgniterJS/docs/angular",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/mindfiredigital/TextIgniterJS/edit/main/docs/angular.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "React",
+    "permalink": "/TextIgniterJS/docs/react"
+  },
+  "next": {
+    "title": "Contributing",
+    "permalink": "/TextIgniterJS/docs/contributing"
+  }
+}

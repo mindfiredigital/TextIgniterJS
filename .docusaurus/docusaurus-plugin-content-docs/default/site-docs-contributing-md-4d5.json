@@ -1,0 +1,24 @@
+{
+  "id": "contributing",
+  "title": "Contributing",
+  "description": "We're thrilled that you're interested in contributing to TextIgniterJS! This document outlines the process for contributing to our project. Whether you're fixing bugs, improving documentation, or proposing new features, your contributions are welcome.",
+  "source": "@site/docs/contributing.md",
+  "sourceDirName": ".",
+  "slug": "/contributing",
+  "permalink": "/TextIgniterJS/docs/contributing",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/mindfiredigital/TextIgniterJS/edit/main/docs/contributing.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Angular",
+    "permalink": "/TextIgniterJS/docs/angular"
+  },
+  "next": {
+    "title": "Our Contributors",
+    "permalink": "/TextIgniterJS/docs/our-contributors"
+  }
+}

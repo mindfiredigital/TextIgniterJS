@@ -1,0 +1,293 @@
+{
+  "entrypoints": [
+    "main"
+  ],
+  "origins": {
+    "237": [
+      237
+    ],
+    "408": [
+      61,
+      401,
+      869,
+      408
+    ],
+    "17896441": [
+      408,
+      869,
+      401
+    ],
+    "main": [
+      354,
+      869,
+      792
+    ],
+    "runtime~main": [
+      792,
+      869,
+      354
+    ],
+    "01a106d5": [
+      423
+    ],
+    "1f391b9e": [
+      408,
+      869,
+      61
+    ],
+    "393be207": [
+      134
+    ],
+    "3b8c55ea": [
+      803
+    ],
+    "48f96d96": [
+      387
+    ],
+    "4d54d076": [
+      459
+    ],
+    "5e95c892": [
+      647
+    ],
+    "6bd0162f": [
+      194
+    ],
+    "94db6e40": [
+      989
+    ],
+    "a09c2993": [
+      899
+    ],
+    "a7456010": [
+      235
+    ],
+    "a7bd4aaa": [
+      98
+    ],
+    "a94703ab": [
+      869,
+      48
+    ],
+    "aba21aa0": [
+      742
+    ],
+    "c4f5d8e4": [
+      869,
+      634
+    ],
+    "c5981551": [
+      752
+    ],
+    "styles": [
+      48,
+      61,
+      354,
+      401,
+      408,
+      634,
+      792,
+      869
+    ]
+  },
+  "assets": {
+    "48": {
+      "js": [
+        {
+          "file": "assets/js/a94703ab.3a741959.js",
+          "hash": "9c9e6a1baec62569",
+          "publicPath": "/TextIgniterJS/assets/js/a94703ab.3a741959.js"
+        }
+      ]
+    },
+    "61": {
+      "js": [
+        {
+          "file": "assets/js/1f391b9e.aa3deb22.js",
+          "hash": "2be0f8cd8f7a9ea7",
+          "publicPath": "/TextIgniterJS/assets/js/1f391b9e.aa3deb22.js"
+        }
+      ]
+    },
+    "98": {
+      "js": [
+        {
+          "file": "assets/js/a7bd4aaa.2fd5a7f9.js",
+          "hash": "ebfaf6b77e588b48",
+          "publicPath": "/TextIgniterJS/assets/js/a7bd4aaa.2fd5a7f9.js"
+        }
+      ]
+    },
+    "134": {
+      "js": [
+        {
+          "file": "assets/js/393be207.eb912ac1.js",
+          "hash": "88290047a0934082",
+          "publicPath": "/TextIgniterJS/assets/js/393be207.eb912ac1.js"
+        }
+      ]
+    },
+    "194": {
+      "js": [
+        {
+          "file": "assets/js/6bd0162f.0cae6313.js",
+          "hash": "e1eca8ddd2b10519",
+          "publicPath": "/TextIgniterJS/assets/js/6bd0162f.0cae6313.js"
+        }
+      ]
+    },
+    "235": {
+      "js": [
+        {
+          "file": "assets/js/a7456010.edbff894.js",
+          "hash": "7e7a5e1c32783f05",
+          "publicPath": "/TextIgniterJS/assets/js/a7456010.edbff894.js"
+        }
+      ]
+    },
+    "237": {
+      "js": [
+        {
+          "file": "assets/js/237.d08f29dd.js",
+          "hash": "48525a8d39ea6a89",
+          "publicPath": "/TextIgniterJS/assets/js/237.d08f29dd.js"
+        }
+      ]
+    },
+    "354": {
+      "js": [
+        {
+          "file": "assets/js/runtime~main.ce110b58.js",
+          "hash": "882ee34af5405c48",
+          "publicPath": "/TextIgniterJS/assets/js/runtime~main.ce110b58.js"
+        }
+      ]
+    },
+    "387": {
+      "js": [
+        {
+          "file": "assets/js/48f96d96.d9e4bc71.js",
+          "hash": "6541ac924527283f",
+          "publicPath": "/TextIgniterJS/assets/js/48f96d96.d9e4bc71.js"
+        }
+      ]
+    },
+    "401": {
+      "js": [
+        {
+          "file": "assets/js/17896441.056a9608.js",
+          "hash": "fde3512f49a4afe7",
+          "publicPath": "/TextIgniterJS/assets/js/17896441.056a9608.js"
+        }
+      ]
+    },
+    "408": {
+      "js": [
+        {
+          "file": "assets/js/408.2e76c173.js",
+          "hash": "816cadb1a913d2f0",
+          "publicPath": "/TextIgniterJS/assets/js/408.2e76c173.js"
+        }
+      ]
+    },
+    "423": {
+      "js": [
+        {
+          "file": "assets/js/01a106d5.788ffa76.js",
+          "hash": "f92e285dd3aa3ca3",
+          "publicPath": "/TextIgniterJS/assets/js/01a106d5.788ffa76.js"
+        }
+      ]
+    },
+    "459": {
+      "js": [
+        {
+          "file": "assets/js/4d54d076.1162222e.js",
+          "hash": "a08898442b238d0d",
+          "publicPath": "/TextIgniterJS/assets/js/4d54d076.1162222e.js"
+        }
+      ]
+    },
+    "634": {
+      "js": [
+        {
+          "file": "assets/js/c4f5d8e4.de5a7b0a.js",
+          "hash": "6d48b2733c41a9a6",
+          "publicPath": "/TextIgniterJS/assets/js/c4f5d8e4.de5a7b0a.js"
+        }
+      ]
+    },
+    "647": {
+      "js": [
+        {
+          "file": "assets/js/5e95c892.d221c9af.js",
+          "hash": "1cbcba063b45eff5",
+          "publicPath": "/TextIgniterJS/assets/js/5e95c892.d221c9af.js"
+        }
+      ]
+    },
+    "742": {
+      "js": [
+        {
+          "file": "assets/js/aba21aa0.8c5473a2.js",
+          "hash": "07edc5dc3e7ca1f4",
+          "publicPath": "/TextIgniterJS/assets/js/aba21aa0.8c5473a2.js"
+        }
+      ]
+    },
+    "752": {
+      "js": [
+        {
+          "file": "assets/js/c5981551.eedae43e.js",
+          "hash": "243cd68e3f05903e",
+          "publicPath": "/TextIgniterJS/assets/js/c5981551.eedae43e.js"
+        }
+      ]
+    },
+    "792": {
+      "js": [
+        {
+          "file": "assets/js/main.21639774.js",
+          "hash": "60b5902c38e64d00",
+          "publicPath": "/TextIgniterJS/assets/js/main.21639774.js"
+        }
+      ]
+    },
+    "803": {
+      "js": [
+        {
+          "file": "assets/js/3b8c55ea.78c25770.js",
+          "hash": "8817660bbb9a46fe",
+          "publicPath": "/TextIgniterJS/assets/js/3b8c55ea.78c25770.js"
+        }
+      ]
+    },
+    "869": {
+      "css": [
+        {
+          "file": "assets/css/styles.2974d8a9.css",
+          "hash": "e5d52045a615405f",
+          "publicPath": "/TextIgniterJS/assets/css/styles.2974d8a9.css"
+        }
+      ]
+    },
+    "899": {
+      "js": [
+        {
+          "file": "assets/js/a09c2993.0018fe04.js",
+          "hash": "fe95d056116e723f",
+          "publicPath": "/TextIgniterJS/assets/js/a09c2993.0018fe04.js"
+        }
+      ]
+    },
+    "989": {
+      "js": [
+        {
+          "file": "assets/js/94db6e40.8d98f1e3.js",
+          "hash": "970f748a94722e2b",
+          "publicPath": "/TextIgniterJS/assets/js/94db6e40.8d98f1e3.js"
+        }
+      ]
+    }
+  }
+}
