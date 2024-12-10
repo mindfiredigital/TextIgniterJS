@@ -25,12 +25,10 @@ jobs:
 
       - name: 'Install dependencies'
         run: |
-          cd docs-docusaurus
           npm install
 
       - name: 'Build Docusaurus site'
         run: |
-          cd docs-docusaurus
           npm run build
 
       - name: 'Fetch branches'
@@ -47,8 +45,8 @@ jobs:
           mkdir -p /tmp/temp-directory
           # Enable dotglob to copy hidden files (like .gitignore)
           shopt -s dotglob
-          # Copy the build from the docs-docusaurus/build folder
-          cp -r docs-docusaurus/build/* /tmp/temp-directory/
+          # Copy the build from the ./build folder
+          cp -r ./build/* /tmp/temp-directory/
           shopt -u dotglob
           # Switch to the gh-pages branch
           git checkout gh-pages
