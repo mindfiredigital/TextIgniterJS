@@ -1,351 +1,83 @@
-import {icons} from './assets/icons'
-import { ImageHandler } from './insertImage';
-import { TextHeadingHandler } from './textHeading';
-import { InsertTableHandler } from './insertTable';
-import { InsertLayoutHandler } from './insertLayout';
-import { HyperlinkHandler } from './hyperLink';
-import "./styles/text-igniter.css"
-export interface EditorConfig {
-  features: string[];
-}
-
-export interface NodeJson {
-  type: string;
-  attributes: { [key: string]: string };
-  children: (NodeJson | string)[];
-}
+import restoreSelection from './utils/selection/restoreSelection';
+import saveSelection from './utils/selection/saveSelection';
+import {TextDocument } from './textDocument';
+import { Piece } from './piece';
 
 class TextIgniter {
-  private editor: HTMLDivElement;
-  private config: EditorConfig;
-  private container!: HTMLDivElement;
-  private imageHandler!: ImageHandler;
-  private textHeadingHandler: TextHeadingHandler;
-  private insertTableHandler: InsertTableHandler;
-  private insertLayoutHandler: InsertLayoutHandler;
-  private hyperlinkHandler: HyperlinkHandler;
+    private editorElement: HTMLElement;
+    private boldButton: HTMLElement;
+    private document: TextDocument;
 
-  constructor(editorId: string, config: EditorConfig) {
-    const editor = document.getElementById(editorId);
-    if (!editor || !(editor instanceof HTMLDivElement)) {
-      throw new Error("Editor element not found or incorrect element type.");
+    constructor(editorElement: HTMLElement, boldButton: HTMLElement) {
+        this.editorElement = editorElement;
+        this.boldButton = boldButton;
+        this.document = new TextDocument();
+
+        this.boldButton.addEventListener("click", () => this.toggleBold());
+        this.editorElement.addEventListener("input", () => this.onInput());
+        this.render();
     }
-    this.editor = editor;
-    this.config = config;
-    this.imageHandler = new ImageHandler(this.editor);
-    this.textHeadingHandler = new TextHeadingHandler(this.editor);
-    this.insertTableHandler = new InsertTableHandler(this.editor);
-    this.insertLayoutHandler = new InsertLayoutHandler(this.editor);
-    this.hyperlinkHandler = new HyperlinkHandler(this.editor);
 
-    this.createContainer();
-    this.init();
-    this.createToolbar();
-    this.addKeyboardShortcuts();
-  }
+    private getSelectionRange(): [number, number] {
+        const savedSel = saveSelection(this.editorElement);
+        if (!savedSel) return [0, 0];
+        return [savedSel.start, savedSel.end];
+    }
 
-  private createContainer() {
-    this.container = document.createElement("div");
-    this.container.classList.add("text-igniter");
-    this.editor.parentNode!.insertBefore(this.container, this.editor);
-    this.container.appendChild(this.editor);
-  }
+    private toggleBold(): void {
+        const [start, end] = this.getSelectionRange();
+        if (start === end) return; // Do nothing if there's no selection
 
-  private init() {
-    this.editor.contentEditable = "true";
-    this.editor.classList.add("editor");
-    this.addSelectionListener();
-    this.editor.focus();
-  }
+        this.document.formatBold(start, end);
+        this.render();
+        this.setCursorPosition(end);
+    }
 
-  private createToolbar() {
-    const toolbar = document.createElement("div");
-    toolbar.classList.add("toolbar");
+    private onInput(): void {
+        const savedSel = saveSelection(this.editorElement);
+        const plainText = this.editorElement.textContent || "";
+        // this.document = new TextDocument();
+        this.document.pieces = [new Piece(plainText)];
+        this.render();
+        restoreSelection(this.editorElement, savedSel);
+    }
 
-    const featureIcons: { [key: string]: string } = {
-      bold: icons.bold,
-      italic: icons.italic,
-      underline: icons.underline,
-      subscript: icons.subscript,
-      superscript: icons.superscript,
-      left_align: icons.left_align,
-      center_align: icons.center_align,
-      right_align: icons.right_align,
-      justify: icons.justify,
-      bullet_list: icons.bullet_list,
-      numbered_list: icons.numbered_list,
-      insert_table: icons.insert_table,
-      insert_layout: icons.insert_layout,
-      heading: icons.heading,
-      hyperlink: icons.hyperlink,
-      image : icons.image
-    };
+    private render(): void {
+        const savedSel = saveSelection(this.editorElement);
+        this.document.render(this.editorElement);
+        restoreSelection(this.editorElement, savedSel);
+    }
 
-    this.config.features.forEach((feature) => {
-      if (feature === "heading") {
-        const button = document.createElement("button");
-        button.innerHTML = icons.heading;
-        button.setAttribute("data-command", feature);
-        button.onclick = () => this.textHeadingHandler.openHeadingModal(); // Open modal
-        toolbar.appendChild(button);
-      }else if (feature === "insert_table") {
-        const button = document.createElement("button");
-        button.innerHTML = icons.insert_table;
-        button.onclick = () => this.insertTableHandler.openTableModal(); // Open table modal
-        toolbar.appendChild(button);
-      }else if (feature === "insert_layout") {
-        const button = document.createElement("button");
-        button.innerHTML = icons.insert_layout;
-        button.onclick = () => this.insertLayoutHandler.openLayoutModal(); // Open layout modal
-        toolbar.appendChild(button);
-      }else if (feature === "hyperlink") {
-        const button = document.createElement("button");
-        button.innerHTML = icons.hyperlink;
-        button.onclick = () => this.hyperlinkHandler.openHyperlinkModal(); // Open hyperlink modal
-        toolbar.appendChild(button);
-      }else{
-        const button = document.createElement("button");
-        button.innerHTML = featureIcons[feature];
-        button.setAttribute("data-command", feature);
-        button.onclick = () => this.format(feature);
+    private setCursorPosition(position: number): void {
+        this.editorElement.focus();
+        const sel = window.getSelection();
+        const range = document.createRange();
+        let charIndex = 0;
+        const nodeStack: Node[] = [this.editorElement];
+        let node: Node | undefined;
 
-        if (feature === "left_align") {
-          button.classList.add("active");
-        }
-        
-        toolbar.appendChild(button);
-      }
-    });
-
-    this.container.insertBefore(toolbar, this.editor);
-  }
-
-  private deactivateAlignmentButtons() {
-    const alignmentButtons = ["left_align", "center_align", "right_align", "justify"];
-    
-    alignmentButtons.forEach((alignment) => {
-      const button = this.container.querySelector(`button[data-command='${alignment}']`);
-      if (button) {
-        button.classList.remove("active");
-      }
-    });
-  }
-
-  private addSelectionListener() {
-    document.addEventListener('selectionchange', () => {
-      this.updateSubSuperButtonState();
-      this.updateListButtonState();
-    });
-  }
-
-  private addKeyboardShortcuts() {
-    document.addEventListener("keydown", (e) => {
-      if (e.ctrlKey && e.key === "b") {
-        e.preventDefault();
-        this.format("bold");
-      } else if (e.ctrlKey && e.key === "i") {
-        e.preventDefault();
-        this.format("italic");
-      } else if (e.ctrlKey && e.key === "u") {
-        e.preventDefault();
-        this.format("underline");
-      }
-    });
-  }
-
-  public format(command: string) {
-    try {
-      const commands: { [key: string]: string } = {
-        bold: "bold",
-        italic: "italic",
-        underline: "underline",
-        subscript: "subscript",
-        superscript: "superscript",
-        left_align: "justifyLeft",
-        center_align: "justifyCenter",
-        right_align: "justifyRight",
-        justify: "justifyFull",
-        bullet_list: "insertUnorderedList",
-        numbered_list: "insertOrderedList",
-        insert_table: "insertTable",
-        insert_layout: "insertLayout",
-        heading: "formatBlock",
-        hyperlink: "createLink",
-        image: "insertImage",
-      };
-      const execCommand = commands[command];
-      if (execCommand) {
-        if (command === "image") {
-          this.imageHandler.insertImage(); // Use the image handler
-        }
-        // If the command is an alignment command, deactivate other alignment buttons
-        if (["left_align", "center_align", "right_align", "justify"].includes(command)) {
-          this.deactivateAlignmentButtons(); // Deactivate all alignment buttons
+        while ((node = nodeStack.pop())) {
+            if (node.nodeType === 3) {
+                const textNode = node as Text;
+                const nextCharIndex = charIndex + textNode.length;
+                if (position >= charIndex && position <= nextCharIndex) {
+                    range.setStart(textNode, position - charIndex);
+                    range.collapse(true);
+                    break;
+                }
+                charIndex = nextCharIndex;
+            } else {
+                for (let i = node.childNodes.length - 1; i >= 0; i--) {
+                    nodeStack.push(node.childNodes[i]);
+                }
+            }
         }
 
-        // Handle mutual exclusivity for subscript and superscript
-        if (command === 'subscript') {
-          // If superscript is currently active, remove it before applying subscript
-          if (document.queryCommandState('superscript')) {
-            document.execCommand('superscript', false, '');
-          }
-        } else if (command === 'superscript') {
-          // If subscript is currently active, remove it before applying superscript
-          if (document.queryCommandState('subscript')) {
-            document.execCommand('subscript', false, '');
-          }
+        if (sel) {
+            sel.removeAllRanges();
+            sel.addRange(range);
         }
-
-         // Handle mutual exclusivity for bullet and numbered lists
-        if (command === 'bullet_list') {
-          // If numbered list is currently active, remove it before applying bullet list
-          if (document.queryCommandState('insertOrderedList')) {
-            document.execCommand('insertOrderedList', false, '');
-          }
-        } else if (command === 'numbered_list') {
-          // If bullet list is currently active, remove it before applying numbered list
-          if (document.queryCommandState('insertUnorderedList')) {
-            document.execCommand('insertUnorderedList', false, '');
-          }
-        }
-
-        if (document.queryCommandSupported(execCommand)) {
-          const success = document.execCommand(execCommand, false, "");
-          if (success) {
-            this.updateButtonState(command);
-            this.updateSubSuperButtonState();
-            this.updateListButtonState();
-          }else{
-            console.warn(`The command '${command}' could not be executed.`);
-          }
-        } else {
-          console.warn(`The command '${command}' is not supported.`);
-        }
-      } else {
-        console.warn(`The command '${command}' is not recognized.`);
-      }
-    } catch (error) {
-      console.error(`Error executing command '${command}':`, error);
     }
-  }
-
-  private updateButtonState(command: string) {
-    if (["left_align", "center_align", "right_align", "justify"].includes(command)) {
-      // For alignment commands, deactivate all buttons first
-      this.deactivateAlignmentButtons();
-    }
-  
-    const button = this.container.querySelector(`button[data-command='${command}']`);
-    if (button) {
-      let isActive = false;
-  
-      // Handle alignment button's states
-      if (["left_align", "center_align", "right_align", "justify"].includes(command)) {
-        button.classList.add("active");
-      } else {
-        // For non-alignment commands like bold, italic, underline etc
-        isActive = document.queryCommandState(command);
-        if (isActive) {
-          button.classList.add("active");
-        } else {
-          button.classList.remove("active");
-        }
-      }
-    }
-  }  
-
-  // New method to update both subscript and superscript
-  private updateSubSuperButtonState() {
-    const subscriptButton = this.container.querySelector(
-      `button[data-command='subscript']`
-    );
-    const superscriptButton = this.container.querySelector(
-      `button[data-command='superscript']`
-    );
-    
-    // Check if subscript is active
-    if (subscriptButton) {
-      if (document.queryCommandState('subscript')) {
-        subscriptButton.classList.add("active");
-      } else {
-        subscriptButton.classList.remove("active");
-      }
-    }
-
-    // Check if superscript is active
-    if (superscriptButton) {
-      if (document.queryCommandState('superscript')) {
-        superscriptButton.classList.add("active");
-      } else {
-        superscriptButton.classList.remove("active");
-      }
-    }
-  }
-  // New method to update both Bullet and numbered list
-  private updateListButtonState() {
-    const bulletListButton = this.container.querySelector(
-      `button[data-command='bullet_list']`
-    );
-    const numberedListButton = this.container.querySelector(
-      `button[data-command='numbered_list']`
-    );
-  
-    // Check if bullet list is active
-    if (bulletListButton) {
-      if (document.queryCommandState('insertUnorderedList')) {
-        bulletListButton.classList.add("active");
-      } else {
-        bulletListButton.classList.remove("active");
-      }
-    }
-  
-    // Check if numbered list is active
-    if (numberedListButton) {
-      if (document.queryCommandState('insertOrderedList')) {
-        numberedListButton.classList.add("active");
-      } else {
-        numberedListButton.classList.remove("active");
-      }
-    }
-  }
-
-  public getHtml(): string {
-    return this.editor.innerHTML;
-  }
-
-  public getJson(): NodeJson {
-    const parseNode = (node: Node): NodeJson | string => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        return node.textContent || "";
-      }
-
-      const result: NodeJson = {
-        type: node.nodeName.toLowerCase(),
-        attributes: {},
-        children: [],
-      };
-
-      // Parse attributes
-      if (node instanceof Element) {
-        Array.from(node.attributes).forEach((attr) => {
-          result.attributes[attr.name] = attr.value;
-        });
-      }
-
-      // Parse children
-      node.childNodes.forEach((child) => {
-        result.children.push(parseNode(child));
-      });
-
-      return result;
-    };
-
-    return {
-      type: "root",
-      attributes: {},
-      children: [parseNode(this.editor)],
-    };
-  }
 }
 
 (window as any).TextIgniter = TextIgniter;

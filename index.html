@@ -4,10 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rich Text Editor</title>
-    <style></style>
+    <style>    #editor {
+      border: 3ypx solid #ccc;
+      padding: 10px;
+      min-height: 150px;
+      outline: none;
+      white-space: pre-wrap;
+  }</style>
   </head>
   <body>
-    <div id="editor"></div>
+    <div class="toolbar">
+      <button id="boldButton">Bold</button>
+  </div>
+  <div id="editor" contenteditable="true"></div>
 <link rel="stylesheet" href="dist/index.css">
     <script src="dist/index.js"></script>
 
@@ -31,9 +40,14 @@
           "heading",
           "hyperlink",
           "image",
+          "colors"
         ],
       };
-      const editor = new TextIgniter("editor", config);
+      // const editor = new TextIgniter("editor", config);
+
+      const editorElement = document.getElementById("editor");
+        const boldButton = document.getElementById("boldButton");
+        new TextIgniter(editorElement, boldButton);
 
       // Example usage of getHtml and getJson methods
       function getEditorContent() {
