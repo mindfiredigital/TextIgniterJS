@@ -1,126 +1,160 @@
-import { Piece } from './piece';
-
-export class TextDocument {
+import EventEmitter from "./utils/events";
+import Piece from "./piece";
+class TextDocument extends EventEmitter {
     pieces: Piece[];
-
-    constructor(text: string = "") {
-        this.pieces = [new Piece(text)];
+    constructor() {
+        super();
+        this.pieces = [new Piece("")];
     }
-
     getPlainText(): string {
-        return this.pieces.map(piece => piece.text).join("");
+        return this.pieces.map(p => p.text).join("");
     }
-
-    formatBold(start: number, end: number): void {
-        let newPieces: Piece[] = [];
+    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean }, position: number): void {
         let offset = 0;
-        let selectionFullyBold = true;
-        let selectionContainsBold = false;
+        let newPieces: Piece[] = [];
+        let inserted = false;
 
-        // First pass: Determine if the entire selection is bold
         for (let piece of this.pieces) {
             const pieceEnd = offset + piece.text.length;
-
-            if (pieceEnd <= start || offset >= end) {
-                // Outside the selection range
-            } else {
-                if (!piece.isBold()) {
-                    selectionFullyBold = false;
-                } else {
-                    selectionContainsBold = true;
+            if (!inserted && position <= pieceEnd) {
+                const relPos = position - offset;
+                if (relPos > 0) {
+                    newPieces.push(new Piece(piece.text.slice(0, relPos), { ...piece.attributes }));
                 }
+                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false }));
+                if (relPos < piece.text.length) {
+                    newPieces.push(new Piece(piece.text.slice(relPos), { ...piece.attributes }));
+                }
+                inserted = true;
+            } else {
+                newPieces.push(piece.clone());
             }
-
             offset = pieceEnd;
         }
 
-        const shouldBold = !selectionFullyBold;
+        if (!inserted) {
+            const lastPiece = newPieces[newPieces.length - 1];
+            if (lastPiece && lastPiece.hasSameAttributes(new Piece("", { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false }))) {
+                lastPiece.text += text;
+            } else {
+                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false }));
+            }
+        }
 
-        // Reset offset for second pass
-        offset = 0;
+        this.pieces = this.mergePieces(newPieces);
+        this.emit('documentChanged', this);
+    }
 
-        // Second pass: Apply bold formatting accordingly
+    deleteRange(start: number, end: number): void {
+        if (start === end) return;
+        let newPieces: Piece[] = [];
+        let offset = 0;
         for (let piece of this.pieces) {
             const pieceEnd = offset + piece.text.length;
-
             if (pieceEnd <= start || offset >= end) {
-                // Outside the selection range
                 newPieces.push(piece.clone());
             } else {
-                let currentPiece = piece.clone();
-                let pieceStart = offset;
-                let pieceText = currentPiece.text;
-
-                if (pieceStart < start && pieceEnd > end) {
-                    // Selection is inside this piece; split into three
-                    const beforeText = pieceText.slice(0, start - pieceStart);
-                    const selectedText = pieceText.slice(start - pieceStart, end - pieceStart);
-                    const afterText = pieceText.slice(end - pieceStart);
-
-                    newPieces.push(new Piece(beforeText, { ...currentPiece.attributes }));
-                    const selectedPiece = new Piece(selectedText, { ...currentPiece.attributes });
-                    selectedPiece.setBold(shouldBold);
-                    newPieces.push(selectedPiece);
-                    newPieces.push(new Piece(afterText, { ...currentPiece.attributes }));
-                } else if (pieceStart < start) {
-                    // Selection starts in the middle of this piece
-                    const beforeText = pieceText.slice(0, start - pieceStart);
-                    const afterText = pieceText.slice(start - pieceStart);
-
-                    newPieces.push(new Piece(beforeText, { ...currentPiece.attributes }));
-                    currentPiece.text = afterText;
-                    currentPiece.setBold(shouldBold);
-                    newPieces.push(currentPiece);
-                } else if (pieceEnd > end) {
-                    // Selection ends in the middle of this piece
-                    const selectedText = pieceText.slice(0, end - pieceStart);
-                    const afterText = pieceText.slice(end - pieceStart);
-
-                    currentPiece.text = selectedText;
-                    currentPiece.setBold(shouldBold);
-                    newPieces.push(currentPiece);
-                    newPieces.push(new Piece(afterText, { ...piece.attributes }));
-                } else {
-                    // The entire piece is within the selection
-                    currentPiece.setBold(shouldBold);
-                    newPieces.push(currentPiece);
+                const pieceStart = offset;
+                const pieceText = piece.text;
+                if (start > pieceStart && start < pieceEnd) {
+                    newPieces.push(new Piece(pieceText.slice(0, start - pieceStart), { ...piece.attributes }));
+                }
+                if (end < pieceEnd) {
+                    newPieces.push(new Piece(pieceText.slice(end - pieceStart), { ...piece.attributes }));
                 }
             }
+            offset = pieceEnd;
+        }
+        this.pieces = this.mergePieces(newPieces);
+        this.emit('documentChanged', this);
+    }
 
+    formatAttribute(start: number, end: number, attribute: 'bold'|'italic'|'underline', value: boolean): void {
+        let newPieces: Piece[] = [];
+        let offset = 0;
+
+        for (let piece of this.pieces) {
+            const pieceEnd = offset + piece.text.length;
+            if (pieceEnd <= start || offset >= end) {
+                newPieces.push(piece.clone());
+            } else {
+                const pieceStart = offset;
+                const pieceText = piece.text;
+                const startInPiece = Math.max(start - pieceStart, 0);
+                const endInPiece = Math.min(end - pieceStart, pieceText.length);
+                if (startInPiece > 0) {
+                    newPieces.push(new Piece(pieceText.slice(0, startInPiece), { ...piece.attributes }));
+                }
+                const selectedPiece = new Piece(pieceText.slice(startInPiece, endInPiece), { ...piece.attributes });
+                selectedPiece.attributes[attribute] = value;
+                newPieces.push(selectedPiece);
+                if (endInPiece < pieceText.length) {
+                    newPieces.push(new Piece(pieceText.slice(endInPiece), { ...piece.attributes }));
+                }
+            }
             offset = pieceEnd;
         }
 
         this.pieces = this.mergePieces(newPieces);
+        this.emit('documentChanged', this);
+    }
+
+    toggleBoldRange(start: number, end: number): void {
+        const allBold = this.isRangeEntirelyAttribute(start, end, 'bold');
+        this.formatAttribute(start, end, 'bold', !allBold);
+    }
+
+    toggleItalicRange(start: number, end: number): void {
+        const allItalic = this.isRangeEntirelyAttribute(start, end, 'italic');
+        this.formatAttribute(start, end, 'italic', !allItalic);
+    }
+
+    toggleUnderlineRange(start: number, end: number): void {
+        const allUnderline = this.isRangeEntirelyAttribute(start, end, 'underline');
+        this.formatAttribute(start, end, 'underline', !allUnderline);
+    }
+
+    isRangeEntirelyAttribute(start: number, end: number, attr: 'bold'|'italic'|'underline'): boolean {
+        let offset = 0;
+        let allHaveAttr = true;
+        for (let piece of this.pieces) {
+            const pieceEnd = offset + piece.text.length;
+            if (pieceEnd > start && offset < end) {
+                if (!piece.attributes[attr]) {
+                    allHaveAttr = false;
+                    break;
+                }
+            }
+            offset = pieceEnd;
+        }
+        return allHaveAttr;
     }
 
     mergePieces(pieces: Piece[]): Piece[] {
         let merged: Piece[] = [];
-        for (let piece of pieces) {
+        for (let p of pieces) {
             const last = merged[merged.length - 1];
-            if (last && this.areAttributesEqual(last.attributes, piece.attributes)) {
-                last.text += piece.text; // Merge adjacent pieces with the same attributes
+            if (last && last.hasSameAttributes(p)) {
+                last.text += p.text;
             } else {
-                merged.push(piece);
+                merged.push(p);
             }
         }
         return merged;
     }
 
-    areAttributesEqual(attr1: Record<string, any>, attr2: Record<string, any>): boolean {
-        return JSON.stringify(attr1) === JSON.stringify(attr2);
-    }
-
-    render(container: HTMLElement): void {
-        container.innerHTML = ""; // Clear the container
-        this.pieces.forEach(piece => {
-            if (piece.isBold()) {
-                const element = document.createElement("strong");
-                element.textContent = piece.text;
-                container.appendChild(element);
-            } else {
-                // Plain text node if not bold
-                container.appendChild(document.createTextNode(piece.text));
+    findPieceAtOffset(offset: number): Piece | null {
+        let currentOffset = 0;
+        for (let piece of this.pieces) {
+            const pieceEnd = currentOffset + piece.text.length;
+            if (offset >= currentOffset && offset <= pieceEnd) {
+                return piece;
             }
-        });
+            currentOffset = pieceEnd;
+        }
+        return null;
     }
 }
+
+
+export default TextDocument;

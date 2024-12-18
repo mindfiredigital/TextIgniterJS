@@ -1,59 +1,130 @@
-import restoreSelection from './utils/selection/restoreSelection';
-import saveSelection from './utils/selection/saveSelection';
-import {TextDocument } from './textDocument';
-import { Piece } from './piece';
+import TextDocument from "./textDocument";
+import EditorView from "./view/editorView";
+import ToolbarView from "./view/toolbarView";
+import Piece from "./piece";
+import { saveSelection } from "./utils/selectionManager";
 
 class TextIgniter {
-    private editorElement: HTMLElement;
-    private boldButton: HTMLElement;
-    private document: TextDocument;
+    document: TextDocument;
+    editorView: EditorView;
+    toolbarView: ToolbarView;
+    currentAttributes: { bold: boolean; italic: boolean; underline: boolean };
+    manualOverride: boolean;
+    lastPiece: Piece | null;
 
-    constructor(editorElement: HTMLElement, boldButton: HTMLElement) {
-        this.editorElement = editorElement;
-        this.boldButton = boldButton;
+    constructor(editorContainer: HTMLElement, toolbarContainer: HTMLElement) {
         this.document = new TextDocument();
-
-        this.boldButton.addEventListener("click", () => this.toggleBold());
-        this.editorElement.addEventListener("input", () => this.onInput());
-        this.render();
+        this.editorView = new EditorView(editorContainer, this.document);
+        this.toolbarView = new ToolbarView(toolbarContainer);
+        this.currentAttributes = { bold: false, italic: false, underline: false };
+        this.manualOverride = false;
+        this.lastPiece = null;
+        this.toolbarView.on('toolbarAction', (action: string) => this.handleToolbarAction(action));
+        this.document.on('documentChanged', () => this.editorView.render());
+        editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
+        editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+                const key = e.key.toLowerCase();
+                if (['b','i','u'].includes(key)) {
+                    e.preventDefault();
+                    const action = key === 'b' ? 'bold' : key === 'i' ? 'italic' : 'underline';
+                    this.handleToolbarAction(action);
+                }
+            }
+        });
+        this.document.emit('documentChanged', this.document);
     }
 
-    private getSelectionRange(): [number, number] {
-        const savedSel = saveSelection(this.editorElement);
-        if (!savedSel) return [0, 0];
-        return [savedSel.start, savedSel.end];
+    getSelectionRange(): [number, number] {
+        const sel = saveSelection(this.editorView.container);
+        if (!sel) return [0, 0];
+        return [sel.start, sel.end];
     }
 
-    private toggleBold(): void {
+    handleToolbarAction(action: string): void {
         const [start, end] = this.getSelectionRange();
-        if (start === end) return; // Do nothing if there's no selection
-
-        this.document.formatBold(start, end);
-        this.render();
-        this.setCursorPosition(end);
+        if (start < end) {
+            switch (action) {
+                case 'bold':
+                    this.document.toggleBoldRange(start, end);
+                    break;
+                case 'italic':
+                    this.document.toggleItalicRange(start, end);
+                    break;
+                case 'underline':
+                    this.document.toggleUnderlineRange(start, end);
+                    break;
+            }
+        } else {
+            this.currentAttributes[action as 'bold'|'italic'|'underline'] = !this.currentAttributes[action as 'bold'|'italic'|'underline'];
+            this.manualOverride = true;
+        }
+        this.toolbarView.updateActiveStates(this.currentAttributes);
     }
 
-    private onInput(): void {
-        const savedSel = saveSelection(this.editorElement);
-        const plainText = this.editorElement.textContent || "";
-        // this.document = new TextDocument();
-        this.document.pieces = [new Piece(plainText)];
-        this.render();
-        restoreSelection(this.editorElement, savedSel);
+    handleKeydown(e: KeyboardEvent): void {
+        const [start, end] = this.getSelectionRange();
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (end > start) {
+                this.document.deleteRange(start, end);
+            }
+            this.document.insertAt('\n', { ...this.currentAttributes }, start);
+            this.setCursorPosition(start + 1);
+        } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            if (start === end && start > 0) {
+                this.document.deleteRange(start - 1, start);
+                this.setCursorPosition(start - 1);
+            } else if (end > start) {
+                this.document.deleteRange(start, end);
+                this.setCursorPosition(start);
+            }
+        } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            if (end > start) {
+                this.document.deleteRange(start, end);
+            }
+            this.document.insertAt(e.key, { ...this.currentAttributes }, start);
+            this.setCursorPosition(start + 1);
+        }
     }
 
-    private render(): void {
-        const savedSel = saveSelection(this.editorElement);
-        this.document.render(this.editorElement);
-        restoreSelection(this.editorElement, savedSel);
+    syncCurrentAttributesWithCursor(): void {
+        const [start, end] = this.getSelectionRange();
+        if (start === end) {
+            const piece = this.document.findPieceAtOffset(start);
+            if (piece) {
+                if (piece !== this.lastPiece) {
+                    this.manualOverride = false;
+                    this.lastPiece = piece;
+                }
+                if (!this.manualOverride) {
+                    this.currentAttributes = {
+                        bold: piece.attributes.bold,
+                        italic: piece.attributes.italic,
+                        underline: piece.attributes.underline
+                    };
+                    this.toolbarView.updateActiveStates(this.currentAttributes);
+                }
+            } else {
+                if (!this.manualOverride) {
+                    this.currentAttributes = { bold: false, italic: false, underline: false };
+                    this.toolbarView.updateActiveStates(this.currentAttributes);
+                }
+                this.lastPiece = null;
+            }
+        }
     }
 
-    private setCursorPosition(position: number): void {
-        this.editorElement.focus();
+    setCursorPosition(position: number): void {
+        this.editorView.container.focus();
         const sel = window.getSelection();
+        if (!sel) return;
         const range = document.createRange();
         let charIndex = 0;
-        const nodeStack: Node[] = [this.editorElement];
+        const nodeStack: Node[] = [this.editorView.container];
         let node: Node | undefined;
 
         while ((node = nodeStack.pop())) {
@@ -66,18 +137,26 @@ class TextIgniter {
                     break;
                 }
                 charIndex = nextCharIndex;
+            } else if ((node as HTMLElement).tagName === 'BR') {
+                if (position === charIndex) {
+                    range.setStartBefore(node);
+                    range.collapse(true);
+                    break;
+                }
+                charIndex++;
             } else {
-                for (let i = node.childNodes.length - 1; i >= 0; i--) {
-                    nodeStack.push(node.childNodes[i]);
+                const el = node as HTMLElement;
+                let i = el.childNodes.length;
+                while (i--) {
+                    nodeStack.push(el.childNodes[i]);
                 }
             }
         }
 
-        if (sel) {
-            sel.removeAllRanges();
-            sel.addRange(range);
-        }
+        sel.removeAllRanges();
+        sel.addRange(range);
     }
 }
+
 
 (window as any).TextIgniter = TextIgniter;
