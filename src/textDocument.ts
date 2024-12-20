@@ -2,19 +2,52 @@ import EventEmitter from "./utils/events";
 import Piece from "./piece";
 class TextDocument extends EventEmitter {
     pieces: Piece[];
+    blocks: any;
+    // selectedBlockId: string | null;
+    private _selectedBlockId: string | null = null;
+    get selectedBlockId(): string | null {
+        return this._selectedBlockId;
+    }
+
+    set selectedBlockId(value: string | null) {
+        if (this._selectedBlockId !== value) {
+            this._selectedBlockId = value;
+            const editorOffset = this.getCursorOffset(document.querySelector('[id="editor"]') as HTMLElement);
+            const paraOffset = this.getCursorOffset(document.querySelector('[data-id="' + value + '"]') as HTMLElement)
+            console.log("editorOffset", editorOffset, "paraOffset", paraOffset)
+            this.currentOffset = editorOffset - paraOffset;
+            console.log('selectedBlockId changed:', value, 'currentOffset:', this.currentOffset);
+        }
+    }
+    currentOffset: number;
     constructor() {
         super();
         this.pieces = [new Piece("")];
+        this.blocks = [
+            { "dataId": 'data-id-1734604240404', "class": "paragraph-block", "pieces": [new Piece(" ")] },
+            // { "dataId": 'data-id-1734604240401', "pieces": [new Piece("")] }
+        ];
+        this.selectedBlockId = 'data-id-1734604240404';
+        // this.selectedBlockId = '';
+
+        this.currentOffset = 0;
     }
     getPlainText(): string {
         return this.pieces.map(p => p.text).join("");
     }
-    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean }, position: number): void {
+    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean }, position: number, dataId: string | null = "", currentOffset: number = 0): void {
         let offset = 0;
         let newPieces: Piece[] = [];
         let inserted = false;
+        let index = 0;
+        if (dataId !== '' || dataId !== null) {
 
-        for (let piece of this.pieces) {
+            index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+            offset = this.currentOffset;
+            // offset = this.getCursorOffset(document.querySelector('[data-id="' + dataId + '"]') as HTMLElement);
+        }
+        // for (let piece of this.pieces) {
+        for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
             if (!inserted && position <= pieceEnd) {
                 const relPos = position - offset;
@@ -40,16 +73,31 @@ class TextDocument extends EventEmitter {
                 newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false }));
             }
         }
+        const _data = this.mergePieces(newPieces)
+        // this.pieces = _data;
 
-        this.pieces = this.mergePieces(newPieces);
+        this.blocks[index].pieces = _data
+        // if (dataId !== '' || dataId !== null) {
+        //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+        // }
         this.emit('documentChanged', this);
     }
 
-    deleteRange(start: number, end: number): void {
+    deleteRange(start: number, end: number, dataId: string | null = "", currentOffset: number = 0): void {
         if (start === end) return;
         let newPieces: Piece[] = [];
         let offset = 0;
-        for (let piece of this.pieces) {
+        let index = 0;
+
+        if (dataId !== '' || dataId !== null) {
+
+            index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+            offset = currentOffset;
+
+            // this.blocks[index].pieces = _data
+        }
+        // for (let piece of this.pieces) {
+        for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
             if (pieceEnd <= start || offset >= end) {
                 newPieces.push(piece.clone());
@@ -65,37 +113,98 @@ class TextDocument extends EventEmitter {
             }
             offset = pieceEnd;
         }
-        this.pieces = this.mergePieces(newPieces);
+        const _data = this.mergePieces(newPieces)
+        // this.pieces = _data;
+        this.blocks[index].pieces = _data
+        console.log(_data, "_data...")
+        if (_data.length === 0 && this.blocks.length > 1) {
+            // delete this.blocks[index];
+            this.blocks = this.blocks.filter((blocks: any) => {
+                return blocks.pieces.length !== 0;
+            });
+        }
+        // if (dataId !== '' || dataId !== null) {
+        //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+        //     this.blocks[index].pieces = _data
+        // }
         this.emit('documentChanged', this);
     }
 
-    formatAttribute(start: number, end: number, attribute: 'bold'|'italic'|'underline', value: boolean): void {
-        let newPieces: Piece[] = [];
+    getCursorOffset(container: HTMLElement): number {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            return -1; // No selection or cursor in the container
+        }
+
+        const range = selection.getRangeAt(0);
         let offset = 0;
 
-        for (let piece of this.pieces) {
+        const traverseNodes = (node: Node): boolean => {
+            if (node === range.startContainer) {
+                offset += range.startOffset;
+                return true; // Found the cursor
+            }
+
+            if (node.nodeType === 3) { // Text node
+                offset += node.textContent?.length || 0;
+            }
+
+            return Array.from(node.childNodes).some(traverseNodes);
+        };
+
+        traverseNodes(container);
+
+        return offset;
+    }
+
+    formatAttribute(start: number, end: number, attribute: 'bold' | 'italic' | 'underline', value: boolean): void {
+        let newPieces: Piece[] = [];
+        let offset = 0;
+        let index = -1;
+        if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
+            index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
+            console.log(this.selectedBlockId, "dataId formatAttribute index", index, "this.currentOffset", this.currentOffset, this.blocks[index].pieces)
+            // this.blocks[index].pieces = _data
+            offset = this.currentOffset;
+            // offset = 18;
+
+        }
+        // for (let piece of this.pieces) {
+        for (let piece of this.blocks[index].pieces) {
+
             const pieceEnd = offset + piece.text.length;
+            console.log(offset, "offset formatAttribute value attribute", value, attribute)
             if (pieceEnd <= start || offset >= end) {
                 newPieces.push(piece.clone());
+                console.log("runn1 formatAttribute")
             } else {
+                console.log("runn2 formatAttribute")
                 const pieceStart = offset;
                 const pieceText = piece.text;
                 const startInPiece = Math.max(start - pieceStart, 0);
                 const endInPiece = Math.min(end - pieceStart, pieceText.length);
                 if (startInPiece > 0) {
+                    console.log("runn3 formatAttribute")
                     newPieces.push(new Piece(pieceText.slice(0, startInPiece), { ...piece.attributes }));
                 }
                 const selectedPiece = new Piece(pieceText.slice(startInPiece, endInPiece), { ...piece.attributes });
                 selectedPiece.attributes[attribute] = value;
                 newPieces.push(selectedPiece);
                 if (endInPiece < pieceText.length) {
+                    console.log("runn4 formatAttribute")
                     newPieces.push(new Piece(pieceText.slice(endInPiece), { ...piece.attributes }));
                 }
             }
             offset = pieceEnd;
         }
 
-        this.pieces = this.mergePieces(newPieces);
+        const _data = this.mergePieces(newPieces)
+        // this.pieces = _data;
+        console.log(_data, "_data formatAttribute")
+        this.blocks[index].pieces = _data
+        // if (dataId !== '' || dataId !== null) {
+        //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+        // }
         this.emit('documentChanged', this);
     }
 
@@ -114,18 +223,34 @@ class TextDocument extends EventEmitter {
         this.formatAttribute(start, end, 'underline', !allUnderline);
     }
 
-    isRangeEntirelyAttribute(start: number, end: number, attr: 'bold'|'italic'|'underline'): boolean {
-        let offset = 0;
+    isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline'): boolean {
+        let offset = this.currentOffset;
         let allHaveAttr = true;
-        for (let piece of this.pieces) {
-            const pieceEnd = offset + piece.text.length;
-            if (pieceEnd > start && offset < end) {
-                if (!piece.attributes[attr]) {
-                    allHaveAttr = false;
-                    break;
+        // this.pieces
+        // for (let piece of this.pieces) {
+        //     const pieceEnd = offset + piece.text.length;
+        //     if (pieceEnd > start && offset < end) {
+        //         if (!piece.attributes[attr]) {
+        //             allHaveAttr = false;
+        //             break;
+        //         }
+        //     }
+        //     offset = pieceEnd;
+        // }
+        if (this.selectedBlockId !== '') {
+            const index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
+
+            for (let piece of this.blocks[index].pieces) {
+                const pieceEnd = offset + piece.text.length;
+                if (pieceEnd > start && offset < end) {
+                    console.log("isRangeEntirelyAttribute")
+                    if (!piece.attributes[attr]) {
+                        allHaveAttr = false;
+                        break;
+                    }
                 }
+                offset = pieceEnd;
             }
-            offset = pieceEnd;
         }
         return allHaveAttr;
     }
@@ -143,14 +268,28 @@ class TextDocument extends EventEmitter {
         return merged;
     }
 
-    findPieceAtOffset(offset: number): Piece | null {
-        let currentOffset = 0;
-        for (let piece of this.pieces) {
-            const pieceEnd = currentOffset + piece.text.length;
-            if (offset >= currentOffset && offset <= pieceEnd) {
-                return piece;
+    findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
+        // let currentOffset = 0;
+        let currentOffset = this.currentOffset;
+        // for (let piece of this.pieces) {
+        //     const pieceEnd = currentOffset + piece.text.length;
+        //     if (offset >= currentOffset && offset <= pieceEnd) {
+        //         return piece;
+        //     }
+        //     currentOffset = pieceEnd;
+        // }
+        if (dataId !== '') {
+            console.log("findPieceAtOffset currentOffset", currentOffset)
+            const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+            console.log(index, "index findPieceAtOffset ", this.blocks[index].pieces)
+            for (let piece of this.blocks[index].pieces) {
+                const pieceEnd = currentOffset + piece.text.length;
+                if (offset >= currentOffset && offset <= pieceEnd) {
+                    console.log(index, "index findPieceAtOffset ", piece);
+                    return piece;
+                }
+                currentOffset = pieceEnd;
             }
-            currentOffset = pieceEnd;
         }
         return null;
     }
