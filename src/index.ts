@@ -143,6 +143,15 @@ class TextIgniter {
             }
             this.document.insertAt(e.key, { ...this.currentAttributes }, start);
             this.setCursorPosition(start + 1);
+        } else if(e.key === "Delete") {
+            e.preventDefault();
+            if (start === end) {
+                this.document.deleteRange(start, start + 1);
+                this.setCursorPosition(start);
+            } else if (end > start) {
+                this.document.deleteRange(start, end);
+                this.setCursorPosition(start);
+            }
         }
     }
 
