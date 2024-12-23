@@ -90,32 +90,20 @@ class TextIgniter {
             this.document.blocks.push({
                 "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")]
             })
-            // this.document.currentOffset = this.document.getCursorOffset(this.editorView.container);
-            // this.document.selectedBlockId = uniqueId;
+            
             this.syncCurrentAttributesWithCursor();
-            console.log(start, end, end + 1, this.document.getCursorOffset(this.editorView.container), "this.document.currentOffset")
             this.editorView.render()
-            this.setCursorPosition(end, uniqueId);
+            this.setCursorPosition(end + 1, uniqueId);
             if (end > start) {
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
             }
-            // this.document.insertAt('\n', { ...this.currentAttributes }, start);
-            // this.setCursorPosition(start + 1);
+            
         } else if (e.key === 'Backspace') {
             e.preventDefault();
-            console.log(this.document.selectedBlockId, this.document.currentOffset, "this.document.currentOffset backspce")
             if (start === end && start > 0) {
-                console.log("runn1 backspce")
-                // this.document.blocks = this.document.blocks.filter((obj: any) => {
-                //     if (obj.pieces.length === 0) {
-                //         return obj;
-                //     }
-                // });
                 this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
                 this.setCursorPosition(start - 1);
             } else if (end > start) {
-                console.log("runn2 backspce")
-
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
                 this.setCursorPosition(start);
             }
@@ -133,7 +121,6 @@ class TextIgniter {
         const [start, end] = this.getSelectionRange();
         if (start === end) {
             const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
-            console.log(piece, "syncCurrentAttributesWithCursor", this.document.selectedBlockId, "start === end", start, end)
             if (piece) {
                 if (piece !== this.lastPiece) {
                     this.manualOverride = false;
@@ -163,7 +150,7 @@ class TextIgniter {
         else {
             const divDataid = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement
             divDataid.focus();
-            console.log(this.editorView.container, "this.editorView.container", divDataid)
+            
         }
         const sel = window.getSelection();
         if (!sel) return;

@@ -14,17 +14,14 @@ class EditorView {
         const savedSel = saveSelection(this.container);
         this.container.innerHTML = "";
         // Create a wrapper div with a unique data-id
-        console.log(this.document.blocks, "this.document.blocks")
-        
+
         this.document.blocks.forEach((block: any) => {
             if (block.dataId !== '') {
                 const wrapperDiv = document.createElement("div");
-                // const uniqueId = `data-id-${Date.now()}`; // Generate a unique ID
                 wrapperDiv.setAttribute("data-id", block.dataId);
                 wrapperDiv.setAttribute("class", block.class);
 
                 block.pieces.forEach((piece: Piece) => {
-                    // this.container.appendChild(this.renderPiece(piece));
                     wrapperDiv.appendChild(this.renderPiece(piece));
                 });
                 // this.document.pieces.forEach(piece => {
@@ -36,13 +33,6 @@ class EditorView {
             }
 
         })
-        // [
-        //     {'dataId':'asdasdasd2123',"piecesData":{}},
-
-        // ]
-
-
-        // Append the wrapper div to the container
 
         restoreSelection(this.container, savedSel);
     }

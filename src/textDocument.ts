@@ -14,9 +14,8 @@ class TextDocument extends EventEmitter {
             this._selectedBlockId = value;
             const editorOffset = this.getCursorOffset(document.querySelector('[id="editor"]') as HTMLElement);
             const paraOffset = this.getCursorOffset(document.querySelector('[data-id="' + value + '"]') as HTMLElement)
-            console.log("editorOffset", editorOffset, "paraOffset", paraOffset)
+            
             this.currentOffset = editorOffset - paraOffset;
-            console.log('selectedBlockId changed:', value, 'currentOffset:', this.currentOffset);
         }
     }
     currentOffset: number;
@@ -94,9 +93,9 @@ class TextDocument extends EventEmitter {
             index = this.blocks.findIndex((block: any) => block.dataId === dataId)
             offset = currentOffset;
 
-            // this.blocks[index].pieces = _data
+            
         }
-        // for (let piece of this.pieces) {
+        
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
             if (pieceEnd <= start || offset >= end) {
@@ -114,19 +113,15 @@ class TextDocument extends EventEmitter {
             offset = pieceEnd;
         }
         const _data = this.mergePieces(newPieces)
-        // this.pieces = _data;
+        
         this.blocks[index].pieces = _data
-        console.log(_data, "_data...")
+        
         if (_data.length === 0 && this.blocks.length > 1) {
-            // delete this.blocks[index];
             this.blocks = this.blocks.filter((blocks: any) => {
                 return blocks.pieces.length !== 0;
             });
         }
-        // if (dataId !== '' || dataId !== null) {
-        //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-        //     this.blocks[index].pieces = _data
-        // }
+        
         this.emit('documentChanged', this);
     }
 
@@ -163,35 +158,27 @@ class TextDocument extends EventEmitter {
         let index = -1;
         if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
             index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
-            console.log(this.selectedBlockId, "dataId formatAttribute index", index, "this.currentOffset", this.currentOffset, this.blocks[index].pieces)
-            // this.blocks[index].pieces = _data
             offset = this.currentOffset;
-            // offset = 18;
-
         }
-        // for (let piece of this.pieces) {
+        
         for (let piece of this.blocks[index].pieces) {
 
             const pieceEnd = offset + piece.text.length;
-            console.log(offset, "offset formatAttribute value attribute", value, attribute)
+           
             if (pieceEnd <= start || offset >= end) {
                 newPieces.push(piece.clone());
-                console.log("runn1 formatAttribute")
             } else {
-                console.log("runn2 formatAttribute")
                 const pieceStart = offset;
                 const pieceText = piece.text;
                 const startInPiece = Math.max(start - pieceStart, 0);
                 const endInPiece = Math.min(end - pieceStart, pieceText.length);
                 if (startInPiece > 0) {
-                    console.log("runn3 formatAttribute")
                     newPieces.push(new Piece(pieceText.slice(0, startInPiece), { ...piece.attributes }));
                 }
                 const selectedPiece = new Piece(pieceText.slice(startInPiece, endInPiece), { ...piece.attributes });
                 selectedPiece.attributes[attribute] = value;
                 newPieces.push(selectedPiece);
                 if (endInPiece < pieceText.length) {
-                    console.log("runn4 formatAttribute")
                     newPieces.push(new Piece(pieceText.slice(endInPiece), { ...piece.attributes }));
                 }
             }
@@ -199,12 +186,7 @@ class TextDocument extends EventEmitter {
         }
 
         const _data = this.mergePieces(newPieces)
-        // this.pieces = _data;
-        console.log(_data, "_data formatAttribute")
         this.blocks[index].pieces = _data
-        // if (dataId !== '' || dataId !== null) {
-        //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-        // }
         this.emit('documentChanged', this);
     }
 
@@ -226,24 +208,13 @@ class TextDocument extends EventEmitter {
     isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline'): boolean {
         let offset = this.currentOffset;
         let allHaveAttr = true;
-        // this.pieces
-        // for (let piece of this.pieces) {
-        //     const pieceEnd = offset + piece.text.length;
-        //     if (pieceEnd > start && offset < end) {
-        //         if (!piece.attributes[attr]) {
-        //             allHaveAttr = false;
-        //             break;
-        //         }
-        //     }
-        //     offset = pieceEnd;
-        // }
+        
         if (this.selectedBlockId !== '') {
             const index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
 
             for (let piece of this.blocks[index].pieces) {
                 const pieceEnd = offset + piece.text.length;
                 if (pieceEnd > start && offset < end) {
-                    console.log("isRangeEntirelyAttribute")
                     if (!piece.attributes[attr]) {
                         allHaveAttr = false;
                         break;
@@ -279,13 +250,10 @@ class TextDocument extends EventEmitter {
         //     currentOffset = pieceEnd;
         // }
         if (dataId !== '') {
-            console.log("findPieceAtOffset currentOffset", currentOffset)
             const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-            console.log(index, "index findPieceAtOffset ", this.blocks[index].pieces)
             for (let piece of this.blocks[index].pieces) {
                 const pieceEnd = currentOffset + piece.text.length;
                 if (offset >= currentOffset && offset <= pieceEnd) {
-                    console.log(index, "index findPieceAtOffset ", piece);
                     return piece;
                 }
                 currentOffset = pieceEnd;
