@@ -1,6 +1,6 @@
 import Piece from "../piece";
 import TextDocument from "../textDocument";
-import { saveSelection,restoreSelection } from "../utils/selectionManager";
+import { saveSelection, restoreSelection } from "../utils/selectionManager";
 
 class EditorView {
     container: HTMLElement;
@@ -13,9 +13,27 @@ class EditorView {
     render(): void {
         const savedSel = saveSelection(this.container);
         this.container.innerHTML = "";
-        this.document.pieces.forEach(piece => {
-            this.container.appendChild(this.renderPiece(piece));
-        });
+        // Create a wrapper div with a unique data-id
+
+        this.document.blocks.forEach((block: any) => {
+            if (block.dataId !== '') {
+                const wrapperDiv = document.createElement("div");
+                wrapperDiv.setAttribute("data-id", block.dataId);
+                wrapperDiv.setAttribute("class", block.class);
+
+                block.pieces.forEach((piece: Piece) => {
+                    wrapperDiv.appendChild(this.renderPiece(piece));
+                });
+                // this.document.pieces.forEach(piece => {
+                //     console.log(piece, "this.document.pieces", this.renderPiece(piece))
+                //     // this.container.appendChild(this.renderPiece(piece));
+                //     wrapperDiv.appendChild(this.renderPiece(piece));
+                // });
+                this.container.appendChild(wrapperDiv);
+            }
+
+        })
+
         restoreSelection(this.container, savedSel);
     }
 

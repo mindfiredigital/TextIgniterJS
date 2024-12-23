@@ -26,13 +26,15 @@ class TextIgniter {
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 const key = e.key.toLowerCase();
-                if (['b','i','u'].includes(key)) {
+                if (['b', 'i', 'u'].includes(key)) {
                     e.preventDefault();
                     const action = key === 'b' ? 'bold' : key === 'i' ? 'italic' : 'underline';
                     this.handleToolbarAction(action);
                 }
             }
         });
+
+        document.addEventListener('selectionchange', this.handleSelectionChange.bind(this));
         this.document.emit('documentChanged', this.document);
     }
 
@@ -57,36 +59,60 @@ class TextIgniter {
                     break;
             }
         } else {
-            this.currentAttributes[action as 'bold'|'italic'|'underline'] = !this.currentAttributes[action as 'bold'|'italic'|'underline'];
+            this.currentAttributes[action as 'bold' | 'italic' | 'underline'] = !this.currentAttributes[action as 'bold' | 'italic' | 'underline'];
             this.manualOverride = true;
         }
         this.toolbarView.updateActiveStates(this.currentAttributes);
+    }
+
+    handleSelectionChange(): void {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            // this.document.selectedBlockId = null;
+            return;
+        }
+
+        const range = selection.getRangeAt(0);
+        const parentBlock = range.startContainer.parentElement?.closest('[data-id]');
+        if (parentBlock && parentBlock instanceof HTMLElement) {
+            this.document.selectedBlockId = parentBlock.getAttribute('data-id') || null;
+        }
+        // else {
+        //     this.document.selectedBlockId = null;
+        // }
     }
 
     handleKeydown(e: KeyboardEvent): void {
         const [start, end] = this.getSelectionRange();
         if (e.key === 'Enter') {
             e.preventDefault();
+            const uniqueId = `data-id-${Date.now()}`;
+            this.document.blocks.push({
+                "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")]
+            })
+            
+            this.syncCurrentAttributesWithCursor();
+            this.editorView.render()
+            this.setCursorPosition(end + 1, uniqueId);
             if (end > start) {
-                this.document.deleteRange(start, end);
+                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
             }
-            this.document.insertAt('\n', { ...this.currentAttributes }, start);
-            this.setCursorPosition(start + 1);
+            
         } else if (e.key === 'Backspace') {
             e.preventDefault();
             if (start === end && start > 0) {
-                this.document.deleteRange(start - 1, start);
+                this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
                 this.setCursorPosition(start - 1);
             } else if (end > start) {
-                this.document.deleteRange(start, end);
+                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
                 this.setCursorPosition(start);
             }
         } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
             e.preventDefault();
             if (end > start) {
-                this.document.deleteRange(start, end);
+                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
             }
-            this.document.insertAt(e.key, { ...this.currentAttributes }, start);
+            this.document.insertAt(e.key, { ...this.currentAttributes }, start, this.document.selectedBlockId, this.document.currentOffset);
             this.setCursorPosition(start + 1);
         }
     }
@@ -94,7 +120,7 @@ class TextIgniter {
     syncCurrentAttributesWithCursor(): void {
         const [start, end] = this.getSelectionRange();
         if (start === end) {
-            const piece = this.document.findPieceAtOffset(start);
+            const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
             if (piece) {
                 if (piece !== this.lastPiece) {
                     this.manualOverride = false;
@@ -118,8 +144,14 @@ class TextIgniter {
         }
     }
 
-    setCursorPosition(position: number): void {
-        this.editorView.container.focus();
+    setCursorPosition(position: number, dataId: string | null = ''): void {
+        if (dataId === '')
+            this.editorView.container.focus();
+        else {
+            const divDataid = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement
+            divDataid.focus();
+            
+        }
         const sel = window.getSelection();
         if (!sel) return;
         const range = document.createRange();

@@ -1,82 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rich Text Editor</title>
-    <style>
-      body {
-          font-family: Arial, sans-serif;
-          margin: 20px;
-      }
 
-      .toolbar {
-          border: 1px solid #ccc;
-          padding: 5px;
-          margin-bottom: 10px;
-          display: inline-block;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rich Text Editor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
 
-      .toolbar button {
-          margin-right: 5px;
-          padding: 5px 10px;
-          cursor: pointer;
-          border: none;
-          background: none;
-          font-size: 16px;
-      }
+    .toolbar {
+      border: 1px solid #ccc;
+      padding: 5px;
+      margin-bottom: 10px;
+      display: inline-block;
+    }
 
-      .toolbar button.active {
-          background-color: #ddd;
-      }
+    .toolbar button {
+      margin-right: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 16px;
+    }
 
-      #editor {
-          border: 1px solid #ccc;
-          padding: 10px;
-          min-height: 150px;
-          outline: none;
-          white-space: pre-wrap;
-          overflow-wrap: break-word;
-      }
+    .toolbar button.active {
+      background-color: #ddd;
+    }
+
+    #editor {
+      border: 1px solid #ccc;
+      padding: 10px;
+      min-height: 150px;
+      outline: none;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+
+    .paragraph-block {
+      padding: 10px;
+      background: #f7f7f7;
+      margin: 5px;
+    }
+    
   </style>
-  </head>
-  <body>
-    <div class="toolbar" id="toolbar">
-      <button data-action="bold"><strong>B</strong></button>
-      <button data-action="italic"><em>I</em></button>
-      <button data-action="underline"><u>U</u></button>
+</head>
+
+<body>
+  <div class="toolbar" id="toolbar">
+    <button data-action="bold"><strong>B</strong></button>
+    <button data-action="italic"><em>I</em></button>
+    <button data-action="underline"><u>U</u></button>
   </div>
   <div id="editor" contenteditable="true"></div>
-<link rel="stylesheet" href="dist/index.css">
-    <script src="dist/index.js"></script>
+  <link rel="stylesheet" href="dist/index.css">
+  <script src="dist/index.js"></script>
 
-    <script>
- 
-      const config = {
-        features: [
-          "bold",
-          "italic",
-          "underline",
-          "subscript",
-          "superscript",
-          "left_align",
-          "center_align",
-          "right_align",
-          "justify",
-          "bullet_list",
-          "numbered_list",
-          "insert_table",
-          "insert_layout",
-          "heading",
-          "hyperlink",
-          "image",
-          "colors"
-        ],
-      };
-   
-      const editorContainer = document.getElementById('editor');
-            const toolbarContainer = document.getElementById('toolbar');
-            new TextIgniter(editorContainer, toolbarContainer);
-    </script>
-  </body>
+  <script>
+
+    const config = {
+      features: [
+        "bold",
+        "italic",
+        "underline",
+        "subscript",
+        "superscript",
+        "left_align",
+        "center_align",
+        "right_align",
+        "justify",
+        "bullet_list",
+        "numbered_list",
+        "insert_table",
+        "insert_layout",
+        "heading",
+        "hyperlink",
+        "image",
+        "colors"
+      ],
+    };
+
+    const editorContainer = document.getElementById('editor');
+    const toolbarContainer = document.getElementById('toolbar');
+    new TextIgniter(editorContainer, toolbarContainer);
+  </script>
+</body>
+
 </html>
