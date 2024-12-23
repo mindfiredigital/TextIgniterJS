@@ -4,11 +4,13 @@ import ToolbarView from "./view/toolbarView";
 import Piece from "./piece";
 import { saveSelection } from "./utils/selectionManager";
 
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean }
+
 class TextIgniter {
     document: TextDocument;
     editorView: EditorView;
     toolbarView: ToolbarView;
-    currentAttributes: { bold: boolean; italic: boolean; underline: boolean };
+    currentAttributes: CurrentAttributeDTO;
     manualOverride: boolean;
     lastPiece: Piece | null;
 
@@ -16,7 +18,7 @@ class TextIgniter {
         this.document = new TextDocument();
         this.editorView = new EditorView(editorContainer, this.document);
         this.toolbarView = new ToolbarView(toolbarContainer);
-        this.currentAttributes = { bold: false, italic: false, underline: false };
+        this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, };
         this.manualOverride = false;
         this.lastPiece = null;
         this.toolbarView.on('toolbarAction', (action: string) => this.handleToolbarAction(action));
@@ -90,14 +92,14 @@ class TextIgniter {
             this.document.blocks.push({
                 "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")]
             })
-            
+
             this.syncCurrentAttributesWithCursor();
             this.editorView.render()
             this.setCursorPosition(end + 1, uniqueId);
             if (end > start) {
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
             }
-            
+
         } else if (e.key === 'Backspace') {
             e.preventDefault();
             if (start === end && start > 0) {
@@ -150,7 +152,7 @@ class TextIgniter {
         else {
             const divDataid = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement
             divDataid.focus();
-            
+
         }
         const sel = window.getSelection();
         if (!sel) return;
