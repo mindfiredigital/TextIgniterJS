@@ -56,7 +56,7 @@ class TextIgniter {
         
             let offset = start;
             for (const p of piecesToInsert) {
-                this.document.insertAt(p.text, p.attributes, offset);
+                this.document.insertAt(p.text,{ ...p.attributes},offset,this.document.selectedBlockId);
                 offset += p.text.length;
             }
             this.setCursorPosition(offset);
@@ -84,7 +84,7 @@ class TextIgniter {
         
             let offset = start;
             for (const p of piecesToInsert) {
-                this.document.insertAt(p.text, p.attributes, offset);
+                this.document.insertAt(p.text,{ ...p.attributes},offset,this.document.selectedBlockId);
                 offset += p.text.length;
             }
             this.setCursorPosition(offset);
@@ -171,11 +171,11 @@ class TextIgniter {
             this.setCursorPosition(start + 1);
         } else if(e.key === "Delete") {
             e.preventDefault();
-            if (start === end) {
-                this.document.deleteRange(start, start + 1);
+            if (start === end) { // just a char
+                this.document.deleteRange(start, start + 1,this.document.selectedBlockId);
                 this.setCursorPosition(start);
-            } else if (end > start) {
-                this.document.deleteRange(start, end);
+            } else if (end > start) { //Selection
+                this.document.deleteRange(start, end,this.document.selectedBlockId);
                 this.setCursorPosition(start);
             }
         }
