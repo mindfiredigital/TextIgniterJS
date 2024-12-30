@@ -14,7 +14,7 @@ class EditorView {
         const savedSel = saveSelection(this.container);
         this.container.innerHTML = "";
         // Create a wrapper div with a unique data-id
-
+        console.log(this.document.blocks, "this.document.blocks")
         this.document.blocks.forEach((block: any) => {
             if (block.dataId !== '') {
                 const wrapperDiv = document.createElement("div");
