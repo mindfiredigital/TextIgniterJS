@@ -156,7 +156,6 @@ class TextDocument extends EventEmitter {
         let index = 0;
 
         if (dataId !== '' || dataId !== null) {
-
             index = this.blocks.findIndex((block: any) => block.dataId === dataId)
             offset = currentOffset;
 

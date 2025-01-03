@@ -3,6 +3,7 @@ import EditorView from "./view/editorView";
 import ToolbarView from "./view/toolbarView";
 import Piece from "./piece";
 import { saveSelection } from "./utils/selectionManager";
+import { parseHtmlToPieces } from "./utils/parseHtml";
 
 export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean }
 
@@ -48,6 +49,60 @@ class TextIgniter {
 
         document.addEventListener('selectionchange', this.handleSelectionChange.bind(this));
         this.document.emit('documentChanged', this.document);
+
+        editorContainer.addEventListener('paste', (e: ClipboardEvent) => {
+            e.preventDefault();
+            const html = e.clipboardData?.getData('text/html');
+            const [start, end] = this.getSelectionRange();
+            if (end > start) {
+                this.document.deleteRange(start, end);
+            }
+        
+            let piecesToInsert: Piece[] = [];
+            if (html) {
+                piecesToInsert = parseHtmlToPieces(html); 
+            } else {
+                const text = e.clipboardData?.getData('text/plain') || '';
+                piecesToInsert = [new Piece(text, { ...this.currentAttributes })];
+            }
+        
+            let offset = start;
+            for (const p of piecesToInsert) {
+                this.document.insertAt(p.text,{ ...p.attributes},offset,this.document.selectedBlockId);
+                offset += p.text.length;
+            }
+            this.setCursorPosition(offset);
+        });
+        
+        editorContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        
+        editorContainer.addEventListener('drop', (e: DragEvent) => {
+            e.preventDefault();
+            const html = e.dataTransfer?.getData('text/html');
+            const [start, end] = this.getSelectionRange();
+            if (end > start) {
+                this.document.deleteRange(start, end);
+            }
+        
+            let piecesToInsert: Piece[] = [];
+            if (html) {
+                piecesToInsert = parseHtmlToPieces(html);
+            } else {
+                const text = e.dataTransfer?.getData('text/plain') || '';
+                piecesToInsert = [new Piece(text, { ...this.currentAttributes })];
+            }
+        
+            let offset = start;
+            for (const p of piecesToInsert) {
+                this.document.insertAt(p.text,{ ...p.attributes},offset,this.document.selectedBlockId);
+                offset += p.text.length;
+            }
+            this.setCursorPosition(offset);
+        });
+        
+        
     }
 
     getSelectionRange(): [number, number] {
@@ -135,6 +190,15 @@ class TextIgniter {
             }
             this.document.insertAt(e.key, { ...this.currentAttributes }, start, this.document.selectedBlockId, this.document.currentOffset);
             this.setCursorPosition(start + 1);
+        } else if(e.key === "Delete") {
+            e.preventDefault();
+            if (start === end) { // just a char
+                this.document.deleteRange(start, start + 1,this.document.selectedBlockId);
+                this.setCursorPosition(start);
+            } else if (end > start) { //Selection
+                this.document.deleteRange(start, end,this.document.selectedBlockId);
+                this.setCursorPosition(start);
+            }
         }
     }
 
@@ -209,6 +273,8 @@ class TextIgniter {
         sel.removeAllRanges();
         sel.addRange(range);
     }
+    
+
 }
 
 
