@@ -104,9 +104,52 @@ class TextDocument extends EventEmitter {
             }
         }
         this.emit('documentChanged', this);
+        const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
+        ele.focus();
+        this.setCursorPositionUsingOffset(ele, offset);
+    }
+
+    setCursorPositionUsingOffset(element: HTMLElement, offset: number): void {
+        element.focus(); // Ensure the element is focusable and focused
+
+        const selection = window.getSelection();
+        if (!selection) return;
+
+        const range = document.createRange();
+        let currentOffset = 0;
+
+        const traverseNodes = (node: Node): boolean => {
+            if (node.nodeType === 3) { // Text node
+
+                const textNode = node as Text;
+                const nextOffset = currentOffset + textNode.length;
+                console.log("data", nextOffset, textNode)
+                if (offset >= currentOffset && offset <= nextOffset) {
+                    range.setStart(textNode, offset - currentOffset); // Set the cursor position
+                    range.collapse(true); // Collapse the range to a single point (cursor)
+                    return true; // Cursor set
+                }
+
+                currentOffset = nextOffset;
+            } else if (node.nodeType === 1) { // Element node
+                const childNodes = Array.from(node.childNodes);
+                for (const child of childNodes) {
+                    if (traverseNodes(child)) return true;
+                }
+            }
+            return false;
+        };
+
+        traverseNodes(element);
+
+        console.log(range, "data")
+        // Clear any previous selection and apply the new range
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
 
     deleteRange(start: number, end: number, dataId: string | null = "", currentOffset: number = 0): void {
+
         if (start === end) return;
         let newPieces: Piece[] = [];
         let offset = 0;
@@ -139,6 +182,7 @@ class TextDocument extends EventEmitter {
             }
             offset = pieceEnd;
         }
+        console.log(dataId, "dataId", this.currentOffset, "offset", offset, "currentOffset", currentOffset)
         const _data = this.mergePieces(newPieces)
 
         this.blocks[index].pieces = _data
@@ -152,6 +196,10 @@ class TextDocument extends EventEmitter {
         console.log(newValue)
 
         this.emit('documentChanged', this);
+        const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
+        ele.focus();
+        this.setCursorPositionUsingOffset(ele, offset);
+        
     }
 
     getCursorOffset(container: HTMLElement): number {
