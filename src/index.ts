@@ -5,11 +5,13 @@ import Piece from "./piece";
 import { saveSelection } from "./utils/selectionManager";
 import { parseHtmlToPieces } from "./utils/parseHtml";
 
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean }
+
 class TextIgniter {
     document: TextDocument;
     editorView: EditorView;
     toolbarView: ToolbarView;
-    currentAttributes: { bold: boolean; italic: boolean; underline: boolean };
+    currentAttributes: CurrentAttributeDTO;
     manualOverride: boolean;
     lastPiece: Piece | null;
 
@@ -17,13 +19,14 @@ class TextIgniter {
         this.document = new TextDocument();
         this.editorView = new EditorView(editorContainer, this.document);
         this.toolbarView = new ToolbarView(toolbarContainer);
-        this.currentAttributes = { bold: false, italic: false, underline: false };
+        this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, };
         this.manualOverride = false;
         this.lastPiece = null;
         this.toolbarView.on('toolbarAction', (action: string) => this.handleToolbarAction(action));
         this.document.on('documentChanged', () => this.editorView.render());
         editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
         editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
+        
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 const key = e.key.toLowerCase();
@@ -32,6 +35,15 @@ class TextIgniter {
                     const action = key === 'b' ? 'bold' : key === 'i' ? 'italic' : 'underline';
                     this.handleToolbarAction(action);
                 }
+
+                if (key === 'z') {
+                    e.preventDefault();
+                    this.document.undo();
+                } else if (key === 'y') {
+                    e.preventDefault();
+                    this.document.redo();
+                }
+                console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
             }
         });
 
@@ -112,11 +124,20 @@ class TextIgniter {
                 case 'underline':
                     this.document.toggleUnderlineRange(start, end);
                     break;
+                case 'undo':
+                    // this.document.toggleUndoRange(start, end);
+                    this.document.undo();
+                    break;
+                case 'redo':
+                    // this.document.toggleRedoRange(start, end);
+                    this.document.redo();
+                    break;
             }
         } else {
-            this.currentAttributes[action as 'bold' | 'italic' | 'underline'] = !this.currentAttributes[action as 'bold' | 'italic' | 'underline'];
+            this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'] = !this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'];
             this.manualOverride = true;
         }
+        console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
         this.toolbarView.updateActiveStates(this.currentAttributes);
     }
 
@@ -145,14 +166,14 @@ class TextIgniter {
             this.document.blocks.push({
                 "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")]
             })
-            
+
             this.syncCurrentAttributesWithCursor();
             this.editorView.render()
             this.setCursorPosition(end + 1, uniqueId);
             if (end > start) {
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
             }
-            
+
         } else if (e.key === 'Backspace') {
             e.preventDefault();
             if (start === end && start > 0) {
@@ -214,7 +235,7 @@ class TextIgniter {
         else {
             const divDataid = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement
             divDataid.focus();
-            
+
         }
         const sel = window.getSelection();
         if (!sel) return;

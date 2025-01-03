@@ -1,3 +1,4 @@
+import { CurrentAttributeDTO } from "..";
 import EventEmitter from "../utils/events";
 
 class ToolbarView extends EventEmitter {
@@ -11,7 +12,7 @@ class ToolbarView extends EventEmitter {
     setupButtons(): void {
         this.container.querySelectorAll('button').forEach(button => {
             button.addEventListener('mousedown', (e) => {
-                e.preventDefault(); 
+                e.preventDefault();
             });
         });
 
@@ -27,13 +28,15 @@ class ToolbarView extends EventEmitter {
         });
     }
 
-    updateActiveStates(attributes: { bold: boolean; italic: boolean; underline: boolean }): void {
+    updateActiveStates(attributes: CurrentAttributeDTO): void {
         this.container.querySelectorAll('button').forEach(btn => {
             const action = btn.getAttribute('data-action');
             let isActive = false;
             if (action === 'bold' && attributes.bold) isActive = true;
             if (action === 'italic' && attributes.italic) isActive = true;
             if (action === 'underline' && attributes.underline) isActive = true;
+            if (action === 'undo' && attributes.undo) isActive = true;
+            if (action === 'redo' && attributes.redo) isActive = true;
             btn.classList.toggle('active', isActive);
         });
     }
