@@ -187,6 +187,7 @@ class TextDocument extends EventEmitter {
 
         this.blocks[index].pieces = _data
 
+        
         if (_data.length === 0 && this.blocks.length > 1) {
             this.blocks = this.blocks.filter((blocks: any) => {
                 return blocks.pieces.length !== 0;
