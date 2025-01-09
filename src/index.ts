@@ -5,6 +5,10 @@ import Piece from "./piece";
 import { saveSelection } from "./utils/selectionManager";
 import { parseHtmlToPieces } from "./utils/parseHtml";
 
+type EditorConfig = {
+    features : [string]
+}
+
 class TextIgniter {
     document: TextDocument;
     editorView: EditorView;
@@ -12,18 +16,33 @@ class TextIgniter {
     currentAttributes: { bold: boolean; italic: boolean; underline: boolean };
     manualOverride: boolean;
     lastPiece: Piece | null;
+    editorContainer : HTMLElement | null;
+    toolbarContainer : HTMLElement | null;
 
-    constructor(editorContainer: HTMLElement, toolbarContainer: HTMLElement) {
+    constructor(editorId:string,config:EditorConfig) {
+
+        this.createEditor(editorId,config);
+        
+        this.editorContainer = document.getElementById('editor') || null;
+        this.toolbarContainer =  document.getElementById('toolbar') || null;
+
+        if(!this.editorContainer || !this.toolbarContainer) {
+            throw new Error("Editor element not found or incorrect element type.");
+        }
+
         this.document = new TextDocument();
-        this.editorView = new EditorView(editorContainer, this.document);
-        this.toolbarView = new ToolbarView(toolbarContainer);
+        this.editorView = new EditorView(this.editorContainer, this.document);
+        this.toolbarView = new ToolbarView(this.toolbarContainer);
         this.currentAttributes = { bold: false, italic: false, underline: false };
         this.manualOverride = false;
         this.lastPiece = null;
+
+        
+
         this.toolbarView.on('toolbarAction', (action: string) => this.handleToolbarAction(action));
         this.document.on('documentChanged', () => this.editorView.render());
-        editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
-        editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
+        this.editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
+        this.editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 const key = e.key.toLowerCase();
@@ -38,7 +57,7 @@ class TextIgniter {
         document.addEventListener('selectionchange', this.handleSelectionChange.bind(this));
         this.document.emit('documentChanged', this.document);
 
-        editorContainer.addEventListener('paste', (e: ClipboardEvent) => {
+        this.editorContainer.addEventListener('paste', (e: ClipboardEvent) => {
             e.preventDefault();
             const html = e.clipboardData?.getData('text/html');
             const [start, end] = this.getSelectionRange();
@@ -62,11 +81,11 @@ class TextIgniter {
             this.setCursorPosition(offset);
         });
         
-        editorContainer.addEventListener('dragover', (e) => {
+        this.editorContainer.addEventListener('dragover', (e) => {
             e.preventDefault();
         });
         
-        editorContainer.addEventListener('drop', (e: DragEvent) => {
+        this.editorContainer.addEventListener('drop', (e: DragEvent) => {
             e.preventDefault();
             const html = e.dataTransfer?.getData('text/html');
             const [start, end] = this.getSelectionRange();
@@ -93,6 +112,61 @@ class TextIgniter {
         
     }
 
+
+    createEditor(editorId:string,config:EditorConfig) {
+        const container = document.getElementById(editorId);
+        if(!container){
+            throw new Error("Editor element not found or incorrect element type.");
+        }
+        const toolbar = document.createElement('div');
+        toolbar.className = 'toolbar';
+        toolbar.id = 'toolbar';
+        container.appendChild(toolbar);
+  
+        const editor = document.createElement('div');   
+        editor.id = 'editor';
+        editor.contentEditable = 'true';
+        container.appendChild(editor);
+  
+        // Map features to button labels/icons
+        const featureLabels : any= {
+          'bold': '<strong>B</strong>',
+          'italic': '<em>I</em>',
+          'underline': '<u>U</u>',
+          'subscript': 'X<sub>2</sub>',
+          'superscript': 'X<sup>2</sup>',
+          'left_align': '&#8676;',    // Unicode for left arrow
+          'center_align': '&#8596;',  // Unicode for left-right arrow
+          'right_align': '&#8677;',   // Unicode for right arrow
+          'justify': '&#8644;',       // Unicode for justify icon
+          'bullet_list': '&#8226;',   // Unicode for bullet
+          'numbered_list': '1.',      // Simple text representation
+          'insert_table': '&#8866;',  // Unicode for table icon
+          'insert_layout': '&#10064;',// Unicode for layout icon
+          'heading': 'H',
+          'hyperlink': '&#128279;',   // Unicode for link symbol
+          'image': '&#128247;',       // Unicode for camera symbol
+          'colors': '&#127912;',      // Unicode for palette symbol
+        };
+  
+        config.features.forEach(feature => {
+          const button = document.createElement('button');
+          button.dataset.action = feature;
+          button.innerHTML = featureLabels[feature] || feature;
+  
+          // Add the title attribute for hover effect
+          button.title = feature
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+  
+          // Add event listeners or additional attributes as needed
+          // button.addEventListener('click', handleToolbarAction);
+  
+          toolbar.appendChild(button);
+        });
+      }
+    
     getSelectionRange(): [number, number] {
         const sel = saveSelection(this.editorView.container);
         if (!sel) return [0, 0];
