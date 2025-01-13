@@ -14,7 +14,7 @@ class TextDocument extends EventEmitter {
             this._selectedBlockId = value;
             const editorOffset = this.getCursorOffset(document.querySelector('[id="editor"]') as HTMLElement);
             const paraOffset = this.getCursorOffset(document.querySelector('[data-id="' + value + '"]') as HTMLElement)
-            
+
             this.currentOffset = editorOffset - paraOffset;
         }
     }
@@ -23,7 +23,12 @@ class TextDocument extends EventEmitter {
         super();
         this.pieces = [new Piece("")];
         this.blocks = [
-            { "dataId": 'data-id-1734604240404', "class": "paragraph-block", "pieces": [new Piece(" ")] },
+            {
+                "dataId": 'data-id-1734604240404',
+                "class": "paragraph-block",
+                "pieces": [new Piece(" ")],
+                // listType: null, // null | 'ol' | 'ul' 
+            },
             // { "dataId": 'data-id-1734604240401', "pieces": [new Piece("")] }
         ];
         this.selectedBlockId = 'data-id-1734604240404';
@@ -92,7 +97,7 @@ class TextDocument extends EventEmitter {
             index = this.blocks.findIndex((block: any) => block.dataId === dataId)
             offset = currentOffset;
         }
-        
+
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
             if (pieceEnd <= start || offset >= end) {
@@ -110,15 +115,15 @@ class TextDocument extends EventEmitter {
             offset = pieceEnd;
         }
         const _data = this.mergePieces(newPieces)
-        
+
         this.blocks[index].pieces = _data
-        
+
         if (_data.length === 0 && this.blocks.length > 1) {
             this.blocks = this.blocks.filter((blocks: any) => {
                 return blocks.pieces.length !== 0;
             });
         }
-        
+
         this.emit('documentChanged', this);
     }
 
@@ -157,11 +162,11 @@ class TextDocument extends EventEmitter {
             index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
             offset = this.currentOffset;
         }
-        
+
         for (let piece of this.blocks[index].pieces) {
 
             const pieceEnd = offset + piece.text.length;
-           
+
             if (pieceEnd <= start || offset >= end) {
                 newPieces.push(piece.clone());
             } else {
@@ -187,6 +192,25 @@ class TextDocument extends EventEmitter {
         this.emit('documentChanged', this);
     }
 
+    toggleOrderedList(dataId: string | null): void {
+        const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+        const block = this.blocks.find((block: any) => block.dataId === dataId);
+        if (!block) return;
+
+        block.listType = block.listType === 'ol' ? null : 'ol'; // Toggle between 'ol' and null
+        this.blocks[index].listType = block.listType;
+        console.log(block, "action -- block ol ", index, this.blocks[index].listType)
+        this.emit('documentChanged', this);
+    }
+
+    toggleUnorderedList(dataId: string | null): void {
+        const block = this.blocks.find((block: any) => block.dataId === dataId);
+        if (!block) return;
+
+        block.listType = block.listType === 'ul' ? null : 'ul'; // Toggle between 'ul' and null
+        this.emit('documentChanged', this);
+    }
+
     toggleBoldRange(start: number, end: number): void {
         const allBold = this.isRangeEntirelyAttribute(start, end, 'bold');
         this.formatAttribute(start, end, 'bold', !allBold);
@@ -205,7 +229,7 @@ class TextDocument extends EventEmitter {
     isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline'): boolean {
         let offset = this.currentOffset;
         let allHaveAttr = true;
-        
+
         if (this.selectedBlockId !== '') {
             const index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
 

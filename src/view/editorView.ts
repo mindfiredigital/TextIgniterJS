@@ -14,16 +14,34 @@ class EditorView {
         const savedSel = saveSelection(this.container);
         this.container.innerHTML = "";
         // Create a wrapper div with a unique data-id
-
+        console.log(this.document.blocks, "action -- block editorview")
         this.document.blocks.forEach((block: any) => {
             if (block.dataId !== '') {
-                const wrapperDiv = document.createElement("div");
+                let wrapperDiv: HTMLElement;
+                let olWrapper: HTMLElement;
+                if (block.listType === 'ol') {
+                    wrapperDiv = document.createElement('ol');
+                    
+                } else if (block.listType === 'ul') {
+                    wrapperDiv = document.createElement('ul');
+                } else {
+                    wrapperDiv = document.createElement('div'); // Default to a paragraph block
+                }
+                // const wrapperDiv = document.createElement("div");
                 wrapperDiv.setAttribute("data-id", block.dataId);
                 wrapperDiv.setAttribute("class", block.class);
+                if (block.listType === 'ol' || block.listType === 'ul') {
+                    olWrapper = document.createElement('li');
+                    block.pieces.forEach((piece: Piece) => {
+                        olWrapper.appendChild(this.renderPiece(piece));
+                    });
+                    wrapperDiv.append(olWrapper)
 
-                block.pieces.forEach((piece: Piece) => {
-                    wrapperDiv.appendChild(this.renderPiece(piece));
-                });
+                } else {
+                    block.pieces.forEach((piece: Piece) => {
+                        wrapperDiv.appendChild(this.renderPiece(piece));
+                    });
+                }
                 // this.document.pieces.forEach(piece => {
                 //     console.log(piece, "this.document.pieces", this.renderPiece(piece))
                 //     // this.container.appendChild(this.renderPiece(piece));

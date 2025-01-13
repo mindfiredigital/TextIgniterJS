@@ -45,27 +45,27 @@ class TextIgniter {
             if (end > start) {
                 this.document.deleteRange(start, end);
             }
-        
+
             let piecesToInsert: Piece[] = [];
             if (html) {
-                piecesToInsert = parseHtmlToPieces(html); 
+                piecesToInsert = parseHtmlToPieces(html);
             } else {
                 const text = e.clipboardData?.getData('text/plain') || '';
                 piecesToInsert = [new Piece(text, { ...this.currentAttributes })];
             }
-        
+
             let offset = start;
             for (const p of piecesToInsert) {
-                this.document.insertAt(p.text,{ ...p.attributes},offset,this.document.selectedBlockId);
+                this.document.insertAt(p.text, { ...p.attributes }, offset, this.document.selectedBlockId);
                 offset += p.text.length;
             }
             this.setCursorPosition(offset);
         });
-        
+
         editorContainer.addEventListener('dragover', (e) => {
             e.preventDefault();
         });
-        
+
         editorContainer.addEventListener('drop', (e: DragEvent) => {
             e.preventDefault();
             const html = e.dataTransfer?.getData('text/html');
@@ -73,7 +73,7 @@ class TextIgniter {
             if (end > start) {
                 this.document.deleteRange(start, end);
             }
-        
+
             let piecesToInsert: Piece[] = [];
             if (html) {
                 piecesToInsert = parseHtmlToPieces(html);
@@ -81,16 +81,16 @@ class TextIgniter {
                 const text = e.dataTransfer?.getData('text/plain') || '';
                 piecesToInsert = [new Piece(text, { ...this.currentAttributes })];
             }
-        
+
             let offset = start;
             for (const p of piecesToInsert) {
-                this.document.insertAt(p.text,{ ...p.attributes},offset,this.document.selectedBlockId);
+                this.document.insertAt(p.text, { ...p.attributes }, offset, this.document.selectedBlockId);
                 offset += p.text.length;
             }
             this.setCursorPosition(offset);
         });
-        
-        
+
+
     }
 
     getSelectionRange(): [number, number] {
@@ -101,7 +101,17 @@ class TextIgniter {
 
     handleToolbarAction(action: string): void {
         const [start, end] = this.getSelectionRange();
+        console.log(action, "action---")
+        switch (action) {
+            case 'orderedList':
+                this.document.toggleOrderedList(this.document.selectedBlockId);
+                break;
+            case 'unorderedList':
+                this.document.toggleUnorderedList(this.document.selectedBlockId);
+                break;
+        }
         if (start < end) {
+            
             switch (action) {
                 case 'bold':
                     this.document.toggleBoldRange(start, end);
@@ -112,6 +122,12 @@ class TextIgniter {
                 case 'underline':
                     this.document.toggleUnderlineRange(start, end);
                     break;
+                // case 'orderedList':
+                //     this.document.toggleOrderedList(this.document.selectedBlockId);
+                //     break;
+                // case 'unorderedList':
+                //     this.document.toggleUnorderedList(this.document.selectedBlockId);
+                //     break;
             }
         } else {
             this.currentAttributes[action as 'bold' | 'italic' | 'underline'] = !this.currentAttributes[action as 'bold' | 'italic' | 'underline'];
@@ -143,16 +159,17 @@ class TextIgniter {
             e.preventDefault();
             const uniqueId = `data-id-${Date.now()}`;
             this.document.blocks.push({
-                "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")]
+                "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                // listType: null, // null | 'ol' | 'ul'
             })
-            
+
             this.syncCurrentAttributesWithCursor();
             this.editorView.render()
             this.setCursorPosition(end + 1, uniqueId);
             if (end > start) {
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
             }
-            
+
         } else if (e.key === 'Backspace') {
             e.preventDefault();
             if (start === end && start > 0) {
@@ -169,13 +186,13 @@ class TextIgniter {
             }
             this.document.insertAt(e.key, { ...this.currentAttributes }, start, this.document.selectedBlockId, this.document.currentOffset);
             this.setCursorPosition(start + 1);
-        } else if(e.key === "Delete") {
+        } else if (e.key === "Delete") {
             e.preventDefault();
             if (start === end) { // just a char
-                this.document.deleteRange(start, start + 1,this.document.selectedBlockId);
+                this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
                 this.setCursorPosition(start);
             } else if (end > start) { //Selection
-                this.document.deleteRange(start, end,this.document.selectedBlockId);
+                this.document.deleteRange(start, end, this.document.selectedBlockId);
                 this.setCursorPosition(start);
             }
         }
@@ -214,7 +231,7 @@ class TextIgniter {
         else {
             const divDataid = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement
             divDataid.focus();
-            
+
         }
         const sel = window.getSelection();
         if (!sel) return;
@@ -252,7 +269,7 @@ class TextIgniter {
         sel.removeAllRanges();
         sel.addRange(range);
     }
-    
+
 
 }
 
