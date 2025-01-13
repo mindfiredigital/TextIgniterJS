@@ -198,6 +198,7 @@ class TextDocument extends EventEmitter {
         if (!block) return;
 
         block.listType = block.listType === 'ol' ? null : 'ol'; // Toggle between 'ol' and null
+        block.listStart = 1;
         this.blocks[index].listType = block.listType;
         console.log(block, "action -- block ol ", index, this.blocks[index].listType)
         this.emit('documentChanged', this);

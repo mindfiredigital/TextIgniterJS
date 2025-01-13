@@ -21,7 +21,7 @@ class EditorView {
                 let olWrapper: HTMLElement;
                 if (block.listType === 'ol') {
                     wrapperDiv = document.createElement('ol');
-                    
+                    wrapperDiv.setAttribute('start', block?.listStart.toString());
                 } else if (block.listType === 'ul') {
                     wrapperDiv = document.createElement('ul');
                 } else {

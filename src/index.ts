@@ -111,7 +111,7 @@ class TextIgniter {
                 break;
         }
         if (start < end) {
-            
+
             switch (action) {
                 case 'bold':
                     this.document.toggleBoldRange(start, end);
@@ -156,12 +156,27 @@ class TextIgniter {
     handleKeydown(e: KeyboardEvent): void {
         const [start, end] = this.getSelectionRange();
         if (e.key === 'Enter') {
+            console.log('blocks', this.document.blocks)
             e.preventDefault();
             const uniqueId = `data-id-${Date.now()}`;
-            this.document.blocks.push({
-                "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                // listType: null, // null | 'ol' | 'ul'
-            })
+            if (this.document.blocks[this.document.blocks.length - 1]?.listType === 'ol' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'ul') {
+                const ListType = this.document.blocks[this.document.blocks.length - 1]?.listType;
+                let _start = 1;
+                if (ListType === 'ol') {
+                    _start = this.document.blocks[this.document.blocks.length - 1]?.listStart
+                    _start += 1;
+                }
+                this.document.blocks.push({
+                    "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                    listType: ListType, // null | 'ol' | 'ul'
+                    listStart: ListType === 'ol' ? _start : '',
+                })
+            } else {
+                this.document.blocks.push({
+                    "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                    // listType: null, // null | 'ol' | 'ul'
+                })
+            }
 
             this.syncCurrentAttributesWithCursor();
             this.editorView.render()
