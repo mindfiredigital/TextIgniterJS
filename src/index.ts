@@ -13,7 +13,7 @@ class TextIgniter {
     document: TextDocument;
     editorView: EditorView;
     toolbarView: ToolbarView;
-    currentAttributes: { bold: boolean; italic: boolean; underline: boolean };
+    currentAttributes: { bold: boolean; italic: boolean; underline: boolean,hyperlink:boolean | string };
     manualOverride: boolean;
     lastPiece: Piece | null;
     editorContainer : HTMLElement | null;
@@ -33,7 +33,7 @@ class TextIgniter {
         this.document = new TextDocument();
         this.editorView = new EditorView(this.editorContainer, this.document);
         this.toolbarView = new ToolbarView(this.toolbarContainer);
-        this.currentAttributes = { bold: false, italic: false, underline: false };
+        this.currentAttributes = { bold: false, italic: false, underline: false,hyperlink:false };
         this.manualOverride = false;
         this.lastPiece = null;
 
@@ -133,6 +133,7 @@ class TextIgniter {
           'bold': '<strong>B</strong>',
           'italic': '<em>I</em>',
           'underline': '<u>U</u>',
+          'hyperlink': '&#128279;',   // Unicode for link symbol
           'subscript': 'X<sub>2</sub>',
           'superscript': 'X<sup>2</sup>',
           'left_align': '&#8676;',    // Unicode for left arrow
@@ -144,12 +145,11 @@ class TextIgniter {
           'insert_table': '&#8866;',  // Unicode for table icon
           'insert_layout': '&#10064;',// Unicode for layout icon
           'heading': 'H',
-          'hyperlink': '&#128279;',   // Unicode for link symbol
           'image': '&#128247;',       // Unicode for camera symbol
           'colors': '&#127912;',      // Unicode for palette symbol
         };
   
-        config.features.forEach(feature => {
+            config.features.forEach(feature => {
           const button = document.createElement('button');
           button.dataset.action = feature;
           button.innerHTML = featureLabels[feature] || feature;
@@ -164,7 +164,38 @@ class TextIgniter {
           // button.addEventListener('click', handleToolbarAction);
   
           toolbar.appendChild(button);
+
         });
+
+            // Create the container div
+            const hyperlinkContainer = document.createElement("div");
+            hyperlinkContainer.id = "hyperlink-container";
+            hyperlinkContainer.style.display = "none";
+
+            // Create the input element
+            const hyperlinkInput = document.createElement("input");
+            hyperlinkInput.type = "text";
+            hyperlinkInput.id = "hyperlink-input";
+            hyperlinkInput.placeholder = "Enter a URL...";
+
+            // Create the Apply button
+            const applyButton = document.createElement("button");
+            applyButton.id = "apply-hyperlink";
+            applyButton.textContent = "Link";
+
+            // Create the Cancel button
+            const cancelButton = document.createElement("button");
+            cancelButton.id = "cancel-hyperlink";
+            cancelButton.textContent = "Unlink";
+
+            // Append input and buttons to the container
+            hyperlinkContainer.appendChild(hyperlinkInput);
+            hyperlinkContainer.appendChild(applyButton);
+            hyperlinkContainer.appendChild(cancelButton);
+
+            // Append the container to the toolbar
+
+            toolbar.appendChild(hyperlinkContainer);
       }
     
     getSelectionRange(): [number, number] {
