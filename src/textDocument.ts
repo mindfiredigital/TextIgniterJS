@@ -25,7 +25,12 @@ class TextDocument extends EventEmitter {
         super();
         this.pieces = [new Piece("")];
         this.blocks = [
-            { "dataId": 'data-id-1734604240404', "class": "paragraph-block", "pieces": [new Piece(" ")] },
+            {
+                "dataId": 'data-id-1734604240404',
+                "class": "paragraph-block",
+                "pieces": [new Piece(" ")],
+                // listType: null, // null | 'ol' | 'ul' 
+            },
             // { "dataId": 'data-id-1734604240401', "pieces": [new Piece("")] }
         ];
         this.selectedBlockId = 'data-id-1734604240404';
@@ -264,6 +269,26 @@ class TextDocument extends EventEmitter {
 
         const _data = this.mergePieces(newPieces)
         this.blocks[index].pieces = _data
+        this.emit('documentChanged', this);
+    }
+
+    toggleOrderedList(dataId: string | null): void {
+        const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+        const block = this.blocks.find((block: any) => block.dataId === dataId);
+        if (!block) return;
+
+        block.listType = block.listType === 'ol' ? null : 'ol'; // Toggle between 'ol' and null
+        block.listStart = 1;
+        this.blocks[index].listType = block.listType;
+        console.log(block, "action -- block ol ", index, this.blocks[index].listType)
+        this.emit('documentChanged', this);
+    }
+
+    toggleUnorderedList(dataId: string | null): void {
+        const block = this.blocks.find((block: any) => block.dataId === dataId);
+        if (!block) return;
+
+        block.listType = block.listType === 'ul' ? null : 'ul'; // Toggle between 'ul' and null
         this.emit('documentChanged', this);
     }
 
