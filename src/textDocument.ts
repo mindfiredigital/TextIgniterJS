@@ -167,12 +167,9 @@ class TextDocument extends EventEmitter {
 
         }
 
-<<<<<<< HEAD
-=======
         const previousValue = this.getRangeText(start, end);
 
         console.log(previousValue);
->>>>>>> dev
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
             if (pieceEnd <= start || offset >= end) {
