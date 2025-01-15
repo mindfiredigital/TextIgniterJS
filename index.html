@@ -50,17 +50,33 @@
 
 <body>
   <div class="toolbar" id="toolbar">
+    <select id="fontFamily">
+      <option value="Arial">Arial</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Verdana">Verdana</option>
+    </select>
+
+    <select id="fontSize">
+      <option value="12px">12px</option>
+      <option value="14px">14px</option>
+      <option value="16px">16px</option>
+      <option value="18px">18px</option>
+      <option value="20px">20px</option>
+    </select>
+
     <button data-action="bold"><strong>B</strong></button>
     <button data-action="italic"><em>I</em></button>
     <button data-action="underline"><u>U</u></button>
     <button data-action="orderedList">OL</button>
     <button data-action="unorderedList">UL</button>
     <button data-action="undo">
-      <img src="./src/assets/icons8-undo-30.png" width="20px" height="20px"/>
+      <img src="./src/assets/icons8-undo-30.png" width="20px" height="20px" />
     </button>
     <button data-action="redo">
-      <img src="./src/assets/icons8-redo-30.png" width="20px" height="20px"/>
+      <img src="./src/assets/icons8-redo-30.png" width="20px" height="20px" />
     </button>
+
   </div>
   <div id="editor" contenteditable="true"></div>
   <link rel="stylesheet" href="dist/index.css">

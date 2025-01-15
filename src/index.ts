@@ -26,7 +26,19 @@ class TextIgniter {
         this.document.on('documentChanged', () => this.editorView.render());
         editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
         editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
+
+        document.getElementById('fontFamily')?.addEventListener('change', (e) => {
+            const fontFamily = (e.target as HTMLSelectElement).value;
+            const [start, end] = this.getSelectionRange();
+            this.document.setFontFamily(start, end, fontFamily);
+        });
         
+        document.getElementById('fontSize')?.addEventListener('change', (e) => {
+            const fontSize = (e.target as HTMLSelectElement).value;
+            const [start, end] = this.getSelectionRange();
+            this.document.setFontSize(start, end, fontSize);
+        });
+
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 const key = e.key.toLowerCase();

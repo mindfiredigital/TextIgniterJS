@@ -60,7 +60,7 @@ class EditorView {
         return this.wrapAttributes(lines, piece.attributes);
     }
 
-    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean }): DocumentFragment {
+    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean; fontFamily?: string; fontSize?: string }): DocumentFragment {
         const fragment = document.createDocumentFragment();
         lines.forEach((line, index) => {
             let textNode: Node = document.createTextNode(line);
@@ -80,7 +80,29 @@ class EditorView {
                 textNode = strong;
             }
 
-            fragment.appendChild(textNode);
+            // Wrap with a span to apply font family and size
+            console.log(attrs, "attribute----1", document.getElementById('fontFamily'));
+            const fontFamilySelect = document.getElementById('fontFamily') as HTMLSelectElement;
+            const fontSizeSelect = document.getElementById('fontSize') as HTMLSelectElement;
+            let selectedFontFamilyValue = "Arial";
+            let selectedFontSizeValue = "16px";
+
+            if (fontFamilySelect) {
+                selectedFontFamilyValue = fontFamilySelect.value; // Get the selected value
+                console.log(selectedFontFamilyValue, "Selected Font Family");
+            }
+
+            if (fontSizeSelect) {
+                selectedFontSizeValue = fontSizeSelect.value; // Get the selected value
+                console.log(selectedFontSizeValue, "Selected Font size");
+            }
+
+            const span = document.createElement('span');
+            span.style.fontFamily = attrs.fontFamily || selectedFontFamilyValue;
+            span.style.fontSize = attrs.fontSize || selectedFontSizeValue;
+            span.appendChild(textNode);
+
+            fragment.appendChild(span);
             if (index < lines.length - 1) {
                 fragment.appendChild(document.createElement('br'));
             }
