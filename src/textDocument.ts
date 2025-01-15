@@ -169,7 +169,7 @@ class TextDocument extends EventEmitter {
 
         const previousValue = this.getRangeText(start, end);
 
-        console.log(previousValue);
+        console.log('run11',previousValue);
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
             if (pieceEnd <= start || offset >= end) {
@@ -191,7 +191,7 @@ class TextDocument extends EventEmitter {
 
         this.blocks[index].pieces = _data
 
-        
+
         if (_data.length === 0 && this.blocks.length > 1) {
             this.blocks = this.blocks.filter((blocks: any) => {
                 return blocks.pieces.length !== 0;
@@ -204,7 +204,7 @@ class TextDocument extends EventEmitter {
         const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
         ele.focus();
         this.setCursorPositionUsingOffset(ele, offset);
-        
+
     }
 
     getCursorOffset(container: HTMLElement): number {
@@ -234,7 +234,10 @@ class TextDocument extends EventEmitter {
         return offset;
     }
 
-    formatAttribute(start: number, end: number, attribute: 'bold' | 'italic' | 'underline' | 'undo' | 'redo', value: boolean): void {
+    formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'],
+        // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
+        value: string | boolean): void {
+        console.log(attribute, "attribute")
         let newPieces: Piece[] = [];
         let offset = 0;
         let index = -1;
@@ -258,7 +261,18 @@ class TextDocument extends EventEmitter {
                     newPieces.push(new Piece(pieceText.slice(0, startInPiece), { ...piece.attributes }));
                 }
                 const selectedPiece = new Piece(pieceText.slice(startInPiece, endInPiece), { ...piece.attributes });
-                selectedPiece.attributes[attribute] = value;
+                // selectedPiece.attributes[attribute] = value;
+                if (
+                    (attribute === 'bold' || attribute === 'italic' || attribute === 'underline' || attribute === 'undo' || attribute === 'redo') &&
+                    typeof value === 'boolean'
+                ) {
+                    selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
+                } else if (
+                    (attribute === 'fontFamily' || attribute === 'fontSize') &&
+                    typeof value === 'string'
+                ) {
+                    selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
+                }
                 newPieces.push(selectedPiece);
                 if (endInPiece < pieceText.length) {
                     newPieces.push(new Piece(pieceText.slice(endInPiece), { ...piece.attributes }));
@@ -498,6 +512,14 @@ class TextDocument extends EventEmitter {
             }
         }
         return null;
+    }
+
+    setFontFamily(start: number, end: number, fontFamily: string): void {
+        this.formatAttribute(start, end, 'fontFamily', fontFamily);
+    }
+
+    setFontSize(start: number, end: number, fontSize: string): void {
+        this.formatAttribute(start, end, 'fontSize', fontSize);
     }
 }
 
