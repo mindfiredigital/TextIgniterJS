@@ -2,7 +2,7 @@ import TextDocument from "./textDocument";
 import EditorView from "./view/editorView";
 import ToolbarView from "./view/toolbarView";
 import Piece from "./piece";
-import { saveSelection } from "./utils/selectionManager";
+import { saveSelection,restoreSelection } from "./utils/selectionManager";
 import { parseHtmlToPieces } from "./utils/parseHtml";
 
 type EditorConfig = {
@@ -13,11 +13,12 @@ class TextIgniter {
     document: TextDocument;
     editorView: EditorView;
     toolbarView: ToolbarView;
-    currentAttributes: { bold: boolean; italic: boolean; underline: boolean,hyperlink:boolean | string };
+    currentAttributes: { bold: boolean; italic: boolean; underline: boolean,hyperlink?: string | boolean };
     manualOverride: boolean;
     lastPiece: Piece | null;
     editorContainer : HTMLElement | null;
     toolbarContainer : HTMLElement | null;
+    savedSelection: { start: number; end: number } | null = null;
 
     constructor(editorId:string,config:EditorConfig) {
 
@@ -46,9 +47,26 @@ class TextIgniter {
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 const key = e.key.toLowerCase();
-                if (['b', 'i', 'u'].includes(key)) {
+                if (['b', 'i', 'u','h'].includes(key)) {
                     e.preventDefault();
-                    const action = key === 'b' ? 'bold' : key === 'i' ? 'italic' : 'underline';
+                    let action = 'b';
+                    switch (key) {
+                        case 'b':
+                            action = 'bold';
+                            break;
+                        case 'i':
+                            action = 'italic';
+                            break;
+                        case 'u':
+                            action = 'underline';
+                            break;
+                        case 'h':
+                            action = 'hyperlink';
+                            break;
+                    
+                        default:
+                            break;
+                    }
                     this.handleToolbarAction(action);
                 }
             }
@@ -217,6 +235,18 @@ class TextIgniter {
                 case 'underline':
                     this.document.toggleUnderlineRange(start, end);
                     break;
+                case 'hyperlink':
+                    if (start < end) {
+                        // Get the existing hyperlink, if any
+                        const existingLink = this.document.getCommonHyperlinkInRange(start, end);
+        
+                        // Show the hyperlink input box
+                        this.showHyperlinkInput(existingLink);
+                    } else {
+                        // No selection
+                        alert("Please select the text you want to hyperlink.");
+                    }
+                    break;
             }
         } else {
             this.currentAttributes[action as 'bold' | 'italic' | 'underline'] = !this.currentAttributes[action as 'bold' | 'italic' | 'underline'];
@@ -225,6 +255,133 @@ class TextIgniter {
         this.toolbarView.updateActiveStates(this.currentAttributes);
     }
 
+    showHyperlinkInput(existingLink: string | null): void {
+        // Get the elements
+        const hyperlinkContainer = document.getElementById('hyperlink-container');
+        const hyperlinkInput = document.getElementById('hyperlink-input') as HTMLInputElement;
+        const applyButton = document.getElementById('apply-hyperlink');
+        const cancelButton = document.getElementById('cancel-hyperlink');
+
+        if (hyperlinkContainer && hyperlinkInput && applyButton && cancelButton) {
+            hyperlinkContainer.style.display = 'block';
+
+            // position the container near the selection or toolbar
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                hyperlinkContainer.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                hyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
+            }
+
+            // Set the existing link
+            hyperlinkInput.value = existingLink || '';
+
+            // Save the current selection
+            this.savedSelection = saveSelection(this.editorView.container);
+
+            // Show temporary selection 
+            this.highlightSelection();
+
+            // Ensure the hyperlink input is focused
+            hyperlinkInput.focus();
+
+            // Remove any previous event listeners
+            applyButton.onclick = null;
+            cancelButton.onclick = null;
+
+            // Handle the 'Link' button
+            applyButton.onclick = () => {
+                const url = hyperlinkInput.value.trim();
+                if (url) {
+                    this.applyHyperlink(url);
+                } else {
+                    // alert('Please enter a valid URL.');
+                }
+                hyperlinkContainer.style.display = 'none';
+            };
+
+            // Handle the 'Unlink' button
+            cancelButton.onclick = () => {
+                this.removeHyperlink();
+                hyperlinkContainer.style.display = 'none';
+            };
+        }
+    }
+
+    highlightSelection(): void {
+        // Remove any existing temporary highlights
+        this.removeHighlightSelection();
+
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+    
+            // Create a wrapper span
+            const span = document.createElement('span');
+            span.className = 'temporary-selection-highlight';
+    
+            // Extract the selected content and wrap it
+            span.appendChild(range.extractContents());
+            range.insertNode(span);
+    
+            // Adjust the selection to encompass the new span
+            selection.removeAllRanges();
+            const newRange = document.createRange();
+            newRange.selectNodeContents(span);
+            selection.addRange(newRange);
+        }
+    }
+
+    removeHighlightSelection(): void {
+        const highlights = this.editorContainer?.querySelectorAll('span.temporary-selection-highlight');
+        highlights?.forEach((span) => {
+            const parent = span.parentNode;
+            if (parent) {
+                while (span.firstChild) {
+                    parent.insertBefore(span.firstChild, span);
+                }
+                parent.removeChild(span);
+            }
+        });
+    }
+
+    applyHyperlink(url: string): void {
+        // Remove any existing temporary highlights
+        this.removeHighlightSelection();
+
+        // Restore the selection
+        restoreSelection(this.editorView.container, this.savedSelection);
+
+        const [start, end] = this.getSelectionRange();
+        if (start < end) {
+            this.document.applyHyperlinkRange(start, end, url);
+            this.editorView.render();
+            // Restore selection and focus
+            restoreSelection(this.editorView.container, this.savedSelection);
+            this.editorView.container.focus();
+        }
+        this.savedSelection = null;
+    }
+
+    removeHyperlink(): void {
+        // Remove any existing temporary highlights
+        this.removeHighlightSelection();
+
+        // Restore the selection
+        restoreSelection(this.editorView.container, this.savedSelection);
+
+        const [start, end] = this.getSelectionRange();
+        if (start < end) {
+            this.document.removeHyperlinkRange(start, end);
+            this.editorView.render();
+            // Restore selection and focus
+            restoreSelection(this.editorView.container, this.savedSelection);
+            this.editorView.container.focus();
+        }
+        this.savedSelection = null;
+    }
+    
     handleSelectionChange(): void {
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) {
@@ -299,13 +456,14 @@ class TextIgniter {
                     this.currentAttributes = {
                         bold: piece.attributes.bold,
                         italic: piece.attributes.italic,
-                        underline: piece.attributes.underline
+                        underline: piece.attributes.underline,
+                        hyperlink: piece.attributes.hyperlink || false
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
                 }
             } else {
                 if (!this.manualOverride) {
-                    this.currentAttributes = { bold: false, italic: false, underline: false };
+                    this.currentAttributes = { bold: false, italic: false, underline: false,hyperlink:false };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
                 }
                 this.lastPiece = null;

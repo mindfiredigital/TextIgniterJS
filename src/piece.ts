@@ -1,12 +1,15 @@
 class Piece {
     text: string;
-    attributes: { bold: boolean; italic: boolean; underline: boolean };
-    constructor(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean } = {}) {
+    attributes: { bold: boolean; italic: boolean; underline: boolean, hyperlink?: string | boolean;
+    };
+    constructor(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean,hyperlink?: string | boolean;
+    } = {}) {
         this.text = text;
         this.attributes = {
             bold: attributes.bold || false,
             italic: attributes.italic || false,
-            underline: attributes.underline || false
+            underline: attributes.underline || false,
+            hyperlink: attributes.hyperlink || false,
         };
     }
     isBold(): boolean { return this.attributes.bold; }
@@ -21,7 +24,15 @@ class Piece {
     hasSameAttributes(other: Piece): boolean {
         return this.attributes.bold === other.attributes.bold &&
                this.attributes.italic === other.attributes.italic &&
-               this.attributes.underline === other.attributes.underline;
+               this.attributes.underline === other.attributes.underline &&
+               this.attributes.hyperlink === other.attributes.hyperlink;
+
+    }
+    getHyperlink(): string | boolean {
+        return this.attributes.hyperlink || false;
+    }
+    setHyperlink(url: string | boolean): void {
+        this.attributes.hyperlink = url;
     }
 }
 

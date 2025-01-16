@@ -42,7 +42,7 @@ class EditorView {
         return this.wrapAttributes(lines, piece.attributes);
     }
 
-    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean }): DocumentFragment {
+    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean; hyperlink?: string | boolean  }): DocumentFragment {
         const fragment = document.createDocumentFragment();
         lines.forEach((line, index) => {
             let textNode: Node = document.createTextNode(line);
@@ -61,7 +61,12 @@ class EditorView {
                 strong.appendChild(textNode);
                 textNode = strong;
             }
-
+            if (attrs.hyperlink && typeof attrs.hyperlink === 'string') {
+                const a = document.createElement('a');
+                a.href = attrs.hyperlink;
+                a.appendChild(textNode);
+                textNode = a;
+            }
             fragment.appendChild(textNode);
             if (index < lines.length - 1) {
                 fragment.appendChild(document.createElement('br'));

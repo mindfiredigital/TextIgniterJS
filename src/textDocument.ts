@@ -34,15 +34,16 @@ class TextDocument extends EventEmitter {
     getPlainText(): string {
         return this.pieces.map(p => p.text).join("");
     }
-    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean }, position: number, dataId: string | null = "", currentOffset: number = 0): void {
+    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean,hyperlink?:boolean|string }, position: number, dataId: string | null = "", currentOffset: number = 0): void {
         let offset = 0;
         let newPieces: Piece[] = [];
         let inserted = false;
         let index = 0;
         if (dataId !== '' || dataId !== null) {
+            index = this.blocks.findIndex((block: any) => block.dataId === dataId);
 
-            index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-            offset = this.currentOffset;
+            // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+            // offset = this.currentOffset;
             // offset = this.getCursorOffset(document.querySelector('[data-id="' + dataId + '"]') as HTMLElement);
         }
         // for (let piece of this.pieces) {
@@ -127,29 +128,69 @@ class TextDocument extends EventEmitter {
         if (!selection || selection.rangeCount === 0) {
             return -1; // No selection or cursor in the container
         }
-
+    
         const range = selection.getRangeAt(0);
         let offset = 0;
-
+    
         const traverseNodes = (node: Node): boolean => {
             if (node === range.startContainer) {
                 offset += range.startOffset;
                 return true; // Found the cursor
             }
-
-            if (node.nodeType === 3) { // Text node
-                offset += node.textContent?.length || 0;
+    
+            if (node.nodeType === Node.TEXT_NODE) {
+                offset += (node.textContent || '').length;
             }
-
-            return Array.from(node.childNodes).some(traverseNodes);
+    
+            for (const child of Array.from(node.childNodes)) {
+                if (traverseNodes(child)) {
+                    return true;
+                }
+            }
+    
+            return false;
         };
-
+    
         traverseNodes(container);
-
+    
         return offset;
     }
+    
+    applyHyperlinkRange(start: number, end: number, url: string): void {
+        this.formatAttribute(start, end, 'hyperlink', url);
+    }
 
-    formatAttribute(start: number, end: number, attribute: 'bold' | 'italic' | 'underline', value: boolean): void {
+    removeHyperlinkRange(start: number, end: number): void {
+        this.formatAttribute(start, end, 'hyperlink', false);
+    }
+
+    getCommonHyperlinkInRange(start: number, end: number): string | null {
+        let offset = this.currentOffset;
+        let index = 0;
+        if (this.selectedBlockId) {
+            index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId);
+        }
+        const pieces = this.blocks[index].pieces;
+        let commonLink: string | null = null;
+
+        for (let piece of pieces) {
+            const pieceEnd = offset + piece.text.length;
+            if (pieceEnd > start && offset < end) {
+                const pieceLink = piece.attributes.hyperlink || null;
+                if (commonLink === null) {
+                    commonLink = pieceLink;
+                } else if (commonLink !== pieceLink) {
+                    // Different hyperlinks in selection
+                    return null;
+                }
+            }
+            offset = pieceEnd;
+        }
+        return commonLink;
+    }
+
+
+    formatAttribute(start: number, end: number, attribute: 'bold' | 'italic' | 'underline' | 'hyperlink', value: string|boolean): void {
         let newPieces: Piece[] = [];
         let offset = 0;
         let index = -1;
@@ -236,24 +277,40 @@ class TextDocument extends EventEmitter {
         return merged;
     }
 
+    // findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
+    //     // let currentOffset = 0;
+    //     let currentOffset = this.currentOffset;
+    //     // for (let piece of this.pieces) {
+    //     //     const pieceEnd = currentOffset + piece.text.length;
+    //     //     if (offset >= currentOffset && offset <= pieceEnd) {
+    //     //         return piece;
+    //     //     }
+    //     //     currentOffset = pieceEnd;
+    //     // }
+    //     if (dataId !== '') {
+    //         const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+    //         for (let piece of this.blocks[index].pieces) {
+    //             const pieceEnd = currentOffset + piece.text.length;
+    //             if (offset >= currentOffset && offset <= pieceEnd) {
+    //                 return piece;
+    //             }
+    //             currentOffset = pieceEnd;
+    //         }
+    //     }
+    //     return null;
+    // }
     findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
-        // let currentOffset = 0;
-        let currentOffset = this.currentOffset;
-        // for (let piece of this.pieces) {
-        //     const pieceEnd = currentOffset + piece.text.length;
-        //     if (offset >= currentOffset && offset <= pieceEnd) {
-        //         return piece;
-        //     }
-        //     currentOffset = pieceEnd;
-        // }
-        if (dataId !== '') {
-            const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-            for (let piece of this.blocks[index].pieces) {
-                const pieceEnd = currentOffset + piece.text.length;
-                if (offset >= currentOffset && offset <= pieceEnd) {
-                    return piece;
+        let currentOffset = 0;
+        if (dataId !== null && dataId !== '') {
+            const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+            if (index >= 0) {
+                for (let piece of this.blocks[index].pieces) {
+                    const pieceEnd = currentOffset + piece.text.length;
+                    if (offset >= currentOffset && offset < pieceEnd) {
+                        return piece;
+                    }
+                    currentOffset = pieceEnd;
                 }
-                currentOffset = pieceEnd;
             }
         }
         return null;
