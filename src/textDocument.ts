@@ -28,6 +28,7 @@ class TextDocument extends EventEmitter {
             {
                 "dataId": 'data-id-1734604240404',
                 "class": "paragraph-block",
+                "alignment": "left",
                 "pieces": [new Piece(" ")],
                 // listType: null, // null | 'ol' | 'ul' 
             },
@@ -169,7 +170,7 @@ class TextDocument extends EventEmitter {
 
         const previousValue = this.getRangeText(start, end);
 
-        console.log('run11',previousValue);
+        console.log('run11', previousValue);
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
             if (pieceEnd <= start || offset >= end) {
@@ -520,6 +521,13 @@ class TextDocument extends EventEmitter {
 
     setFontSize(start: number, end: number, fontSize: string): void {
         this.formatAttribute(start, end, 'fontSize', fontSize);
+    }
+    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void {
+        const block = this.blocks.find((block: any) => block.dataId === dataId);
+        if (!block) return;
+
+        block.alignment = alignment; // Update alignment
+        this.emit('documentChanged', this); // Trigger re-render
     }
 }
 

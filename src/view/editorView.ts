@@ -30,6 +30,7 @@ class EditorView {
                 // const wrapperDiv = document.createElement("div");
                 wrapperDiv.setAttribute("data-id", block.dataId);
                 wrapperDiv.setAttribute("class", block.class);
+                wrapperDiv.style.textAlign = block.alignment || "left"; 
                 if (block.listType === 'ol' || block.listType === 'ul') {
                     olWrapper = document.createElement('li');
                     block.pieces.forEach((piece: Piece) => {
