@@ -39,6 +39,18 @@ class TextIgniter {
             this.document.setFontSize(start, end, fontSize);
         });
 
+        document.getElementById('alignLeft')?.addEventListener('click', () => {
+            this.document.setAlignment('left', this.document.selectedBlockId);
+        });
+        
+        document.getElementById('alignCenter')?.addEventListener('click', () => {
+            this.document.setAlignment('center', this.document.selectedBlockId);
+        });
+        
+        document.getElementById('alignRight')?.addEventListener('click', () => {
+            this.document.setAlignment('right', this.document.selectedBlockId);
+        });
+
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 const key = e.key.toLowerCase();
@@ -54,6 +66,17 @@ class TextIgniter {
                 } else if (key === 'y') {
                     e.preventDefault();
                     this.document.redo();
+                }
+
+                if (e.key === 'l') {
+                    e.preventDefault();
+                    this.document.setAlignment('left', this.document.selectedBlockId);
+                } else if (e.key === 'e') {
+                    e.preventDefault();
+                    this.document.setAlignment('center', this.document.selectedBlockId);
+                } else if (e.key === 'r') {
+                    e.preventDefault();
+                    this.document.setAlignment('right', this.document.selectedBlockId);
                 }
                 console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
             }
