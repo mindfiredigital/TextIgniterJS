@@ -3,6 +3,7 @@ import Piece from "./piece";
 class TextDocument extends EventEmitter {
     undoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
     redoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
+    dataIds: string[] = [];
     pieces: Piece[];
     blocks: any;
     // selectedBlockId: string | null;
@@ -202,10 +203,61 @@ class TextDocument extends EventEmitter {
         console.log(newValue)
 
         this.emit('documentChanged', this);
-        const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
-        ele.focus();
-        this.setCursorPositionUsingOffset(ele, offset);
+        // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
+        // ele.focus();
+        // this.setCursorPositionUsingOffset(ele, offset);
 
+    }
+
+    getSelectedTextDataId(): string | null {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            return null; // No text is selected
+        }
+
+        const range = selection.getRangeAt(0); // Get the current range of selection
+        const container = range.startContainer; // The container node of the selection
+
+        // Traverse to the parent element with `data-id` attribute
+        const elementWithId = (container.nodeType === Node.TEXT_NODE
+            ? container.parentElement
+            : container) as HTMLElement;
+
+        const dataIdElement = elementWithId.closest('[data-id]'); // Find the closest ancestor with `data-id`
+        return dataIdElement?.getAttribute('data-id') || null; // Return the `data-id` or null if not found
+    }
+
+    getAllSelectedDataIds(): string[] {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            return []; // No text is selected
+        }
+
+        const range = selection.getRangeAt(0); // Get the current range of selection
+        const selectedIds: string[] = [];
+
+        // Traverse all nodes in the selection
+        const iterator = document.createNodeIterator(
+            range.commonAncestorContainer, // Start traversal from the common ancestor
+            NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT // Include element and text nodes
+        );
+
+        let currentNode: Node | null;
+        while ((currentNode = iterator.nextNode())) {
+            if (range.intersectsNode(currentNode)) {
+                const element =
+                    currentNode.nodeType === Node.TEXT_NODE
+                        ? currentNode.parentElement
+                        : (currentNode as HTMLElement);
+
+                const dataId = element?.closest('[data-id]')?.getAttribute('data-id');
+                if (dataId && !selectedIds.includes(dataId)) {
+                    selectedIds.push(dataId); // Add unique data-id to the array
+                }
+            }
+        }
+        this.dataIds = selectedIds
+        return selectedIds;
     }
 
     getCursorOffset(container: HTMLElement): number {

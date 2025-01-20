@@ -26,13 +26,17 @@ class TextIgniter {
         this.document.on('documentChanged', () => this.editorView.render());
         editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
         editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
-
+        document.addEventListener('mouseup', () => {
+            const dataId = this.document.getAllSelectedDataIds();
+            console.log('Selected text is inside element with data-id:', dataId);
+            console.log(this.document.dataIds, "this.document.dataIds")
+        });
         document.getElementById('fontFamily')?.addEventListener('change', (e) => {
             const fontFamily = (e.target as HTMLSelectElement).value;
             const [start, end] = this.getSelectionRange();
             this.document.setFontFamily(start, end, fontFamily);
         });
-        
+
         document.getElementById('fontSize')?.addEventListener('change', (e) => {
             const fontSize = (e.target as HTMLSelectElement).value;
             const [start, end] = this.getSelectionRange();
@@ -42,11 +46,11 @@ class TextIgniter {
         document.getElementById('alignLeft')?.addEventListener('click', () => {
             this.document.setAlignment('left', this.document.selectedBlockId);
         });
-        
+
         document.getElementById('alignCenter')?.addEventListener('click', () => {
             this.document.setAlignment('center', this.document.selectedBlockId);
         });
-        
+
         document.getElementById('alignRight')?.addEventListener('click', () => {
             this.document.setAlignment('right', this.document.selectedBlockId);
         });
