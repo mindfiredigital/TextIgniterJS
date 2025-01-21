@@ -22,7 +22,7 @@ class TextIgniter {
         this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, };
         this.manualOverride = false;
         this.lastPiece = null;
-        this.toolbarView.on('toolbarAction', (action: string) => this.handleToolbarAction(action));
+        this.toolbarView.on('toolbarAction', (action: string, dataId: string[] = []) => this.handleToolbarAction(action, dataId));
         this.document.on('documentChanged', () => this.editorView.render());
         editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
         editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
@@ -44,15 +44,19 @@ class TextIgniter {
         });
 
         document.getElementById('alignLeft')?.addEventListener('click', () => {
-            this.document.setAlignment('left', this.document.selectedBlockId);
+            this.document.dataIds.forEach(obj => this.document.setAlignment('left', obj))
+            // this.document.setAlignment('left', this.document.selectedBlockId);
         });
 
         document.getElementById('alignCenter')?.addEventListener('click', () => {
-            this.document.setAlignment('center', this.document.selectedBlockId);
+            this.document.dataIds.forEach(obj => this.document.setAlignment('center', obj))
+
+            // this.document.setAlignment('center', this.document.selectedBlockId);
         });
 
         document.getElementById('alignRight')?.addEventListener('click', () => {
-            this.document.setAlignment('right', this.document.selectedBlockId);
+            this.document.dataIds.forEach(obj => this.document.setAlignment('right', obj))
+            // this.document.setAlignment('right', this.document.selectedBlockId);
         });
 
         document.addEventListener('keydown', (e) => {
@@ -70,6 +74,11 @@ class TextIgniter {
                 } else if (key === 'y') {
                     e.preventDefault();
                     this.document.redo();
+                }
+                if (key === 'a') {
+                    // e.preventDefault();
+                    const dataId = this.document.getAllSelectedDataIds();
+                    console.log('Selected text is inside element with data-id:', dataId);
                 }
 
                 if (e.key === 'l') {
@@ -150,21 +159,31 @@ class TextIgniter {
         return [sel.start, sel.end];
     }
 
-    handleToolbarAction(action: string): void {
+    handleToolbarAction(action: string, dataId: string[] = []): void {
+
         const [start, end] = this.getSelectionRange();
         console.log(action, "action---")
         switch (action) {
             case 'orderedList':
-                this.document.toggleOrderedList(this.document.selectedBlockId);
+                this.document.dataIds.map((obj: string, i: number) => this.document.toggleOrderedList(obj, i + 1))
+                // this.document.toggleOrderedList(this.document.selectedBlockId)
+
                 break;
             case 'unorderedList':
-                this.document.toggleUnorderedList(this.document.selectedBlockId);
+                this.document.dataIds.map(obj => this.document.toggleUnorderedList(obj))
+
+                // this.document.toggleUnorderedList(this.document.selectedBlockId);
                 break;
         }
         if (start < end) {
 
             switch (action) {
                 case 'bold':
+                    // this.document.dataIds.forEach(obj => {
+                    //     console.log(obj, "vicky", this.document.selectedBlockId)
+                    //     this.document.selectedBlockId = obj;
+                    //     this.document.toggleBoldRange(start, end)
+                    // })
                     this.document.toggleBoldRange(start, end);
                     break;
                 case 'italic':

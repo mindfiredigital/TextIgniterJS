@@ -339,13 +339,13 @@ class TextDocument extends EventEmitter {
         this.emit('documentChanged', this);
     }
 
-    toggleOrderedList(dataId: string | null): void {
+    toggleOrderedList(dataId: string | null, listStart: number = 1): void {
         const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
         const block = this.blocks.find((block: any) => block.dataId === dataId);
         if (!block) return;
 
         block.listType = block.listType === 'ol' ? null : 'ol'; // Toggle between 'ol' and null
-        block.listStart = 1;
+        block.listStart = listStart;
         this.blocks[index].listType = block.listType;
         console.log(block, "action -- block ol ", index, this.blocks[index].listType)
         this.emit('documentChanged', this);
@@ -516,7 +516,7 @@ class TextDocument extends EventEmitter {
 
         if (this.selectedBlockId !== '') {
             const index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
-
+            console.log(index, "vicky", this.selectedBlockId)
             for (let piece of this.blocks[index].pieces) {
                 const pieceEnd = offset + piece.text.length;
                 if (pieceEnd > start && offset < end) {
