@@ -1,5 +1,6 @@
 import EventEmitter from "./utils/events";
 import Piece from "./piece";
+import { start } from "repl";
 class TextDocument extends EventEmitter {
     undoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
     redoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
@@ -208,6 +209,10 @@ class TextDocument extends EventEmitter {
         // this.setCursorPositionUsingOffset(ele, offset);
 
     }
+    deleteBlocks() {
+        this.blocks.filter((block: any) => !this.dataIds.includes(block.dataId))
+        this.emit('documentChanged', this);
+    }
 
     getSelectedTextDataId(): string | null {
         const selection = window.getSelection();
@@ -259,6 +264,39 @@ class TextDocument extends EventEmitter {
         this.dataIds = selectedIds
         return selectedIds;
     }
+    getSelectedDataIds(): string[] {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            return []; // No text is selected
+        }
+
+        const range = selection.getRangeAt(0); // Get the current range of selection
+        const selectedIds: string[] = [];
+
+        // Get the start and end nodes of the selection
+        const startContainer = range.startContainer;
+        const endContainer = range.endContainer;
+
+        // Check if the startContainer or endContainer has a `data-id`
+        const startDataId = this.getDataIdFromNode(startContainer);
+        const endDataId = this.getDataIdFromNode(endContainer);
+
+        // Add unique data-ids
+        if (startDataId && !selectedIds.includes(startDataId)) {
+            selectedIds.push(startDataId);
+        }
+        if (endDataId && !selectedIds.includes(endDataId)) {
+            selectedIds.push(endDataId);
+        }
+
+        this.dataIds = selectedIds;
+        return selectedIds;
+    }
+
+    private getDataIdFromNode(node: Node): string | null {
+        const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : (node as HTMLElement);
+        return element?.closest('[data-id]')?.getAttribute('data-id') || null;
+    }
 
     getCursorOffset(container: HTMLElement): number {
         const selection = window.getSelection();
@@ -290,17 +328,18 @@ class TextDocument extends EventEmitter {
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'],
         // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
         value: string | boolean): void {
-        console.log(attribute, "attribute")
+        console.log(attribute, "attribute1", start, end)
         let newPieces: Piece[] = [];
         let offset = 0;
         let index = -1;
         if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
             index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
             offset = this.currentOffset;
+            console.log(index, "index attribute1", offset)
         }
 
         for (let piece of this.blocks[index].pieces) {
-
+            console.log(piece.text.length, "piece.text.length attribute1")
             const pieceEnd = offset + piece.text.length;
 
             if (pieceEnd <= start || offset >= end) {
