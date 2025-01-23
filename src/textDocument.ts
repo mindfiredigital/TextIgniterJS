@@ -46,7 +46,6 @@ class TextDocument extends EventEmitter {
             // offset = this.currentOffset;
             // offset = this.getCursorOffset(document.querySelector('[data-id="' + dataId + '"]') as HTMLElement);
         }
-        // for (let piece of this.pieces) {
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
             if (!inserted && position <= pieceEnd) {
@@ -54,7 +53,7 @@ class TextDocument extends EventEmitter {
                 if (relPos > 0) {
                     newPieces.push(new Piece(piece.text.slice(0, relPos), { ...piece.attributes }));
                 }
-                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false }));
+                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false,hyperlink: attributes.hyperlink || false}));
                 if (relPos < piece.text.length) {
                     newPieces.push(new Piece(piece.text.slice(relPos), { ...piece.attributes }));
                 }
@@ -67,10 +66,10 @@ class TextDocument extends EventEmitter {
 
         if (!inserted) {
             const lastPiece = newPieces[newPieces.length - 1];
-            if (lastPiece && lastPiece.hasSameAttributes(new Piece("", { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false }))) {
+            if (lastPiece && lastPiece.hasSameAttributes(new Piece("", { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false,hyperlink: attributes.hyperlink || false }))) {
                 lastPiece.text += text;
             } else {
-                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false }));
+                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false,hyperlink: attributes.hyperlink || false }));
             }
         }
         const _data = this.mergePieces(newPieces)

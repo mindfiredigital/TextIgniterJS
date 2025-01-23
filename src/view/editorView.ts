@@ -38,8 +38,20 @@ class EditorView {
     }
 
     renderPiece(piece: Piece): DocumentFragment {
-        const lines = piece.text.split('\n');
-        return this.wrapAttributes(lines, piece.attributes);
+        if (piece.attributes.image) {
+            // Render an image element
+            const fragment = document.createDocumentFragment();
+            const img = document.createElement('img');
+            img.src = piece.attributes.image;
+            img.style.maxWidth = '100%';
+            img.setAttribute('contenteditable', 'false');
+            fragment.appendChild(img);
+      
+            return fragment;
+          } else {
+            const lines = piece.text.split('\n');
+            return this.wrapAttributes(lines, piece.attributes);
+          }
     }
 
     wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean; hyperlink?: string | boolean  }): DocumentFragment {
@@ -64,6 +76,7 @@ class EditorView {
             if (attrs.hyperlink && typeof attrs.hyperlink === 'string') {
                 const a = document.createElement('a');
                 a.href = attrs.hyperlink;
+                a.target = "_blank";//For new tab
                 a.appendChild(textNode);
                 textNode = a;
             }

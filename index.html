@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Rich Text Editor</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
 
     .editor-container {
       border: 1px solid #ccc;
@@ -60,6 +56,17 @@
   background: white;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
+    #hyperlink-container-view {
+  position: absolute;
+  display: none;
+  z-index: 1000;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
 #hyperlink-input {
   width: 200px;
   margin-right: 5px;

@@ -4,6 +4,8 @@ import ToolbarView from "./view/toolbarView";
 import Piece from "./piece";
 import { saveSelection,restoreSelection } from "./utils/selectionManager";
 import { parseHtmlToPieces } from "./utils/parseHtml";
+import {showHyperlinkViewButton,hideHyperlinkViewButton} from './attributes/hyperLink'
+
 
 type EditorConfig = {
     features : [string]
@@ -167,7 +169,7 @@ class TextIgniter {
           'colors': '&#127912;',      // Unicode for palette symbol
         };
   
-            config.features.forEach(feature => {
+        config.features.forEach(feature => {
           const button = document.createElement('button');
           button.dataset.action = feature;
           button.innerHTML = featureLabels[feature] || feature;
@@ -177,9 +179,6 @@ class TextIgniter {
             .split('_')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
-  
-          // Add event listeners or additional attributes as needed
-          // button.addEventListener('click', handleToolbarAction);
   
           toolbar.appendChild(button);
 
@@ -214,6 +213,46 @@ class TextIgniter {
             // Append the container to the toolbar
 
             toolbar.appendChild(hyperlinkContainer);
+
+
+
+
+             // Create the container div
+             const viewHyperlinkContainer = document.createElement("div");
+             viewHyperlinkContainer.id = "hyperlink-container-view";
+             viewHyperlinkContainer.style.display = "none";
+ 
+            //  // Create the input element
+             const hyperLinkViewSpan = document.createElement("span");
+             hyperLinkViewSpan.id = "hyperlink-view-span";
+             hyperLinkViewSpan.innerHTML = "Visit URL : ";
+
+             const hyperLinkAnchor = document.createElement("a");
+             hyperLinkAnchor.id = "hyperlink-view-link";
+             hyperLinkAnchor.href="";
+             hyperLinkAnchor.target = "_blank";
+
+
+            // Create the Apply button
+            // const editHyperlinkButton = document.createElement("button");
+            // editHyperlinkButton.id = "edit-hyperlink";
+            // editHyperlinkButton.textContent = "edit |";
+
+            // Create the Cancel button
+            // const removeHyperlinkButton = document.createElement("button");
+            // removeHyperlinkButton.id = "delete-hyperlink";
+            // removeHyperlinkButton.textContent = "remove";
+
+ 
+            //  // Append input and buttons to the container
+             viewHyperlinkContainer.appendChild(hyperLinkViewSpan);
+             viewHyperlinkContainer.appendChild(hyperLinkAnchor);
+            //  viewHyperlinkContainer.appendChild(editHyperlinkButton);
+            //  viewHyperlinkContainer.appendChild(removeHyperlinkButton);
+ 
+            //  // Append the container to the toolbar
+ 
+             toolbar.appendChild(viewHyperlinkContainer);
       }
     
     getSelectionRange(): [number, number] {
@@ -383,6 +422,7 @@ class TextIgniter {
     }
     
     handleSelectionChange(): void {
+        this.syncCurrentAttributesWithCursor();
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) {
             // this.document.selectedBlockId = null;
@@ -394,9 +434,6 @@ class TextIgniter {
         if (parentBlock && parentBlock instanceof HTMLElement) {
             this.document.selectedBlockId = parentBlock.getAttribute('data-id') || null;
         }
-        // else {
-        //     this.document.selectedBlockId = null;
-        // }
     }
 
     handleKeydown(e: KeyboardEvent): void {
@@ -418,11 +455,13 @@ class TextIgniter {
         } else if (e.key === 'Backspace') {
             e.preventDefault();
             if (start === end && start > 0) {
-                this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
-                this.setCursorPosition(start - 1);
+              // Check if the previous piece is an image
+              const position = start - 1;
+              this.deleteAtPosition(position);
+              this.setCursorPosition(Math.max(0, position));
             } else if (end > start) {
-                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
-                this.setCursorPosition(start);
+              this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+              this.setCursorPosition(start);
             }
         } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
             e.preventDefault();
@@ -433,15 +472,22 @@ class TextIgniter {
             this.setCursorPosition(start + 1);
         } else if(e.key === "Delete") {
             e.preventDefault();
-            if (start === end) { // just a char
-                this.document.deleteRange(start, start + 1,this.document.selectedBlockId);
-                this.setCursorPosition(start);
-            } else if (end > start) { //Selection
-                this.document.deleteRange(start, end,this.document.selectedBlockId);
-                this.setCursorPosition(start);
-            }
+            this.deleteAtPosition(start);
+            this.setCursorPosition(start);
         }
     }
+
+    deleteAtPosition(position: number): void {
+        // Delete a character or an image at the specified position
+        const piece = this.document.findPieceAtOffset(position, this.document.selectedBlockId);
+        if (piece && piece.attributes.image) {
+          // Delete the entire image piece
+          this.document.deleteRange(position, position + 1, this.document.selectedBlockId);
+        } else {
+          // Delete as usual
+          this.document.deleteRange(position, position + 1, this.document.selectedBlockId);
+        }
+      }
 
     syncCurrentAttributesWithCursor(): void {
         const [start, end] = this.getSelectionRange();
@@ -460,6 +506,14 @@ class TextIgniter {
                         hyperlink: piece.attributes.hyperlink || false
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
+                }
+                // Show below link..
+                const hyperlink = piece?.attributes.hyperlink; 
+                if(hyperlink && typeof hyperlink === 'string'){
+                    showHyperlinkViewButton(hyperlink);
+                }
+                else{
+                    hideHyperlinkViewButton()
                 }
             } else {
                 if (!this.manualOverride) {
@@ -515,7 +569,7 @@ class TextIgniter {
         sel.removeAllRanges();
         sel.addRange(range);
     }
-    
+
 
 }
 
