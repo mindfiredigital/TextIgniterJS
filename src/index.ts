@@ -22,33 +22,73 @@ class TextIgniter {
         this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, };
         this.manualOverride = false;
         this.lastPiece = null;
-        this.toolbarView.on('toolbarAction', (action: string) => this.handleToolbarAction(action));
+        this.toolbarView.on('toolbarAction', (action: string, dataId: string[] = []) => this.handleToolbarAction(action, dataId));
         this.document.on('documentChanged', () => this.editorView.render());
         editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
         editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
-
+        document.addEventListener('mouseup', () => {
+            const dataId = this.document.getAllSelectedDataIds();
+            console.log('Selected text is inside element with data-id:', dataId);
+            console.log(this.document.dataIds, "this.document.dataIds")
+        });
         document.getElementById('fontFamily')?.addEventListener('change', (e) => {
             const fontFamily = (e.target as HTMLSelectElement).value;
             const [start, end] = this.getSelectionRange();
-            this.document.setFontFamily(start, end, fontFamily);
+            if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                    if (this.document.dataIds.includes(block.dataId)) {
+                        console.log(document.getElementById(block.dataId))
+                        console.log(block.dataId, this.document.dataIds, "attribute1")
+                        this.document.selectedBlockId = block.dataId;
+                        let countE = 0;
+                        block.pieces.forEach((obj: any) => {
+                            countE += obj.text.length;
+                        })
+                        let countS = start - countE
+                        this.document.setFontFamily(countS, countE, fontFamily);
+
+                    }
+                })
+            } else {
+                this.document.setFontFamily(start, end, fontFamily);
+            }
         });
-        
+
         document.getElementById('fontSize')?.addEventListener('change', (e) => {
             const fontSize = (e.target as HTMLSelectElement).value;
             const [start, end] = this.getSelectionRange();
-            this.document.setFontSize(start, end, fontSize);
+            if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                    if (this.document.dataIds.includes(block.dataId)) {
+                        this.document.selectedBlockId = block.dataId;
+                        let countE = 0;
+                        block.pieces.forEach((obj: any) => {
+                            countE += obj.text.length;
+                        })
+                        let countS = start - countE;
+                        this.document.setFontSize(countS, countE, fontSize);
+                    }
+                })
+            } else {
+                this.document.setFontSize(start, end, fontSize);
+            }
+            // this.document.setFontSize(start, end, fontSize);
         });
 
         document.getElementById('alignLeft')?.addEventListener('click', () => {
-            this.document.setAlignment('left', this.document.selectedBlockId);
+            this.document.dataIds.forEach(obj => this.document.setAlignment('left', obj))
+            // this.document.setAlignment('left', this.document.selectedBlockId);
         });
-        
+
         document.getElementById('alignCenter')?.addEventListener('click', () => {
-            this.document.setAlignment('center', this.document.selectedBlockId);
+            this.document.dataIds.forEach(obj => this.document.setAlignment('center', obj))
+
+            // this.document.setAlignment('center', this.document.selectedBlockId);
         });
-        
+
         document.getElementById('alignRight')?.addEventListener('click', () => {
-            this.document.setAlignment('right', this.document.selectedBlockId);
+            this.document.dataIds.forEach(obj => this.document.setAlignment('right', obj))
+            // this.document.setAlignment('right', this.document.selectedBlockId);
         });
 
         document.addEventListener('keydown', (e) => {
@@ -66,6 +106,11 @@ class TextIgniter {
                 } else if (key === 'y') {
                     e.preventDefault();
                     this.document.redo();
+                }
+                if (key === 'a') {
+                    // e.preventDefault();
+                    const dataId = this.document.getAllSelectedDataIds();
+                    console.log('Selected text is inside element with data-id:', dataId);
                 }
 
                 if (e.key === 'l') {
@@ -146,28 +191,83 @@ class TextIgniter {
         return [sel.start, sel.end];
     }
 
-    handleToolbarAction(action: string): void {
+    handleToolbarAction(action: string, dataId: string[] = []): void {
+
         const [start, end] = this.getSelectionRange();
         console.log(action, "action---")
         switch (action) {
             case 'orderedList':
-                this.document.toggleOrderedList(this.document.selectedBlockId);
+                this.document.dataIds.map((obj: string, i: number) => this.document.toggleOrderedList(obj, i + 1))
+                // this.document.toggleOrderedList(this.document.selectedBlockId)
+
                 break;
             case 'unorderedList':
-                this.document.toggleUnorderedList(this.document.selectedBlockId);
+                this.document.dataIds.map(obj => this.document.toggleUnorderedList(obj))
+
+                // this.document.toggleUnorderedList(this.document.selectedBlockId);
                 break;
         }
         if (start < end) {
 
             switch (action) {
                 case 'bold':
-                    this.document.toggleBoldRange(start, end);
+                    // this.document.dataIds.forEach(obj => {
+                    //     console.log(obj, "vicky", this.document.selectedBlockId)
+                    //     this.document.selectedBlockId = obj;
+                    //     this.document.toggleBoldRange(start, end)
+                    // })
+                    if (this.document.dataIds.length > 1) {
+                        this.document.blocks.forEach((block: any) => {
+                            if (this.document.dataIds.includes(block.dataId)) {
+                                this.document.selectedBlockId = block.dataId;
+                                let countE = 0;
+                                block.pieces.forEach((obj: any) => {
+                                    countE += obj.text.length;
+                                })
+                                let countS = start - countE;
+                                this.document.toggleBoldRange(countS, countE);
+                            }
+                        })
+                    } else {
+                        this.document.toggleBoldRange(start, end);
+                    }
+
                     break;
                 case 'italic':
-                    this.document.toggleItalicRange(start, end);
+                    if (this.document.dataIds.length > 1) {
+                        this.document.blocks.forEach((block: any) => {
+                            if (this.document.dataIds.includes(block.dataId)) {
+                                this.document.selectedBlockId = block.dataId;
+                                let countE = 0;
+                                block.pieces.forEach((obj: any) => {
+                                    countE += obj.text.length;
+                                })
+                                let countS = start - countE;
+                                this.document.toggleItalicRange(countS, countE);
+                            }
+                        })
+                    } else {
+                        this.document.toggleItalicRange(start, end);
+                    }
+                    // this.document.toggleItalicRange(start, end);
                     break;
                 case 'underline':
-                    this.document.toggleUnderlineRange(start, end);
+                    if (this.document.dataIds.length > 1) {
+                        this.document.blocks.forEach((block: any) => {
+                            if (this.document.dataIds.includes(block.dataId)) {
+                                this.document.selectedBlockId = block.dataId;
+                                let countE = 0;
+                                block.pieces.forEach((obj: any) => {
+                                    countE += obj.text.length;
+                                })
+                                let countS = start - countE;
+                                this.document.toggleUnderlineRange(countS, countE);
+                            }
+                        })
+                    } else {
+                        this.document.toggleUnderlineRange(start, end);
+                    }
+                    // this.document.toggleUnderlineRange(start, end);
                     break;
                 // case 'orderedList':
                 //     this.document.toggleOrderedList(this.document.selectedBlockId);
@@ -228,10 +328,19 @@ class TextIgniter {
                     listStart: ListType === 'ol' ? _start : '',
                 })
             } else {
-                this.document.blocks.push({
-                    "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                    // listType: null, // null | 'ol' | 'ul'
-                })
+                if (this.getCurrentCursorBlock() !== null) {
+                    const updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
+                        "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                        // listType: null, // null | 'ol' | 'ul'
+                    });
+                    this.document.blocks = updatedBlock
+                    console.log("vicky11", this.document.blocks, " updatedBlock", updatedBlock)
+                } else {
+                    this.document.blocks.push({
+                        "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                        // listType: null, // null | 'ol' | 'ul'
+                    })
+                }
             }
 
             this.syncCurrentAttributesWithCursor();
@@ -243,10 +352,20 @@ class TextIgniter {
 
         } else if (e.key === 'Backspace') {
             e.preventDefault();
+            if (this.document.dataIds.length > 1) {
+                console.log(this.document.dataIds, "this.document.dataIds")
+                // this.document.dataIds.forEach(obj => {
+                //     this.document.deleteBlocks(obj)
+                // })
+                this.document.deleteBlocks();
+            }
+
             if (start === end && start > 0) {
+                // this.document.dataIds.forEach(obj => this.document.deleteRange(start - 1, start, obj, this.document.currentOffset))
                 this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
                 this.setCursorPosition(start - 1);
             } else if (end > start) {
+                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
                 this.setCursorPosition(start);
             }
@@ -260,15 +379,55 @@ class TextIgniter {
         } else if (e.key === "Delete") {
             e.preventDefault();
             if (start === end) { // just a char
+                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, start + 1, obj))
                 this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
                 this.setCursorPosition(start);
             } else if (end > start) { //Selection
+                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj))
                 this.document.deleteRange(start, end, this.document.selectedBlockId);
                 this.setCursorPosition(start);
             }
         }
     }
 
+
+
+    getCurrentCursorBlock(): string | null {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            return null; // No selection or cursor position
+        }
+
+        const range = selection.getRangeAt(0); // Get the range of the cursor/selection
+        const container = range.startContainer; // The container node of the cursor
+
+        // Traverse to the parent element with a `data-id` attribute
+        const elementWithId = (container.nodeType === Node.TEXT_NODE
+            ? container.parentElement
+            : container) as HTMLElement;
+
+        const dataIdElement = elementWithId?.closest('[data-id]'); // Find closest ancestor with `data-id`
+        return dataIdElement?.getAttribute('data-id') || null; // Return the `data-id` or null if not found
+    }
+
+    addBlockAfter(data: any[], targetDataId: string, newBlock: any): any[] {
+        // Find the index of the block with the specified dataId
+        const targetIndex = data.findIndex(block => block.dataId === targetDataId);
+
+        if (targetIndex === -1) {
+            console.error(`Block with dataId "${targetDataId}" not found.`);
+            return data;
+        }
+
+        // Insert the new block after the target index
+        const updatedData = [
+            ...data.slice(0, targetIndex + 1),
+            newBlock,
+            ...data.slice(targetIndex + 1),
+        ];
+
+        return updatedData;
+    }
     syncCurrentAttributesWithCursor(): void {
         const [start, end] = this.getSelectionRange();
         if (start === end) {
