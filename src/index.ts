@@ -311,6 +311,7 @@ class TextIgniter {
 
     handleKeydown(e: KeyboardEvent): void {
         const [start, end] = this.getSelectionRange();
+        let ending = end;
         if (e.key === 'Enter') {
             console.log('blocks', this.document.blocks)
             e.preventDefault();
@@ -328,13 +329,27 @@ class TextIgniter {
                     listStart: ListType === 'ol' ? _start : '',
                 })
             } else {
+                console.log('vk11', this.getCurrentCursorBlock())
                 if (this.getCurrentCursorBlock() !== null) {
-                    const updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
-                        "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                        // listType: null, // null | 'ol' | 'ul'
-                    });
+                    const extractedContent = " " + this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString())
+                    console.log("vk11, ", this.getCurrentCursorBlock()!.toString(), " - ", start, end, extractedContent)
+                    let updatedBlock = this.document.blocks;
+
+                    if (extractedContent.length > 0) {
+                        updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
+                            "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(extractedContent)],
+                            // listType: null, // null | 'ol' | 'ul'
+                        });
+                        ending = start + extractedContent.length - 1;
+                    } else {
+                        updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
+                            "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                            // listType: null, // null | 'ol' | 'ul'
+                        });
+                    }
+
                     this.document.blocks = updatedBlock
-                    console.log("vicky11", this.document.blocks, " updatedBlock", updatedBlock)
+                    console.log("vk11", this.document.blocks, " updatedBlock", updatedBlock)
                 } else {
                     this.document.blocks.push({
                         "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
@@ -345,9 +360,9 @@ class TextIgniter {
 
             this.syncCurrentAttributesWithCursor();
             this.editorView.render()
-            this.setCursorPosition(end + 1, uniqueId);
-            if (end > start) {
-                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+            this.setCursorPosition(ending + 1, uniqueId);
+            if (ending > start) {
+                this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
             }
 
         } else if (e.key === 'Backspace') {
@@ -390,6 +405,47 @@ class TextIgniter {
         }
     }
 
+
+    extractTextFromDataId(dataId: string): string {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            return ''; // No valid selection
+        }
+
+        const range = selection.getRangeAt(0); // Get the current range of the cursor
+        const cursorNode = range.startContainer; // The node where the cursor is placed
+
+        // Find the element with the given data-id
+        const element = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
+        if (!element) {
+            console.error(`Element with data-id "${dataId}" not found.`);
+            return ''; // No element with the provided data-id
+        }
+
+        // Ensure the cursor is inside the specified element
+        if (!element.contains(cursorNode)) {
+            console.error(`Cursor is not inside the element with data-id "${dataId}".`);
+            return ''; // Cursor is outside the target element
+        }
+
+        // Get the full text content of the element
+        const fullText = element.textContent || '';
+
+        // Calculate the offset position of the cursor within the text node
+        const cursorOffset = range.startOffset;
+
+        // Extract text from the cursor position to the end
+        const remainingText = fullText.slice(cursorOffset);
+
+        // Update the DOM: Keep only the text before the cursor
+        const newContent = fullText.slice(0, cursorOffset);
+        element.textContent = newContent; // Update the element content with remaining text
+
+        console.log('Extracted text:', remainingText);
+        console.log('Updated element content:', newContent);
+
+        return remainingText; // Return the extracted text
+    }
 
 
     getCurrentCursorBlock(): string | null {
