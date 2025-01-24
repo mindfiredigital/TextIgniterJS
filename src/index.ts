@@ -1,351 +1,932 @@
-import {icons} from './assets/icons'
-import { ImageHandler } from './insertImage';
-import { TextHeadingHandler } from './textHeading';
-import { InsertTableHandler } from './insertTable';
-import { InsertLayoutHandler } from './insertLayout';
-import { HyperlinkHandler } from './hyperLink';
+import TextDocument from "./textDocument";
+import EditorView from "./view/editorView";
+import ToolbarView from "./view/toolbarView";
+import Piece from "./piece";
+import { saveSelection,restoreSelection } from "./utils/selectionManager";
+import { parseHtmlToPieces } from "./utils/parseHtml";
+import {showHyperlinkViewButton,hideHyperlinkViewButton} from './attributes/hyperLink'
 import "./styles/text-igniter.css"
-export interface EditorConfig {
-  features: string[];
+
+
+type EditorConfig = {
+    features : [string]
 }
 
-export interface NodeJson {
-  type: string;
-  attributes: { [key: string]: string };
-  children: (NodeJson | string)[];
-}
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean,hyperlink?: string | boolean }
 
 class TextIgniter {
-  private editor: HTMLDivElement;
-  private config: EditorConfig;
-  private container!: HTMLDivElement;
-  private imageHandler!: ImageHandler;
-  private textHeadingHandler: TextHeadingHandler;
-  private insertTableHandler: InsertTableHandler;
-  private insertLayoutHandler: InsertLayoutHandler;
-  private hyperlinkHandler: HyperlinkHandler;
+    document: TextDocument;
+    editorView: EditorView;
+    toolbarView: ToolbarView;
+    currentAttributes: CurrentAttributeDTO;
+    manualOverride: boolean;
+    lastPiece: Piece | null;
+    editorContainer : HTMLElement | null;
+    toolbarContainer : HTMLElement | null;
+    savedSelection: { start: number; end: number } | null = null;
 
-  constructor(editorId: string, config: EditorConfig) {
-    const editor = document.getElementById(editorId);
-    if (!editor || !(editor instanceof HTMLDivElement)) {
-      throw new Error("Editor element not found or incorrect element type.");
-    }
-    this.editor = editor;
-    this.config = config;
-    this.imageHandler = new ImageHandler(this.editor);
-    this.textHeadingHandler = new TextHeadingHandler(this.editor);
-    this.insertTableHandler = new InsertTableHandler(this.editor);
-    this.insertLayoutHandler = new InsertLayoutHandler(this.editor);
-    this.hyperlinkHandler = new HyperlinkHandler(this.editor);
+    constructor(editorId:string,config:EditorConfig) {
 
-    this.createContainer();
-    this.init();
-    this.createToolbar();
-    this.addKeyboardShortcuts();
-  }
-
-  private createContainer() {
-    this.container = document.createElement("div");
-    this.container.classList.add("text-igniter");
-    this.editor.parentNode!.insertBefore(this.container, this.editor);
-    this.container.appendChild(this.editor);
-  }
-
-  private init() {
-    this.editor.contentEditable = "true";
-    this.editor.classList.add("editor");
-    this.addSelectionListener();
-    this.editor.focus();
-  }
-
-  private createToolbar() {
-    const toolbar = document.createElement("div");
-    toolbar.classList.add("toolbar");
-
-    const featureIcons: { [key: string]: string } = {
-      bold: icons.bold,
-      italic: icons.italic,
-      underline: icons.underline,
-      subscript: icons.subscript,
-      superscript: icons.superscript,
-      left_align: icons.left_align,
-      center_align: icons.center_align,
-      right_align: icons.right_align,
-      justify: icons.justify,
-      bullet_list: icons.bullet_list,
-      numbered_list: icons.numbered_list,
-      insert_table: icons.insert_table,
-      insert_layout: icons.insert_layout,
-      heading: icons.heading,
-      hyperlink: icons.hyperlink,
-      image : icons.image
-    };
-
-    this.config.features.forEach((feature) => {
-      if (feature === "heading") {
-        const button = document.createElement("button");
-        button.innerHTML = icons.heading;
-        button.setAttribute("data-command", feature);
-        button.onclick = () => this.textHeadingHandler.openHeadingModal(); // Open modal
-        toolbar.appendChild(button);
-      }else if (feature === "insert_table") {
-        const button = document.createElement("button");
-        button.innerHTML = icons.insert_table;
-        button.onclick = () => this.insertTableHandler.openTableModal(); // Open table modal
-        toolbar.appendChild(button);
-      }else if (feature === "insert_layout") {
-        const button = document.createElement("button");
-        button.innerHTML = icons.insert_layout;
-        button.onclick = () => this.insertLayoutHandler.openLayoutModal(); // Open layout modal
-        toolbar.appendChild(button);
-      }else if (feature === "hyperlink") {
-        const button = document.createElement("button");
-        button.innerHTML = icons.hyperlink;
-        button.onclick = () => this.hyperlinkHandler.openHyperlinkModal(); // Open hyperlink modal
-        toolbar.appendChild(button);
-      }else{
-        const button = document.createElement("button");
-        button.innerHTML = featureIcons[feature];
-        button.setAttribute("data-command", feature);
-        button.onclick = () => this.format(feature);
-
-        if (feature === "left_align") {
-          button.classList.add("active");
-        }
+        this.createEditor(editorId,config);
         
-        toolbar.appendChild(button);
-      }
-    });
+        this.editorContainer = document.getElementById('editor') || null;
+        this.toolbarContainer = document.getElementById('toolbar') || null;
 
-    this.container.insertBefore(toolbar, this.editor);
-  }
-
-  private deactivateAlignmentButtons() {
-    const alignmentButtons = ["left_align", "center_align", "right_align", "justify"];
-    
-    alignmentButtons.forEach((alignment) => {
-      const button = this.container.querySelector(`button[data-command='${alignment}']`);
-      if (button) {
-        button.classList.remove("active");
-      }
-    });
-  }
-
-  private addSelectionListener() {
-    document.addEventListener('selectionchange', () => {
-      this.updateSubSuperButtonState();
-      this.updateListButtonState();
-    });
-  }
-
-  private addKeyboardShortcuts() {
-    document.addEventListener("keydown", (e) => {
-      if (e.ctrlKey && e.key === "b") {
-        e.preventDefault();
-        this.format("bold");
-      } else if (e.ctrlKey && e.key === "i") {
-        e.preventDefault();
-        this.format("italic");
-      } else if (e.ctrlKey && e.key === "u") {
-        e.preventDefault();
-        this.format("underline");
-      }
-    });
-  }
-
-  public format(command: string) {
-    try {
-      const commands: { [key: string]: string } = {
-        bold: "bold",
-        italic: "italic",
-        underline: "underline",
-        subscript: "subscript",
-        superscript: "superscript",
-        left_align: "justifyLeft",
-        center_align: "justifyCenter",
-        right_align: "justifyRight",
-        justify: "justifyFull",
-        bullet_list: "insertUnorderedList",
-        numbered_list: "insertOrderedList",
-        insert_table: "insertTable",
-        insert_layout: "insertLayout",
-        heading: "formatBlock",
-        hyperlink: "createLink",
-        image: "insertImage",
-      };
-      const execCommand = commands[command];
-      if (execCommand) {
-        if (command === "image") {
-          this.imageHandler.insertImage(); // Use the image handler
-        }
-        // If the command is an alignment command, deactivate other alignment buttons
-        if (["left_align", "center_align", "right_align", "justify"].includes(command)) {
-          this.deactivateAlignmentButtons(); // Deactivate all alignment buttons
+        if(!this.editorContainer || !this.toolbarContainer) {
+            throw new Error("Editor element not found or incorrect element type.");
         }
 
-        // Handle mutual exclusivity for subscript and superscript
-        if (command === 'subscript') {
-          // If superscript is currently active, remove it before applying subscript
-          if (document.queryCommandState('superscript')) {
-            document.execCommand('superscript', false, '');
-          }
-        } else if (command === 'superscript') {
-          // If subscript is currently active, remove it before applying superscript
-          if (document.queryCommandState('subscript')) {
-            document.execCommand('subscript', false, '');
-          }
-        }
-
-         // Handle mutual exclusivity for bullet and numbered lists
-        if (command === 'bullet_list') {
-          // If numbered list is currently active, remove it before applying bullet list
-          if (document.queryCommandState('insertOrderedList')) {
-            document.execCommand('insertOrderedList', false, '');
-          }
-        } else if (command === 'numbered_list') {
-          // If bullet list is currently active, remove it before applying numbered list
-          if (document.queryCommandState('insertUnorderedList')) {
-            document.execCommand('insertUnorderedList', false, '');
-          }
-        }
-
-        if (document.queryCommandSupported(execCommand)) {
-          const success = document.execCommand(execCommand, false, "");
-          if (success) {
-            this.updateButtonState(command);
-            this.updateSubSuperButtonState();
-            this.updateListButtonState();
-          }else{
-            console.warn(`The command '${command}' could not be executed.`);
-          }
-        } else {
-          console.warn(`The command '${command}' is not supported.`);
-        }
-      } else {
-        console.warn(`The command '${command}' is not recognized.`);
-      }
-    } catch (error) {
-      console.error(`Error executing command '${command}':`, error);
-    }
-  }
-
-  private updateButtonState(command: string) {
-    if (["left_align", "center_align", "right_align", "justify"].includes(command)) {
-      // For alignment commands, deactivate all buttons first
-      this.deactivateAlignmentButtons();
-    }
-  
-    const button = this.container.querySelector(`button[data-command='${command}']`);
-    if (button) {
-      let isActive = false;
-  
-      // Handle alignment button's states
-      if (["left_align", "center_align", "right_align", "justify"].includes(command)) {
-        button.classList.add("active");
-      } else {
-        // For non-alignment commands like bold, italic, underline etc
-        isActive = document.queryCommandState(command);
-        if (isActive) {
-          button.classList.add("active");
-        } else {
-          button.classList.remove("active");
-        }
-      }
-    }
-  }  
-
-  // New method to update both subscript and superscript
-  private updateSubSuperButtonState() {
-    const subscriptButton = this.container.querySelector(
-      `button[data-command='subscript']`
-    );
-    const superscriptButton = this.container.querySelector(
-      `button[data-command='superscript']`
-    );
-    
-    // Check if subscript is active
-    if (subscriptButton) {
-      if (document.queryCommandState('subscript')) {
-        subscriptButton.classList.add("active");
-      } else {
-        subscriptButton.classList.remove("active");
-      }
-    }
-
-    // Check if superscript is active
-    if (superscriptButton) {
-      if (document.queryCommandState('superscript')) {
-        superscriptButton.classList.add("active");
-      } else {
-        superscriptButton.classList.remove("active");
-      }
-    }
-  }
-  // New method to update both Bullet and numbered list
-  private updateListButtonState() {
-    const bulletListButton = this.container.querySelector(
-      `button[data-command='bullet_list']`
-    );
-    const numberedListButton = this.container.querySelector(
-      `button[data-command='numbered_list']`
-    );
-  
-    // Check if bullet list is active
-    if (bulletListButton) {
-      if (document.queryCommandState('insertUnorderedList')) {
-        bulletListButton.classList.add("active");
-      } else {
-        bulletListButton.classList.remove("active");
-      }
-    }
-  
-    // Check if numbered list is active
-    if (numberedListButton) {
-      if (document.queryCommandState('insertOrderedList')) {
-        numberedListButton.classList.add("active");
-      } else {
-        numberedListButton.classList.remove("active");
-      }
-    }
-  }
-
-  public getHtml(): string {
-    return this.editor.innerHTML;
-  }
-
-  public getJson(): NodeJson {
-    const parseNode = (node: Node): NodeJson | string => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        return node.textContent || "";
-      }
-
-      const result: NodeJson = {
-        type: node.nodeName.toLowerCase(),
-        attributes: {},
-        children: [],
-      };
-
-      // Parse attributes
-      if (node instanceof Element) {
-        Array.from(node.attributes).forEach((attr) => {
-          result.attributes[attr.name] = attr.value;
+        this.document = new TextDocument();
+        this.editorView = new EditorView(this.editorContainer, this.document);
+        this.toolbarView = new ToolbarView(this.toolbarContainer);
+        this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, hyperlink:false};
+        this.manualOverride = false;
+        this.lastPiece = null;
+        this.toolbarView.on('toolbarAction', (action: string, dataId: string[] = []) => this.handleToolbarAction(action, dataId));
+        this.document.on('documentChanged', () => this.editorView.render());
+        this.editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
+        this.editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
+        document.addEventListener('mouseup', () => {
+            const dataId = this.document.getAllSelectedDataIds();
+            console.log('Selected text is inside element with data-id:', dataId);
+            console.log(this.document.dataIds, "this.document.dataIds")
         });
+        document.getElementById('fontFamily')?.addEventListener('change', (e) => {
+            const fontFamily = (e.target as HTMLSelectElement).value;
+            const [start, end] = this.getSelectionRange();
+            if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                    if (this.document.dataIds.includes(block.dataId)) {
+                        console.log(document.getElementById(block.dataId))
+                        console.log(block.dataId, this.document.dataIds, "attribute1")
+                        this.document.selectedBlockId = block.dataId;
+                        let countE = 0;
+                        block.pieces.forEach((obj: any) => {
+                            countE += obj.text.length;
+                        })
+                        let countS = start - countE
+                        this.document.setFontFamily(countS, countE, fontFamily);
+
+                    }
+                })
+            } else {
+                this.document.setFontFamily(start, end, fontFamily);
+            }
+        });
+
+        document.getElementById('fontSize')?.addEventListener('change', (e) => {
+            const fontSize = (e.target as HTMLSelectElement).value;
+            const [start, end] = this.getSelectionRange();
+            if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                    if (this.document.dataIds.includes(block.dataId)) {
+                        this.document.selectedBlockId = block.dataId;
+                        let countE = 0;
+                        block.pieces.forEach((obj: any) => {
+                            countE += obj.text.length;
+                        })
+                        let countS = start - countE;
+                        this.document.setFontSize(countS, countE, fontSize);
+                    }
+                })
+            } else {
+                this.document.setFontSize(start, end, fontSize);
+            }
+            // this.document.setFontSize(start, end, fontSize);
+        });
+
+        document.getElementById('alignLeft')?.addEventListener('click', () => {
+            this.document.dataIds.forEach(obj => this.document.setAlignment('left', obj))
+            // this.document.setAlignment('left', this.document.selectedBlockId);
+        });
+
+        document.getElementById('alignCenter')?.addEventListener('click', () => {
+            this.document.dataIds.forEach(obj => this.document.setAlignment('center', obj))
+
+            // this.document.setAlignment('center', this.document.selectedBlockId);
+        });
+
+        document.getElementById('alignRight')?.addEventListener('click', () => {
+            this.document.dataIds.forEach(obj => this.document.setAlignment('right', obj))
+            // this.document.setAlignment('right', this.document.selectedBlockId);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+                const key = e.key.toLowerCase();
+                if (['b', 'i', 'u','h'].includes(key)) {
+                    e.preventDefault();
+                    let action = 'b';
+                    switch (key) {
+                        case 'b':
+                            action = 'bold';
+                            break;
+                        case 'i':
+                            action = 'italic';
+                            break;
+                        case 'u':
+                            action = 'underline';
+                            break;
+                        case 'h':
+                            action = 'hyperlink';
+                            break;
+                    
+                        default:
+                            break;
+                    }
+                    this.handleToolbarAction(action);
+                }
+
+                if (key === 'z') {
+                    e.preventDefault();
+                    this.document.undo();
+                } else if (key === 'y') {
+                    e.preventDefault();
+                    this.document.redo();
+                }
+                if (key === 'a') {
+                    // e.preventDefault();
+                    const dataId = this.document.getAllSelectedDataIds();
+                    console.log('Selected text is inside element with data-id:', dataId);
+                }
+
+                if (e.key === 'l') {
+                    e.preventDefault();
+                    this.document.setAlignment('left', this.document.selectedBlockId);
+                } else if (e.key === 'e') {
+                    e.preventDefault();
+                    this.document.setAlignment('center', this.document.selectedBlockId);
+                } else if (e.key === 'r') {
+                    e.preventDefault();
+                    this.document.setAlignment('right', this.document.selectedBlockId);
+                }
+                console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
+            }
+        });
+
+        document.addEventListener('selectionchange', this.handleSelectionChange.bind(this));
+        this.document.emit('documentChanged', this.document);
+
+        this.editorContainer.addEventListener('paste', (e: ClipboardEvent) => {
+            e.preventDefault();
+            const html = e.clipboardData?.getData('text/html');
+            const [start, end] = this.getSelectionRange();
+            if (end > start) {
+                this.document.deleteRange(start, end);
+            }
+
+            let piecesToInsert: Piece[] = [];
+            if (html) {
+                piecesToInsert = parseHtmlToPieces(html);
+            } else {
+                const text = e.clipboardData?.getData('text/plain') || '';
+                piecesToInsert = [new Piece(text, { ...this.currentAttributes })];
+            }
+
+            let offset = start;
+            for (const p of piecesToInsert) {
+                this.document.insertAt(p.text, { ...p.attributes }, offset, this.document.selectedBlockId);
+                offset += p.text.length;
+            }
+            this.setCursorPosition(offset);
+        });
+
+        this.editorContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        
+        this.editorContainer.addEventListener('drop', (e: DragEvent) => {
+            e.preventDefault();
+            const html = e.dataTransfer?.getData('text/html');
+            const [start, end] = this.getSelectionRange();
+            if (end > start) {
+                this.document.deleteRange(start, end);
+            }
+
+            let piecesToInsert: Piece[] = [];
+            if (html) {
+                piecesToInsert = parseHtmlToPieces(html);
+            } else {
+                const text = e.dataTransfer?.getData('text/plain') || '';
+                piecesToInsert = [new Piece(text, { ...this.currentAttributes })];
+            }
+
+            let offset = start;
+            for (const p of piecesToInsert) {
+                this.document.insertAt(p.text, { ...p.attributes }, offset, this.document.selectedBlockId);
+                offset += p.text.length;
+            }
+            this.setCursorPosition(offset);
+        });
+
+
+    }
+    
+    createEditor(editorId:string,config:EditorConfig) {
+        const allowedFontFamily = [
+            'Arial',
+            'Times New Roman',
+            'Courier New',
+            'Verdana',
+        ];
+        const allowedFontSizes = [
+            '12px',
+            '14px',
+            '16px',
+            '18px',
+            '20px',
+          ];
+        const container = document.getElementById(editorId);
+        if(!container){
+            throw new Error("Editor element not found or incorrect element type.");
+        }
+        const toolbar = document.createElement('div');
+        toolbar.className = 'toolbar';
+        toolbar.id = 'toolbar';
+        container.appendChild(toolbar);
+  
+        const editor = document.createElement('div');   
+        editor.id = 'editor';
+        editor.contentEditable = 'true';
+        container.appendChild(editor);
+  
+        // Map features to button labels/icons
+        const featureLabels : any= {
+          'bold': '<strong>B</strong>',
+          'italic': '<em>I</em>',
+          'underline': '<u>U</u>',
+          'hyperlink': '&#128279;',   // Unicode for link symbol
+
+          'alignLeft': '&#8676;',    // Unicode for left arrow
+          'alignCenter': '&#8596;',  // Unicode for left-right arrow
+          'alignRight': '&#8677;',   // Unicode for right arrow
+
+          'unorderedList': '&#8226;',   // Unicode for bullet
+          'orderedList': '1.',      // Simple text representation
+          'fontFamily' : 'fontFamily',
+          'fontSize': 'fontSize',
+
+          'subscript': 'X<sub>2</sub>',
+          'superscript': 'X<sup>2</sup>',
+          'justify': '&#8644;',       // Unicode for justify icon
+          'insert_table': '&#8866;',  // Unicode for table icon
+          'insert_layout': '&#10064;',// Unicode for layout icon
+          'heading': 'H',
+          'image': '&#128247;',       // Unicode for camera symbol
+          'colors': '&#127912;',      // Unicode for palette symbol
+        };
+
+        const featuresWithPngIcon = [
+            { feature: 'alignLeft', id: 'alignLeft', icon: './src/assets/icons8-left-alignment-48.png' },
+            { feature: 'alignCenter', id: 'alignCenter', icon: './src/assets/icons8-align-center-48.png' },
+            { feature: 'alignRight', id: 'alignRight', icon: './src/assets/icons8-align-right-48.png' },
+            { feature: 'unorderedList', id: 'alignRight', icon: './src/assets/icons8-list-50.png' },
+            { feature: 'orderedList', id: 'alignRight', icon: './src/assets/icons8-numbered-list-50.png' },
+          ];
+  
+        const createSelect = (id:string, options:string[]) => {
+            const select = document.createElement('select');
+            select.id = id;
+            options.forEach(optionValue => {
+              const option = document.createElement('option');
+              option.value = optionValue;
+              option.textContent = optionValue;
+              select.appendChild(option);
+            });
+            return select;
+          };
+
+        config.features.forEach(feature => {
+            if(feature === 'fontFamily'){
+            const fontFamilySelect = createSelect('fontFamily', allowedFontFamily);
+          toolbar.appendChild(fontFamilySelect);
+            } else if(feature === 'fontSize'){
+                const fontSizeSelect = createSelect('fontSize',allowedFontSizes );
+                  toolbar.appendChild(fontSizeSelect);
+            }else if(featuresWithPngIcon.map(item=>item.feature).indexOf(feature) !== -1){
+                const featureDataArray = featuresWithPngIcon.filter(item=>item.feature === feature);
+                let featureData = null;
+                if(featureDataArray?.length > 0){
+                    featureData = featureDataArray[0];
+                }
+                const button = document.createElement('button');
+                button.id = feature;
+                button.dataset.action = feature;
+                const img = document.createElement('img');
+                img.src = featureData?.icon || "";
+                img.width = 20;
+                img.height = 20;
+                button.appendChild(img);
+                toolbar.appendChild(button);
+            }else {
+                const button = document.createElement('button');
+                button.dataset.action = feature;
+                button.innerHTML = featureLabels[feature] || feature;
+                button.id = feature;
+                // if(['leftAlign','centerAlign','rightAlign','bulletList','numberedList'].indexOf(feature) !== -1){
+                //     button.id = feature;
+                // }
+                // Add the title attribute for hover effect
+                button.title = feature
+                .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+            
+            toolbar.appendChild(button);
+        }
+
+        });
+
+            // Create the container div
+            const hyperlinkContainer = document.createElement("div");
+            hyperlinkContainer.id = "hyperlink-container";
+            hyperlinkContainer.style.display = "none";
+
+            // Create the input element
+            const hyperlinkInput = document.createElement("input");
+            hyperlinkInput.type = "text";
+            hyperlinkInput.id = "hyperlink-input";
+            hyperlinkInput.placeholder = "Enter a URL...";
+
+            // Create the Apply button
+            const applyButton = document.createElement("button");
+            applyButton.id = "apply-hyperlink";
+            applyButton.textContent = "Link";
+
+            // Create the Cancel button
+            const cancelButton = document.createElement("button");
+            cancelButton.id = "cancel-hyperlink";
+            cancelButton.textContent = "Unlink";
+
+            // Append input and buttons to the container
+            hyperlinkContainer.appendChild(hyperlinkInput);
+            hyperlinkContainer.appendChild(applyButton);
+            hyperlinkContainer.appendChild(cancelButton);
+
+            // Append the container to the toolbar
+
+            toolbar.appendChild(hyperlinkContainer);
+
+
+
+
+             // Create the container div
+             const viewHyperlinkContainer = document.createElement("div");
+             viewHyperlinkContainer.id = "hyperlink-container-view";
+             viewHyperlinkContainer.style.display = "none";
+ 
+            //  // Create the input element
+             const hyperLinkViewSpan = document.createElement("span");
+             hyperLinkViewSpan.id = "hyperlink-view-span";
+             hyperLinkViewSpan.innerHTML = "Visit URL : ";
+
+             const hyperLinkAnchor = document.createElement("a");
+             hyperLinkAnchor.id = "hyperlink-view-link";
+             hyperLinkAnchor.href="";
+             hyperLinkAnchor.target = "_blank";
+
+
+            // Create the Apply button
+            // const editHyperlinkButton = document.createElement("button");
+            // editHyperlinkButton.id = "edit-hyperlink";
+            // editHyperlinkButton.textContent = "edit |";
+
+            // Create the Cancel button
+            // const removeHyperlinkButton = document.createElement("button");
+            // removeHyperlinkButton.id = "delete-hyperlink";
+            // removeHyperlinkButton.textContent = "remove";
+
+ 
+            //  // Append input and buttons to the container
+             viewHyperlinkContainer.appendChild(hyperLinkViewSpan);
+             viewHyperlinkContainer.appendChild(hyperLinkAnchor);
+            //  viewHyperlinkContainer.appendChild(editHyperlinkButton);
+            //  viewHyperlinkContainer.appendChild(removeHyperlinkButton);
+ 
+            //  // Append the container to the toolbar
+ 
+             toolbar.appendChild(viewHyperlinkContainer);
       }
 
-      // Parse children
-      node.childNodes.forEach((child) => {
-        result.children.push(parseNode(child));
-      });
+    getSelectionRange(): [number, number] {
+        const sel = saveSelection(this.editorView.container);
+        if (!sel) return [0, 0];
+        return [sel.start, sel.end];
+    }
 
-      return result;
-    };
+    handleToolbarAction(action: string, dataId: string[] = []): void {
 
-    return {
-      type: "root",
-      attributes: {},
-      children: [parseNode(this.editor)],
-    };
-  }
+        const [start, end] = this.getSelectionRange();
+        console.log(action, "action---")
+        switch (action) {
+            case 'orderedList':
+                this.document.dataIds.map((obj: string, i: number) => this.document.toggleOrderedList(obj, i + 1))
+                // this.document.toggleOrderedList(this.document.selectedBlockId)
+
+                break;
+            case 'unorderedList':
+                this.document.dataIds.map(obj => this.document.toggleUnorderedList(obj))
+
+                // this.document.toggleUnorderedList(this.document.selectedBlockId);
+                break;
+        }
+        if (start < end) {
+
+            switch (action) {
+                case 'bold':
+                    // this.document.dataIds.forEach(obj => {
+                    //     console.log(obj, "vicky", this.document.selectedBlockId)
+                    //     this.document.selectedBlockId = obj;
+                    //     this.document.toggleBoldRange(start, end)
+                    // })
+                    if (this.document.dataIds.length > 1) {
+                        this.document.blocks.forEach((block: any) => {
+                            if (this.document.dataIds.includes(block.dataId)) {
+                                this.document.selectedBlockId = block.dataId;
+                                let countE = 0;
+                                block.pieces.forEach((obj: any) => {
+                                    countE += obj.text.length;
+                                })
+                                let countS = start - countE;
+                                this.document.toggleBoldRange(countS, countE);
+                            }
+                        })
+                    } else {
+                        this.document.toggleBoldRange(start, end);
+                    }
+
+                    break;
+                case 'italic':
+                    if (this.document.dataIds.length > 1) {
+                        this.document.blocks.forEach((block: any) => {
+                            if (this.document.dataIds.includes(block.dataId)) {
+                                this.document.selectedBlockId = block.dataId;
+                                let countE = 0;
+                                block.pieces.forEach((obj: any) => {
+                                    countE += obj.text.length;
+                                })
+                                let countS = start - countE;
+                                this.document.toggleItalicRange(countS, countE);
+                            }
+                        })
+                    } else {
+                        this.document.toggleItalicRange(start, end);
+                    }
+                    // this.document.toggleItalicRange(start, end);
+                    break;
+                case 'underline':
+                    if (this.document.dataIds.length > 1) {
+                        this.document.blocks.forEach((block: any) => {
+                            if (this.document.dataIds.includes(block.dataId)) {
+                                this.document.selectedBlockId = block.dataId;
+                                let countE = 0;
+                                block.pieces.forEach((obj: any) => {
+                                    countE += obj.text.length;
+                                })
+                                let countS = start - countE;
+                                this.document.toggleUnderlineRange(countS, countE);
+                            }
+                        })
+                    } else {
+                        this.document.toggleUnderlineRange(start, end);
+                    }
+                    // this.document.toggleUnderlineRange(start, end);
+                    break;
+                // case 'orderedList':
+                //     this.document.toggleOrderedList(this.document.selectedBlockId);
+                //     break;
+                // case 'unorderedList':
+                //     this.document.toggleUnorderedList(this.document.selectedBlockId);
+                //     break;
+                case 'undo':
+                    // this.document.toggleUndoRange(start, end);
+                    this.document.undo();
+                    break;
+                case 'redo':
+                    // this.document.toggleRedoRange(start, end);
+                    this.document.redo();
+                    break;
+                case 'hyperlink':
+                    if (start < end) {
+                        // Get the existing hyperlink, if any
+                        const existingLink = this.document.getCommonHyperlinkInRange(start, end);
+        
+                        // Show the hyperlink input box
+                        this.showHyperlinkInput(existingLink);
+                    } else {
+                        // No selection
+                        alert("Please select the text you want to hyperlink.");
+                    }
+                    break;
+            }
+        } else {
+            this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'] = !this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'];
+            this.manualOverride = true;
+        }
+        console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
+        this.toolbarView.updateActiveStates(this.currentAttributes);
+    }
+
+    showHyperlinkInput(existingLink: string | null): void {
+        // Get the elements
+        const hyperlinkContainer = document.getElementById('hyperlink-container');
+        const hyperlinkInput = document.getElementById('hyperlink-input') as HTMLInputElement;
+        const applyButton = document.getElementById('apply-hyperlink');
+        const cancelButton = document.getElementById('cancel-hyperlink');
+
+        if (hyperlinkContainer && hyperlinkInput && applyButton && cancelButton) {
+            hyperlinkContainer.style.display = 'block';
+
+            // position the container near the selection or toolbar
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                hyperlinkContainer.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                hyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
+            }
+
+            // Set the existing link
+            hyperlinkInput.value = existingLink || '';
+
+            // Save the current selection
+            this.savedSelection = saveSelection(this.editorView.container);
+
+            // Show temporary selection 
+            this.highlightSelection();
+
+            // Ensure the hyperlink input is focused
+            hyperlinkInput.focus();
+
+            // Remove any previous event listeners
+            applyButton.onclick = null;
+            cancelButton.onclick = null;
+
+            // Handle the 'Link' button
+            applyButton.onclick = () => {
+                const url = hyperlinkInput.value.trim();
+                if (url) {
+                    this.applyHyperlink(url);
+                } else {
+                    // alert('Please enter a valid URL.');
+                }
+                hyperlinkContainer.style.display = 'none';
+            };
+
+            // Handle the 'Unlink' button
+            cancelButton.onclick = () => {
+                this.removeHyperlink();
+                hyperlinkContainer.style.display = 'none';
+            };
+        }
+    }
+
+    highlightSelection(): void {
+        // Remove any existing temporary highlights
+        this.removeHighlightSelection();
+
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+    
+            // Create a wrapper span
+            const span = document.createElement('span');
+            span.className = 'temporary-selection-highlight';
+    
+            // Extract the selected content and wrap it
+            span.appendChild(range.extractContents());
+            range.insertNode(span);
+    
+            // Adjust the selection to encompass the new span
+            selection.removeAllRanges();
+            const newRange = document.createRange();
+            newRange.selectNodeContents(span);
+            selection.addRange(newRange);
+        }
+    }
+
+    removeHighlightSelection(): void {
+        const highlights = this.editorContainer?.querySelectorAll('span.temporary-selection-highlight');
+        highlights?.forEach((span) => {
+            const parent = span.parentNode;
+            if (parent) {
+                while (span.firstChild) {
+                    parent.insertBefore(span.firstChild, span);
+                }
+                parent.removeChild(span);
+            }
+        });
+    }
+
+    applyHyperlink(url: string): void {
+        // Remove any existing temporary highlights
+        this.removeHighlightSelection();
+
+        // Restore the selection
+        restoreSelection(this.editorView.container, this.savedSelection);
+
+        const [start, end] = this.getSelectionRange();
+        if (start < end) {
+            this.document.applyHyperlinkRange(start, end, url);
+            this.editorView.render();
+            // Restore selection and focus
+            restoreSelection(this.editorView.container, this.savedSelection);
+            this.editorView.container.focus();
+        }
+        this.savedSelection = null;
+    }
+
+    removeHyperlink(): void {
+        // Remove any existing temporary highlights
+        this.removeHighlightSelection();
+
+        // Restore the selection
+        restoreSelection(this.editorView.container, this.savedSelection);
+
+        const [start, end] = this.getSelectionRange();
+        if (start < end) {
+            this.document.removeHyperlinkRange(start, end);
+            this.editorView.render();
+            // Restore selection and focus
+            restoreSelection(this.editorView.container, this.savedSelection);
+            this.editorView.container.focus();
+        }
+        this.savedSelection = null;
+    }
+    
+    handleSelectionChange(): void {
+        this.syncCurrentAttributesWithCursor();
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            // this.document.selectedBlockId = null;
+            return;
+        }
+
+        const range = selection.getRangeAt(0);
+        const parentBlock = range.startContainer.parentElement?.closest('[data-id]');
+        if (parentBlock && parentBlock instanceof HTMLElement) {
+            this.document.selectedBlockId = parentBlock.getAttribute('data-id') || null;
+        }
+    }
+
+    handleKeydown(e: KeyboardEvent): void {
+        const [start, end] = this.getSelectionRange();
+        let ending = end;
+        if (e.key === 'Enter') {
+            console.log('blocks', this.document.blocks)
+            e.preventDefault();
+            const uniqueId = `data-id-${Date.now()}`;
+            if (this.document.blocks[this.document.blocks.length - 1]?.listType === 'ol' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'ul') {
+                const ListType = this.document.blocks[this.document.blocks.length - 1]?.listType;
+                let _start = 1;
+                if (ListType === 'ol') {
+                    _start = this.document.blocks[this.document.blocks.length - 1]?.listStart
+                    _start += 1;
+                }
+                this.document.blocks.push({
+                    "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                    listType: ListType, // null | 'ol' | 'ul'
+                    listStart: ListType === 'ol' ? _start : '',
+                })
+            } else {
+                console.log('vk11', this.getCurrentCursorBlock())
+                if (this.getCurrentCursorBlock() !== null) {
+                    const extractedContent = " " + this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString())
+                    console.log("vk11, ", this.getCurrentCursorBlock()!.toString(), " - ", start, end, extractedContent)
+                    let updatedBlock = this.document.blocks;
+
+                    if (extractedContent.length > 0) {
+                        updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
+                            "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(extractedContent)],
+                            // listType: null, // null | 'ol' | 'ul'
+                        });
+                        ending = start + extractedContent.length - 1;
+                    } else {
+                        updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
+                            "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                            // listType: null, // null | 'ol' | 'ul'
+                        });
+                    }
+
+                    this.document.blocks = updatedBlock
+                    console.log("vk11", this.document.blocks, " updatedBlock", updatedBlock)
+                } else {
+                    this.document.blocks.push({
+                        "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                        // listType: null, // null | 'ol' | 'ul'
+                    })
+                }
+            }
+
+            this.syncCurrentAttributesWithCursor();
+            this.editorView.render()
+            this.setCursorPosition(ending + 1, uniqueId);
+            if (ending > start) {
+                this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
+            }
+
+        } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            if (this.document.dataIds.length > 1) {
+                console.log(this.document.dataIds, "this.document.dataIds")
+                // this.document.dataIds.forEach(obj => {
+                //     this.document.deleteBlocks(obj)
+                // })
+                this.document.deleteBlocks();
+            }
+
+            if (start === end && start > 0) {
+                // this.document.dataIds.forEach(obj => this.document.deleteRange(start - 1, start, obj, this.document.currentOffset))
+                this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
+                this.setCursorPosition(start - 1);
+            } else if (end > start) {
+                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
+                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+                this.setCursorPosition(start);
+            }
+        } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            if (end > start) {
+                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+            }
+            this.document.insertAt(e.key, { ...this.currentAttributes }, start, this.document.selectedBlockId, this.document.currentOffset);
+            this.setCursorPosition(start + 1);
+        } else if (e.key === "Delete") {
+            e.preventDefault();
+            if (start === end) { // just a char
+                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, start + 1, obj))
+                this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
+                this.setCursorPosition(start);
+            } else if (end > start) { //Selection
+                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj))
+                this.document.deleteRange(start, end, this.document.selectedBlockId);
+                this.setCursorPosition(start);
+            }
+        }
+    }
+
+
+    extractTextFromDataId(dataId: string): string {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            return ''; // No valid selection
+        }
+
+        const range = selection.getRangeAt(0); // Get the current range of the cursor
+        const cursorNode = range.startContainer; // The node where the cursor is placed
+
+        // Find the element with the given data-id
+        const element = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
+        if (!element) {
+            console.error(`Element with data-id "${dataId}" not found.`);
+            return ''; // No element with the provided data-id
+        }
+
+        // Ensure the cursor is inside the specified element
+        if (!element.contains(cursorNode)) {
+            console.error(`Cursor is not inside the element with data-id "${dataId}".`);
+            return ''; // Cursor is outside the target element
+        }
+
+        // Get the full text content of the element
+        const fullText = element.textContent || '';
+
+        // Calculate the offset position of the cursor within the text node
+        const cursorOffset = range.startOffset;
+
+        // Extract text from the cursor position to the end
+        const remainingText = fullText.slice(cursorOffset);
+
+        // Update the DOM: Keep only the text before the cursor
+        const newContent = fullText.slice(0, cursorOffset);
+        element.textContent = newContent; // Update the element content with remaining text
+
+        console.log('Extracted text:', remainingText);
+        console.log('Updated element content:', newContent);
+
+        return remainingText; // Return the extracted text
+    }
+
+
+    getCurrentCursorBlock(): string | null {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            return null; // No selection or cursor position
+        }
+
+        const range = selection.getRangeAt(0); // Get the range of the cursor/selection
+        const container = range.startContainer; // The container node of the cursor
+
+        // Traverse to the parent element with a `data-id` attribute
+        const elementWithId = (container.nodeType === Node.TEXT_NODE
+            ? container.parentElement
+            : container) as HTMLElement;
+
+        const dataIdElement = elementWithId?.closest('[data-id]'); // Find closest ancestor with `data-id`
+        return dataIdElement?.getAttribute('data-id') || null; // Return the `data-id` or null if not found
+    }
+
+    addBlockAfter(data: any[], targetDataId: string, newBlock: any): any[] {
+        // Find the index of the block with the specified dataId
+        const targetIndex = data.findIndex(block => block.dataId === targetDataId);
+
+        if (targetIndex === -1) {
+            console.error(`Block with dataId "${targetDataId}" not found.`);
+            return data;
+        }
+
+        // Insert the new block after the target index
+        const updatedData = [
+            ...data.slice(0, targetIndex + 1),
+            newBlock,
+            ...data.slice(targetIndex + 1),
+        ];
+
+        return updatedData;
+    }
+    syncCurrentAttributesWithCursor(): void {
+        const [start, end] = this.getSelectionRange();
+        if (start === end) {
+            const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
+            if (piece) {
+                if (piece !== this.lastPiece) {
+                    this.manualOverride = false;
+                    this.lastPiece = piece;
+                }
+                if (!this.manualOverride) {
+                    this.currentAttributes = {
+                        bold: piece.attributes.bold,
+                        italic: piece.attributes.italic,
+                        underline: piece.attributes.underline,
+                        hyperlink: piece.attributes.hyperlink || false
+                    };
+                    this.toolbarView.updateActiveStates(this.currentAttributes);
+                }
+                // Show below link..
+                const hyperlink = piece?.attributes.hyperlink; 
+                if(hyperlink && typeof hyperlink === 'string'){
+                    showHyperlinkViewButton(hyperlink);
+                }
+                else{
+                    hideHyperlinkViewButton()
+                }
+            } else {
+                if (!this.manualOverride) {
+                    this.currentAttributes = { bold: false, italic: false, underline: false,hyperlink:false };
+                    this.toolbarView.updateActiveStates(this.currentAttributes);
+                }
+                this.lastPiece = null;
+            }
+        }
+    }
+
+    setCursorPosition(position: number, dataId: string | null = ''): void {
+        if (dataId === '')
+            this.editorView.container.focus();
+        else {
+            const divDataid = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement
+            divDataid.focus();
+
+        }
+        const sel = window.getSelection();
+        if (!sel) return;
+        const range = document.createRange();
+        let charIndex = 0;
+        const nodeStack: Node[] = [this.editorView.container];
+        let node: Node | undefined;
+
+        while ((node = nodeStack.pop())) {
+            if (node.nodeType === 3) {
+                const textNode = node as Text;
+                const nextCharIndex = charIndex + textNode.length;
+                if (position >= charIndex && position <= nextCharIndex) {
+                    range.setStart(textNode, position - charIndex);
+                    range.collapse(true);
+                    break;
+                }
+                charIndex = nextCharIndex;
+            } else if ((node as HTMLElement).tagName === 'BR') {
+                if (position === charIndex) {
+                    range.setStartBefore(node);
+                    range.collapse(true);
+                    break;
+                }
+                charIndex++;
+            } else {
+                const el = node as HTMLElement;
+                let i = el.childNodes.length;
+                while (i--) {
+                    nodeStack.push(el.childNodes[i]);
+                }
+            }
+        }
+
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+
 }
+
 
 (window as any).TextIgniter = TextIgniter;

@@ -1,12 +1,10 @@
-interface EditorConfig {
-    features: string[];
-}
-interface NodeJson {
-    type: string;
-    attributes: {
-        [key: string]: string;
-    };
-    children: (NodeJson | string)[];
+interface CurrentAttributeDTO {
+    bold: boolean;
+    italic: boolean;
+    underline: boolean;
+    undo?: boolean;
+    redo?: boolean;
+    hyperlink?: string | boolean;
 }
 
-export type { EditorConfig, NodeJson };
+export type { CurrentAttributeDTO };
