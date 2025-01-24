@@ -282,7 +282,6 @@ class TextIgniter {
             { feature: 'alignRight', id: 'alignRight', icon: './src/assets/icons8-align-right-48.png' },
             { feature: 'unorderedList', id: 'alignRight', icon: './src/assets/icons8-list-50.png' },
             { feature: 'orderedList', id: 'alignRight', icon: './src/assets/icons8-numbered-list-50.png' },
-            { feature: 'hyperlink', id: 'hyperlink', icon: './src/assets/icons8-hyperlink-50.png' },
           ];
   
         const createSelect = (id:string, options:string[]) => {
