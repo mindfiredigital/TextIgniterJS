@@ -1,6 +1,6 @@
 import EventEmitter from "./utils/events";
 import Piece from "./piece";
-import { start } from "repl";
+
 class TextDocument extends EventEmitter {
     undoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
     redoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
@@ -45,15 +45,16 @@ class TextDocument extends EventEmitter {
         return this.pieces.map(p => p.text).join("");
     }
 
-    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = ''): void {
+    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean,hyperlink?:boolean|string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = ''): void {
         let offset = 0;
         let newPieces: Piece[] = [];
         let inserted = false;
         let index = 0;
         if (dataId !== '' || dataId !== null) {
+            index = this.blocks.findIndex((block: any) => block.dataId === dataId);
 
-            index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-            offset = this.currentOffset;
+            // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+            // offset = this.currentOffset;
             // offset = this.getCursorOffset(document.querySelector('[data-id="' + dataId + '"]') as HTMLElement);
         }
         const previousValue = this.getRangeText(position, position);
@@ -66,7 +67,7 @@ class TextDocument extends EventEmitter {
                 if (relPos > 0) {
                     newPieces.push(new Piece(piece.text.slice(0, relPos), { ...piece.attributes }));
                 }
-                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false }));
+                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false,hyperlink: attributes.hyperlink || false}));
                 if (relPos < piece.text.length) {
                     newPieces.push(new Piece(piece.text.slice(relPos), { ...piece.attributes }));
                 }
@@ -79,10 +80,10 @@ class TextDocument extends EventEmitter {
 
         if (!inserted) {
             const lastPiece = newPieces[newPieces.length - 1];
-            if (lastPiece && lastPiece.hasSameAttributes(new Piece("", { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false }))) {
+            if (lastPiece && lastPiece.hasSameAttributes(new Piece("", { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false,hyperlink: attributes.hyperlink || false }))) {
                 lastPiece.text += text;
             } else {
-                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false }));
+                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false,hyperlink: attributes.hyperlink || false }));
             }
         }
 
@@ -209,8 +210,16 @@ class TextDocument extends EventEmitter {
         // this.setCursorPositionUsingOffset(ele, offset);
 
     }
+
     deleteBlocks() {
-        this.blocks.filter((block: any) => !this.dataIds.includes(block.dataId))
+        this.blocks = this.blocks.filter((block: any) => {
+            if (this.dataIds.includes(block.dataId)) {
+                if (block.dataId === 'data-id-1734604240404') {
+                    block.pieces = [new Piece(" ")]
+                    return block;
+                }
+            }
+        })
         this.emit('documentChanged', this);
     }
 
@@ -303,32 +312,73 @@ class TextDocument extends EventEmitter {
         if (!selection || selection.rangeCount === 0) {
             return -1; // No selection or cursor in the container
         }
-
+    
         const range = selection.getRangeAt(0);
         let offset = 0;
-
+    
         const traverseNodes = (node: Node): boolean => {
             if (node === range.startContainer) {
                 offset += range.startOffset;
                 return true; // Found the cursor
             }
-
-            if (node.nodeType === 3) { // Text node
-                offset += node.textContent?.length || 0;
+    
+            if (node.nodeType === Node.TEXT_NODE) {
+                offset += (node.textContent || '').length;
             }
-
-            return Array.from(node.childNodes).some(traverseNodes);
+    
+            for (const child of Array.from(node.childNodes)) {
+                if (traverseNodes(child)) {
+                    return true;
+                }
+            }
+    
+            return false;
         };
-
+    
         traverseNodes(container);
-
+    
         return offset;
+    }
+    
+    applyHyperlinkRange(start: number, end: number, url: string): void {
+        this.formatAttribute(start, end, 'hyperlink', url);
+    }
+
+
+    removeHyperlinkRange(start: number, end: number): void {
+        this.formatAttribute(start, end, 'hyperlink', false);
+    }
+
+    getCommonHyperlinkInRange(start: number, end: number): string | null {
+        let offset = this.currentOffset;
+        let index = 0;
+        if (this.selectedBlockId) {
+            index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId);
+        }
+        const pieces = this.blocks[index].pieces;
+        let commonLink: string | null = null;
+
+        for (let piece of pieces) {
+            const pieceEnd = offset + piece.text.length;
+            if (pieceEnd > start && offset < end) {
+                const pieceLink = piece.attributes.hyperlink || null;
+                if (commonLink === null) {
+                    commonLink = pieceLink;
+                } else if (commonLink !== pieceLink) {
+                    // Different hyperlinks in selection
+                    return null;
+                }
+            }
+            offset = pieceEnd;
+        }
+        return commonLink;
     }
 
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'],
         // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
         value: string | boolean): void {
         console.log(attribute, "attribute1", start, end)
+
         let newPieces: Piece[] = [];
         let offset = 0;
         let index = -1;
@@ -355,12 +405,12 @@ class TextDocument extends EventEmitter {
                 const selectedPiece = new Piece(pieceText.slice(startInPiece, endInPiece), { ...piece.attributes });
                 // selectedPiece.attributes[attribute] = value;
                 if (
-                    (attribute === 'bold' || attribute === 'italic' || attribute === 'underline' || attribute === 'undo' || attribute === 'redo') &&
+                    (attribute === 'bold' || attribute === 'italic' || attribute === 'underline' || attribute === 'undo' || attribute === 'redo' || attribute === 'hyperlink') &&
                     typeof value === 'boolean'
                 ) {
                     selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
                 } else if (
-                    (attribute === 'fontFamily' || attribute === 'fontSize') &&
+                    (attribute === 'fontFamily' || attribute === 'fontSize' || attribute === 'hyperlink') &&
                     typeof value === 'string'
                 ) {
                     selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
@@ -583,24 +633,40 @@ class TextDocument extends EventEmitter {
         return merged;
     }
 
+    // findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
+    //     // let currentOffset = 0;
+    //     let currentOffset = this.currentOffset;
+    //     // for (let piece of this.pieces) {
+    //     //     const pieceEnd = currentOffset + piece.text.length;
+    //     //     if (offset >= currentOffset && offset <= pieceEnd) {
+    //     //         return piece;
+    //     //     }
+    //     //     currentOffset = pieceEnd;
+    //     // }
+    //     if (dataId !== '') {
+    //         const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+    //         for (let piece of this.blocks[index].pieces) {
+    //             const pieceEnd = currentOffset + piece.text.length;
+    //             if (offset >= currentOffset && offset <= pieceEnd) {
+    //                 return piece;
+    //             }
+    //             currentOffset = pieceEnd;
+    //         }
+    //     }
+    //     return null;
+    // }
     findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
-        // let currentOffset = 0;
-        let currentOffset = this.currentOffset;
-        // for (let piece of this.pieces) {
-        //     const pieceEnd = currentOffset + piece.text.length;
-        //     if (offset >= currentOffset && offset <= pieceEnd) {
-        //         return piece;
-        //     }
-        //     currentOffset = pieceEnd;
-        // }
-        if (dataId !== '') {
-            const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-            for (let piece of this.blocks[index].pieces) {
-                const pieceEnd = currentOffset + piece.text.length;
-                if (offset >= currentOffset && offset <= pieceEnd) {
-                    return piece;
+        let currentOffset = 0;
+        if (dataId !== null && dataId !== '') {
+            const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+            if (index >= 0) {
+                for (let piece of this.blocks[index].pieces) {
+                    const pieceEnd = currentOffset + piece.text.length;
+                    if (offset >= currentOffset && offset < pieceEnd) {
+                        return piece;
+                    }
+                    currentOffset = pieceEnd;
                 }
-                currentOffset = pieceEnd;
             }
         }
         return null;
