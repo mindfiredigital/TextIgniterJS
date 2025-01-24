@@ -6,7 +6,7 @@ import { saveSelection,restoreSelection } from "./utils/selectionManager";
 import { parseHtmlToPieces } from "./utils/parseHtml";
 import {showHyperlinkViewButton,hideHyperlinkViewButton} from './attributes/hyperLink'
 import "./styles/text-igniter.css"
-
+import { icons } from "./assets/icons";
 
 type EditorConfig = {
     features : [string]
@@ -277,11 +277,11 @@ class TextIgniter {
         };
 
         const featuresWithPngIcon = [
-            { feature: 'alignLeft', id: 'alignLeft', icon: './src/assets/icons8-left-alignment-48.png' },
-            { feature: 'alignCenter', id: 'alignCenter', icon: './src/assets/icons8-align-center-48.png' },
-            { feature: 'alignRight', id: 'alignRight', icon: './src/assets/icons8-align-right-48.png' },
-            { feature: 'unorderedList', id: 'alignRight', icon: './src/assets/icons8-list-50.png' },
-            { feature: 'orderedList', id: 'alignRight', icon: './src/assets/icons8-numbered-list-50.png' },
+            { feature: 'alignLeft', id: 'alignLeft', icon: icons.left_align },
+            { feature: 'alignCenter', id: 'alignCenter', icon: icons.center_align },
+            { feature: 'alignRight', id: 'alignRight', icon: icons.right_align },
+            { feature: 'unorderedList', id: 'unorderedList', icon: icons.bullet_list },
+            { feature: 'orderedList', id: 'orderedList', icon: icons.numbered_list },
           ];
   
         const createSelect = (id:string, options:string[]) => {

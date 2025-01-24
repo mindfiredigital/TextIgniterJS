@@ -5,6 +5,7 @@ const { babel } = require("@rollup/plugin-babel");
 const terser = require("@rollup/plugin-terser");
 const postcss = require("rollup-plugin-postcss");
 const { dts } = require("rollup-plugin-dts");
+const copy = require("rollup-plugin-copy");
 
 module.exports = [
   {
@@ -37,6 +38,11 @@ module.exports = [
         presets: ["@babel/preset-env"],
       }),
       terser(),
+      copy({
+        targets: [
+          { src: "src/assets/**/*", dest: "dist/assets" },
+        ],
+      }),
     ],
   },
   {
