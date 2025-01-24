@@ -1,64 +1,76 @@
-.text-igniter {
-    width: 80%;
-    margin: auto;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-    position: relative;
-    margin-top: 20px;
-    text-align: left;
-    background-color: white;
-    color: black;
-}
 
-.toolbar {
-    display: flex;
-    justify-content: flex-start;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-    background-color: white;
-}
-
-.editor {
+.editor-container {
+    border: 1px solid #ccc;
     padding: 10px;
-    min-height: 400px;
-    overflow: auto;
-    outline: none;
-    border: none;
-}
+  }
 
-
-.toolbar button {
+  .toolbar {
+    border: 1px solid #ccc;
     padding: 5px;
+    margin-bottom: 10px;
+    display: inline-block;
+  }
+
+  .toolbar button {
+    margin-right: 5px;
+    padding: 5px 10px;
     cursor: pointer;
     border: none;
-    background-color: transparent;
-}
-
-button.active {
-    background-color: #9ba0a3;
-    border: none;
-    margin: 2px;
-}
-
-button {
-    margin: 2px;
-    padding: 5px;
-}
-
-.hyperlink-modal {
-    position: fixed;
-    transform: translate(-30%, -30%);
-    background-color: #fff;
-    background: var(--overlay-bg);
-    padding: 20px;
-    z-index: 1000;
-    width: 40%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background: none;
+    font-size: 16px;
   }
-  
-  .hyperlink-input {
-    display: block;
-    margin: 10px 0;
-    padding: 8px;
-    width: 95%;
+
+  .toolbar button.active {
+    background-color: #ddd;
   }
-  
+
+  #editor {
+    border: 1px solid #ccc;
+    padding: 10px;
+    min-height: 150px;
+    outline: none;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  .paragraph-block {
+    padding: 10px;
+    background: #f7f7f7;
+    margin: 5px;
+  }
+
+  #hyperlink-container {
+position: absolute;
+display: none;
+z-index: 1000;
+padding: 5px;
+border: 1px solid #ccc;
+border-radius: 4px;
+background: white;
+box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+  #hyperlink-container-view {
+position: absolute;
+display: none;
+z-index: 1000;
+padding: 5px;
+border: 1px solid #ccc;
+border-radius: 4px;
+background: white;
+box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#hyperlink-input {
+width: 200px;
+margin-right: 5px;
+}
+
+#apply-hyperlink:hover{
+background: #ccc;
+}
+#cancel-hyperlink:hover{
+background: #ccc;
+}
+.temporary-selection-highlight {
+  background-color:rgb(67, 111, 201) /* Light blue highlight */
+}

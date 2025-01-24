@@ -2,11 +2,11 @@ class Piece {
     text: string;
     attributes: {
         bold: boolean; italic: boolean; underline: boolean, undo?: boolean, redo?: boolean, fontFamily?: string;
-        fontSize?: string;
+        fontSize?: string;hyperlink?: string | boolean;
     };
     constructor(text: string, attributes: {
         bold?: boolean; italic?: boolean; underline?: boolean; undo?: boolean; redo?: boolean, fontFamily?: string;
-        fontSize?: string;
+        fontSize?: string;hyperlink?: string | boolean;
     } = {}) {
         this.text = text;
         const fontFamilySelect = document.getElementById('fontFamily') as HTMLSelectElement;
@@ -29,8 +29,8 @@ class Piece {
             undo: attributes.undo || false,
             redo: attributes.redo || false,
             fontFamily: attributes.fontFamily || selectedFontFamilyValue, // Default font family
-            fontSize: attributes.fontSize || selectedFontSizeValue      // Default font size
-
+            fontSize: attributes.fontSize || selectedFontSizeValue ,     // Default font size
+            hyperlink: attributes.hyperlink || false,
         };
     }
     isBold(): boolean { return this.attributes.bold; }
@@ -55,7 +55,16 @@ class Piece {
             this.attributes.undo === other.attributes.undo &&
             this.attributes.redo === other.attributes.redo &&
             this.attributes.fontFamily === other.attributes.fontFamily &&
-            this.attributes.fontSize === other.attributes.fontSize
+            this.attributes.fontSize === other.attributes.fontSize &&
+               this.attributes.italic === other.attributes.italic &&
+               this.attributes.underline === other.attributes.underline &&
+               this.attributes.hyperlink === other.attributes.hyperlink 
+    }
+    getHyperlink(): string | boolean {
+        return this.attributes.hyperlink || false;
+    }
+    setHyperlink(url: string | boolean): void {
+        this.attributes.hyperlink = url;
     }
 }
 

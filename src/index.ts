@@ -2,10 +2,17 @@ import TextDocument from "./textDocument";
 import EditorView from "./view/editorView";
 import ToolbarView from "./view/toolbarView";
 import Piece from "./piece";
-import { saveSelection } from "./utils/selectionManager";
+import { saveSelection,restoreSelection } from "./utils/selectionManager";
 import { parseHtmlToPieces } from "./utils/parseHtml";
+import {showHyperlinkViewButton,hideHyperlinkViewButton} from './attributes/hyperLink'
+import "./styles/text-igniter.css"
 
-export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean }
+
+type EditorConfig = {
+    features : [string]
+}
+
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean,hyperlink?: string | boolean }
 
 class TextIgniter {
     document: TextDocument;
@@ -14,18 +21,31 @@ class TextIgniter {
     currentAttributes: CurrentAttributeDTO;
     manualOverride: boolean;
     lastPiece: Piece | null;
+    editorContainer : HTMLElement | null;
+    toolbarContainer : HTMLElement | null;
+    savedSelection: { start: number; end: number } | null = null;
 
-    constructor(editorContainer: HTMLElement, toolbarContainer: HTMLElement) {
+    constructor(editorId:string,config:EditorConfig) {
+
+        this.createEditor(editorId,config);
+        
+        this.editorContainer = document.getElementById('editor') || null;
+        this.toolbarContainer = document.getElementById('toolbar') || null;
+
+        if(!this.editorContainer || !this.toolbarContainer) {
+            throw new Error("Editor element not found or incorrect element type.");
+        }
+
         this.document = new TextDocument();
-        this.editorView = new EditorView(editorContainer, this.document);
-        this.toolbarView = new ToolbarView(toolbarContainer);
-        this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, };
+        this.editorView = new EditorView(this.editorContainer, this.document);
+        this.toolbarView = new ToolbarView(this.toolbarContainer);
+        this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, hyperlink:false};
         this.manualOverride = false;
         this.lastPiece = null;
         this.toolbarView.on('toolbarAction', (action: string, dataId: string[] = []) => this.handleToolbarAction(action, dataId));
         this.document.on('documentChanged', () => this.editorView.render());
-        editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
-        editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
+        this.editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
+        this.editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
         document.addEventListener('mouseup', () => {
             const dataId = this.document.getAllSelectedDataIds();
             console.log('Selected text is inside element with data-id:', dataId);
@@ -94,9 +114,26 @@ class TextIgniter {
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 const key = e.key.toLowerCase();
-                if (['b', 'i', 'u'].includes(key)) {
+                if (['b', 'i', 'u','h'].includes(key)) {
                     e.preventDefault();
-                    const action = key === 'b' ? 'bold' : key === 'i' ? 'italic' : 'underline';
+                    let action = 'b';
+                    switch (key) {
+                        case 'b':
+                            action = 'bold';
+                            break;
+                        case 'i':
+                            action = 'italic';
+                            break;
+                        case 'u':
+                            action = 'underline';
+                            break;
+                        case 'h':
+                            action = 'hyperlink';
+                            break;
+                    
+                        default:
+                            break;
+                    }
                     this.handleToolbarAction(action);
                 }
 
@@ -130,7 +167,7 @@ class TextIgniter {
         document.addEventListener('selectionchange', this.handleSelectionChange.bind(this));
         this.document.emit('documentChanged', this.document);
 
-        editorContainer.addEventListener('paste', (e: ClipboardEvent) => {
+        this.editorContainer.addEventListener('paste', (e: ClipboardEvent) => {
             e.preventDefault();
             const html = e.clipboardData?.getData('text/html');
             const [start, end] = this.getSelectionRange();
@@ -154,11 +191,11 @@ class TextIgniter {
             this.setCursorPosition(offset);
         });
 
-        editorContainer.addEventListener('dragover', (e) => {
+        this.editorContainer.addEventListener('dragover', (e) => {
             e.preventDefault();
         });
-
-        editorContainer.addEventListener('drop', (e: DragEvent) => {
+        
+        this.editorContainer.addEventListener('drop', (e: DragEvent) => {
             e.preventDefault();
             const html = e.dataTransfer?.getData('text/html');
             const [start, end] = this.getSelectionRange();
@@ -184,6 +221,192 @@ class TextIgniter {
 
 
     }
+    
+    createEditor(editorId:string,config:EditorConfig) {
+        const allowedFontFamily = [
+            'Arial',
+            'Times New Roman',
+            'Courier New',
+            'Verdana',
+        ];
+        const allowedFontSizes = [
+            '12px',
+            '14px',
+            '16px',
+            '18px',
+            '20px',
+          ];
+        const container = document.getElementById(editorId);
+        if(!container){
+            throw new Error("Editor element not found or incorrect element type.");
+        }
+        const toolbar = document.createElement('div');
+        toolbar.className = 'toolbar';
+        toolbar.id = 'toolbar';
+        container.appendChild(toolbar);
+  
+        const editor = document.createElement('div');   
+        editor.id = 'editor';
+        editor.contentEditable = 'true';
+        container.appendChild(editor);
+  
+        // Map features to button labels/icons
+        const featureLabels : any= {
+          'bold': '<strong>B</strong>',
+          'italic': '<em>I</em>',
+          'underline': '<u>U</u>',
+          'hyperlink': '&#128279;',   // Unicode for link symbol
+
+          'alignLeft': '&#8676;',    // Unicode for left arrow
+          'alignCenter': '&#8596;',  // Unicode for left-right arrow
+          'alignRight': '&#8677;',   // Unicode for right arrow
+
+          'unorderedList': '&#8226;',   // Unicode for bullet
+          'orderedList': '1.',      // Simple text representation
+          'fontFamily' : 'fontFamily',
+          'fontSize': 'fontSize',
+
+          'subscript': 'X<sub>2</sub>',
+          'superscript': 'X<sup>2</sup>',
+          'justify': '&#8644;',       // Unicode for justify icon
+          'insert_table': '&#8866;',  // Unicode for table icon
+          'insert_layout': '&#10064;',// Unicode for layout icon
+          'heading': 'H',
+          'image': '&#128247;',       // Unicode for camera symbol
+          'colors': '&#127912;',      // Unicode for palette symbol
+        };
+
+        const featuresWithPngIcon = [
+            { feature: 'alignLeft', id: 'alignLeft', icon: './src/assets/icons8-left-alignment-48.png' },
+            { feature: 'alignCenter', id: 'alignCenter', icon: './src/assets/icons8-align-center-48.png' },
+            { feature: 'alignRight', id: 'alignRight', icon: './src/assets/icons8-align-right-48.png' },
+            { feature: 'unorderedList', id: 'alignRight', icon: './src/assets/icons8-list-50.png' },
+            { feature: 'orderedList', id: 'alignRight', icon: './src/assets/icons8-numbered-list-50.png' },
+          ];
+  
+        const createSelect = (id:string, options:string[]) => {
+            const select = document.createElement('select');
+            select.id = id;
+            options.forEach(optionValue => {
+              const option = document.createElement('option');
+              option.value = optionValue;
+              option.textContent = optionValue;
+              select.appendChild(option);
+            });
+            return select;
+          };
+
+        config.features.forEach(feature => {
+            if(feature === 'fontFamily'){
+            const fontFamilySelect = createSelect('fontFamily', allowedFontFamily);
+          toolbar.appendChild(fontFamilySelect);
+            } else if(feature === 'fontSize'){
+                const fontSizeSelect = createSelect('fontSize',allowedFontSizes );
+                  toolbar.appendChild(fontSizeSelect);
+            }else if(featuresWithPngIcon.map(item=>item.feature).indexOf(feature) !== -1){
+                const featureDataArray = featuresWithPngIcon.filter(item=>item.feature === feature);
+                let featureData = null;
+                if(featureDataArray?.length > 0){
+                    featureData = featureDataArray[0];
+                }
+                const button = document.createElement('button');
+                button.id = feature;
+                button.dataset.action = feature;
+                const img = document.createElement('img');
+                img.src = featureData?.icon || "";
+                img.width = 20;
+                img.height = 20;
+                button.appendChild(img);
+                toolbar.appendChild(button);
+            }else {
+                const button = document.createElement('button');
+                button.dataset.action = feature;
+                button.innerHTML = featureLabels[feature] || feature;
+                button.id = feature;
+                // if(['leftAlign','centerAlign','rightAlign','bulletList','numberedList'].indexOf(feature) !== -1){
+                //     button.id = feature;
+                // }
+                // Add the title attribute for hover effect
+                button.title = feature
+                .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+            
+            toolbar.appendChild(button);
+        }
+
+        });
+
+            // Create the container div
+            const hyperlinkContainer = document.createElement("div");
+            hyperlinkContainer.id = "hyperlink-container";
+            hyperlinkContainer.style.display = "none";
+
+            // Create the input element
+            const hyperlinkInput = document.createElement("input");
+            hyperlinkInput.type = "text";
+            hyperlinkInput.id = "hyperlink-input";
+            hyperlinkInput.placeholder = "Enter a URL...";
+
+            // Create the Apply button
+            const applyButton = document.createElement("button");
+            applyButton.id = "apply-hyperlink";
+            applyButton.textContent = "Link";
+
+            // Create the Cancel button
+            const cancelButton = document.createElement("button");
+            cancelButton.id = "cancel-hyperlink";
+            cancelButton.textContent = "Unlink";
+
+            // Append input and buttons to the container
+            hyperlinkContainer.appendChild(hyperlinkInput);
+            hyperlinkContainer.appendChild(applyButton);
+            hyperlinkContainer.appendChild(cancelButton);
+
+            // Append the container to the toolbar
+
+            toolbar.appendChild(hyperlinkContainer);
+
+
+
+
+             // Create the container div
+             const viewHyperlinkContainer = document.createElement("div");
+             viewHyperlinkContainer.id = "hyperlink-container-view";
+             viewHyperlinkContainer.style.display = "none";
+ 
+            //  // Create the input element
+             const hyperLinkViewSpan = document.createElement("span");
+             hyperLinkViewSpan.id = "hyperlink-view-span";
+             hyperLinkViewSpan.innerHTML = "Visit URL : ";
+
+             const hyperLinkAnchor = document.createElement("a");
+             hyperLinkAnchor.id = "hyperlink-view-link";
+             hyperLinkAnchor.href="";
+             hyperLinkAnchor.target = "_blank";
+
+
+            // Create the Apply button
+            // const editHyperlinkButton = document.createElement("button");
+            // editHyperlinkButton.id = "edit-hyperlink";
+            // editHyperlinkButton.textContent = "edit |";
+
+            // Create the Cancel button
+            // const removeHyperlinkButton = document.createElement("button");
+            // removeHyperlinkButton.id = "delete-hyperlink";
+            // removeHyperlinkButton.textContent = "remove";
+
+ 
+            //  // Append input and buttons to the container
+             viewHyperlinkContainer.appendChild(hyperLinkViewSpan);
+             viewHyperlinkContainer.appendChild(hyperLinkAnchor);
+            //  viewHyperlinkContainer.appendChild(editHyperlinkButton);
+            //  viewHyperlinkContainer.appendChild(removeHyperlinkButton);
+ 
+            //  // Append the container to the toolbar
+ 
+             toolbar.appendChild(viewHyperlinkContainer);
+      }
 
     getSelectionRange(): [number, number] {
         const sel = saveSelection(this.editorView.container);
@@ -283,6 +506,18 @@ class TextIgniter {
                     // this.document.toggleRedoRange(start, end);
                     this.document.redo();
                     break;
+                case 'hyperlink':
+                    if (start < end) {
+                        // Get the existing hyperlink, if any
+                        const existingLink = this.document.getCommonHyperlinkInRange(start, end);
+        
+                        // Show the hyperlink input box
+                        this.showHyperlinkInput(existingLink);
+                    } else {
+                        // No selection
+                        alert("Please select the text you want to hyperlink.");
+                    }
+                    break;
             }
         } else {
             this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'] = !this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'];
@@ -292,7 +527,135 @@ class TextIgniter {
         this.toolbarView.updateActiveStates(this.currentAttributes);
     }
 
+    showHyperlinkInput(existingLink: string | null): void {
+        // Get the elements
+        const hyperlinkContainer = document.getElementById('hyperlink-container');
+        const hyperlinkInput = document.getElementById('hyperlink-input') as HTMLInputElement;
+        const applyButton = document.getElementById('apply-hyperlink');
+        const cancelButton = document.getElementById('cancel-hyperlink');
+
+        if (hyperlinkContainer && hyperlinkInput && applyButton && cancelButton) {
+            hyperlinkContainer.style.display = 'block';
+
+            // position the container near the selection or toolbar
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                hyperlinkContainer.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                hyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
+            }
+
+            // Set the existing link
+            hyperlinkInput.value = existingLink || '';
+
+            // Save the current selection
+            this.savedSelection = saveSelection(this.editorView.container);
+
+            // Show temporary selection 
+            this.highlightSelection();
+
+            // Ensure the hyperlink input is focused
+            hyperlinkInput.focus();
+
+            // Remove any previous event listeners
+            applyButton.onclick = null;
+            cancelButton.onclick = null;
+
+            // Handle the 'Link' button
+            applyButton.onclick = () => {
+                const url = hyperlinkInput.value.trim();
+                if (url) {
+                    this.applyHyperlink(url);
+                } else {
+                    // alert('Please enter a valid URL.');
+                }
+                hyperlinkContainer.style.display = 'none';
+            };
+
+            // Handle the 'Unlink' button
+            cancelButton.onclick = () => {
+                this.removeHyperlink();
+                hyperlinkContainer.style.display = 'none';
+            };
+        }
+    }
+
+    highlightSelection(): void {
+        // Remove any existing temporary highlights
+        this.removeHighlightSelection();
+
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+    
+            // Create a wrapper span
+            const span = document.createElement('span');
+            span.className = 'temporary-selection-highlight';
+    
+            // Extract the selected content and wrap it
+            span.appendChild(range.extractContents());
+            range.insertNode(span);
+    
+            // Adjust the selection to encompass the new span
+            selection.removeAllRanges();
+            const newRange = document.createRange();
+            newRange.selectNodeContents(span);
+            selection.addRange(newRange);
+        }
+    }
+
+    removeHighlightSelection(): void {
+        const highlights = this.editorContainer?.querySelectorAll('span.temporary-selection-highlight');
+        highlights?.forEach((span) => {
+            const parent = span.parentNode;
+            if (parent) {
+                while (span.firstChild) {
+                    parent.insertBefore(span.firstChild, span);
+                }
+                parent.removeChild(span);
+            }
+        });
+    }
+
+    applyHyperlink(url: string): void {
+        // Remove any existing temporary highlights
+        this.removeHighlightSelection();
+
+        // Restore the selection
+        restoreSelection(this.editorView.container, this.savedSelection);
+
+        const [start, end] = this.getSelectionRange();
+        if (start < end) {
+            this.document.applyHyperlinkRange(start, end, url);
+            this.editorView.render();
+            // Restore selection and focus
+            restoreSelection(this.editorView.container, this.savedSelection);
+            this.editorView.container.focus();
+        }
+        this.savedSelection = null;
+    }
+
+    removeHyperlink(): void {
+        // Remove any existing temporary highlights
+        this.removeHighlightSelection();
+
+        // Restore the selection
+        restoreSelection(this.editorView.container, this.savedSelection);
+
+        const [start, end] = this.getSelectionRange();
+        if (start < end) {
+            this.document.removeHyperlinkRange(start, end);
+            this.editorView.render();
+            // Restore selection and focus
+            restoreSelection(this.editorView.container, this.savedSelection);
+            this.editorView.container.focus();
+        }
+        this.savedSelection = null;
+    }
+    
     handleSelectionChange(): void {
+        this.syncCurrentAttributesWithCursor();
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) {
             // this.document.selectedBlockId = null;
@@ -304,9 +667,6 @@ class TextIgniter {
         if (parentBlock && parentBlock instanceof HTMLElement) {
             this.document.selectedBlockId = parentBlock.getAttribute('data-id') || null;
         }
-        // else {
-        //     this.document.selectedBlockId = null;
-        // }
     }
 
     handleKeydown(e: KeyboardEvent): void {
@@ -497,13 +857,22 @@ class TextIgniter {
                     this.currentAttributes = {
                         bold: piece.attributes.bold,
                         italic: piece.attributes.italic,
-                        underline: piece.attributes.underline
+                        underline: piece.attributes.underline,
+                        hyperlink: piece.attributes.hyperlink || false
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
                 }
+                // Show below link..
+                const hyperlink = piece?.attributes.hyperlink; 
+                if(hyperlink && typeof hyperlink === 'string'){
+                    showHyperlinkViewButton(hyperlink);
+                }
+                else{
+                    hideHyperlinkViewButton()
+                }
             } else {
                 if (!this.manualOverride) {
-                    this.currentAttributes = { bold: false, italic: false, underline: false };
+                    this.currentAttributes = { bold: false, italic: false, underline: false,hyperlink:false };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
                 }
                 this.lastPiece = null;

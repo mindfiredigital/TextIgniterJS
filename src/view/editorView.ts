@@ -57,11 +57,14 @@ class EditorView {
     }
 
     renderPiece(piece: Piece): DocumentFragment {
-        const lines = piece.text.split('\n');
-        return this.wrapAttributes(lines, piece.attributes);
+
+            const lines = piece.text.split('\n');
+            return this.wrapAttributes(lines, piece.attributes);
+          
     }
 
-    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean; fontFamily?: string; fontSize?: string }): DocumentFragment {
+
+    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean; fontFamily?: string; fontSize?: string ;hyperlink?:string|boolean}): DocumentFragment {
         const fragment = document.createDocumentFragment();
         lines.forEach((line, index) => {
             let textNode: Node = document.createTextNode(line);
@@ -98,10 +101,19 @@ class EditorView {
                 console.log(selectedFontSizeValue, "Selected Font size");
             }
 
+            if (attrs.hyperlink && typeof attrs.hyperlink === 'string') {
+                const a = document.createElement('a');
+                a.href = attrs.hyperlink;
+                a.target = "_blank";//For new tab
+                a.appendChild(textNode);
+                textNode = a;
+            }
+
             const span = document.createElement('span');
             span.style.fontFamily = attrs.fontFamily || selectedFontFamilyValue;
             span.style.fontSize = attrs.fontSize || selectedFontSizeValue;
             span.appendChild(textNode);
+
 
             fragment.appendChild(span);
             if (index < lines.length - 1) {
