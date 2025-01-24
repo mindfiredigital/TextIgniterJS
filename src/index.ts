@@ -313,11 +313,17 @@ class TextIgniter {
                 const button = document.createElement('button');
                 button.id = feature;
                 button.dataset.action = feature;
-                const img = document.createElement('img');
-                img.src = featureData?.icon || "";
-                img.width = 20;
-                img.height = 20;
-                button.appendChild(img);
+                const svg = featureData?.icon || "";
+                button.innerHTML = svg; 
+                toolbar.appendChild(button);
+
+                // Commented for future use
+                
+                // const img = document.createElement('img');
+                // img.src = featureData?.icon || "";
+                // img.width = 20;
+                // img.height = 20;
+                // button.appendChild(img);
                 toolbar.appendChild(button);
             }else {
                 const button = document.createElement('button');
