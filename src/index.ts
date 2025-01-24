@@ -276,6 +276,7 @@ class TextIgniter {
           'colors': '&#127912;',      // Unicode for palette symbol
         };
 
+        // Features with custom SVG icons
         const featuresWithPngIcon = [
             { feature: 'alignLeft', id: 'alignLeft', icon: icons.left_align },
             { feature: 'alignCenter', id: 'alignCenter', icon: icons.center_align },
