@@ -8,7 +8,7 @@ export class InsertTableHandler {
     // Open a modal to let the user specify the table size
     public openTableModal() {
       const modal = document.createElement("div");
-      modal.classList.add("table-modal");
+      modal.classList.add("modal");
   
       const rowInput = document.createElement("input");
       rowInput.type = "number";
@@ -38,16 +38,6 @@ export class InsertTableHandler {
       modal.appendChild(colInput);
       modal.appendChild(insertButton);
       modal.appendChild(closeButton);
-  
-      // Style the modal (you can modify these styles)
-      modal.style.position = "fixed";
-      modal.style.top = "10%";
-      modal.style.left = "50%";
-      modal.style.transform = "translate(-30%, -30%)";
-      modal.style.padding = "10px";
-      modal.style.backgroundColor = "white";
-      modal.style.boxShadow = "0px 0px 10px rgba(0,0,0,0.1)";
-  
       document.body.appendChild(modal);
     }
   
