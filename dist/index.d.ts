@@ -133,7 +133,7 @@ declare class ToolbarView extends EventEmitter {
 }
 
 type EditorConfig = {
-    features: [string];
+    features: string[];
 };
 interface CurrentAttributeDTO {
     bold: boolean;
