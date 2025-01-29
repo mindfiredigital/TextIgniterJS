@@ -45,7 +45,7 @@ class TextDocument extends EventEmitter {
         return this.pieces.map(p => p.text).join("");
     }
 
-    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean,hyperlink?:boolean|string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = ''): void {
+    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean, hyperlink?: boolean | string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = ''): void {
         let offset = 0;
         let newPieces: Piece[] = [];
         let inserted = false;
@@ -67,7 +67,7 @@ class TextDocument extends EventEmitter {
                 if (relPos > 0) {
                     newPieces.push(new Piece(piece.text.slice(0, relPos), { ...piece.attributes }));
                 }
-                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false,hyperlink: attributes.hyperlink || false}));
+                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }));
                 if (relPos < piece.text.length) {
                     newPieces.push(new Piece(piece.text.slice(relPos), { ...piece.attributes }));
                 }
@@ -80,10 +80,10 @@ class TextDocument extends EventEmitter {
 
         if (!inserted) {
             const lastPiece = newPieces[newPieces.length - 1];
-            if (lastPiece && lastPiece.hasSameAttributes(new Piece("", { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false,hyperlink: attributes.hyperlink || false }))) {
+            if (lastPiece && lastPiece.hasSameAttributes(new Piece("", { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }))) {
                 lastPiece.text += text;
             } else {
-                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false,hyperlink: attributes.hyperlink || false }));
+                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }));
             }
         }
 
@@ -166,6 +166,7 @@ class TextDocument extends EventEmitter {
 
         if (dataId !== '' || dataId !== null) {
             index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+            console.log(index, "index action")
             offset = currentOffset;
 
 
@@ -203,7 +204,7 @@ class TextDocument extends EventEmitter {
         }
         const newValue = this.getRangeText(start - 1, end - 1);
         console.log(newValue)
-
+        
         this.emit('documentChanged', this);
         // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
         // ele.focus();
@@ -312,34 +313,34 @@ class TextDocument extends EventEmitter {
         if (!selection || selection.rangeCount === 0) {
             return -1; // No selection or cursor in the container
         }
-    
+
         const range = selection.getRangeAt(0);
         let offset = 0;
-    
+
         const traverseNodes = (node: Node): boolean => {
             if (node === range.startContainer) {
                 offset += range.startOffset;
                 return true; // Found the cursor
             }
-    
+
             if (node.nodeType === Node.TEXT_NODE) {
                 offset += (node.textContent || '').length;
             }
-    
+
             for (const child of Array.from(node.childNodes)) {
                 if (traverseNodes(child)) {
                     return true;
                 }
             }
-    
+
             return false;
         };
-    
+
         traverseNodes(container);
-    
+
         return offset;
     }
-    
+
     applyHyperlinkRange(start: number, end: number, url: string): void {
         this.formatAttribute(start, end, 'hyperlink', url);
     }

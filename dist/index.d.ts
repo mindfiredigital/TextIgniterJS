@@ -142,6 +142,8 @@ interface CurrentAttributeDTO {
     undo?: boolean;
     redo?: boolean;
     hyperlink?: string | boolean;
+    fontFamily?: string;
+    fontSize?: string;
 }
 declare class TextIgniter {
     document: TextDocument;

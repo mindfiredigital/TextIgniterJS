@@ -19,7 +19,7 @@ class EditorView {
             if (block.dataId !== '') {
                 let wrapperDiv: HTMLElement;
                 let olWrapper: HTMLElement;
-                if (block.listType === 'ol') {
+                if (block.listType === 'ol' || block.listType === 'li') {
                     wrapperDiv = document.createElement('ol');
                     wrapperDiv.setAttribute('start', block?.listStart.toString());
                 } else if (block.listType === 'ul') {
@@ -30,8 +30,8 @@ class EditorView {
                 // const wrapperDiv = document.createElement("div");
                 wrapperDiv.setAttribute("data-id", block.dataId);
                 wrapperDiv.setAttribute("class", block.class);
-                wrapperDiv.style.textAlign = block.alignment || "left"; 
-                if (block.listType === 'ol' || block.listType === 'ul') {
+                wrapperDiv.style.textAlign = block.alignment || "left";
+                if (block.listType === 'ol' || block.listType === 'ul' || block.listType === 'li') {
                     olWrapper = document.createElement('li');
                     block.pieces.forEach((piece: Piece) => {
                         olWrapper.appendChild(this.renderPiece(piece));
@@ -58,13 +58,13 @@ class EditorView {
 
     renderPiece(piece: Piece): DocumentFragment {
 
-            const lines = piece.text.split('\n');
-            return this.wrapAttributes(lines, piece.attributes);
-          
+        const lines = piece.text.split('\n');
+        return this.wrapAttributes(lines, piece.attributes);
+
     }
 
 
-    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean; fontFamily?: string; fontSize?: string ;hyperlink?:string|boolean}): DocumentFragment {
+    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean; fontFamily?: string; fontSize?: string; hyperlink?: string | boolean }): DocumentFragment {
         const fragment = document.createDocumentFragment();
         lines.forEach((line, index) => {
             let textNode: Node = document.createTextNode(line);
