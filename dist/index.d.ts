@@ -174,4 +174,4 @@ declare class TextIgniter {
     setCursorPosition(position: number, dataId?: string | null): void;
 }
 
-export { type CurrentAttributeDTO, TextIgniter };
+export { type CurrentAttributeDTO, type EditorConfig, TextIgniter };
