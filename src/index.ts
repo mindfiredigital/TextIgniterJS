@@ -9,7 +9,7 @@ import "./styles/text-igniter.css"
 import { icons } from "./assets/icons";
 
 export type EditorConfig = {
-    features : [string]
+    features :string[]
 }
 
 export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean,hyperlink?: string | boolean ,fontFamily?: string;fontSize?: string;}
