@@ -31,6 +31,7 @@ class ToolbarView extends EventEmitter {
     updateActiveStates(attributes: CurrentAttributeDTO): void {
         this.container.querySelectorAll('button').forEach(btn => {
             const action = btn.getAttribute('data-action');
+
             let isActive = false;
             if (action === 'bold' && attributes.bold) isActive = true;
             if (action === 'italic' && attributes.italic) isActive = true;
@@ -38,6 +39,11 @@ class ToolbarView extends EventEmitter {
             if (action === 'undo' && attributes.undo) isActive = true;
             if (action === 'redo' && attributes.redo) isActive = true;
             btn.classList.toggle('active', isActive);
+        });
+        this.container.querySelectorAll('select').forEach(select => {
+            const action = select.getAttribute('data-action');
+            if(action === 'fontFamily' && attributes.fontFamily) select.value = attributes.fontFamily;
+            if(action === 'fontSize' && attributes.fontSize) select.value = attributes.fontSize;
         });
     }
 }

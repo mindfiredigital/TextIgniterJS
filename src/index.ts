@@ -12,7 +12,7 @@ export type EditorConfig = {
     features : [string]
 }
 
-export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean,hyperlink?: string | boolean }
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean,hyperlink?: string | boolean ,fontFamily?: string;fontSize?: string;}
 
 class TextIgniter {
     document: TextDocument;
@@ -287,6 +287,7 @@ class TextIgniter {
   
         const createSelect = (id:string, options:string[]) => {
             const select = document.createElement('select');
+            select.dataset.action = id;
             select.id = id;
             options.forEach(optionValue => {
               const option = document.createElement('option');
@@ -855,6 +856,7 @@ class TextIgniter {
         const [start, end] = this.getSelectionRange();
         if (start === end) {
             const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
+            console.log("this is the piece",piece);
             if (piece) {
                 if (piece !== this.lastPiece) {
                     this.manualOverride = false;
@@ -865,7 +867,9 @@ class TextIgniter {
                         bold: piece.attributes.bold,
                         italic: piece.attributes.italic,
                         underline: piece.attributes.underline,
-                        hyperlink: piece.attributes.hyperlink || false
+                        hyperlink: piece.attributes.hyperlink || false,
+                        fontFamily: piece.attributes.fontFamily,
+                        fontSize: piece.attributes.fontSize,
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
                 }
