@@ -79,6 +79,7 @@ declare class TextDocument extends EventEmitter {
     deleteBlocks(): void;
     getSelectedTextDataId(): string | null;
     getAllSelectedDataIds(): string[];
+    handleCtrlASelection(): string[];
     getSelectedDataIds(): string[];
     private getDataIdFromNode;
     getCursorOffset(container: HTMLElement): number;

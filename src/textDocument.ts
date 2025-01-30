@@ -204,7 +204,7 @@ class TextDocument extends EventEmitter {
         }
         const newValue = this.getRangeText(start - 1, end - 1);
         console.log(newValue)
-        
+
         this.emit('documentChanged', this);
         // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
         // ele.focus();
@@ -273,6 +273,25 @@ class TextDocument extends EventEmitter {
         }
         this.dataIds = selectedIds
         return selectedIds;
+    }
+
+    handleCtrlASelection(): string[] {
+        const selectedDataIds: string[] = [];
+        const editor = document.getElementById('editor'); // Assuming your contenteditable div has id 'editor'
+
+        if (editor) {
+            const childNodes = editor.querySelectorAll('[data-id]');
+            childNodes.forEach((node) => {
+                const dataId = node.getAttribute('data-id');
+                if (dataId && !selectedDataIds.includes(dataId)) {
+                    selectedDataIds.push(dataId);
+                }
+            });
+        }
+        this.dataIds = selectedDataIds;
+        console.log('Selected Data IDs:', selectedDataIds);
+        return selectedDataIds;
+        // Now you can use `selectedDataIds` as needed
     }
     getSelectedDataIds(): string[] {
         const selection = window.getSelection();
