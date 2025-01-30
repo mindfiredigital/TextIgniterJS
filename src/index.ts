@@ -9,10 +9,10 @@ import "./styles/text-igniter.css"
 import { icons } from "./assets/icons";
 
 export type EditorConfig = {
-    features :string[]
+    features: string[]
 }
 
-export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean,hyperlink?: string | boolean ,fontFamily?: string;fontSize?: string;}
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; }
 
 class TextIgniter {
     document: TextDocument;
@@ -146,7 +146,7 @@ class TextIgniter {
                 }
                 if (key === 'a') {
                     // e.preventDefault();
-                    const dataId = this.document.getAllSelectedDataIds();
+                    const dataId = this.document.handleCtrlASelection();
                     console.log('Selected text is inside element with data-id:', dataId);
                 }
 
@@ -896,7 +896,7 @@ class TextIgniter {
         const [start, end] = this.getSelectionRange();
         if (start === end) {
             const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
-            console.log("this is the piece",piece);
+            console.log("this is the piece", piece);
             if (piece) {
                 if (piece !== this.lastPiece) {
                     this.manualOverride = false;
@@ -981,4 +981,4 @@ class TextIgniter {
 
 
 (window as any).TextIgniter = TextIgniter;
-export {TextIgniter};
+export { TextIgniter };
