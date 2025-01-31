@@ -54,8 +54,7 @@ class TextDocument extends EventEmitter {
             index = this.blocks.findIndex((block: any) => block.dataId === dataId);
 
             // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-            // offset = this.currentOffset;
-            // offset = this.getCursorOffset(document.querySelector('[data-id="' + dataId + '"]') as HTMLElement);
+            offset = this.currentOffset;
         }
         const previousValue = this.getRangeText(position, position);
         console.log('run1..', text, position, previousValue)
