@@ -79,6 +79,7 @@ declare class TextDocument extends EventEmitter {
     deleteBlocks(): void;
     getSelectedTextDataId(): string | null;
     getAllSelectedDataIds(): string[];
+    handleCtrlASelection(): string[];
     getSelectedDataIds(): string[];
     private getDataIdFromNode;
     getCursorOffset(container: HTMLElement): number;
@@ -142,6 +143,8 @@ interface CurrentAttributeDTO {
     undo?: boolean;
     redo?: boolean;
     hyperlink?: string | boolean;
+    fontFamily?: string;
+    fontSize?: string;
 }
 declare class TextIgniter {
     document: TextDocument;
