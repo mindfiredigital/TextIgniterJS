@@ -317,9 +317,6 @@ class TextIgniter {
                 const svg = featureData?.icon || "";
                 button.innerHTML = svg;
                 toolbar.appendChild(button);
-
-                // Commented for future use
-
                 // const img = document.createElement('img');
                 // img.src = featureData?.icon || "";
                 // img.width = 20;
