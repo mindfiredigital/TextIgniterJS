@@ -652,39 +652,22 @@ class TextDocument extends EventEmitter {
         return merged;
     }
 
-    // findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
-    //     // let currentOffset = 0;
-    //     let currentOffset = this.currentOffset;
-    //     // for (let piece of this.pieces) {
-    //     //     const pieceEnd = currentOffset + piece.text.length;
-    //     //     if (offset >= currentOffset && offset <= pieceEnd) {
-    //     //         return piece;
-    //     //     }
-    //     //     currentOffset = pieceEnd;
-    //     // }
-    //     if (dataId !== '') {
-    //         const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-    //         for (let piece of this.blocks[index].pieces) {
-    //             const pieceEnd = currentOffset + piece.text.length;
-    //             if (offset >= currentOffset && offset <= pieceEnd) {
-    //                 return piece;
-    //             }
-    //             currentOffset = pieceEnd;
-    //         }
-    //     }
-    //     return null;
-    // }
     findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
         let currentOffset = 0;
         if (dataId !== null && dataId !== '') {
-            const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-            if (index >= 0) {
-                for (let piece of this.blocks[index].pieces) {
-                    const pieceEnd = currentOffset + piece.text.length;
-                    if (offset >= currentOffset && offset < pieceEnd) {
-                        return piece;
+            for(let i=0;i<this.blocks.length;i++) {
+                let block = this.blocks[i];
+                const blockLenght = block.pieces.reduce((acc:number,currVal:Piece) =>acc+currVal.text.length,0);
+                if(block.dataId == dataId){
+                    for (let piece of block.pieces) {
+                        const pieceEnd = currentOffset + piece.text.length;
+                        if (offset >= currentOffset && offset < pieceEnd) {
+                            return piece;
+                        }
+                        currentOffset = pieceEnd;
                     }
-                    currentOffset = pieceEnd;
+                }else{
+                    currentOffset += blockLenght;
                 }
             }
         }

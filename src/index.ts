@@ -893,7 +893,6 @@ class TextIgniter {
         const [start, end] = this.getSelectionRange();
         if (start === end) {
             const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
-            console.log("this is the piece", piece);
             if (piece) {
                 if (piece !== this.lastPiece) {
                     this.manualOverride = false;
