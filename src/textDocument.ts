@@ -202,6 +202,10 @@ class TextDocument extends EventEmitter {
             this.blocks[index - 1].pieces = _data
             console.log("runn1 --- > _data", _data)
             this.blocks[index].pieces = [new Piece(" ")]
+            this.blocks = this.blocks.filter((block: any, i: number) => {
+                if (i !== index)
+                    return block;
+            });
 
         } else
             this.blocks[index].pieces = _data
@@ -666,10 +670,10 @@ class TextDocument extends EventEmitter {
     findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
         let currentOffset = 0;
         if (dataId !== null && dataId !== '') {
-            for(let i=0;i<this.blocks.length;i++) {
+            for (let i = 0; i < this.blocks.length; i++) {
                 let block = this.blocks[i];
-                const blockLenght = block.pieces.reduce((acc:number,currVal:Piece) =>acc+currVal.text.length,0);
-                if(block.dataId == dataId){
+                const blockLenght = block.pieces.reduce((acc: number, currVal: Piece) => acc + currVal.text.length, 0);
+                if (block.dataId == dataId) {
                     for (let piece of block.pieces) {
                         const pieceEnd = currentOffset + piece.text.length;
                         if (offset >= currentOffset && offset < pieceEnd) {
@@ -677,7 +681,7 @@ class TextDocument extends EventEmitter {
                         }
                         currentOffset = pieceEnd;
                     }
-                }else{
+                } else {
                     currentOffset += blockLenght;
                 }
             }
