@@ -288,6 +288,7 @@ class TextDocument extends EventEmitter {
             });
         }
         this.dataIds = selectedDataIds;
+        console.log('zzz',{dataIds:this.dataIds});
         console.log('Selected Data IDs:', selectedDataIds);
         return selectedDataIds;
         // Now you can use `selectedDataIds` as needed
@@ -402,6 +403,7 @@ class TextDocument extends EventEmitter {
         let offset = 0;
         let index = -1;
         if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
+            console.log('ctrlakesathbold',this.selectedBlockId)
             index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
             offset = this.currentOffset;
             console.log(index, "index attribute1", offset)
