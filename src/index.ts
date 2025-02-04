@@ -317,9 +317,6 @@ class TextIgniter {
                 const svg = featureData?.icon || "";
                 button.innerHTML = svg;
                 toolbar.appendChild(button);
-
-                // Commented for future use
-
                 // const img = document.createElement('img');
                 // img.src = featureData?.icon || "";
                 // img.width = 20;
@@ -896,7 +893,6 @@ class TextIgniter {
         const [start, end] = this.getSelectionRange();
         if (start === end) {
             const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
-            console.log("this is the piece", piece);
             if (piece) {
                 if (piece !== this.lastPiece) {
                     this.manualOverride = false;
