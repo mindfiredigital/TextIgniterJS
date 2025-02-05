@@ -703,6 +703,45 @@ class TextDocument extends EventEmitter {
         block.alignment = alignment; // Update alignment
         this.emit('documentChanged', this); // Trigger re-render
     }
+
+    getCursorOffsetInParent(parentSelector: string): {
+        offset: number; childNode: Node | null, innerHTML: string;
+        innerText: string;
+    } | null {
+        const parentElement = document.querySelector(parentSelector);
+        if (!parentElement) return null;
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return null;
+
+        const range = selection.getRangeAt(0);
+
+        // Ensure the cursor is within the parent element
+        if (!parentElement.contains(range.startContainer)) return null;
+
+        let offset = 0;
+        let targetNode: Node | null = null;
+        const walker = document.createTreeWalker(parentElement, NodeFilter.SHOW_TEXT, null);
+        let matchedChild = null;
+        // Traverse text nodes to calculate the total offset
+        while (walker.nextNode()) {
+            const currentNode = walker.currentNode;
+            if (currentNode === range.startContainer) {
+                offset += range.startOffset; // Add the offset in the current node
+                targetNode = currentNode; // This is the child containing the cursor
+                matchedChild = currentNode.parentElement;
+                break;
+            } else {
+                offset += currentNode.textContent?.length || 0;
+            }
+        }
+
+
+        return {
+            offset, childNode: targetNode, innerHTML: matchedChild!.innerHTML,
+            innerText: matchedChild!.innerText
+        };
+    }
 }
 
 
