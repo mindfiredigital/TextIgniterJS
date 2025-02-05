@@ -360,39 +360,6 @@ class TextDocument extends EventEmitter {
         return offset;
     }
 
-    applyHyperlinkRange(start: number, end: number, url: string): void {
-        this.formatAttribute(start, end, 'hyperlink', url);
-    }
-
-
-    removeHyperlinkRange(start: number, end: number): void {
-        this.formatAttribute(start, end, 'hyperlink', false);
-    }
-
-    getCommonHyperlinkInRange(start: number, end: number): string | null {
-        let offset = this.currentOffset;
-        let index = 0;
-        if (this.selectedBlockId) {
-            index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId);
-        }
-        const pieces = this.blocks[index].pieces;
-        let commonLink: string | null = null;
-
-        for (let piece of pieces) {
-            const pieceEnd = offset + piece.text.length;
-            if (pieceEnd > start && offset < end) {
-                const pieceLink = piece.attributes.hyperlink || null;
-                if (commonLink === null) {
-                    commonLink = pieceLink;
-                } else if (commonLink !== pieceLink) {
-                    // Different hyperlinks in selection
-                    return null;
-                }
-            }
-            offset = pieceEnd;
-        }
-        return commonLink;
-    }
 
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'],
         // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
