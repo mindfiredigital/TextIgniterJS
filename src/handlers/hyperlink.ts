@@ -1,14 +1,22 @@
 import { blockType } from "../types/pieces";
-import { saveSelection,restoreSelection,getSelectionRange } from "../utils/selectionManager";
+import {
+  saveSelection,
+  restoreSelection,
+  getSelectionRange,
+} from "../utils/selectionManager";
 import EditorView from "../view/editorView";
 import TextDocument from "../textDocument";
 class HyperlinkHandler {
   savedSelection: { start: number; end: number } | null = null;
   editorContainer: HTMLElement | null;
   editorView: EditorView;
-  document:TextDocument;
+  document: TextDocument;
 
-  constructor(editorContainer: HTMLElement, editorView: EditorView,document:TextDocument) {
+  constructor(
+    editorContainer: HTMLElement,
+    editorView: EditorView,
+    document: TextDocument
+  ) {
     this.editorContainer = editorContainer;
     this.editorView = editorView;
     this.document = document;
@@ -104,19 +112,22 @@ class HyperlinkHandler {
       applyButton.onclick = null;
       cancelButton.onclick = null;
 
+      const dataIdsSnapshot = this.document.dataIds;
+
       // Handle the 'Link' button
       applyButton.onclick = () => {
         const url = hyperlinkInput.value.trim();
         if (url) {
-          this.applyHyperlink(url);
+          this.applyHyperlink(url,dataIdsSnapshot);
         }
         hyperlinkContainer.style.display = "none";
       };
 
+      console.log("yyy", { outer: this.document.dataIds });
       // Handle the 'Unlink' button
       cancelButton.onclick = () => {
-        // console.log("yyy", { remove: this.document.dataIds });
-        this.removeHyperlink();
+        console.log("yyy", { removeOuter: this.document.dataIds });
+        this.removeHyperlink(dataIdsSnapshot);
         hyperlinkContainer.style.display = "none";
       };
     }
@@ -161,8 +172,7 @@ class HyperlinkHandler {
     });
   }
 
-
-  applyHyperlink(url: string): void {
+  applyHyperlink(url: string,dataIdsSnapshot:any): void {
     // Remove any existing temporary highlights
     this.removeHighlightSelection();
 
@@ -171,41 +181,39 @@ class HyperlinkHandler {
 
     const [start, end] = getSelectionRange(this.editorView);
     if (start < end) {
-        console.log('yyy',this.document.blocks)
-        console.log('yyy',this.document.selectedBlockId)
-        console.log('yyy',this.document.dataIds)
-        
-        if (this.document.dataIds.length > 1) {
-            this.document.blocks.forEach((block: any) => {
-                if (this.document.dataIds.includes(block.dataId)) {
-                    this.document.selectedBlockId = block.dataId;
-                    let countE = 0;
-                    block.pieces.forEach((obj: any) => {
-                        countE += obj.text.length;
-                    })
-                    let countS = start - countE;
-                    // this.document.applyHyperlinkRange(countS, countE,url);
-                    this.document.formatAttribute(countS, countE, 'hyperlink', url);
-                }
-            })
-        } else {
-            // this.document.applyHyperlinkRange(start, end,url);
-            this.document.formatAttribute(start, end, 'hyperlink', url);
-        }
-      
+      console.log("yyy", this.document.blocks);
+      console.log("yyy", this.document.selectedBlockId);
+      console.log("yyy", this.document.dataIds);
 
+      if (dataIdsSnapshot.length > 1) {
+        this.document.blocks.forEach((block: any) => {
+          if (dataIdsSnapshot.includes(block.dataId)) {
+            this.document.selectedBlockId = block.dataId;
+            let countE = 0;
+            block.pieces.forEach((obj: any) => {
+              countE += obj.text.length;
+            });
+            let countS = start - countE;
+            // this.document.applyHyperlinkRange(countS, countE,url);
+            this.document.formatAttribute(countS, countE, "hyperlink", url);
+          }
+        });
+      } else {
+        // this.document.applyHyperlinkRange(start, end,url);
+        this.document.formatAttribute(start, end, "hyperlink", url);
+      }
 
-        // this.document.applyHyperlinkRange(start, end, url);
+      // this.document.applyHyperlinkRange(start, end, url);
 
-        this.editorView.render();
-        // Restore selection and focus
-        restoreSelection(this.editorView.container, this.savedSelection);
-        this.editorView.container.focus();
+      this.editorView.render();
+      // Restore selection and focus
+      restoreSelection(this.editorView.container, this.savedSelection);
+      this.editorView.container.focus();
     }
     this.savedSelection = null;
-}
+  }
 
-removeHyperlink(): void {
+  removeHyperlink(dataIdsSnapshot:any): void {
     // Remove any existing temporary highlights
     this.removeHighlightSelection();
 
@@ -213,84 +221,76 @@ removeHyperlink(): void {
     restoreSelection(this.editorView.container, this.savedSelection);
 
     const [start, end] = getSelectionRange(this.editorView);
-    console.log('yyy',{remove:this.document.dataIds})
+    console.log("yyyy", { remove: this.document.dataIds });
     if (start < end) {
+      // this.document.removeHyperlinkRange(start, end);
+      console.log("yyyy", { inside: this.document.dataIds });
+
+      if (dataIdsSnapshot.length > 1) {
+        this.document.blocks.forEach((block: any) => {
+          if (dataIdsSnapshot.includes(block.dataId)) {
+            this.document.selectedBlockId = block.dataId;
+            let countE = 0;
+            block.pieces.forEach((obj: any) => {
+              countE += obj.text.length;
+            });
+            let countS = start - countE;
+            // this.document.removeHyperlinkRange(countS, countE);
+            this.document.formatAttribute(countS, countE, "hyperlink", false);
+          }
+        });
+      } else {
+        this.document.formatAttribute(start, end, "hyperlink", false);
+
         // this.document.removeHyperlinkRange(start, end);
+      }
 
-
-
-
-
-
-        if (this.document.dataIds.length > 1) {
-            this.document.blocks.forEach((block: any) => {
-                if (this.document.dataIds.includes(block.dataId)) {
-                    this.document.selectedBlockId = block.dataId;
-                    let countE = 0;
-                    block.pieces.forEach((obj: any) => {
-                        countE += obj.text.length;
-                    })
-                    let countS = start - countE;
-                    // this.document.removeHyperlinkRange(countS, countE);
-                    this.document.formatAttribute(countS, countE, 'hyperlink', false);
-
-                }
-            })
-        } else {
-            this.document.formatAttribute(start, end, 'hyperlink', false);
-
-            // this.document.removeHyperlinkRange(start, end);
-        }
-      
-
-
-
-        this.editorView.render();
-        // Restore selection and focus
-        restoreSelection(this.editorView.container, this.savedSelection);
-        this.editorView.container.focus();
-
-
-
-
+      this.editorView.render();
+      // Restore selection and focus
+      restoreSelection(this.editorView.container, this.savedSelection);
+      this.editorView.container.focus();
     }
     this.savedSelection = null;
-}
+  }
 
-
-showHyperlinkViewButton(link:string | "") : void{
-    const viewHyperlinkContainer = document.getElementById('hyperlink-container-view') as HTMLDivElement;
-    const hyperLinkAnchor = document.getElementById('hyperlink-view-link') as HTMLAnchorElement;
-  
+  showHyperlinkViewButton(link: string | ""): void {
+    const viewHyperlinkContainer = document.getElementById(
+      "hyperlink-container-view"
+    ) as HTMLDivElement;
+    const hyperLinkAnchor = document.getElementById(
+      "hyperlink-view-link"
+    ) as HTMLAnchorElement;
 
     if (viewHyperlinkContainer && hyperLinkAnchor) {
-        viewHyperlinkContainer.style.display = 'block';
+      viewHyperlinkContainer.style.display = "block";
 
-        // position the container near the selection or toolbar
-        const selection = window.getSelection();
-        if (selection) {
-            const range = selection.getRangeAt(0);
-            const rect = range.getBoundingClientRect();
-            viewHyperlinkContainer.style.top = `${rect.bottom + window.scrollY + 5}px`;
-            viewHyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
-        }
+      // position the container near the selection or toolbar
+      const selection = window.getSelection();
+      if (selection) {
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        viewHyperlinkContainer.style.top = `${
+          rect.bottom + window.scrollY + 5
+        }px`;
+        viewHyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
+      }
 
-        // Set the existing link
-        if(link){
-            hyperLinkAnchor.innerText = link || '';
-            hyperLinkAnchor.href = link || '';
-        }
+      // Set the existing link
+      if (link) {
+        hyperLinkAnchor.innerText = link || "";
+        hyperLinkAnchor.href = link || "";
+      }
     }
-}
+  }
 
- hideHyperlinkViewButton(){
-    const hyperlinkContainer = document.getElementById('hyperlink-container-view');
-    if(hyperlinkContainer){
-        hyperlinkContainer.style.display = 'none';
+  hideHyperlinkViewButton() {
+    const hyperlinkContainer = document.getElementById(
+      "hyperlink-container-view"
+    );
+    if (hyperlinkContainer) {
+      hyperlinkContainer.style.display = "none";
     }
-}
-
-
+  }
 }
 
 export default HyperlinkHandler;
