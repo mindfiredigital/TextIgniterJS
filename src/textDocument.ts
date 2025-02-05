@@ -157,23 +157,28 @@ class TextDocument extends EventEmitter {
     }
 
     deleteRange(start: number, end: number, dataId: string | null = "", currentOffset: number = 0): void {
-
+        console.log("runn1 deleteRange() ", start, end, dataId, currentOffset)
         if (start === end) return;
         let newPieces: Piece[] = [];
         let offset = 0;
         let index = 0;
-
+        let runBackspace = false;
         if (dataId !== '' || dataId !== null) {
             index = this.blocks.findIndex((block: any) => block.dataId === dataId)
             console.log(index, "index action")
             offset = currentOffset;
-
-
         }
 
         const previousValue = this.getRangeText(start, end);
 
-        console.log('run11', previousValue);
+        console.log('runn1 previousValue', previousValue, "start === offset", start, offset);
+        if (start === offset) {
+            for (let piece1 of this.blocks[index - 1].pieces) {
+                // console.log('runn1 if-----', start, end, pieceEnd, piece1.clone(), index);
+                newPieces.push(piece1.clone());
+                runBackspace = true;
+            }
+        }
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
             if (pieceEnd <= start || offset >= end) {
@@ -193,7 +198,17 @@ class TextDocument extends EventEmitter {
         console.log(dataId, "dataId", this.currentOffset, "offset", offset, "currentOffset", currentOffset)
         const _data = this.mergePieces(newPieces)
 
-        this.blocks[index].pieces = _data
+        if (runBackspace) {
+            this.blocks[index - 1].pieces = _data
+            console.log("runn1 --- > _data", _data)
+            this.blocks[index].pieces = [new Piece(" ")]
+            this.blocks = this.blocks.filter((block: any, i: number) => {
+                if (i !== index)
+                    return block;
+            });
+
+        } else
+            this.blocks[index].pieces = _data
 
 
         if (_data.length === 0 && this.blocks.length > 1) {
@@ -624,10 +639,10 @@ class TextDocument extends EventEmitter {
     findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
         let currentOffset = 0;
         if (dataId !== null && dataId !== '') {
-            for(let i=0;i<this.blocks.length;i++) {
+            for (let i = 0; i < this.blocks.length; i++) {
                 let block = this.blocks[i];
-                const blockLenght = block.pieces.reduce((acc:number,currVal:Piece) =>acc+currVal.text.length,0);
-                if(block.dataId == dataId){
+                const blockLenght = block.pieces.reduce((acc: number, currVal: Piece) => acc + currVal.text.length, 0);
+                if (block.dataId == dataId) {
                     for (let piece of block.pieces) {
                         const pieceEnd = currentOffset + piece.text.length;
                         if (offset >= currentOffset && offset < pieceEnd) {
@@ -635,7 +650,7 @@ class TextDocument extends EventEmitter {
                         }
                         currentOffset = pieceEnd;
                     }
-                }else{
+                } else {
                     currentOffset += blockLenght;
                 }
             }
