@@ -1,3 +1,4 @@
+import EditorView from "../view/editorView";
 export function saveSelection(container: HTMLElement): { start: number; end: number } | null {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return null;
@@ -59,3 +60,9 @@ export function restoreSelection(container: HTMLElement, savedSel: { start: numb
     sel.addRange(range);
 }
 
+
+export function getSelectionRange(editorView:EditorView): [number, number] {
+    const sel = saveSelection(editorView.container);
+    if (!sel) return [0, 0];
+    return [sel.start, sel.end];
+}
