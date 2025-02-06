@@ -228,13 +228,21 @@ class TextDocument extends EventEmitter {
 
     deleteBlocks() {
         this.blocks = this.blocks.filter((block: any) => {
-            if (this.dataIds.includes(block.dataId)) {
-                if (block.dataId === 'data-id-1734604240404') {
-                    block.pieces = [new Piece(" ")]
-                    return block;
-                }
+            // if (block.dataId === 'data-id-1734604240404') {
+            //     block.pieces = [new Piece(" ")]
+            //     return block;
+            // }
+            if (!this.dataIds.includes(block.dataId)) {
+                return block;
             }
         })
+        this.dataIds = [];
+        if (this.blocks.length === 0) {
+            this.blocks.push({
+                "dataId": 'data-id-1734604240404', "class": "paragraph-block", "pieces": [new Piece(" ")],
+                // listType: null, // null | 'ol' | 'ul'
+            })
+        }
         this.emit('documentChanged', this);
     }
 
@@ -303,7 +311,7 @@ class TextDocument extends EventEmitter {
             });
         }
         this.dataIds = selectedDataIds;
-        console.log('zzz',{dataIds:this.dataIds});
+        console.log('zzz', { dataIds: this.dataIds });
         console.log('Selected Data IDs:', selectedDataIds);
         return selectedDataIds;
         // Now you can use `selectedDataIds` as needed
@@ -385,7 +393,7 @@ class TextDocument extends EventEmitter {
         let offset = 0;
         let index = -1;
         if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
-            console.log('ctrlakesathbold',this.selectedBlockId)
+            console.log('ctrlakesathbold', this.selectedBlockId)
             index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
             offset = this.currentOffset;
             console.log(index, "index attribute1", offset)

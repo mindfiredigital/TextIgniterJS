@@ -166,6 +166,7 @@ class TextIgniter {
         });
 
         document.addEventListener('selectionchange', this.handleSelectionChange.bind(this));
+
         this.document.emit('documentChanged', this.document);
 
         this.editorContainer.addEventListener('paste', (e: ClipboardEvent) => {
@@ -456,8 +457,9 @@ class TextIgniter {
 
         } else if (e.key === 'Backspace') {
             e.preventDefault();
+            console.log(this.document.dataIds.length, "length rn1", this.document.dataIds, "this.document.selectedBlockId", this.document.selectedBlockId)
             if (this.document.dataIds.length > 1) {
-                console.log(this.document.dataIds, "this.document.dataIds")
+                console.log(this.document.dataIds, "this.document.dataIds rn1")
                 // this.document.dataIds.forEach(obj => {
                 //     this.document.deleteBlocks(obj)
                 // })
@@ -487,10 +489,12 @@ class TextIgniter {
                         }
                         return block;
                     });
-                    console.log(_blocks, " _block index action-----")
+                    console.log(_blocks, " _block index action----- rn1")
                     this.document.emit('documentChanged', this);
                 }
             } else if (end > start) {
+                console.log("else if rn1", end, start)
+                // this.document.deleteBlocks();
                 // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
                 this.setCursorPosition(start);
