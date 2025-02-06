@@ -1,7 +1,7 @@
 import TextDocument from "./textDocument";
 import EditorView from "./view/editorView";
 import ToolbarView from "./view/toolbarView";
-import HyperlinkHandler  from "./handlers/hyperlink";
+import HyperlinkHandler from "./handlers/hyperlink";
 import Piece from "./piece";
 import { saveSelection, restoreSelection } from "./utils/selectionManager";
 import { parseHtmlToPieces } from "./utils/parseHtml";
@@ -17,7 +17,7 @@ class TextIgniter {
     document: TextDocument;
     editorView: EditorView;
     toolbarView: ToolbarView;
-    hyperlinkHandler:HyperlinkHandler;
+    hyperlinkHandler: HyperlinkHandler;
     currentAttributes: CurrentAttributeDTO;
     manualOverride: boolean;
     lastPiece: Piece | null;
@@ -27,7 +27,7 @@ class TextIgniter {
 
     constructor(editorId: string, config: EditorConfig) {
 
-        const{mainEditorId,toolbarId} = createEditor(editorId, config);
+        const { mainEditorId, toolbarId } = createEditor(editorId, config);
 
         this.editorContainer = document.getElementById(mainEditorId) || null;
         this.toolbarContainer = document.getElementById(toolbarId) || null;
@@ -39,7 +39,7 @@ class TextIgniter {
         this.document = new TextDocument();
         this.editorView = new EditorView(this.editorContainer, this.document);
         this.toolbarView = new ToolbarView(this.toolbarContainer);
-        this.hyperlinkHandler = new HyperlinkHandler(this.editorContainer,this.editorView,this.document);
+        this.hyperlinkHandler = new HyperlinkHandler(this.editorContainer, this.editorView, this.document);
         this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, hyperlink: false };
         this.manualOverride = false;
         this.lastPiece = null;
@@ -166,6 +166,7 @@ class TextIgniter {
         });
 
         document.addEventListener('selectionchange', this.handleSelectionChange.bind(this));
+
         this.document.emit('documentChanged', this.document);
 
         this.editorContainer.addEventListener('paste', (e: ClipboardEvent) => {
@@ -322,7 +323,7 @@ class TextIgniter {
                     this.document.redo();
                     break;
                 case 'hyperlink':
-                        this.hyperlinkHandler.hanldeHyperlinkClick(start,end,this.document.currentOffset,this.document.selectedBlockId,this.document.blocks);
+                    this.hyperlinkHandler.hanldeHyperlinkClick(start, end, this.document.currentOffset, this.document.selectedBlockId, this.document.blocks);
                     break;
             }
         } else {
@@ -334,7 +335,7 @@ class TextIgniter {
     }
 
 
-       
+
 
     handleSelectionChange(): void {
         this.syncCurrentAttributesWithCursor();
@@ -378,7 +379,7 @@ class TextIgniter {
                 //  else if (ListType === 'ol' && ListType2 === null) {
                 //     blockListType = 'li';
                 // }
-
+                console.log('vk11   0', this.getCurrentCursorBlock())
                 this.document.blocks.push({
                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
                     // listType: ListType, // null | 'ol' | 'ul'
@@ -387,18 +388,43 @@ class TextIgniter {
                     listStart: ListType === 'ol' || ListType === 'li' ? _start : '',
                 })
             } else {
-                console.log('jagdiii 0')
-
-                console.log('vk11', this.getCurrentCursorBlock())
+                console.log('vk11   1', this.getCurrentCursorBlock())
                 if (this.getCurrentCursorBlock() !== null) {
-                    const extractedContent = " " + this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString())
-                    console.log("vk11, ", this.getCurrentCursorBlock()!.toString(), " - ", start, end, extractedContent)
+                    const { remainingText, piece } = this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString());
+                    const extractedContent = " " + remainingText;
                     let updatedBlock = this.document.blocks;
-                    console.log({extractedContent})
+                    console.log({ extractedContent })
                     if (extractedContent.length > 0) {
+                        const _extractedContent = remainingText.split(' ');
+                        let _pieces = []
+                        console.log("extractTextFromDataId run if0", _extractedContent, piece)
+                        if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
+                            if (piece.length === 1) {
+                                _pieces = [new Piece(extractedContent, piece[0].attributes)]
+                                console.log("extractTextFromDataId run if1", _extractedContent, piece, "_pieces", _pieces)
+
+                            } else {
+                                console.log("extractTextFromDataId run else1", _extractedContent, piece)
+                                _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes))
+                                if (piece.length >= 2) {
+                                    console.log("extractTextFromDataId run if2")
+                                    piece.forEach((obj: any, i: number) => {
+                                        if (i !== 0) {
+                                            _pieces.push(obj)
+                                        }
+
+                                    })
+                                }
+                            }
+
+
+                        } else {
+                            console.log("extractTextFromDataId run else0")
+                            _pieces = [new Piece(" ")]
+                        }
+                        console.log(" extractTextFromDataId pieces", _pieces, piece);
                         updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
-                            "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(extractedContent)],
-                            // "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                            "dataId": uniqueId, "class": "paragraph-block", "pieces": _pieces,
                             // listType: null, // null | 'ol' | 'ul'
                         });
                         console.log('schenerio1');
@@ -431,8 +457,9 @@ class TextIgniter {
 
         } else if (e.key === 'Backspace') {
             e.preventDefault();
+            console.log(this.document.dataIds.length, "length rn1", this.document.dataIds, "this.document.selectedBlockId", this.document.selectedBlockId)
             if (this.document.dataIds.length > 1) {
-                console.log(this.document.dataIds, "this.document.dataIds")
+                console.log(this.document.dataIds, "this.document.dataIds rn1")
                 // this.document.dataIds.forEach(obj => {
                 //     this.document.deleteBlocks(obj)
                 // })
@@ -462,10 +489,12 @@ class TextIgniter {
                         }
                         return block;
                     });
-                    console.log(_blocks, " _block index action-----")
+                    console.log(_blocks, " _block index action----- rn1")
                     this.document.emit('documentChanged', this);
                 }
             } else if (end > start) {
+                console.log("else if rn1", end, start)
+                // this.document.deleteBlocks();
                 // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
                 this.setCursorPosition(start);
@@ -493,39 +522,63 @@ class TextIgniter {
     }
 
 
-    extractTextFromDataId(dataId: string): string {
+    extractTextFromDataId(dataId: string): { remainingText: string, piece: any } {
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) {
-            return ''; // No valid selection
+            return { remainingText: '', piece: null }; // No valid selection
         }
 
         const range = selection.getRangeAt(0); // Get the current range of the cursor
         const cursorNode = range.startContainer; // The node where the cursor is placed
 
         // Find the element with the given data-id
+        let fText = '';
+
+        let count = 0;
+        const _block = this.document.blocks.filter((block: any) => {
+            if (block.dataId === dataId) {
+                return block;
+            }
+        })
         const element = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
+        const textPosition = this.document.getCursorOffsetInParent(`[data-id="${dataId}"]`)
+        let _piece: any = [];
+        let index = 0;
+        _block[0].pieces.forEach((obj: any, i: number) => {
+            fText += obj.text
+            if (textPosition?.innerText === obj.text) {
+                index = i;
+                _piece.push(obj);
+            }
+        })
+        if (_block[0].pieces.length > 1) {
+            _block[0].pieces.forEach((obj: any, i: number) => {
+                if (index < i) {
+                    _piece.push(obj)
+                }
+            })
+        }
+        console.log("v11, element", element, "_block", _block, textPosition, _piece)
+
         if (!element) {
             console.error(`Element with data-id "${dataId}" not found.`);
-            return ''; // No element with the provided data-id
+            return { remainingText: '', piece: null }; // No element with the provided data-id
         }
 
         // Ensure the cursor is inside the specified element
         if (!element.contains(cursorNode)) {
             console.error(`Cursor is not inside the element with data-id "${dataId}".`);
-            return ''; // Cursor is outside the target element
+            return { remainingText: '', piece: null }; // Cursor is outside the target element
         }
 
         // Get the full text content of the element
-        const fullText = element.textContent || '';
-
-        console.log("oooo",{fullText});
+        // const fullText = element.textContent || '';
+        const fullText = fText;
         // Calculate the offset position of the cursor within the text node
-        const cursorOffset = range.startOffset;
-        const textLengthTillCurrentCursor = this.document.blocks.filter((block:any) => block.dataId === dataId)[0].pieces.reduce((acc:number,currVal:Piece) =>acc+currVal.text.length,0);
-        console.log("oooo",{textLengthTillCurrentCursor})
+        // const cursorOffset = range.startOffset;
+        const cursorOffset = textPosition?.offset;
 
-        console.log("oooo",{cursorOffset})
-        console.log("oooo",{end:range.endOffset});
+        console.log("v11 fullText", fullText, fText, cursorOffset, range)
         // Extract text from the cursor position to the end
         const remainingText = fullText.slice(cursorOffset);
 
@@ -533,10 +586,10 @@ class TextIgniter {
         const newContent = fullText.slice(0, cursorOffset);
         element.textContent = newContent; // Update the element content with remaining text
 
-        console.log('Extracted text:', remainingText);
-        console.log('Updated element content:', newContent);
+        console.log('v11 Extracted text:', remainingText);
+        console.log('v11 Updated element content:', newContent);
 
-        return remainingText; // Return the extracted text
+        return { remainingText: remainingText, piece: _piece }; // Return the extracted text
     }
 
 
@@ -578,7 +631,7 @@ class TextIgniter {
     }
     syncCurrentAttributesWithCursor(): void {
         const [start, end] = this.getSelectionRange();
-        console.log("oooo",{start});
+        // console.log("oooo",{start});
         if (start === end) {
             const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
             if (piece) {
