@@ -464,6 +464,7 @@ class TextIgniter {
                 //     this.document.deleteBlocks(obj)
                 // })
                 this.document.deleteBlocks();
+                this.setCursorPosition(start + 1);
             }
 
             if (start === end && start > 0) {
@@ -472,7 +473,7 @@ class TextIgniter {
                 this.setCursorPosition(start - 1);
                 const index = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
                 const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement
-                console.log(chkBlock, " _block index action")
+                console.log(chkBlock, " _block index action r1 1")
                 if (chkBlock === null) {
                     // const listType = this.document.blocks[index].listType;
                     // let parentId = this.document.blocks[index]?.parentId;
@@ -489,15 +490,16 @@ class TextIgniter {
                         }
                         return block;
                     });
-                    console.log(_blocks, " _block index action----- rn1")
+                    console.log(_blocks, " _block index action----- rn1 2")
                     this.document.emit('documentChanged', this);
                 }
             } else if (end > start) {
-                console.log("else if rn1", end, start)
+                console.log("else if rn1 3", end, start)
                 // this.document.deleteBlocks();
                 // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
+                this.document.deleteBlocks();
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
-                this.setCursorPosition(start);
+                this.setCursorPosition(start + 1);
 
             }
         } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
