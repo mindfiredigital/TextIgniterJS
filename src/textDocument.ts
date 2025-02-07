@@ -312,7 +312,7 @@ class TextDocument extends EventEmitter {
         }
         this.dataIds = selectedDataIds;
         console.log('zzz', { dataIds: this.dataIds });
-        console.log('Selected Data IDs:', selectedDataIds);
+        console.log(' run1 id Selected Data IDs:', selectedDataIds);
         return selectedDataIds;
         // Now you can use `selectedDataIds` as needed
     }

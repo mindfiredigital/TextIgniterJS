@@ -49,8 +49,9 @@ class TextIgniter {
         this.editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
         document.addEventListener('mouseup', () => {
             const dataId = this.document.getAllSelectedDataIds();
-            console.log('Selected text is inside element with data-id:', dataId);
-            console.log(this.document.dataIds, "this.document.dataIds")
+            // const dataId = this.document.handleCtrlASelection();
+            console.log('run1 id mouseup Selected text is inside element with data-id:', dataId);
+            console.log(this.document.dataIds, "this.document.dataIds mouseup run1 id")
         });
         document.getElementById('fontFamily')?.addEventListener('change', (e) => {
             const fontFamily = (e.target as HTMLSelectElement).value;
@@ -340,15 +341,24 @@ class TextIgniter {
     handleSelectionChange(): void {
         this.syncCurrentAttributesWithCursor();
         const selection = window.getSelection();
+        console.log("run1 id ---- ", selection)
         if (!selection || selection.rangeCount === 0) {
             // this.document.selectedBlockId = null;
+            console.log("run1 id ---- if1")
             return;
+        }
+        if (selection && (selection.isCollapsed===true)) {
+            console.log("run1 id ---- if2")
+            this.document.dataIds = [];
+            // this.document.selectedBlockId = 'data-id-1734604240404';
+            // return;
         }
 
         const range = selection.getRangeAt(0);
         const parentBlock = range.startContainer.parentElement?.closest('[data-id]');
         if (parentBlock && parentBlock instanceof HTMLElement) {
             this.document.selectedBlockId = parentBlock.getAttribute('data-id') || null;
+            // this.document.dataIds[0] = parentBlock.getAttribute('data-id') || '';
         }
     }
 
@@ -457,9 +467,13 @@ class TextIgniter {
 
         } else if (e.key === 'Backspace') {
             e.preventDefault();
-            console.log(this.document.dataIds.length, "length rn1", this.document.dataIds, "this.document.selectedBlockId", this.document.selectedBlockId)
+            const selection = window.getSelection();
+            console.log("selection",selection," ",this.document.dataIds.length, "run1 id length rn1", this.document.dataIds, "this.document.selectedBlockId", this.document.selectedBlockId)
+
+           
+
             if (this.document.dataIds.length > 1) {
-                console.log(this.document.dataIds, "this.document.dataIds rn1")
+                console.log(this.document.dataIds, "run1 id this.document.dataIds rn1")
                 // this.document.dataIds.forEach(obj => {
                 //     this.document.deleteBlocks(obj)
                 // })
