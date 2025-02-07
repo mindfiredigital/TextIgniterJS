@@ -62,6 +62,7 @@ declare class TextDocument extends EventEmitter {
     dataIds: string[];
     pieces: Piece[];
     blocks: any;
+    selectAll: boolean;
     private _selectedBlockId;
     get selectedBlockId(): string | null;
     set selectedBlockId(value: string | null);
@@ -83,9 +84,6 @@ declare class TextDocument extends EventEmitter {
     getSelectedDataIds(): string[];
     private getDataIdFromNode;
     getCursorOffset(container: HTMLElement): number;
-    applyHyperlinkRange(start: number, end: number, url: string): void;
-    removeHyperlinkRange(start: number, end: number): void;
-    getCommonHyperlinkInRange(start: number, end: number): string | null;
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'], value: string | boolean): void;
     toggleOrderedList(dataId: string | null, listStart?: number): void;
     toggleUnorderedList(dataId: string | null): void;
@@ -108,6 +106,12 @@ declare class TextDocument extends EventEmitter {
     setFontFamily(start: number, end: number, fontFamily: string): void;
     setFontSize(start: number, end: number, fontSize: string): void;
     setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void;
+    getCursorOffsetInParent(parentSelector: string): {
+        offset: number;
+        childNode: Node | null;
+        innerHTML: string;
+        innerText: string;
+    } | null;
 }
 
 declare class EditorView {
@@ -133,9 +137,32 @@ declare class ToolbarView extends EventEmitter {
     updateActiveStates(attributes: CurrentAttributeDTO): void;
 }
 
+type blockType = any;
+
+declare class HyperlinkHandler {
+    savedSelection: {
+        start: number;
+        end: number;
+    } | null;
+    editorContainer: HTMLElement | null;
+    editorView: EditorView;
+    document: TextDocument;
+    constructor(editorContainer: HTMLElement, editorView: EditorView, document: TextDocument);
+    hanldeHyperlinkClick(start: number, end: number, currentOffset: number, selectedBlockId: string | null, blocks: blockType): void;
+    getCommonHyperlinkInRange(start: number, end: number, currentOffset: number, selectedBlockId: string | null, blocks: blockType): string | null;
+    showHyperlinkInput(existingLink: string | null): void;
+    highlightSelection(): void;
+    removeHighlightSelection(): void;
+    applyHyperlink(url: string, dataIdsSnapshot: any): void;
+    removeHyperlink(dataIdsSnapshot: any): void;
+    showHyperlinkViewButton(link: string | ""): void;
+    hideHyperlinkViewButton(): void;
+}
+
 type EditorConfig = {
     features: string[];
 };
+
 interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
@@ -150,6 +177,7 @@ declare class TextIgniter {
     document: TextDocument;
     editorView: EditorView;
     toolbarView: ToolbarView;
+    hyperlinkHandler: HyperlinkHandler;
     currentAttributes: CurrentAttributeDTO;
     manualOverride: boolean;
     lastPiece: Piece | null;
@@ -160,21 +188,18 @@ declare class TextIgniter {
         end: number;
     } | null;
     constructor(editorId: string, config: EditorConfig);
-    createEditor(editorId: string, config: EditorConfig): void;
     getSelectionRange(): [number, number];
     handleToolbarAction(action: string, dataId?: string[]): void;
-    showHyperlinkInput(existingLink: string | null): void;
-    highlightSelection(): void;
-    removeHighlightSelection(): void;
-    applyHyperlink(url: string): void;
-    removeHyperlink(): void;
     handleSelectionChange(): void;
     handleKeydown(e: KeyboardEvent): void;
-    extractTextFromDataId(dataId: string): string;
+    extractTextFromDataId(dataId: string): {
+        remainingText: string;
+        piece: any;
+    };
     getCurrentCursorBlock(): string | null;
     addBlockAfter(data: any[], targetDataId: string, newBlock: any): any[];
     syncCurrentAttributesWithCursor(): void;
     setCursorPosition(position: number, dataId?: string | null): void;
 }
 
-export { type CurrentAttributeDTO, type EditorConfig, TextIgniter };
+export { type CurrentAttributeDTO, TextIgniter };
