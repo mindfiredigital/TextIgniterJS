@@ -123,10 +123,8 @@ class HyperlinkHandler {
         hyperlinkContainer.style.display = "none";
       };
 
-      console.log("yyy", { outer: this.document.dataIds });
       // Handle the 'Unlink' button
       cancelButton.onclick = () => {
-        console.log("yyy", { removeOuter: this.document.dataIds });
         this.removeHyperlink(dataIdsSnapshot);
         hyperlinkContainer.style.display = "none";
       };
@@ -181,10 +179,6 @@ class HyperlinkHandler {
 
     const [start, end] = getSelectionRange(this.editorView);
     if (start < end) {
-      console.log("yyy", this.document.blocks);
-      console.log("yyy", this.document.selectedBlockId);
-      console.log("yyy", this.document.dataIds);
-
       if (dataIdsSnapshot.length > 1) {
         this.document.blocks.forEach((block: any) => {
           if (dataIdsSnapshot.includes(block.dataId)) {
@@ -221,11 +215,7 @@ class HyperlinkHandler {
     restoreSelection(this.editorView.container, this.savedSelection);
 
     const [start, end] = getSelectionRange(this.editorView);
-    console.log("yyyy", { remove: this.document.dataIds });
     if (start < end) {
-      // this.document.removeHyperlinkRange(start, end);
-      console.log("yyyy", { inside: this.document.dataIds });
-
       if (dataIdsSnapshot.length > 1) {
         this.document.blocks.forEach((block: any) => {
           if (dataIdsSnapshot.includes(block.dataId)) {
@@ -235,14 +225,11 @@ class HyperlinkHandler {
               countE += obj.text.length;
             });
             let countS = start - countE;
-            // this.document.removeHyperlinkRange(countS, countE);
             this.document.formatAttribute(countS, countE, "hyperlink", false);
           }
         });
       } else {
         this.document.formatAttribute(start, end, "hyperlink", false);
-
-        // this.document.removeHyperlinkRange(start, end);
       }
 
       this.editorView.render();
