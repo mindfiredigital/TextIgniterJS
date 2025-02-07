@@ -1,6 +1,7 @@
 import EventEmitter from "./utils/events";
 import Piece from "./piece";
 
+// text document extend
 class TextDocument extends EventEmitter {
     undoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
     redoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
