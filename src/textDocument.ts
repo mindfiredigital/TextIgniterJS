@@ -7,6 +7,8 @@ class TextDocument extends EventEmitter {
     dataIds: string[] = [];
     pieces: Piece[];
     blocks: any;
+    selectAll: boolean = false;
+
     // selectedBlockId: string | null;
     private _selectedBlockId: string | null = null;
     get selectedBlockId(): string | null {
@@ -50,17 +52,16 @@ class TextDocument extends EventEmitter {
         let newPieces: Piece[] = [];
         let inserted = false;
         let index = 0;
-        if (dataId !== '' || dataId !== null) {
+        if (dataId) {
             index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-
             // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
             offset = this.currentOffset;
         }
         const previousValue = this.getRangeText(position, position);
         console.log('run1..', text, position, previousValue)
         // for (let piece of this.pieces) {
-        for (let piece of this.blocks[index].pieces) {
-            const pieceEnd = offset + piece.text.length;
+            for (let piece of this.blocks[index].pieces) {
+                const pieceEnd = offset + piece.text.length;
             if (!inserted && position <= pieceEnd) {
                 const relPos = position - offset;
                 if (relPos > 0) {
@@ -157,23 +158,28 @@ class TextDocument extends EventEmitter {
     }
 
     deleteRange(start: number, end: number, dataId: string | null = "", currentOffset: number = 0): void {
-
+        console.log("runn1 deleteRange() ", start, end, dataId, currentOffset)
         if (start === end) return;
         let newPieces: Piece[] = [];
         let offset = 0;
         let index = 0;
-
+        let runBackspace = false;
         if (dataId !== '' || dataId !== null) {
             index = this.blocks.findIndex((block: any) => block.dataId === dataId)
             console.log(index, "index action")
             offset = currentOffset;
-
-
         }
 
         const previousValue = this.getRangeText(start, end);
 
-        console.log('run11', previousValue);
+        console.log('runn1 previousValue', previousValue, "start === offset", start, offset);
+        if (start === offset) {
+            for (let piece1 of this.blocks[index - 1].pieces) {
+                // console.log('runn1 if-----', start, end, piece1.clone(), index);
+                newPieces.push(piece1.clone());
+                runBackspace = true;
+            }
+        }
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
             if (pieceEnd <= start || offset >= end) {
@@ -193,7 +199,17 @@ class TextDocument extends EventEmitter {
         console.log(dataId, "dataId", this.currentOffset, "offset", offset, "currentOffset", currentOffset)
         const _data = this.mergePieces(newPieces)
 
-        this.blocks[index].pieces = _data
+        if (runBackspace) {
+            this.blocks[index - 1].pieces = _data
+            console.log("runn1 --- > _data", _data)
+            this.blocks[index].pieces = [new Piece(" ")]
+            this.blocks = this.blocks.filter((block: any, i: number) => {
+                if (i !== index)
+                    return block;
+            });
+
+        } else
+            this.blocks[index].pieces = _data
 
 
         if (_data.length === 0 && this.blocks.length > 1) {
@@ -213,13 +229,22 @@ class TextDocument extends EventEmitter {
 
     deleteBlocks() {
         this.blocks = this.blocks.filter((block: any) => {
-            if (this.dataIds.includes(block.dataId)) {
-                if (block.dataId === 'data-id-1734604240404') {
-                    block.pieces = [new Piece(" ")]
-                    return block;
-                }
+            // if (block.dataId === 'data-id-1734604240404') {
+            //     block.pieces = [new Piece(" ")]
+            //     return block;
+            // }
+            if (!this.dataIds.includes(block.dataId)) {
+                return block;
             }
         })
+        this.dataIds = [];
+        this.selectAll = false;
+        if (this.blocks.length === 0) {
+            this.blocks.push({
+                "dataId": 'data-id-1734604240404', "class": "paragraph-block", "pieces": [new Piece(" ")],
+                // listType: null, // null | 'ol' | 'ul'
+            })
+        }
         this.emit('documentChanged', this);
     }
 
@@ -288,7 +313,8 @@ class TextDocument extends EventEmitter {
             });
         }
         this.dataIds = selectedDataIds;
-        console.log('Selected Data IDs:', selectedDataIds);
+        console.log('zzz', { dataIds: this.dataIds });
+        console.log(' run1 id Selected Data IDs:', selectedDataIds);
         return selectedDataIds;
         // Now you can use `selectedDataIds` as needed
     }
@@ -359,39 +385,6 @@ class TextDocument extends EventEmitter {
         return offset;
     }
 
-    applyHyperlinkRange(start: number, end: number, url: string): void {
-        this.formatAttribute(start, end, 'hyperlink', url);
-    }
-
-
-    removeHyperlinkRange(start: number, end: number): void {
-        this.formatAttribute(start, end, 'hyperlink', false);
-    }
-
-    getCommonHyperlinkInRange(start: number, end: number): string | null {
-        let offset = this.currentOffset;
-        let index = 0;
-        if (this.selectedBlockId) {
-            index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId);
-        }
-        const pieces = this.blocks[index].pieces;
-        let commonLink: string | null = null;
-
-        for (let piece of pieces) {
-            const pieceEnd = offset + piece.text.length;
-            if (pieceEnd > start && offset < end) {
-                const pieceLink = piece.attributes.hyperlink || null;
-                if (commonLink === null) {
-                    commonLink = pieceLink;
-                } else if (commonLink !== pieceLink) {
-                    // Different hyperlinks in selection
-                    return null;
-                }
-            }
-            offset = pieceEnd;
-        }
-        return commonLink;
-    }
 
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'],
         // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
@@ -402,6 +395,7 @@ class TextDocument extends EventEmitter {
         let offset = 0;
         let index = -1;
         if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
+            console.log('ctrlakesathbold', this.selectedBlockId)
             index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
             offset = this.currentOffset;
             console.log(index, "index attribute1", offset)
@@ -655,10 +649,10 @@ class TextDocument extends EventEmitter {
     findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
         let currentOffset = 0;
         if (dataId !== null && dataId !== '') {
-            for(let i=0;i<this.blocks.length;i++) {
+            for (let i = 0; i < this.blocks.length; i++) {
                 let block = this.blocks[i];
-                const blockLenght = block.pieces.reduce((acc:number,currVal:Piece) =>acc+currVal.text.length,0);
-                if(block.dataId == dataId){
+                const blockLenght = block.pieces.reduce((acc: number, currVal: Piece) => acc + currVal.text.length, 0);
+                if (block.dataId == dataId) {
                     for (let piece of block.pieces) {
                         const pieceEnd = currentOffset + piece.text.length;
                         if (offset >= currentOffset && offset < pieceEnd) {
@@ -666,7 +660,7 @@ class TextDocument extends EventEmitter {
                         }
                         currentOffset = pieceEnd;
                     }
-                }else{
+                } else {
                     currentOffset += blockLenght;
                 }
             }
@@ -687,6 +681,45 @@ class TextDocument extends EventEmitter {
 
         block.alignment = alignment; // Update alignment
         this.emit('documentChanged', this); // Trigger re-render
+    }
+
+    getCursorOffsetInParent(parentSelector: string): {
+        offset: number; childNode: Node | null, innerHTML: string;
+        innerText: string;
+    } | null {
+        const parentElement = document.querySelector(parentSelector);
+        if (!parentElement) return null;
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return null;
+
+        const range = selection.getRangeAt(0);
+
+        // Ensure the cursor is within the parent element
+        if (!parentElement.contains(range.startContainer)) return null;
+
+        let offset = 0;
+        let targetNode: Node | null = null;
+        const walker = document.createTreeWalker(parentElement, NodeFilter.SHOW_TEXT, null);
+        let matchedChild = null;
+        // Traverse text nodes to calculate the total offset
+        while (walker.nextNode()) {
+            const currentNode = walker.currentNode;
+            if (currentNode === range.startContainer) {
+                offset += range.startOffset; // Add the offset in the current node
+                targetNode = currentNode; // This is the child containing the cursor
+                matchedChild = currentNode.parentElement;
+                break;
+            } else {
+                offset += currentNode.textContent?.length || 0;
+            }
+        }
+
+
+        return {
+            offset, childNode: targetNode, innerHTML: matchedChild!.innerHTML,
+            innerText: matchedChild!.innerText
+        };
     }
 }
 

@@ -36,6 +36,7 @@ class ToolbarView extends EventEmitter {
             if (action === 'bold' && attributes.bold) isActive = true;
             if (action === 'italic' && attributes.italic) isActive = true;
             if (action === 'underline' && attributes.underline) isActive = true;
+            if (action === 'hyperlink' && attributes.hyperlink) isActive = true;
             if (action === 'undo' && attributes.undo) isActive = true;
             if (action === 'redo' && attributes.redo) isActive = true;
             btn.classList.toggle('active', isActive);
