@@ -7,6 +7,8 @@ class TextDocument extends EventEmitter {
     dataIds: string[] = [];
     pieces: Piece[];
     blocks: any;
+    selectAll: boolean = false;
+
     // selectedBlockId: string | null;
     private _selectedBlockId: string | null = null;
     get selectedBlockId(): string | null {
@@ -174,7 +176,7 @@ class TextDocument extends EventEmitter {
         console.log('runn1 previousValue', previousValue, "start === offset", start, offset);
         if (start === offset) {
             for (let piece1 of this.blocks[index - 1].pieces) {
-                // console.log('runn1 if-----', start, end, pieceEnd, piece1.clone(), index);
+                // console.log('runn1 if-----', start, end, piece1.clone(), index);
                 newPieces.push(piece1.clone());
                 runBackspace = true;
             }
@@ -237,6 +239,7 @@ class TextDocument extends EventEmitter {
             }
         })
         this.dataIds = [];
+        this.selectAll = false;
         if (this.blocks.length === 0) {
             this.blocks.push({
                 "dataId": 'data-id-1734604240404', "class": "paragraph-block", "pieces": [new Piece(" ")],
@@ -312,7 +315,7 @@ class TextDocument extends EventEmitter {
         }
         this.dataIds = selectedDataIds;
         console.log('zzz', { dataIds: this.dataIds });
-        console.log('Selected Data IDs:', selectedDataIds);
+        console.log(' run1 id Selected Data IDs:', selectedDataIds);
         return selectedDataIds;
         // Now you can use `selectedDataIds` as needed
     }
