@@ -7,6 +7,8 @@ class TextDocument extends EventEmitter {
     dataIds: string[] = [];
     pieces: Piece[];
     blocks: any;
+    selectAll: boolean = false;
+
     // selectedBlockId: string | null;
     private _selectedBlockId: string | null = null;
     get selectedBlockId(): string | null {
@@ -173,7 +175,7 @@ class TextDocument extends EventEmitter {
         console.log('runn1 previousValue', previousValue, "start === offset", start, offset);
         if (start === offset) {
             for (let piece1 of this.blocks[index - 1].pieces) {
-                // console.log('runn1 if-----', start, end, pieceEnd, piece1.clone(), index);
+                // console.log('runn1 if-----', start, end, piece1.clone(), index);
                 newPieces.push(piece1.clone());
                 runBackspace = true;
             }
@@ -227,13 +229,22 @@ class TextDocument extends EventEmitter {
 
     deleteBlocks() {
         this.blocks = this.blocks.filter((block: any) => {
-            if (this.dataIds.includes(block.dataId)) {
-                if (block.dataId === 'data-id-1734604240404') {
-                    block.pieces = [new Piece(" ")]
-                    return block;
-                }
+            // if (block.dataId === 'data-id-1734604240404') {
+            //     block.pieces = [new Piece(" ")]
+            //     return block;
+            // }
+            if (!this.dataIds.includes(block.dataId)) {
+                return block;
             }
         })
+        this.dataIds = [];
+        this.selectAll = false;
+        if (this.blocks.length === 0) {
+            this.blocks.push({
+                "dataId": 'data-id-1734604240404', "class": "paragraph-block", "pieces": [new Piece(" ")],
+                // listType: null, // null | 'ol' | 'ul'
+            })
+        }
         this.emit('documentChanged', this);
     }
 
@@ -302,8 +313,8 @@ class TextDocument extends EventEmitter {
             });
         }
         this.dataIds = selectedDataIds;
-        console.log('zzz',{dataIds:this.dataIds});
-        console.log('Selected Data IDs:', selectedDataIds);
+        console.log('zzz', { dataIds: this.dataIds });
+        console.log(' run1 id Selected Data IDs:', selectedDataIds);
         return selectedDataIds;
         // Now you can use `selectedDataIds` as needed
     }
@@ -384,7 +395,7 @@ class TextDocument extends EventEmitter {
         let offset = 0;
         let index = -1;
         if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
-            console.log('ctrlakesathbold',this.selectedBlockId)
+            console.log('ctrlakesathbold', this.selectedBlockId)
             index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
             offset = this.currentOffset;
             console.log(index, "index attribute1", offset)
@@ -670,6 +681,45 @@ class TextDocument extends EventEmitter {
 
         block.alignment = alignment; // Update alignment
         this.emit('documentChanged', this); // Trigger re-render
+    }
+
+    getCursorOffsetInParent(parentSelector: string): {
+        offset: number; childNode: Node | null, innerHTML: string;
+        innerText: string;
+    } | null {
+        const parentElement = document.querySelector(parentSelector);
+        if (!parentElement) return null;
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return null;
+
+        const range = selection.getRangeAt(0);
+
+        // Ensure the cursor is within the parent element
+        if (!parentElement.contains(range.startContainer)) return null;
+
+        let offset = 0;
+        let targetNode: Node | null = null;
+        const walker = document.createTreeWalker(parentElement, NodeFilter.SHOW_TEXT, null);
+        let matchedChild = null;
+        // Traverse text nodes to calculate the total offset
+        while (walker.nextNode()) {
+            const currentNode = walker.currentNode;
+            if (currentNode === range.startContainer) {
+                offset += range.startOffset; // Add the offset in the current node
+                targetNode = currentNode; // This is the child containing the cursor
+                matchedChild = currentNode.parentElement;
+                break;
+            } else {
+                offset += currentNode.textContent?.length || 0;
+            }
+        }
+
+
+        return {
+            offset, childNode: targetNode, innerHTML: matchedChild!.innerHTML,
+            innerText: matchedChild!.innerText
+        };
     }
 }
 
