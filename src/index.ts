@@ -149,6 +149,7 @@ class TextIgniter {
                 if (key === 'a') {
                     // e.preventDefault();
                     const dataId = this.document.handleCtrlASelection();
+                    this.document.selectAll = true;
                     console.log('Selected text is inside element with data-id:', dataId);
                 }
 
@@ -347,7 +348,7 @@ class TextIgniter {
             console.log("run1 id ---- if1")
             return;
         }
-        if (selection && (selection.isCollapsed===true)) {
+        if (selection && (selection.isCollapsed === true)) {
             console.log("run1 id ---- if2")
             this.document.dataIds = [];
             // this.document.selectedBlockId = 'data-id-1734604240404';
@@ -468,11 +469,9 @@ class TextIgniter {
         } else if (e.key === 'Backspace') {
             e.preventDefault();
             const selection = window.getSelection();
-            console.log("selection",selection," ",this.document.dataIds.length, "run1 id length rn1", this.document.dataIds, "this.document.selectedBlockId", this.document.selectedBlockId)
+            console.log("selection", selection, " ", this.document.dataIds.length, "run1 id1 length rn1", this.document.dataIds, "this.document.selectedBlockId", this.document.selectedBlockId)
 
-           
-
-            if (this.document.dataIds.length > 1) {
+            if (this.document.dataIds.length >= 1 && this.document.selectAll) {
                 console.log(this.document.dataIds, "run1 id this.document.dataIds rn1")
                 // this.document.dataIds.forEach(obj => {
                 //     this.document.deleteBlocks(obj)
@@ -511,7 +510,7 @@ class TextIgniter {
                 console.log("else if rn1 3", end, start)
                 // this.document.deleteBlocks();
                 // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
-                this.document.deleteBlocks();
+                // this.document.deleteBlocks();
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
                 this.setCursorPosition(start + 1);
 
