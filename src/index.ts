@@ -45,9 +45,14 @@ class TextIgniter {
         this.lastPiece = null;
         this.toolbarView.on('toolbarAction', (action: string, dataId: string[] = []) => this.handleToolbarAction(action, dataId));
         this.document.on('documentChanged', () => this.editorView.render());
-        this.editorContainer.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
+        this.editorContainer.addEventListener('keydown', (e) => {this.syncCurrentAttributesWithCursor();this.handleKeydown(e as KeyboardEvent);});
         this.editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
+        this.editorContainer.addEventListener("blur", () => {
+                this.hyperlinkHandler.hideHyperlinkViewButton();
+        });
+
         document.addEventListener('mouseup', () => {
+            this.syncCurrentAttributesWithCursor();
             const dataId = this.document.getAllSelectedDataIds();
             // const dataId = this.document.handleCtrlASelection();
             console.log('run1 id mouseup Selected text is inside element with data-id:', dataId);
@@ -520,7 +525,7 @@ class TextIgniter {
             if (end > start) {
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
             }
-            this.document.insertAt(e.key, { ...this.currentAttributes }, start, this.document.selectedBlockId, this.document.currentOffset);
+            this.document.insertAt(e.key, this.currentAttributes , start, this.document.selectedBlockId, this.document.currentOffset);
             this.setCursorPosition(start + 1);
         } else if (e.key === "Delete") {
             e.preventDefault();
@@ -534,6 +539,8 @@ class TextIgniter {
                 this.setCursorPosition(start);
             }
         }
+
+        this.hyperlinkHandler.hideHyperlinkViewButton();
     }
 
 
@@ -646,7 +653,6 @@ class TextIgniter {
     }
     syncCurrentAttributesWithCursor(): void {
         const [start, end] = this.getSelectionRange();
-        // console.log("oooo",{start});
         if (start === end) {
             const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
             if (piece) {
@@ -654,14 +660,15 @@ class TextIgniter {
                     this.manualOverride = false;
                     this.lastPiece = piece;
                 }
+
                 if (!this.manualOverride) {
                     this.currentAttributes = {
-                        bold: piece.attributes.bold,
-                        italic: piece.attributes.italic,
-                        underline: piece.attributes.underline,
-                        hyperlink: piece.attributes.hyperlink || false,
-                        fontFamily: piece.attributes.fontFamily,
-                        fontSize: piece.attributes.fontSize,
+                        bold: this.currentAttributes.bold || piece.attributes.bold,
+                        italic: this.currentAttributes.italic || piece.attributes.italic,
+                        underline: this.currentAttributes.underline || piece.attributes.underline,
+                        hyperlink: this.currentAttributes.hyperlink || piece.attributes.hyperlink || false,
+                        fontFamily: this.currentAttributes.fontFamily || piece.attributes.fontFamily,
+                        fontSize: this.currentAttributes.fontSize || piece.attributes.fontSize,
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
                 }
@@ -671,8 +678,10 @@ class TextIgniter {
                     this.hyperlinkHandler.showHyperlinkViewButton(hyperlink);
                 }
                 else {
-                    this.hyperlinkHandler.hideHyperlinkViewButton()
+                    this.hyperlinkHandler.hideHyperlinkViewButton();
                 }
+
+
             } else {
                 if (!this.manualOverride) {
                     this.currentAttributes = { bold: false, italic: false, underline: false, hyperlink: false };

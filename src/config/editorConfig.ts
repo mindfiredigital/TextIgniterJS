@@ -65,6 +65,7 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
         { feature: 'alignRight', id: 'alignRight', icon: icons.right_align },
         { feature: 'unorderedList', id: 'unorderedList', icon: icons.bullet_list },
         { feature: 'orderedList', id: 'orderedList', icon: icons.numbered_list },
+        { feature: 'hyperlink', id: 'hyperlink', icon: icons.hyperlink },
     ];
 
     const createSelect = (id: string, options: string[]) => {

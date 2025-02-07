@@ -52,17 +52,16 @@ class TextDocument extends EventEmitter {
         let newPieces: Piece[] = [];
         let inserted = false;
         let index = 0;
-        if (dataId !== '' || dataId !== null) {
+        if (dataId) {
             index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-
             // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
             offset = this.currentOffset;
         }
         const previousValue = this.getRangeText(position, position);
         console.log('run1..', text, position, previousValue)
         // for (let piece of this.pieces) {
-        for (let piece of this.blocks[index].pieces) {
-            const pieceEnd = offset + piece.text.length;
+            for (let piece of this.blocks[index].pieces) {
+                const pieceEnd = offset + piece.text.length;
             if (!inserted && position <= pieceEnd) {
                 const relPos = position - offset;
                 if (relPos > 0) {
