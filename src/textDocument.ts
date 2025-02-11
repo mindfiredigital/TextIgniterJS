@@ -429,7 +429,7 @@ class TextDocument extends EventEmitter {
                     console.log(selectedPiece, "attribute1 -- if")
                     selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
                 } else if (
-                    (attribute === 'fontFamily' || attribute === 'fontSize' || attribute === 'hyperlink' || attribute === 'fontColor') &&
+                    (attribute === 'fontFamily' || attribute === 'fontSize' || attribute === 'hyperlink' || attribute === 'fontColor' || attribute === 'bgColor') &&
                     typeof value === 'string'
                 ) {
                     console.log(selectedPiece, "attribute1 -- elseif")
@@ -626,6 +626,14 @@ class TextDocument extends EventEmitter {
         if (start < end) {
             console.log("_color fontColorPicker", color)
             this.formatAttribute(start, end, "fontColor", color);
+        }
+    }
+
+    applyBgColor(start: number, end: number, color: string, id = ""): void {
+        // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
+        if (start < end) {
+            console.log("_color bgColorPicker", color)
+            this.formatAttribute(start, end, "bgColor", color);
         }
     }
 

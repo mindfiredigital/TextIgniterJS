@@ -106,7 +106,7 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
 
             span.appendChild(button)
             // Create input element
-            const span1 =  document.createElement("span");
+            const span1 = document.createElement("span");
             span1.id = "colorWrapper"; // Unique ID for span
             span1.style.display = "hidden";
             const fontColorPicker = document.createElement("input");
@@ -115,6 +115,47 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
             fontColorPicker.id = "fontColorPicker";
             fontColorPicker.style.display = "none"; // Hide it initially
             span1.appendChild(fontColorPicker)
+            span.appendChild(span1)
+            toolbar.appendChild(span);
+
+        } else if (feature === 'bgColor') {
+            if (document.getElementById("bgColorWrapper")) return;
+
+            const span = document.createElement("span");
+            span.id = "bgColorWrapper"; // Unique ID for span
+            span.style.display = "inline-block"; // Keeps the layout inline
+            span.style.marginRight = "8px"; // Adds spacing if needed
+
+            // Create button element
+            const button = document.createElement("button");
+            button.id = "bgColor";
+            button.type = "button";
+            button.textContent = "B";
+
+            span.appendChild(button)
+            const rect = button.getBoundingClientRect();
+
+            // Get absolute position including scrolling
+            const x = rect.left + window.scrollX;
+            const y = rect.top + window.scrollY;
+
+            console.log(`bgColor Button Position - X: ${x}, Y: ${y}`);
+            // Create input element
+            const span1 = document.createElement("span");
+            span1.id = "colorBgWrapper"; // Unique ID for span
+            span1.style.display = "hidden";
+            const bgColorPicker = document.createElement("input");
+            bgColorPicker.value = '#f7f7f7'
+            bgColorPicker.type = "color";
+            bgColorPicker.id = "bgColorPicker";
+            bgColorPicker.style.display = "none"; // Hide it initially
+            // const colorBgWrapper = document.getElementById('colorBgWrapper') as HTMLElement;
+            // colorBgWrapper.style.position = "absolute";
+            // colorBgWrapper.style.left = `${x - 2}px`;
+            // colorBgWrapper.style.top = `${y - 15}px`;
+            // colorBgWrapper.style.display = "block";
+
+            span1.appendChild(bgColorPicker)
             span.appendChild(span1)
             toolbar.appendChild(span);
 

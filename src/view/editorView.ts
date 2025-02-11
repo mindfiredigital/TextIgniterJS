@@ -64,7 +64,7 @@ class EditorView {
     }
 
 
-    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean; fontFamily?: string; fontSize?: string; hyperlink?: string | boolean, fontColor?: string }): DocumentFragment {
+    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean; fontFamily?: string; fontSize?: string; hyperlink?: string | boolean, fontColor?: string, bgColor?: string }): DocumentFragment {
         const fragment = document.createDocumentFragment();
         lines.forEach((line, index) => {
             let textNode: Node = document.createTextNode(line);
@@ -112,6 +112,13 @@ class EditorView {
             if (attrs.fontColor && typeof attrs.fontColor === 'string') {
                 const span = document.createElement('span');
                 span.style.color = attrs.fontColor;
+                span.appendChild(textNode);
+                textNode = span;
+            }
+
+            if (attrs.bgColor && typeof attrs.bgColor === 'string') {
+                const span = document.createElement('span');
+                span.style.backgroundColor = attrs.bgColor;
                 span.appendChild(textNode);
                 textNode = span;
             }

@@ -3,12 +3,12 @@ class Piece {
     attributes: {
         bold: boolean; italic: boolean; underline: boolean, undo?: boolean, redo?: boolean, fontFamily?: string;
         fontSize?: string; hyperlink?: string | boolean;
-        fontColor?: string;
+        fontColor?: string; bgColor: string;
     };
     constructor(text: string, attributes: {
         bold?: boolean; italic?: boolean; underline?: boolean; undo?: boolean; redo?: boolean, fontFamily?: string;
         fontSize?: string; hyperlink?: string | boolean;
-        fontColor?: string;
+        fontColor?: string; bgColor?: string;
     } = {}) {
         this.text = text;
         const fontFamilySelect = document.getElementById('fontFamily') as HTMLSelectElement;
@@ -16,7 +16,7 @@ class Piece {
         let selectedFontFamilyValue = "Arial";
         let selectedFontSizeValue = "16px";
         let selectedFontColor = document.getElementById('fontColorPicker') as HTMLInputElement;
-
+        let selectedBgColor = document.getElementById('bgColorPicker') as HTMLInputElement
         if (fontFamilySelect) {
             selectedFontFamilyValue = fontFamilySelect.value; // Get the selected value
         }
@@ -35,6 +35,7 @@ class Piece {
             fontSize: attributes.fontSize || selectedFontSizeValue,     // Default font size
             hyperlink: attributes.hyperlink || false,
             fontColor: attributes.fontColor || selectedFontColor.value,
+            bgColor: attributes.bgColor || selectedBgColor.value,
         };
     }
     isBold(): boolean { return this.attributes.bold; }
@@ -63,7 +64,8 @@ class Piece {
             this.attributes.italic === other.attributes.italic &&
             this.attributes.underline === other.attributes.underline &&
             this.attributes.hyperlink === other.attributes.hyperlink &&
-            this.attributes.fontColor === other.attributes.fontColor
+            this.attributes.fontColor === other.attributes.fontColor &&
+            this.attributes.bgColor === other.attributes.bgColor
     }
     getHyperlink(): string | boolean {
         return this.attributes.hyperlink || false;
