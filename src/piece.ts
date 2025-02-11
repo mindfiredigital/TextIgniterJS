@@ -15,7 +15,7 @@ class Piece {
         const fontSizeSelect = document.getElementById('fontSize') as HTMLSelectElement;
         let selectedFontFamilyValue = "Arial";
         let selectedFontSizeValue = "16px";
-        let selectedFontColor = "#000000";
+        let selectedFontColor = document.getElementById('fontColorPicker') as HTMLInputElement;
 
         if (fontFamilySelect) {
             selectedFontFamilyValue = fontFamilySelect.value; // Get the selected value
@@ -34,7 +34,7 @@ class Piece {
             fontFamily: attributes.fontFamily || selectedFontFamilyValue, // Default font family
             fontSize: attributes.fontSize || selectedFontSizeValue,     // Default font size
             hyperlink: attributes.hyperlink || false,
-            fontColor: attributes.fontColor || selectedFontColor,
+            fontColor: attributes.fontColor || selectedFontColor.value,
         };
     }
     isBold(): boolean { return this.attributes.bold; }
