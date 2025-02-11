@@ -2,17 +2,20 @@ class Piece {
     text: string;
     attributes: {
         bold: boolean; italic: boolean; underline: boolean, undo?: boolean, redo?: boolean, fontFamily?: string;
-        fontSize?: string;hyperlink?: string | boolean;
+        fontSize?: string; hyperlink?: string | boolean;
+        fontColor?: string;
     };
     constructor(text: string, attributes: {
         bold?: boolean; italic?: boolean; underline?: boolean; undo?: boolean; redo?: boolean, fontFamily?: string;
-        fontSize?: string;hyperlink?: string | boolean;
+        fontSize?: string; hyperlink?: string | boolean;
+        fontColor?: string;
     } = {}) {
         this.text = text;
         const fontFamilySelect = document.getElementById('fontFamily') as HTMLSelectElement;
         const fontSizeSelect = document.getElementById('fontSize') as HTMLSelectElement;
         let selectedFontFamilyValue = "Arial";
         let selectedFontSizeValue = "16px";
+        let selectedFontColor = "#000000";
 
         if (fontFamilySelect) {
             selectedFontFamilyValue = fontFamilySelect.value; // Get the selected value
@@ -29,8 +32,9 @@ class Piece {
             undo: attributes.undo || false,
             redo: attributes.redo || false,
             fontFamily: attributes.fontFamily || selectedFontFamilyValue, // Default font family
-            fontSize: attributes.fontSize || selectedFontSizeValue ,     // Default font size
+            fontSize: attributes.fontSize || selectedFontSizeValue,     // Default font size
             hyperlink: attributes.hyperlink || false,
+            fontColor: attributes.fontColor || selectedFontColor,
         };
     }
     isBold(): boolean { return this.attributes.bold; }
@@ -56,9 +60,10 @@ class Piece {
             this.attributes.redo === other.attributes.redo &&
             this.attributes.fontFamily === other.attributes.fontFamily &&
             this.attributes.fontSize === other.attributes.fontSize &&
-               this.attributes.italic === other.attributes.italic &&
-               this.attributes.underline === other.attributes.underline &&
-               this.attributes.hyperlink === other.attributes.hyperlink 
+            this.attributes.italic === other.attributes.italic &&
+            this.attributes.underline === other.attributes.underline &&
+            this.attributes.hyperlink === other.attributes.hyperlink &&
+            this.attributes.fontColor === other.attributes.fontColor
     }
     getHyperlink(): string | boolean {
         return this.attributes.hyperlink || false;
@@ -66,6 +71,14 @@ class Piece {
     setHyperlink(url: string | boolean): void {
         this.attributes.hyperlink = url;
     }
+
+    // getFontColor(): string | undefined {
+    //     return this.attributes.fontColor
+    // }
+
+    // setFontColor(fontColor: string): void {
+    //     this.attributes.fontColor = fontColor
+    // }
 }
 
 export default Piece;

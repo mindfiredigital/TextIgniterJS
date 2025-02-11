@@ -11,7 +11,7 @@ import "./styles/text-igniter.css"
 import { EditorConfig } from "./types/editorConfig";
 
 
-export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; }
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string }
 
 class TextIgniter {
     document: TextDocument;
@@ -24,7 +24,7 @@ class TextIgniter {
     editorContainer: HTMLElement | null;
     toolbarContainer: HTMLElement | null;
     savedSelection: { start: number; end: number } | null = null;
-
+    debounceTimer: NodeJS.Timeout | null = null;
     constructor(editorId: string, config: EditorConfig) {
 
         const { mainEditorId, toolbarId } = createEditor(editorId, config);
@@ -45,10 +45,10 @@ class TextIgniter {
         this.lastPiece = null;
         this.toolbarView.on('toolbarAction', (action: string, dataId: string[] = []) => this.handleToolbarAction(action, dataId));
         this.document.on('documentChanged', () => this.editorView.render());
-        this.editorContainer.addEventListener('keydown', (e) => {this.syncCurrentAttributesWithCursor();this.handleKeydown(e as KeyboardEvent);});
+        this.editorContainer.addEventListener('keydown', (e) => { this.syncCurrentAttributesWithCursor(); this.handleKeydown(e as KeyboardEvent); });
         this.editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
         this.editorContainer.addEventListener("blur", () => {
-                this.hyperlinkHandler.hideHyperlinkViewButton();
+            this.hyperlinkHandler.hideHyperlinkViewButton();
         });
 
         document.addEventListener('mouseup', () => {
@@ -58,6 +58,43 @@ class TextIgniter {
             console.log('run1 id mouseup Selected text is inside element with data-id:', dataId);
             console.log(this.document.dataIds, "this.document.dataIds mouseup run1 id")
         });
+        document.getElementById('fontColor')?.addEventListener('click', (e) => {
+            console.log(e, "attribute1")
+            const fontColorPicker = document.getElementById("fontColorPicker") as HTMLInputElement;
+            const fontColorButton = document.querySelector(`[data-feature="fontColor"]`);
+            console.log("fontColorPicker, attribute1", fontColorPicker, fontColorButton)
+            fontColorPicker.style.display = 'inline';
+            const colorWrapper = document.getElementById('colorWrapper') as HTMLElement;
+            // Get the button's position (x, y)
+            const rect = (e.target as HTMLElement).getBoundingClientRect();
+            const x = rect.left + window.scrollX; // Adjust for scrolling
+            const y = rect.bottom + window.scrollY; // Position below the button
+
+            // Position the color picker
+            colorWrapper.style.position = "absolute";
+            colorWrapper.style.left = `${x - 2}px`;
+            colorWrapper.style.top = `${y - 15}px`;
+            colorWrapper.style.display = "block"; // Show the color picker
+
+            fontColorPicker.click();
+            if (fontColorPicker) {
+                fontColorPicker.addEventListener("input", (event) => {
+                    const selectedColor = (event.target as HTMLInputElement).value;
+                    const [start, end] = this.getSelectionRange();
+                    console.log("fontColorPicker", selectedColor, start, end)
+                    // applyFontColor(selectedColor);
+                    if (this.debounceTimer) {
+                        clearTimeout(this.debounceTimer); // Clear previous timer
+                    }
+                    this.debounceTimer = setTimeout(() => {
+                        this.document.applyFontColor(start, end, selectedColor);
+                        console.log("Color applied:", selectedColor);
+                    }, 300);
+                    // this.document.applyFontColor(start, end, selectedColor);
+
+                });
+            }
+        })
         document.getElementById('fontFamily')?.addEventListener('change', (e) => {
             const fontFamily = (e.target as HTMLSelectElement).value;
             const [start, end] = this.getSelectionRange();
@@ -80,6 +117,9 @@ class TextIgniter {
                 this.document.setFontFamily(start, end, fontFamily);
             }
         });
+
+
+
 
         document.getElementById('fontSize')?.addEventListener('change', (e) => {
             const fontSize = (e.target as HTMLSelectElement).value;
@@ -235,6 +275,19 @@ class TextIgniter {
         const sel = saveSelection(this.editorView.container);
         if (!sel) return [0, 0];
         return [sel.start, sel.end];
+    }
+
+    // Function to apply selected color
+    applyFontColor(color: string) {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        const selectedText = range.toString();
+        if (!selectedText) return;
+
+        // Apply color to pieces
+        // this.applyFontColor(selection, color);
     }
 
     handleToolbarAction(action: string, dataId: string[] = []): void {
@@ -525,7 +578,7 @@ class TextIgniter {
             if (end > start) {
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
             }
-            this.document.insertAt(e.key, this.currentAttributes , start, this.document.selectedBlockId, this.document.currentOffset);
+            this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset);
             this.setCursorPosition(start + 1);
         } else if (e.key === "Delete") {
             e.preventDefault();
