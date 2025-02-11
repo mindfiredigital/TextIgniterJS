@@ -1,44 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Rich Text Editor</title>
-  <style>
-  </style>
-</head>
-<body>
-  <div id="editor-container"></div>
-  <link rel="stylesheet" href="dist/index.css">
-  <script src="dist/index.js"></script>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Rich Text Editor</title>
+    <style>
+    </style>
+  </head>
+  <body>
+    <div id="editor-container"></div>
+    <link rel="stylesheet" href="dist/index.css">
+    <script src="dist/index.js"></script>
 
-  <script>
-    const config = {
-      features: [
-        "bold",
-        "italic",
-        "underline",
-        "hyperlink",
+    <script>
+      const config = {
+        features: [
+          "bold",
+          "italic",
+          "underline",
+          "hyperlink",
 
-        "fontFamily",
-        "fontSize",
-        "alignLeft",
-        "alignCenter",
-        "alignRight",
-        "unorderedList",
-        "orderedList",
+          "fontFamily",
+          "fontSize",
+          "alignLeft",
+          "alignCenter",
+          "alignRight",
+          "unorderedList",
+          "orderedList",
+          "image",
 
-        // "subscript",
-        // "superscript",
-        // "insert_table",
-        // "insert_layout",
-        // "heading",
-        // "image",
-        // "colors"
-      ],
-    };
+          // "subscript",
+          // "superscript",
+          // "insert_table",
+          // "insert_layout",
+          // "heading",
+          // "colors"
+        ],
+      };
 
-    new TextIgniter("editor-container", config);
-  </script>
-</body>
-</html>
+      new TextIgniter("editor-container", config);
+    </script>
+  </body>
+  </html>
