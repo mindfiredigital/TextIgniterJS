@@ -95,6 +95,44 @@ class TextIgniter {
                 });
             }
         })
+
+        document.getElementById('bgColor')?.addEventListener('click', (e) => {
+            console.log(e, "attribute1")
+            const bgColorPicker = document.getElementById("bgColorPicker") as HTMLInputElement;
+            console.log("bgColorPicker, attribute1", bgColorPicker)
+            bgColorPicker.style.display = 'inline';
+            const colorBgWrapper = document.getElementById('colorBgWrapper') as HTMLElement;
+            // Get the button's position (x, y)
+            const rect = (e.target as HTMLElement).getBoundingClientRect();
+            const x = rect.left + window.scrollX; // Adjust for scrolling
+            const y = rect.bottom + window.scrollY; // Position below the button
+
+            // Position the color picker
+            colorBgWrapper.style.position = "absolute";
+            colorBgWrapper.style.left = `${x - 2}px`;
+            colorBgWrapper.style.top = `${y - 15}px`;
+            colorBgWrapper.style.display = "block"; // Show the color picker
+
+            bgColorPicker.click();
+            if (bgColorPicker) {
+                bgColorPicker.addEventListener("input", (event) => {
+                    const selectedColor = (event.target as HTMLInputElement).value;
+                    const [start, end] = this.getSelectionRange();
+                    console.log("bgColorPicker", selectedColor, start, end)
+                    // applybgColor(selectedColor);
+                    if (this.debounceTimer) {
+                        clearTimeout(this.debounceTimer); // Clear previous timer
+                    }
+                    this.debounceTimer = setTimeout(() => {
+                        this.document.applyBgColor(start, end, selectedColor);
+                        console.log("Color applied:", selectedColor);
+                    }, 300);
+                    // this.document.applyFontColor(start, end, selectedColor);
+
+                });
+            }
+        })
+
         document.getElementById('fontFamily')?.addEventListener('change', (e) => {
             const fontFamily = (e.target as HTMLSelectElement).value;
             const [start, end] = this.getSelectionRange();

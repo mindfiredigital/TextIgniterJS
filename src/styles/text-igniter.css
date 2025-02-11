@@ -83,10 +83,20 @@
   font-size: larger;
 }
 
-#fontColorPicker {
+#bgColor {
+  border-bottom: 5px solid #f7f7f7;
+  font-size: larger;
+}
+
+#fontColorPicker,
+#bgColorPicker {
   border: 0;
   padding: 0;
   margin: 0;
   height: 15px;
   width: 36px;
+}
+
+#fontColorWrapper {
+  display: block;
 }
