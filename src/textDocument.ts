@@ -1,6 +1,7 @@
 import EventEmitter from "./utils/events";
 import Piece from "./piece";
 
+// text document extend
 class TextDocument extends EventEmitter {
     undoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
     redoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
@@ -60,8 +61,8 @@ class TextDocument extends EventEmitter {
         const previousValue = this.getRangeText(position, position);
         console.log('run1..', text, position, previousValue)
         // for (let piece of this.pieces) {
-            for (let piece of this.blocks[index].pieces) {
-                const pieceEnd = offset + piece.text.length;
+        for (let piece of this.blocks[index].pieces) {
+            const pieceEnd = offset + piece.text.length;
             if (!inserted && position <= pieceEnd) {
                 const relPos = position - offset;
                 if (relPos > 0) {
@@ -389,7 +390,7 @@ class TextDocument extends EventEmitter {
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'],
         // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
         value: string | boolean): void {
-        console.log(attribute, "attribute1", start, end)
+        console.log(attribute, "attribute1", start, end, value)
 
         let newPieces: Piece[] = [];
         let offset = 0;
@@ -402,7 +403,7 @@ class TextDocument extends EventEmitter {
         }
 
         for (let piece of this.blocks[index].pieces) {
-            console.log(piece.text.length, "piece.text.length attribute1")
+            console.log(piece.text.length, "piece.text.length attribute1", piece)
             const pieceEnd = offset + piece.text.length;
 
             if (pieceEnd <= start || offset >= end) {
@@ -413,22 +414,29 @@ class TextDocument extends EventEmitter {
                 const startInPiece = Math.max(start - pieceStart, 0);
                 const endInPiece = Math.min(end - pieceStart, pieceText.length);
                 if (startInPiece > 0) {
+                    console.log(newPieces, "attribute1-- slice if", pieceText.slice(0, startInPiece), { ...piece.attributes })
                     newPieces.push(new Piece(pieceText.slice(0, startInPiece), { ...piece.attributes }));
+                    console.log(newPieces, "attribute1-- slice if1", pieceText.slice(0, startInPiece), { ...piece.attributes })
+
                 }
                 const selectedPiece = new Piece(pieceText.slice(startInPiece, endInPiece), { ...piece.attributes });
                 // selectedPiece.attributes[attribute] = value;
+                console.log(selectedPiece, "attribute1 -- selectedPiece", startInPiece, endInPiece, newPieces, value)
                 if (
                     (attribute === 'bold' || attribute === 'italic' || attribute === 'underline' || attribute === 'undo' || attribute === 'redo' || attribute === 'hyperlink') &&
                     typeof value === 'boolean'
                 ) {
+                    console.log(selectedPiece, "attribute1 -- if")
                     selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
                 } else if (
-                    (attribute === 'fontFamily' || attribute === 'fontSize' || attribute === 'hyperlink') &&
+                    (attribute === 'fontFamily' || attribute === 'fontSize' || attribute === 'hyperlink' || attribute === 'fontColor') &&
                     typeof value === 'string'
                 ) {
+                    console.log(selectedPiece, "attribute1 -- elseif")
                     selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
                 }
                 newPieces.push(selectedPiece);
+                console.log(newPieces, " newPieces attribute1 --")
                 if (endInPiece < pieceText.length) {
                     newPieces.push(new Piece(pieceText.slice(endInPiece), { ...piece.attributes }));
                 }
@@ -437,6 +445,7 @@ class TextDocument extends EventEmitter {
         }
 
         const _data = this.mergePieces(newPieces)
+        console.log(_data, "attribute1")
         this.blocks[index].pieces = _data
         this.emit('documentChanged', this);
     }
@@ -610,6 +619,14 @@ class TextDocument extends EventEmitter {
     toggleRedoRange(start: number, end: number): void {
         const allRedo = this.isRangeEntirelyAttribute(start, end, 'redo');
         this.formatAttribute(start, end, 'redo', !allRedo);
+    }
+
+    applyFontColor(start: number, end: number, color: string, id = ""): void {
+        // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
+        if (start < end) {
+            console.log("_color fontColorPicker", color)
+            this.formatAttribute(start, end, "fontColor", color);
+        }
     }
 
     isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline' | 'undo' | 'redo'): boolean {

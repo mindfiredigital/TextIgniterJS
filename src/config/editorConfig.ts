@@ -1,9 +1,9 @@
-import { EditorConfig,EditorConfigReturnType } from '../types/editorConfig';
+import { EditorConfig, EditorConfigReturnType } from '../types/editorConfig';
 import { icons } from "../assets/icons";
 
 export function createEditor(editorId: string, config: EditorConfig): EditorConfigReturnType {
-   const mainEditorId = 'editor';
-   const toolbarId = 'toolbar';
+    const mainEditorId = 'editor';
+    const toolbarId = 'toolbar';
 
     const allowedFontFamily = [
         'Arial',
@@ -47,7 +47,7 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
         'orderedList': '1.',      // Simple text representation
         'fontFamily': 'fontFamily',
         'fontSize': 'fontSize',
-
+        'fontColor': 'A',
         'subscript': 'X<sub>2</sub>',
         'superscript': 'X<sup>2</sup>',
         'justify': '&#8644;',       // Unicode for justify icon
@@ -88,7 +88,38 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
         } else if (feature === 'fontSize') {
             const fontSizeSelect = createSelect('fontSize', allowedFontSizes);
             toolbar.appendChild(fontSizeSelect);
-        } else if (featuresWithPngIcon.map(item => item.feature).indexOf(feature) !== -1) {
+        }
+        else if (feature === 'fontColor') {
+            if (document.getElementById("fontColorWrapper")) return;
+            // if (document.getElementById("fontColorPicker")) return;
+
+            const span = document.createElement("span");
+            span.id = "fontColorWrapper"; // Unique ID for span
+            span.style.display = "inline-block"; // Keeps the layout inline
+            span.style.marginRight = "8px"; // Adds spacing if needed
+
+            // Create button element
+            const button = document.createElement("button");
+            button.id = "fontColor";
+            button.type = "button";
+            button.textContent = "A";
+
+            span.appendChild(button)
+            // Create input element
+            const span1 =  document.createElement("span");
+            span1.id = "colorWrapper"; // Unique ID for span
+            span1.style.display = "hidden";
+            const fontColorPicker = document.createElement("input");
+            // fontColorPicker.value = '#171717'
+            fontColorPicker.type = "color";
+            fontColorPicker.id = "fontColorPicker";
+            fontColorPicker.style.display = "none"; // Hide it initially
+            span1.appendChild(fontColorPicker)
+            span.appendChild(span1)
+            toolbar.appendChild(span);
+
+        }
+        else if (featuresWithPngIcon.map(item => item.feature).indexOf(feature) !== -1) {
             const featureDataArray = featuresWithPngIcon.filter(item => item.feature === feature);
             let featureData = null;
             if (featureDataArray?.length > 0) {
@@ -198,5 +229,5 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
 
     toolbar.appendChild(viewHyperlinkContainer);
 
-    return {mainEditorId,toolbarId};
+    return { mainEditorId, toolbarId };
 }

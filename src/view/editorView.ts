@@ -64,7 +64,7 @@ class EditorView {
     }
 
 
-    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean; fontFamily?: string; fontSize?: string; hyperlink?: string | boolean }): DocumentFragment {
+    wrapAttributes(lines: string[], attrs: { bold: boolean; italic: boolean; underline: boolean; fontFamily?: string; fontSize?: string; hyperlink?: string | boolean, fontColor?: string }): DocumentFragment {
         const fragment = document.createDocumentFragment();
         lines.forEach((line, index) => {
             let textNode: Node = document.createTextNode(line);
@@ -90,6 +90,7 @@ class EditorView {
             const fontSizeSelect = document.getElementById('fontSize') as HTMLSelectElement;
             let selectedFontFamilyValue = "Arial";
             let selectedFontSizeValue = "16px";
+            let selectedFontColor = "#000000";
 
             if (fontFamilySelect) {
                 selectedFontFamilyValue = fontFamilySelect.value; // Get the selected value
@@ -108,10 +109,17 @@ class EditorView {
                 a.appendChild(textNode);
                 textNode = a;
             }
+            if (attrs.fontColor && typeof attrs.fontColor === 'string') {
+                const span = document.createElement('span');
+                span.style.color = attrs.fontColor;
+                span.appendChild(textNode);
+                textNode = span;
+            }
 
             const span = document.createElement('span');
             span.style.fontFamily = attrs.fontFamily || selectedFontFamilyValue;
             span.style.fontSize = attrs.fontSize || selectedFontSizeValue;
+            // span.style.color = attrs.fontColor || selectedFontColor;
             span.appendChild(textNode);
 
 
