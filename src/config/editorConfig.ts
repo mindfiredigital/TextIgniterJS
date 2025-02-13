@@ -48,6 +48,7 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
         'fontFamily': 'fontFamily',
         'fontSize': 'fontSize',
         'fontColor': 'A',
+        // "getHTMLContent": "getHTMLContent",
         'subscript': 'X<sub>2</sub>',
         'superscript': 'X<sup>2</sup>',
         'justify': '&#8644;',       // Unicode for justify icon
@@ -159,8 +160,33 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
             span.appendChild(span1)
             toolbar.appendChild(span);
 
-        }
-        else if (featuresWithPngIcon.map(item => item.feature).indexOf(feature) !== -1) {
+        } else if (feature === 'getHtmlContent') {
+            const button = document.createElement("button");
+            button.id = "getHtmlButton";
+            button.type = "button";
+            button.textContent = "Get HTML";
+
+            button.style.padding = "8px 12px";
+            button.style.marginRight = "8px";
+            button.style.border = "1px solid #ccc";
+            button.style.borderRadius = "4px";
+            button.style.cursor = "pointer";
+            button.style.background = "#f4f4f4";
+            toolbar.appendChild(button);
+        } else if (feature === "loadHtmlContent") {
+            const button = document.createElement("button");
+            button.id = "loadHtmlButton";
+            button.type = "button";
+            button.textContent = "Load HTML";
+
+            button.style.padding = "8px 12px";
+            button.style.marginRight = "8px";
+            button.style.border = "1px solid #ccc";
+            button.style.borderRadius = "4px";
+            button.style.cursor = "pointer";
+            button.style.background = "#f4f4f4";
+            toolbar.appendChild(button);
+        } else if (featuresWithPngIcon.map(item => item.feature).indexOf(feature) !== -1) {
             const featureDataArray = featuresWithPngIcon.filter(item => item.feature === feature);
             let featureData = null;
             if (featureDataArray?.length > 0) {
