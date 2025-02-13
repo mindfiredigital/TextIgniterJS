@@ -390,6 +390,7 @@ class TextDocument extends EventEmitter {
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'],
         // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
         value: string | boolean): void {
+        console.log("blocks formatattribute", this.blocks, this.dataIds, this.currentOffset, start, end, value)
         console.log(attribute, "attribute1", start, end, value)
 
         let newPieces: Piece[] = [];
@@ -707,6 +708,25 @@ class TextDocument extends EventEmitter {
         block.alignment = alignment; // Update alignment
         this.emit('documentChanged', this); // Trigger re-render
     }
+
+    getHtmlContent() {
+        const editorContainer = document.getElementById("editor"); // Adjust to your editor's ID
+        if (!editorContainer) {
+            console.error("Editor container not found.");
+            return;
+        }
+
+        const htmlContent = editorContainer.innerHTML;
+        console.log("Editor HTML Content:", htmlContent);
+
+        // You can also copy it to the clipboard
+        navigator.clipboard.writeText(htmlContent).then(() => {
+            console.log("HTML copied to clipboard!");
+        }).catch(err => console.error("Failed to copy HTML:", err));
+        return htmlContent;
+    }
+
+
 
     getCursorOffsetInParent(parentSelector: string): {
         offset: number; childNode: Node | null, innerHTML: string;
