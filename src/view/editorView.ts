@@ -1,13 +1,19 @@
 import Piece from "../piece";
 import TextDocument from "../textDocument";
 import { saveSelection, restoreSelection } from "../utils/selectionManager";
-
+import { ImageHandler } from "../handlers/image";
 class EditorView {
     container: HTMLElement;
     document: TextDocument;
+    imageHandler!: ImageHandler;
+
     constructor(container: HTMLElement, document: TextDocument) {
         this.container = container;
         this.document = document;
+    }
+
+    setImageHandler(imageHandler: ImageHandler) {
+        this.imageHandler = imageHandler;
     }
 
     render(): void {
@@ -30,6 +36,7 @@ class EditorView {
                 // const wrapperDiv = document.createElement("div");
                 wrapperDiv.setAttribute("data-id", block.dataId);
                 wrapperDiv.setAttribute("class", block.class);
+                wrapperDiv.setAttribute("type", block.type);
                 wrapperDiv.style.textAlign = block.alignment || "left";
                 if (block.listType === 'ol' || block.listType === 'ul' || block.listType === 'li') {
                     olWrapper = document.createElement('li');
@@ -39,9 +46,15 @@ class EditorView {
                     wrapperDiv.append(olWrapper)
 
                 } else {
-                    block.pieces.forEach((piece: Piece) => {
-                        wrapperDiv.appendChild(this.renderPiece(piece));
-                    });
+                    if(block?.type === "image"){
+                        if (block?.image) {
+                            wrapperDiv.appendChild(this.imageHandler.createImageFragment(block.image,block.dataId));
+                          }
+                    }else{
+                        block.pieces.forEach((piece: Piece) => {
+                            wrapperDiv.appendChild(this.renderPiece(piece));
+                        });
+                    }
                 }
                 // this.document.pieces.forEach(piece => {
                 //     console.log(piece, "this.document.pieces", this.renderPiece(piece))
@@ -58,8 +71,8 @@ class EditorView {
 
     renderPiece(piece: Piece): DocumentFragment {
 
-        const lines = piece.text.split('\n');
-        return this.wrapAttributes(lines, piece.attributes);
+              const lines = piece.text.split('\n');
+              return this.wrapAttributes(lines, piece.attributes);
 
     }
 

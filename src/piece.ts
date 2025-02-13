@@ -56,8 +56,8 @@ class Piece {
             this.attributes.redo === other.attributes.redo &&
             this.attributes.fontFamily === other.attributes.fontFamily &&
             this.attributes.fontSize === other.attributes.fontSize &&
-               this.attributes.italic === other.attributes.italic &&
-               this.attributes.underline === other.attributes.underline &&
+            this.attributes.italic === other.attributes.italic &&
+            this.attributes.underline === other.attributes.underline &&
                this.attributes.hyperlink === other.attributes.hyperlink 
     }
     getHyperlink(): string | boolean {
