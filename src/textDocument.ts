@@ -173,10 +173,15 @@ class TextDocument extends EventEmitter {
         }
 
         const previousValue = this.getRangeText(start, end);
-
+        let previousTextBlockIndex = 0;
         console.log('runn1 previousValue', previousValue, "start === offset", start, offset);
         if (start === offset) {
-            for (let piece1 of this.blocks[index - 1].pieces) {
+            if(index -1 >= 0 && this.blocks[index - 1].type === 'image'){
+                previousTextBlockIndex = index -2;
+            }else{
+                previousTextBlockIndex = index -1;
+            }
+            for (let piece1 of this.blocks[previousTextBlockIndex].pieces) {
                 // console.log('runn1 if-----', start, end, piece1.clone(), index);
                 newPieces.push(piece1.clone());
                 runBackspace = true;
@@ -202,7 +207,7 @@ class TextDocument extends EventEmitter {
         const _data = this.mergePieces(newPieces)
 
         if (runBackspace) {
-            this.blocks[index - 1].pieces = _data
+            this.blocks[previousTextBlockIndex].pieces = _data
             console.log("runn1 --- > _data", _data)
             this.blocks[index].pieces = [new Piece(" ")]
             this.blocks = this.blocks.filter((block: any, i: number) => {
