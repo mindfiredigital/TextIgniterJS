@@ -60,7 +60,7 @@ class TextDocument extends EventEmitter {
             offset = this.currentOffset;
         }
         const previousValue = this.getRangeText(position, position);
-        console.log('run1..', text, position, previousValue)
+        
         // for (let piece of this.pieces) {
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
@@ -134,7 +134,7 @@ class TextDocument extends EventEmitter {
 
                 const textNode = node as Text;
                 const nextOffset = currentOffset + textNode.length;
-                console.log("data", nextOffset, textNode)
+                
                 if (offset >= currentOffset && offset <= nextOffset) {
                     range.setStart(textNode, offset - currentOffset); // Set the cursor position
                     range.collapse(true); // Collapse the range to a single point (cursor)
@@ -153,14 +153,14 @@ class TextDocument extends EventEmitter {
 
         traverseNodes(element);
 
-        console.log(range, "data")
+        
         // Clear any previous selection and apply the new range
         selection.removeAllRanges();
         selection.addRange(range);
     }
 
     deleteRange(start: number, end: number, dataId: string | null = "", currentOffset: number = 0): void {
-        console.log("runn1 deleteRange() ", start, end, dataId, currentOffset)
+        
         if (start === end) return;
         let newPieces: Piece[] = [];
         let offset = 0;
@@ -168,13 +168,13 @@ class TextDocument extends EventEmitter {
         let runBackspace = false;
         if (dataId !== '' || dataId !== null) {
             index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-            console.log(index, "index action")
+            
             offset = currentOffset;
         }
 
         const previousValue = this.getRangeText(start, end);
         let previousTextBlockIndex = 0;
-        console.log('runn1 previousValue', previousValue, "start === offset", start, offset);
+        
         if (start === offset) {
             if(index -1 >= 0 && this.blocks[index - 1].type === 'image'){
                 previousTextBlockIndex = index -2;
@@ -182,7 +182,7 @@ class TextDocument extends EventEmitter {
                 previousTextBlockIndex = index -1;
             }
             for (let piece1 of this.blocks[previousTextBlockIndex].pieces) {
-                // console.log('runn1 if-----', start, end, piece1.clone(), index);
+                
                 newPieces.push(piece1.clone());
                 runBackspace = true;
             }
@@ -203,12 +203,12 @@ class TextDocument extends EventEmitter {
             }
             offset = pieceEnd;
         }
-        console.log(dataId, "dataId", this.currentOffset, "offset", offset, "currentOffset", currentOffset)
+        
         const _data = this.mergePieces(newPieces)
 
         if (runBackspace) {
             this.blocks[previousTextBlockIndex].pieces = _data
-            console.log("runn1 --- > _data", _data)
+            
             this.blocks[index].pieces = [new Piece(" ")]
             this.blocks = this.blocks.filter((block: any, i: number) => {
                 if (i !== index)
@@ -225,7 +225,7 @@ class TextDocument extends EventEmitter {
             });
         }
         const newValue = this.getRangeText(start - 1, end - 1);
-        console.log(newValue)
+        
 
         this.emit('documentChanged', this);
         // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
@@ -320,8 +320,7 @@ class TextDocument extends EventEmitter {
             });
         }
         this.dataIds = selectedDataIds;
-        console.log('zzz', { dataIds: this.dataIds });
-        console.log(' run1 id Selected Data IDs:', selectedDataIds);
+        
         return selectedDataIds;
         // Now you can use `selectedDataIds` as needed
     }
@@ -396,21 +395,20 @@ class TextDocument extends EventEmitter {
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'],
         // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
         value: string | boolean): void {
-        console.log("blocks formatattribute", this.blocks, this.dataIds, this.currentOffset, start, end, value)
-        console.log(attribute, "attribute1", start, end, value)
+        
 
         let newPieces: Piece[] = [];
         let offset = 0;
         let index = -1;
         if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
-            console.log('ctrlakesathbold', this.selectedBlockId)
+            
             index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
             offset = this.currentOffset;
-            console.log(index, "index attribute1", offset)
+           
         }
 
         for (let piece of this.blocks[index].pieces) {
-            console.log(piece.text.length, "piece.text.length attribute1", piece)
+            
             const pieceEnd = offset + piece.text.length;
 
             if (pieceEnd <= start || offset >= end) {
@@ -421,29 +419,29 @@ class TextDocument extends EventEmitter {
                 const startInPiece = Math.max(start - pieceStart, 0);
                 const endInPiece = Math.min(end - pieceStart, pieceText.length);
                 if (startInPiece > 0) {
-                    console.log(newPieces, "attribute1-- slice if", pieceText.slice(0, startInPiece), { ...piece.attributes })
+                    
                     newPieces.push(new Piece(pieceText.slice(0, startInPiece), { ...piece.attributes }));
-                    console.log(newPieces, "attribute1-- slice if1", pieceText.slice(0, startInPiece), { ...piece.attributes })
+                    
 
                 }
                 const selectedPiece = new Piece(pieceText.slice(startInPiece, endInPiece), { ...piece.attributes });
                 // selectedPiece.attributes[attribute] = value;
-                console.log(selectedPiece, "attribute1 -- selectedPiece", startInPiece, endInPiece, newPieces, value)
+                
                 if (
                     (attribute === 'bold' || attribute === 'italic' || attribute === 'underline' || attribute === 'undo' || attribute === 'redo' || attribute === 'hyperlink') &&
                     typeof value === 'boolean'
                 ) {
-                    console.log(selectedPiece, "attribute1 -- if")
+                   
                     selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
                 } else if (
                     (attribute === 'fontFamily' || attribute === 'fontSize' || attribute === 'hyperlink' || attribute === 'fontColor' || attribute === 'bgColor') &&
                     typeof value === 'string'
                 ) {
-                    console.log(selectedPiece, "attribute1 -- elseif")
+                    
                     selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
                 }
                 newPieces.push(selectedPiece);
-                console.log(newPieces, " newPieces attribute1 --")
+                
                 if (endInPiece < pieceText.length) {
                     newPieces.push(new Piece(pieceText.slice(endInPiece), { ...piece.attributes }));
                 }
@@ -452,7 +450,7 @@ class TextDocument extends EventEmitter {
         }
 
         const _data = this.mergePieces(newPieces)
-        console.log(_data, "attribute1")
+        
         this.blocks[index].pieces = _data
         this.emit('documentChanged', this);
     }
@@ -465,7 +463,7 @@ class TextDocument extends EventEmitter {
         block.listType = block.listType === 'ol' ? null : 'ol'; // Toggle between 'ol' and null
         block.listStart = listStart;
         this.blocks[index].listType = block.listType;
-        console.log(block, "action -- block ol ", index, this.blocks[index].listType)
+        
         this.emit('documentChanged', this);
     }
 
@@ -508,7 +506,7 @@ class TextDocument extends EventEmitter {
 
     undo(): void {
         const action = this.undoStack.pop();
-        console.log(action, "action undo")
+        
         if (!action) return;
 
         this.redoStack.push(action);
@@ -517,7 +515,7 @@ class TextDocument extends EventEmitter {
 
     redo(): void {
         const action = this.redoStack.pop();
-        console.log(action, "action redo")
+        
 
         if (!action) return;
 
@@ -537,7 +535,7 @@ class TextDocument extends EventEmitter {
                 this.toggleUnderlineRange(action.start, action.end, action.id);
                 break
             case 'insert':
-                console.log('insert... delete')
+                
                 this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
                 break;
             // Add cases for other actions like italic, underline, insert, delete
@@ -557,7 +555,7 @@ class TextDocument extends EventEmitter {
                 this.toggleUnderlineRange1(action.start, action.end, action.id);
                 break;
             case 'insert':
-                console.log('insert... insert')
+                
                 this.insertAt(action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo');
                 // this.setCursorPosition(action.start, action.end, action.id)
                 break;
@@ -631,7 +629,7 @@ class TextDocument extends EventEmitter {
     applyFontColor(start: number, end: number, color: string, id = ""): void {
         // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
         if (start < end) {
-            console.log("_color fontColorPicker", color)
+            
             this.formatAttribute(start, end, "fontColor", color);
         }
     }
@@ -639,7 +637,7 @@ class TextDocument extends EventEmitter {
     applyBgColor(start: number, end: number, color: string, id = ""): void {
         // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
         if (start < end) {
-            console.log("_color bgColorPicker", color)
+           
             this.formatAttribute(start, end, "bgColor", color);
         }
     }
@@ -650,7 +648,7 @@ class TextDocument extends EventEmitter {
 
         if (this.selectedBlockId !== '') {
             const index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
-            console.log(index, "vicky", this.selectedBlockId)
+            
             for (let piece of this.blocks[index].pieces) {
                 const pieceEnd = offset + piece.text.length;
                 if (pieceEnd > start && offset < end) {
@@ -723,7 +721,7 @@ class TextDocument extends EventEmitter {
         }
 
         const htmlContent = editorContainer.innerHTML;
-        console.log("Editor HTML Content:", htmlContent);
+        
 
         // You can also copy it to the clipboard
         navigator.clipboard.writeText(htmlContent).then(() => {

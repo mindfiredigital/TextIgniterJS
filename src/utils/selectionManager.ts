@@ -106,7 +106,7 @@ export function  extractTextFromDataId(dataId: string,textDocument:TextDocument)
             }
         })
     }
-    console.log("v11, element", element, "_block", _block, textPosition, _piece)
+    
 
     if (!element) {
         console.error(`Element with data-id "${dataId}" not found.`);
@@ -126,7 +126,7 @@ export function  extractTextFromDataId(dataId: string,textDocument:TextDocument)
     // const cursorOffset = range.startOffset;
     const cursorOffset = textPosition?.offset;
 
-    console.log("v11 fullText", fullText, fText, cursorOffset, range)
+    
     // Extract text from the cursor position to the end
     const remainingText = fullText.slice(cursorOffset);
 
@@ -134,8 +134,7 @@ export function  extractTextFromDataId(dataId: string,textDocument:TextDocument)
     const newContent = fullText.slice(0, cursorOffset);
     element.textContent = newContent; // Update the element content with remaining text
 
-    console.log('v11 Extracted text:', remainingText);
-    console.log('v11 Updated element content:', newContent);
+    
 
     return { remainingText: remainingText, piece: _piece }; // Return the extracted text
 }

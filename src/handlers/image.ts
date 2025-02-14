@@ -242,9 +242,9 @@ export class ImageHandler {
       // e.stopPropagation();
       e.preventDefault();
       // this.deleteImage();
-      console.log("delete1 __", this.highLightedImageDataId);
+      
     });
-    console.log("delete1", this.highLightedImageDataId);
+    
 
     span?.appendChild(cross);
     this.isImageHighlighted = true;
@@ -270,7 +270,7 @@ export class ImageHandler {
   }
 
   public deleteImage() {
-    console.log("deleted", this.highLightedImageDataId);
+    
     this.document.blocks = this.document.blocks.filter(
       (block: any) => block.dataId !== this.highLightedImageDataId
     );
