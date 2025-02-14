@@ -72,7 +72,7 @@ class HtmlToJsonParser {
     }
 
     private extractTextAttributes(node: any): any {
-        const text = node.textContent?.trim() || "";
+        const text = node.textContent || "";
         if (!text) return null;
 
         return {

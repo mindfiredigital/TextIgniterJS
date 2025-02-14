@@ -11,6 +11,7 @@ import HtmlToJsonParser from "./HtmlToJsonParser"
 import { EditorConfig } from "./types/editorConfig";
 import { ImageHandler } from "./handlers/image";
 import EventEmitter from "./utils/events";
+import { strings } from "./constants/strings";
 
 
 export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string }
@@ -44,7 +45,7 @@ class TextIgniter {
         this.editorView = new EditorView(this.editorContainer, this.document);
         this.toolbarView = new ToolbarView(this.toolbarContainer);
         this.hyperlinkHandler = new HyperlinkHandler(this.editorContainer, this.editorView, this.document);
-        this.imageHandler = new ImageHandler(this.editorContainer,this.document);
+        this.imageHandler = new ImageHandler(this.editorContainer, this.document);
         this.editorView.setImageHandler(this.imageHandler);
         this.imageHandler.setEditorView(this.editorView);
         this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, hyperlink: false };
@@ -57,7 +58,7 @@ class TextIgniter {
         this.editorContainer.addEventListener("blur", () => {
             this.hyperlinkHandler.hideHyperlinkViewButton();
         });
-    
+
         document.addEventListener('mouseup', () => {
             this.syncCurrentAttributesWithCursor();
             const dataId = this.document.getAllSelectedDataIds();
@@ -195,8 +196,7 @@ class TextIgniter {
         document.getElementById("loadHtmlButton")?.addEventListener('click', (e) => {
             console.log("Editor HTML Content:")
             // const htmlString = this.document.getHtmlContent();
-            // const str = '<div data-id="data-id-1734604240404" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(160, 39, 39);"><span style="color: rgb(255, 255, 255);"> ajsh diujaksd</span></span></span></div><div data-id="data-id-1739337267195" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(160, 39, 39);"><span style="color: rgb(255, 255, 255);"> asd iasgiuda</span></span></span></div><div data-id="data-id-1739337267885" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(160, 39, 39);"><span style="color: rgb(255, 255, 255);"> sdoa ihsd</span></span></span></div><div data-id="data-id-1739346059031" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(160, 39, 39);"><span style="color: rgb(255, 255, 255);"> asod9b8ahisod</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);">asdasdasdaishd yaiusjd 09ioasd</span></span></span></div><div data-id="data-id-1739346084169" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> alsdk g78tasuid 09ausidoj</span></span></span></div><ul data-id="data-id-1739355369739" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asdj oiasd</span></span></span></li></ul><ul data-id="data-id-1739355373160" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asdj oaisd</span></span></span></li></ul><ul data-id="data-id-1739355374849" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asdpjo oasd</span></span></span></li></ul><ol start="1" data-id="data-id-1739355376025" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asd oinasd</span></span></span></li></ol><ol start="2" data-id="data-id-1739355379576" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> sdj oiasd</span></span></span></li></ol><ol start="3" data-id="data-id-1739355384505" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asdj a9sdio</span></span></span></li></ol><ol start="4" data-id="data-id-1739355385545" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asd jhuasid</span></span></span></li></ol><div data-id="data-id-1739355388595" class="paragraph-block" style="text-align: center;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> alsid uoaisjd u09asd</span></span></span></div><div data-id="data-id-1739355406320" class="paragraph-block" style="text-align: right;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asdj oaihsd</span></span></span></div><div data-id="data-id-1739355414447" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><strong> asdh 98hasiud</strong></span></span></span></div><div data-id="data-id-1739355425249" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> a;</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><u>sdj </u></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><em>09asuj</em></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);">dio</span></span></span></div><div data-id="data-id-1739355441165" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><strong>  a;</strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><strong><u>sdj </u></strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><strong><em>09asuj</em></strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><strong>dio</strong></span></span></span></div><div data-id="data-id-1739355452982" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><a href="asd 90auoisjdn 9asiod" target="_blank"> oiasda90 uasd y98asiod</a></span></span></span></div><div data-id="data-id-1739355466282" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> </span></span></span><span style="font-family: &quot;Courier New&quot;; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);">asdj</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> a9sudoij </span></span></span><span style="font-family: Arial; font-size: 16px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);">a90sdo</span></span></span></div>'
-            const str = '<div data-id="data-id-1734604240404" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> ajsh diujaksdajsh diujaksdajsh </span></span></span></div><div data-id="data-id-1739430551701" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> diujaksdasd </span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong>asdh 98hasiudasdh 98</strong></span></span></span></div><div data-id="data-id-1739430553412" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong> hasiudasdh </strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);">a;a;a;</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><u>sdjsdjsdj</u></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><em>09asuj09asuj09asuj</em></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);">diodiodio</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong>a;a;a</strong></span></span></span></div><div data-id="data-id-1739430554776" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(97, 89, 35);"><span style="color: rgb(255, 255, 255);"> ;sdjsdjsdj09asuj09asuj09asujdiodiod</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);">iooiasda90 </span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong>a;a;a;</strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong><u>sdjsdjsdj</u></strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong><em>09asuj09as</em></strong></span></span></span></div><div data-id="data-id-1739430558023" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong><em> uj09asujdi</em></strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><a href="a;lsjd 98aiosd" target="_blank"><strong><em>odiodiooias </em></strong></a></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><a href="a;lsjd 98aiosd" target="_blank"><strong>diodiodio</strong></a></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><a href="a;lsjd 98aiosd" target="_blank">oias</a></span></span></span></div><div data-id="data-id-1739430556280" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> da90 uasd y98asiodoiasda90 uasd y9</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(140, 180, 80);">8asiodoiasda90 uasd y98asioda</span></span></span></div><div data-id="data-id-1739430559464" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(171, 158, 73);"><span style="color: rgb(0, 0, 0);"> sdjasdjasdja9sudoija9sudoija9sudoija90sdoa90sdoa90sdo</span></span></span></div>';
+            const str = strings.TEST_HTML_CODE;
             this.htmlToJsonParser = new HtmlToJsonParser(str as string);
             const jsonOutput = this.htmlToJsonParser.parse();
 
@@ -204,8 +204,21 @@ class TextIgniter {
             this.document.dataIds[0] = jsonOutput[0].dataId;
             this.document.selectedBlockId = 'data-id-1734604240404';
             this.document.emit('documentChanged', this);
+            const [start, end] = this.getSelectionRange();
+            this.document.blocks.forEach((block: any) => {
+                if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                        countE += obj.text.length;
+                    })
+                    let countS = start - countE;
+                    console.log(countS, countE, "load html", window.getSelection())
+                    this.document.setFontSize(countS, countE, block.fontSize);
+                }
+            })
             console.log("blocks", this.document.blocks, this.document.dataIds, this.document.currentOffset)
-            // console.log("htmltoJson", JSON.stringify(jsonOutput, null, 2), jsonOutput);
+            console.log("htmltoJson", JSON.stringify(jsonOutput, null, 2), jsonOutput);
         })
 
         console.log('block dataIds', this.document.dataIds);
@@ -421,7 +434,7 @@ class TextIgniter {
                 // this.document.toggleUnorderedList(this.document.selectedBlockId);
                 break;
         }
-        if(action === 'image'){
+        if (action === 'image') {
             this.imageHandler.insertImage();
         }
         else if (start < end) {
@@ -516,7 +529,7 @@ class TextIgniter {
 
 
     handleSelectionChange(): void {
-       
+
         const [start] = this.getSelectionRange();
         this.imageHandler.currentCursorLocation = start;
 
@@ -536,13 +549,13 @@ class TextIgniter {
 
         const range = selection.getRangeAt(0);
         const parentBlock =
-        range.startContainer.parentElement?.closest('[data-id]') || range.startContainer;
+            range.startContainer.parentElement?.closest('[data-id]') || range.startContainer;
         if (parentBlock instanceof HTMLElement) {
-        this.document.selectedBlockId =
-            parentBlock.getAttribute('data-id') ||
-            (range.startContainer instanceof HTMLElement
-            ? range.startContainer.getAttribute('data-id')
-            : null);
+            this.document.selectedBlockId =
+                parentBlock.getAttribute('data-id') ||
+                (range.startContainer instanceof HTMLElement
+                    ? range.startContainer.getAttribute('data-id')
+                    : null);
         }
         this.syncCurrentAttributesWithCursor();
     }
@@ -578,7 +591,7 @@ class TextIgniter {
                 console.log('vk11   0', this.getCurrentCursorBlock())
                 this.document.blocks.push({
                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                    "type":"text",
+                    "type": "text",
                     // listType: ListType, // null | 'ol' | 'ul'
                     listType: blockListType,
                     parentId: parentId,
@@ -586,11 +599,11 @@ class TextIgniter {
                 })
             } else {
                 console.log('vk11   1', this.getCurrentCursorBlock())
-                const currentBlockIndex = this.document.blocks.findIndex((block:any)=>block.dataId === this.document.selectedBlockId)
-                if(this.document.blocks[currentBlockIndex].type === "image"){
+                const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
+                if (this.document.blocks[currentBlockIndex].type === "image") {
                     this.document.blocks.push({
                         "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                        "type" : "text"
+                        "type": "text"
                     });
                     this.document.emit('documentChanged', this);
                     this.imageHandler.setCursorPostion(1, uniqueId);
@@ -632,7 +645,7 @@ class TextIgniter {
                         console.log(" extractTextFromDataId pieces", _pieces, piece);
                         updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
                             "dataId": uniqueId, "class": "paragraph-block", "pieces": _pieces,
-                            "type":"text"
+                            "type": "text"
                             // listType: null, // null | 'ol' | 'ul'
                         });
                         console.log('schenerio1');
@@ -640,7 +653,7 @@ class TextIgniter {
                     } else {
                         updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
                             "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                            "type":"text"
+                            "type": "text"
                             // listType: null, // null | 'ol' | 'ul'
                         });
                     }
@@ -651,7 +664,7 @@ class TextIgniter {
                     console.log('jagdiii 1')
                     this.document.blocks.push({
                         "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                        "type" : "text"
+                        "type": "text"
                         // listType: null, // null | 'ol' | 'ul'
                     })
                 }
@@ -667,11 +680,11 @@ class TextIgniter {
 
         } else if (e.key === 'Backspace') {
             e.preventDefault();
-            if(this.imageHandler.isImageHighlighted){
-                const currentBlockIndex = this.document.blocks.findIndex((block:any)=>block.dataId === this.imageHandler.highLightedImageDataId);
-                console.log('jagdish5',currentBlockIndex,this.document.blocks[currentBlockIndex -1])
+            if (this.imageHandler.isImageHighlighted) {
+                const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.imageHandler.highLightedImageDataId);
+                console.log('jagdish5', currentBlockIndex, this.document.blocks[currentBlockIndex - 1])
                 this.imageHandler.deleteImage();
-                this.imageHandler.setCursorPostion(1,this.document.blocks[currentBlockIndex -1].dataId);
+                this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
                 return;
             }
             const selection = window.getSelection();
@@ -854,14 +867,14 @@ class TextIgniter {
     }
     syncCurrentAttributesWithCursor(): void {
         const [start, end] = this.getSelectionRange();
-            const blockIndex = this.document.blocks.findIndex((block:any)=>block.dataId === this.document.selectedBlockId);
-            if(this.document.blocks[blockIndex]?.type === 'image'){
-                this.imageHandler.addStyleToImage(this.document.selectedBlockId || "");
-            }else{
-                if(this.imageHandler.isImageHighlighted){
-                    this.imageHandler.clearImageStyling();
-                }
+        const blockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId);
+        if (this.document.blocks[blockIndex]?.type === 'image') {
+            this.imageHandler.addStyleToImage(this.document.selectedBlockId || "");
+        } else {
+            if (this.imageHandler.isImageHighlighted) {
+                this.imageHandler.clearImageStyling();
             }
+        }
         if (start === end) {
             const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
             if (piece) {
