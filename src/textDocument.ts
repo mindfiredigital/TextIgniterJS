@@ -31,6 +31,7 @@ class TextDocument extends EventEmitter {
         this.pieces = [new Piece("")];
         this.blocks = [
             {
+                "type" : "text",
                 "dataId": 'data-id-1734604240404',
                 "class": "paragraph-block",
                 "alignment": "left",
@@ -91,8 +92,8 @@ class TextDocument extends EventEmitter {
         const _data = this.mergePieces(newPieces)
         // this.pieces = _data;
 
-        this.blocks[index].pieces = _data
-        const newValue = this.getRangeText(position, position + text.length);
+                this.blocks[index].pieces = _data
+                const newValue = this.getRangeText(position, position + text.length);
         // if (dataId !== '' || dataId !== null) {
         //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
         // }

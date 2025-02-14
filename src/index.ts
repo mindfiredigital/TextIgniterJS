@@ -9,6 +9,7 @@ import { createEditor } from "./config/editorConfig";
 import "./styles/text-igniter.css"
 import HtmlToJsonParser from "./HtmlToJsonParser"
 import { EditorConfig } from "./types/editorConfig";
+import { ImageHandler } from "./handlers/image";
 import EventEmitter from "./utils/events";
 
 
@@ -20,6 +21,7 @@ class TextIgniter {
     editorView: EditorView;
     toolbarView: ToolbarView;
     hyperlinkHandler: HyperlinkHandler;
+    imageHandler: ImageHandler;
     currentAttributes: CurrentAttributeDTO;
     manualOverride: boolean;
     lastPiece: Piece | null;
@@ -42,6 +44,9 @@ class TextIgniter {
         this.editorView = new EditorView(this.editorContainer, this.document);
         this.toolbarView = new ToolbarView(this.toolbarContainer);
         this.hyperlinkHandler = new HyperlinkHandler(this.editorContainer, this.editorView, this.document);
+        this.imageHandler = new ImageHandler(this.editorContainer,this.document);
+        this.editorView.setImageHandler(this.imageHandler);
+        this.imageHandler.setEditorView(this.editorView);
         this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, hyperlink: false };
         this.manualOverride = false;
         this.lastPiece = null;
@@ -52,7 +57,7 @@ class TextIgniter {
         this.editorContainer.addEventListener("blur", () => {
             this.hyperlinkHandler.hideHyperlinkViewButton();
         });
-
+    
         document.addEventListener('mouseup', () => {
             this.syncCurrentAttributesWithCursor();
             const dataId = this.document.getAllSelectedDataIds();
@@ -416,7 +421,10 @@ class TextIgniter {
                 // this.document.toggleUnorderedList(this.document.selectedBlockId);
                 break;
         }
-        if (start < end) {
+        if(action === 'image'){
+            this.imageHandler.insertImage();
+        }
+        else if (start < end) {
 
             switch (action) {
                 case 'bold':
@@ -508,7 +516,10 @@ class TextIgniter {
 
 
     handleSelectionChange(): void {
-        this.syncCurrentAttributesWithCursor();
+       
+        const [start] = this.getSelectionRange();
+        this.imageHandler.currentCursorLocation = start;
+
         const selection = window.getSelection();
         console.log("run1 id ---- ", selection)
         if (!selection || selection.rangeCount === 0) {
@@ -524,15 +535,21 @@ class TextIgniter {
         }
 
         const range = selection.getRangeAt(0);
-        const parentBlock = range.startContainer.parentElement?.closest('[data-id]');
-        if (parentBlock && parentBlock instanceof HTMLElement) {
-            this.document.selectedBlockId = parentBlock.getAttribute('data-id') || null;
-            // this.document.dataIds[0] = parentBlock.getAttribute('data-id') || '';
+        const parentBlock =
+        range.startContainer.parentElement?.closest('[data-id]') || range.startContainer;
+        if (parentBlock instanceof HTMLElement) {
+        this.document.selectedBlockId =
+            parentBlock.getAttribute('data-id') ||
+            (range.startContainer instanceof HTMLElement
+            ? range.startContainer.getAttribute('data-id')
+            : null);
         }
+        this.syncCurrentAttributesWithCursor();
     }
 
     handleKeydown(e: KeyboardEvent): void {
         const [start, end] = this.getSelectionRange();
+        this.imageHandler.currentCursorLocation = start;
         let ending = end;
         if (e.key === 'Enter') {
             console.log('blocks--->>', this.document.blocks)
@@ -561,6 +578,7 @@ class TextIgniter {
                 console.log('vk11   0', this.getCurrentCursorBlock())
                 this.document.blocks.push({
                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                    "type":"text",
                     // listType: ListType, // null | 'ol' | 'ul'
                     listType: blockListType,
                     parentId: parentId,
@@ -568,6 +586,16 @@ class TextIgniter {
                 })
             } else {
                 console.log('vk11   1', this.getCurrentCursorBlock())
+                const currentBlockIndex = this.document.blocks.findIndex((block:any)=>block.dataId === this.document.selectedBlockId)
+                if(this.document.blocks[currentBlockIndex].type === "image"){
+                    this.document.blocks.push({
+                        "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                        "type" : "text"
+                    });
+                    this.document.emit('documentChanged', this);
+                    this.imageHandler.setCursorPostion(1, uniqueId);
+                    return;
+                }
                 if (this.getCurrentCursorBlock() !== null) {
                     const { remainingText, piece } = this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString());
                     const extractedContent = " " + remainingText;
@@ -604,6 +632,7 @@ class TextIgniter {
                         console.log(" extractTextFromDataId pieces", _pieces, piece);
                         updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
                             "dataId": uniqueId, "class": "paragraph-block", "pieces": _pieces,
+                            "type":"text"
                             // listType: null, // null | 'ol' | 'ul'
                         });
                         console.log('schenerio1');
@@ -611,6 +640,7 @@ class TextIgniter {
                     } else {
                         updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
                             "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                            "type":"text"
                             // listType: null, // null | 'ol' | 'ul'
                         });
                     }
@@ -621,6 +651,7 @@ class TextIgniter {
                     console.log('jagdiii 1')
                     this.document.blocks.push({
                         "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                        "type" : "text"
                         // listType: null, // null | 'ol' | 'ul'
                     })
                 }
@@ -636,6 +667,13 @@ class TextIgniter {
 
         } else if (e.key === 'Backspace') {
             e.preventDefault();
+            if(this.imageHandler.isImageHighlighted){
+                const currentBlockIndex = this.document.blocks.findIndex((block:any)=>block.dataId === this.imageHandler.highLightedImageDataId);
+                console.log('jagdish5',currentBlockIndex,this.document.blocks[currentBlockIndex -1])
+                this.imageHandler.deleteImage();
+                this.imageHandler.setCursorPostion(1,this.document.blocks[currentBlockIndex -1].dataId);
+                return;
+            }
             const selection = window.getSelection();
             console.log("selection", selection, " ", this.document.dataIds.length, "run1 id1 length rn1", this.document.dataIds, "this.document.selectedBlockId", this.document.selectedBlockId)
 
@@ -816,6 +854,14 @@ class TextIgniter {
     }
     syncCurrentAttributesWithCursor(): void {
         const [start, end] = this.getSelectionRange();
+            const blockIndex = this.document.blocks.findIndex((block:any)=>block.dataId === this.document.selectedBlockId);
+            if(this.document.blocks[blockIndex]?.type === 'image'){
+                this.imageHandler.addStyleToImage(this.document.selectedBlockId || "");
+            }else{
+                if(this.imageHandler.isImageHighlighted){
+                    this.imageHandler.clearImageStyling();
+                }
+            }
         if (start === end) {
             const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
             if (piece) {
