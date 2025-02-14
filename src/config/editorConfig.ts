@@ -1,9 +1,9 @@
-import { EditorConfig,EditorConfigReturnType } from '../types/editorConfig';
+import { EditorConfig, EditorConfigReturnType } from '../types/editorConfig';
 import { icons } from "../assets/icons";
 
 export function createEditor(editorId: string, config: EditorConfig): EditorConfigReturnType {
-   const mainEditorId = 'editor';
-   const toolbarId = 'toolbar';
+    const mainEditorId = 'editor';
+    const toolbarId = 'toolbar';
 
     const allowedFontFamily = [
         'Arial',
@@ -47,7 +47,8 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
         'orderedList': '1.',      // Simple text representation
         'fontFamily': 'fontFamily',
         'fontSize': 'fontSize',
-
+        'fontColor': 'A',
+        // "getHTMLContent": "getHTMLContent",
         'subscript': 'X<sub>2</sub>',
         'superscript': 'X<sup>2</sup>',
         'justify': '&#8644;',       // Unicode for justify icon
@@ -88,6 +89,103 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
         } else if (feature === 'fontSize') {
             const fontSizeSelect = createSelect('fontSize', allowedFontSizes);
             toolbar.appendChild(fontSizeSelect);
+        }
+        else if (feature === 'fontColor') {
+            if (document.getElementById("fontColorWrapper")) return;
+            // if (document.getElementById("fontColorPicker")) return;
+
+            const span = document.createElement("span");
+            span.id = "fontColorWrapper"; // Unique ID for span
+            span.style.display = "inline-block"; // Keeps the layout inline
+            span.style.marginRight = "8px"; // Adds spacing if needed
+
+            // Create button element
+            const button = document.createElement("button");
+            button.id = "fontColor";
+            button.type = "button";
+            button.textContent = "A";
+
+            span.appendChild(button)
+            // Create input element
+            const span1 = document.createElement("span");
+            span1.id = "colorWrapper"; // Unique ID for span
+            span1.style.display = "hidden";
+            const fontColorPicker = document.createElement("input");
+            // fontColorPicker.value = '#171717'
+            fontColorPicker.type = "color";
+            fontColorPicker.id = "fontColorPicker";
+            fontColorPicker.style.display = "none"; // Hide it initially
+            span1.appendChild(fontColorPicker)
+            span.appendChild(span1)
+            toolbar.appendChild(span);
+
+        } else if (feature === 'bgColor') {
+            if (document.getElementById("bgColorWrapper")) return;
+
+            const span = document.createElement("span");
+            span.id = "bgColorWrapper"; // Unique ID for span
+            span.style.display = "inline-block"; // Keeps the layout inline
+            span.style.marginRight = "8px"; // Adds spacing if needed
+
+            // Create button element
+            const button = document.createElement("button");
+            button.id = "bgColor";
+            button.type = "button";
+            button.textContent = "B";
+
+            span.appendChild(button)
+            const rect = button.getBoundingClientRect();
+
+            // Get absolute position including scrolling
+            const x = rect.left + window.scrollX;
+            const y = rect.top + window.scrollY;
+
+            
+            // Create input element
+            const span1 = document.createElement("span");
+            span1.id = "colorBgWrapper"; // Unique ID for span
+            span1.style.display = "hidden";
+            const bgColorPicker = document.createElement("input");
+            bgColorPicker.value = '#f7f7f7'
+            bgColorPicker.type = "color";
+            bgColorPicker.id = "bgColorPicker";
+            bgColorPicker.style.display = "none"; // Hide it initially
+            // const colorBgWrapper = document.getElementById('colorBgWrapper') as HTMLElement;
+            // colorBgWrapper.style.position = "absolute";
+            // colorBgWrapper.style.left = `${x - 2}px`;
+            // colorBgWrapper.style.top = `${y - 15}px`;
+            // colorBgWrapper.style.display = "block";
+
+            span1.appendChild(bgColorPicker)
+            span.appendChild(span1)
+            toolbar.appendChild(span);
+
+        } else if (feature === 'getHtmlContent') {
+            const button = document.createElement("button");
+            button.id = "getHtmlButton";
+            button.type = "button";
+            button.textContent = "Get HTML";
+
+            button.style.padding = "8px 12px";
+            button.style.marginRight = "8px";
+            button.style.border = "1px solid #ccc";
+            button.style.borderRadius = "4px";
+            button.style.cursor = "pointer";
+            button.style.background = "#f4f4f4";
+            toolbar.appendChild(button);
+        } else if (feature === "loadHtmlContent") {
+            const button = document.createElement("button");
+            button.id = "loadHtmlButton";
+            button.type = "button";
+            button.textContent = "Load HTML";
+
+            button.style.padding = "8px 12px";
+            button.style.marginRight = "8px";
+            button.style.border = "1px solid #ccc";
+            button.style.borderRadius = "4px";
+            button.style.cursor = "pointer";
+            button.style.background = "#f4f4f4";
+            toolbar.appendChild(button);
         } else if (featuresWithPngIcon.map(item => item.feature).indexOf(feature) !== -1) {
             const featureDataArray = featuresWithPngIcon.filter(item => item.feature === feature);
             let featureData = null;
@@ -198,5 +296,5 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
 
     toolbar.appendChild(viewHyperlinkContainer);
 
-    return {mainEditorId,toolbarId};
+    return { mainEditorId, toolbarId };
 }

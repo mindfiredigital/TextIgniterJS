@@ -7,24 +7,29 @@ import { saveSelection, restoreSelection } from "./utils/selectionManager";
 import { parseHtmlToPieces } from "./utils/parseHtml";
 import { createEditor } from "./config/editorConfig";
 import "./styles/text-igniter.css"
-
+import HtmlToJsonParser from "./HtmlToJsonParser"
 import { EditorConfig } from "./types/editorConfig";
+import { ImageHandler } from "./handlers/image";
+import EventEmitter from "./utils/events";
+import { strings } from "./constants/strings";
 
 
-export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; }
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string }
 
 class TextIgniter {
     document: TextDocument;
+    htmlToJsonParser: HtmlToJsonParser | undefined;
     editorView: EditorView;
     toolbarView: ToolbarView;
     hyperlinkHandler: HyperlinkHandler;
+    imageHandler: ImageHandler;
     currentAttributes: CurrentAttributeDTO;
     manualOverride: boolean;
     lastPiece: Piece | null;
     editorContainer: HTMLElement | null;
     toolbarContainer: HTMLElement | null;
     savedSelection: { start: number; end: number } | null = null;
-
+    debounceTimer: NodeJS.Timeout | null = null;
     constructor(editorId: string, config: EditorConfig) {
 
         const { mainEditorId, toolbarId } = createEditor(editorId, config);
@@ -40,32 +45,179 @@ class TextIgniter {
         this.editorView = new EditorView(this.editorContainer, this.document);
         this.toolbarView = new ToolbarView(this.toolbarContainer);
         this.hyperlinkHandler = new HyperlinkHandler(this.editorContainer, this.editorView, this.document);
+        this.imageHandler = new ImageHandler(this.editorContainer, this.document);
+        this.editorView.setImageHandler(this.imageHandler);
+        this.imageHandler.setEditorView(this.editorView);
         this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, hyperlink: false };
         this.manualOverride = false;
         this.lastPiece = null;
         this.toolbarView.on('toolbarAction', (action: string, dataId: string[] = []) => this.handleToolbarAction(action, dataId));
         this.document.on('documentChanged', () => this.editorView.render());
-        this.editorContainer.addEventListener('keydown', (e) => {this.syncCurrentAttributesWithCursor();this.handleKeydown(e as KeyboardEvent);});
+        this.editorContainer.addEventListener('keydown', (e) => { this.syncCurrentAttributesWithCursor(); this.handleKeydown(e as KeyboardEvent); });
         this.editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
         this.editorContainer.addEventListener("blur", () => {
-                this.hyperlinkHandler.hideHyperlinkViewButton();
+            this.hyperlinkHandler.hideHyperlinkViewButton();
         });
 
         document.addEventListener('mouseup', () => {
             this.syncCurrentAttributesWithCursor();
             const dataId = this.document.getAllSelectedDataIds();
-            // const dataId = this.document.handleCtrlASelection();
-            console.log('run1 id mouseup Selected text is inside element with data-id:', dataId);
-            console.log(this.document.dataIds, "this.document.dataIds mouseup run1 id")
         });
+        document.getElementById('fontColor')?.addEventListener('click', (e) => {
+
+            const fontColorPicker = document.getElementById("fontColorPicker") as HTMLInputElement;
+            const fontColorButton = document.querySelector(`[data-feature="fontColor"]`);
+
+            fontColorPicker.style.display = 'inline';
+            const colorWrapper = document.getElementById('colorWrapper') as HTMLElement;
+            // Get the button's position (x, y)
+            const rect = (e.target as HTMLElement).getBoundingClientRect();
+            const x = rect.left + window.scrollX; // Adjust for scrolling
+            const y = rect.bottom + window.scrollY; // Position below the button
+
+            // Position the color picker
+            colorWrapper.style.position = "absolute";
+            colorWrapper.style.left = `${x - 2}px`;
+            colorWrapper.style.top = `${y - 15}px`;
+            colorWrapper.style.display = "block"; // Show the color picker
+
+            fontColorPicker.click();
+            if (fontColorPicker) {
+
+
+                fontColorPicker.addEventListener("input", (event) => {
+                    const selectedColor = (event.target as HTMLInputElement).value;
+                    const [start, end] = this.getSelectionRange();
+
+
+                    if (this.document.dataIds.length > 1) {
+                        this.document.blocks.forEach((block: any) => {
+                            if (this.document.dataIds.includes(block.dataId)) {
+                                this.document.selectedBlockId = block.dataId;
+                                let countE = 0;
+                                block.pieces.forEach((obj: any) => {
+                                    countE += obj.text.length;
+                                })
+                                let countS = start - countE;
+                                this.document.applyFontColor(countS, countE, selectedColor);
+
+                            }
+                        })
+                    } else {
+                        if (this.debounceTimer) {
+                            clearTimeout(this.debounceTimer); // Clear previous timer
+                        }
+                        this.debounceTimer = setTimeout(() => {
+                            this.document.applyFontColor(start, end, selectedColor);
+
+                        }, 300);
+                    }
+
+                });
+            }
+        })
+
+        document.getElementById('bgColor')?.addEventListener('click', (e) => {
+
+            const bgColorPicker = document.getElementById("bgColorPicker") as HTMLInputElement;
+
+            bgColorPicker.style.display = 'inline';
+            const colorBgWrapper = document.getElementById('colorBgWrapper') as HTMLElement;
+            // Get the button's position (x, y)
+            const rect = (e.target as HTMLElement).getBoundingClientRect();
+            const x = rect.left + window.scrollX; // Adjust for scrolling
+            const y = rect.bottom + window.scrollY; // Position below the button
+
+            // Position the color picker
+            colorBgWrapper.style.position = "absolute";
+            colorBgWrapper.style.left = `${x - 2}px`;
+            colorBgWrapper.style.top = `${y - 15}px`;
+            colorBgWrapper.style.display = "block"; // Show the color picker
+
+            bgColorPicker.click();
+            if (bgColorPicker) {
+                bgColorPicker.addEventListener("input", (event) => {
+                    const selectedColor = (event.target as HTMLInputElement).value;
+                    const [start, end] = this.getSelectionRange();
+
+
+
+                    if (this.document.dataIds.length > 1) {
+                        this.document.blocks.forEach((block: any) => {
+                            if (this.document.dataIds.includes(block.dataId)) {
+                                this.document.selectedBlockId = block.dataId;
+                                let countE = 0;
+                                block.pieces.forEach((obj: any) => {
+                                    countE += obj.text.length;
+                                })
+                                let countS = start - countE;
+                                this.document.applyBgColor(countS, countE, selectedColor);
+
+                            }
+                        })
+                    } else {
+                        if (this.debounceTimer) {
+                            clearTimeout(this.debounceTimer); // Clear previous timer
+                        }
+                        this.debounceTimer = setTimeout(() => {
+                            this.document.applyBgColor(start, end, selectedColor);
+
+                        }, 300);
+                    }
+
+
+                    // this.document.applyFontColor(start, end, selectedColor);
+
+                });
+            }
+        })
+
+        document.getElementById("getHtmlButton")?.addEventListener('click', (e) => {
+            const htmlString = this.document.getHtmlContent();
+            console.log("Editor HTML Content:", htmlString)
+            this.htmlToJsonParser = new HtmlToJsonParser(htmlString as string);
+            const jsonOutput = this.htmlToJsonParser.parse();
+
+            console.log("htmltoJson", JSON.stringify(jsonOutput, null, 2), jsonOutput);
+        })
+
+        document.getElementById("loadHtmlButton")?.addEventListener('click', (e) => {
+            
+            // const htmlString = this.document.getHtmlContent();
+            const str = strings.TEST_HTML_CODE;
+            this.htmlToJsonParser = new HtmlToJsonParser(str as string);
+            const jsonOutput = this.htmlToJsonParser.parse();
+
+            this.document.blocks = jsonOutput;
+            this.document.dataIds[0] = jsonOutput[0].dataId;
+            this.document.selectedBlockId = 'data-id-1734604240404';
+            this.document.emit('documentChanged', this);
+            const [start, end] = this.getSelectionRange();
+            this.document.blocks.forEach((block: any) => {
+                if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                        countE += obj.text.length;
+                    })
+                    let countS = start - countE;
+                    
+                    this.document.setFontSize(countS, countE, block.fontSize);
+                }
+            })
+            console.log("blocks", this.document.blocks, this.document.dataIds, this.document.currentOffset)
+            console.log("htmltoJson", JSON.stringify(jsonOutput, null, 2), jsonOutput);
+        })
+
+        
+
         document.getElementById('fontFamily')?.addEventListener('change', (e) => {
             const fontFamily = (e.target as HTMLSelectElement).value;
             const [start, end] = this.getSelectionRange();
             if (this.document.dataIds.length > 1) {
                 this.document.blocks.forEach((block: any) => {
                     if (this.document.dataIds.includes(block.dataId)) {
-                        console.log(document.getElementById(block.dataId))
-                        console.log(block.dataId, this.document.dataIds, "attribute1")
+                       
                         this.document.selectedBlockId = block.dataId;
                         let countE = 0;
                         block.pieces.forEach((obj: any) => {
@@ -80,6 +232,9 @@ class TextIgniter {
                 this.document.setFontFamily(start, end, fontFamily);
             }
         });
+
+
+
 
         document.getElementById('fontSize')?.addEventListener('change', (e) => {
             const fontSize = (e.target as HTMLSelectElement).value;
@@ -168,7 +323,7 @@ class TextIgniter {
                     e.preventDefault();
                     this.document.setAlignment('right', this.document.selectedBlockId);
                 }
-                console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
+                // console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
             }
         });
 
@@ -237,10 +392,23 @@ class TextIgniter {
         return [sel.start, sel.end];
     }
 
+    // Function to apply selected color
+    applyFontColor(color: string) {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        const selectedText = range.toString();
+        if (!selectedText) return;
+
+        // Apply color to pieces
+        // this.applyFontColor(selection, color);
+    }
+
     handleToolbarAction(action: string, dataId: string[] = []): void {
 
         const [start, end] = this.getSelectionRange();
-        console.log(action, "action---")
+        
         switch (action) {
             case 'orderedList':
                 this.document.dataIds.map((obj: string, i: number) => this.document.toggleOrderedList(obj, i + 1))
@@ -253,7 +421,10 @@ class TextIgniter {
                 // this.document.toggleUnorderedList(this.document.selectedBlockId);
                 break;
         }
-        if (start < end) {
+        if (action === 'image') {
+            this.imageHandler.insertImage();
+        }
+        else if (start < end) {
 
             switch (action) {
                 case 'bold':
@@ -337,7 +508,7 @@ class TextIgniter {
             this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'] = !this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'];
             this.manualOverride = true;
         }
-        console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
+        // console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
         this.toolbarView.updateActiveStates(this.currentAttributes);
     }
 
@@ -345,31 +516,40 @@ class TextIgniter {
 
 
     handleSelectionChange(): void {
-        this.syncCurrentAttributesWithCursor();
+
+        const [start] = this.getSelectionRange();
+        this.imageHandler.currentCursorLocation = start;
+
         const selection = window.getSelection();
-        console.log("run1 id ---- ", selection)
+        
         if (!selection || selection.rangeCount === 0) {
             // this.document.selectedBlockId = null;
-            console.log("run1 id ---- if1")
+            
             return;
         }
         if (selection && (selection.isCollapsed === true)) {
-            console.log("run1 id ---- if2")
+            
             this.document.dataIds = [];
             // this.document.selectedBlockId = 'data-id-1734604240404';
             // return;
         }
 
         const range = selection.getRangeAt(0);
-        const parentBlock = range.startContainer.parentElement?.closest('[data-id]');
-        if (parentBlock && parentBlock instanceof HTMLElement) {
-            this.document.selectedBlockId = parentBlock.getAttribute('data-id') || null;
-            // this.document.dataIds[0] = parentBlock.getAttribute('data-id') || '';
+        const parentBlock =
+            range.startContainer.parentElement?.closest('[data-id]') || range.startContainer;
+        if (parentBlock instanceof HTMLElement) {
+            this.document.selectedBlockId =
+                parentBlock.getAttribute('data-id') ||
+                (range.startContainer instanceof HTMLElement
+                    ? range.startContainer.getAttribute('data-id')
+                    : null);
         }
+        this.syncCurrentAttributesWithCursor();
     }
 
     handleKeydown(e: KeyboardEvent): void {
         const [start, end] = this.getSelectionRange();
+        this.imageHandler.currentCursorLocation = start;
         let ending = end;
         if (e.key === 'Enter') {
             console.log('blocks--->>', this.document.blocks)
@@ -381,7 +561,7 @@ class TextIgniter {
                 let parentId = '';
                 let _start = 1;
                 let blockListType = ListType;
-                console.log('action -', ListType2, ListType)
+               
                 if (ListType === 'ol') {
                     _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
                     _start += 1;
@@ -395,35 +575,46 @@ class TextIgniter {
                 //  else if (ListType === 'ol' && ListType2 === null) {
                 //     blockListType = 'li';
                 // }
-                console.log('vk11   0', this.getCurrentCursorBlock())
+                
                 this.document.blocks.push({
                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                    "type": "text",
                     // listType: ListType, // null | 'ol' | 'ul'
                     listType: blockListType,
                     parentId: parentId,
                     listStart: ListType === 'ol' || ListType === 'li' ? _start : '',
                 })
             } else {
-                console.log('vk11   1', this.getCurrentCursorBlock())
+                
+                const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
+                if (this.document.blocks[currentBlockIndex].type === "image") {
+                    this.document.blocks.push({
+                        "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                        "type": "text"
+                    });
+                    this.document.emit('documentChanged', this);
+                    this.imageHandler.setCursorPostion(1, uniqueId);
+                    return;
+                }
                 if (this.getCurrentCursorBlock() !== null) {
                     const { remainingText, piece } = this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString());
                     const extractedContent = " " + remainingText;
                     let updatedBlock = this.document.blocks;
-                    console.log({ extractedContent })
+                    
                     if (extractedContent.length > 0) {
                         const _extractedContent = remainingText.split(' ');
                         let _pieces = []
-                        console.log("extractTextFromDataId run if0", _extractedContent, piece)
+                        
                         if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
                             if (piece.length === 1) {
                                 _pieces = [new Piece(extractedContent, piece[0].attributes)]
-                                console.log("extractTextFromDataId run if1", _extractedContent, piece, "_pieces", _pieces)
+                                
 
                             } else {
-                                console.log("extractTextFromDataId run else1", _extractedContent, piece)
+                               
                                 _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes))
                                 if (piece.length >= 2) {
-                                    console.log("extractTextFromDataId run if2")
+                                    
                                     piece.forEach((obj: any, i: number) => {
                                         if (i !== 0) {
                                             _pieces.push(obj)
@@ -435,29 +626,32 @@ class TextIgniter {
 
 
                         } else {
-                            console.log("extractTextFromDataId run else0")
+                           
                             _pieces = [new Piece(" ")]
                         }
-                        console.log(" extractTextFromDataId pieces", _pieces, piece);
+                        
                         updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
                             "dataId": uniqueId, "class": "paragraph-block", "pieces": _pieces,
+                            "type": "text"
                             // listType: null, // null | 'ol' | 'ul'
                         });
-                        console.log('schenerio1');
+                        
                         ending = start + extractedContent.length - 1;
                     } else {
                         updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
                             "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                            "type": "text"
                             // listType: null, // null | 'ol' | 'ul'
                         });
                     }
 
                     this.document.blocks = updatedBlock
-                    console.log("vk11", this.document.blocks, " updatedBlock", updatedBlock)
+                    
                 } else {
-                    console.log('jagdiii 1')
+                    
                     this.document.blocks.push({
                         "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+                        "type": "text"
                         // listType: null, // null | 'ol' | 'ul'
                     })
                 }
@@ -473,11 +667,18 @@ class TextIgniter {
 
         } else if (e.key === 'Backspace') {
             e.preventDefault();
+            if (this.imageHandler.isImageHighlighted) {
+                const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.imageHandler.highLightedImageDataId);
+                
+                this.imageHandler.deleteImage();
+                this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
+                return;
+            }
             const selection = window.getSelection();
-            console.log("selection", selection, " ", this.document.dataIds.length, "run1 id1 length rn1", this.document.dataIds, "this.document.selectedBlockId", this.document.selectedBlockId)
+           
 
             if (this.document.dataIds.length >= 1 && this.document.selectAll) {
-                console.log(this.document.dataIds, "run1 id this.document.dataIds rn1")
+                
                 // this.document.dataIds.forEach(obj => {
                 //     this.document.deleteBlocks(obj)
                 // })
@@ -491,7 +692,7 @@ class TextIgniter {
                 this.setCursorPosition(start - 1);
                 const index = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
                 const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement
-                console.log(chkBlock, " _block index action r1 1")
+                
                 if (chkBlock === null) {
                     // const listType = this.document.blocks[index].listType;
                     // let parentId = this.document.blocks[index]?.parentId;
@@ -508,11 +709,11 @@ class TextIgniter {
                         }
                         return block;
                     });
-                    console.log(_blocks, " _block index action----- rn1 2")
+                    
                     this.document.emit('documentChanged', this);
                 }
             } else if (end > start) {
-                console.log("else if rn1 3", end, start)
+                
                 // this.document.deleteBlocks();
                 // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
                 // this.document.deleteBlocks();
@@ -525,7 +726,7 @@ class TextIgniter {
             if (end > start) {
                 this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
             }
-            this.document.insertAt(e.key, this.currentAttributes , start, this.document.selectedBlockId, this.document.currentOffset);
+            this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset);
             this.setCursorPosition(start + 1);
         } else if (e.key === "Delete") {
             e.preventDefault();
@@ -580,7 +781,7 @@ class TextIgniter {
                 }
             })
         }
-        console.log("v11, element", element, "_block", _block, textPosition, _piece)
+        
 
         if (!element) {
             console.error(`Element with data-id "${dataId}" not found.`);
@@ -600,7 +801,7 @@ class TextIgniter {
         // const cursorOffset = range.startOffset;
         const cursorOffset = textPosition?.offset;
 
-        console.log("v11 fullText", fullText, fText, cursorOffset, range)
+       
         // Extract text from the cursor position to the end
         const remainingText = fullText.slice(cursorOffset);
 
@@ -608,8 +809,7 @@ class TextIgniter {
         const newContent = fullText.slice(0, cursorOffset);
         element.textContent = newContent; // Update the element content with remaining text
 
-        console.log('v11 Extracted text:', remainingText);
-        console.log('v11 Updated element content:', newContent);
+        
 
         return { remainingText: remainingText, piece: _piece }; // Return the extracted text
     }
@@ -653,6 +853,14 @@ class TextIgniter {
     }
     syncCurrentAttributesWithCursor(): void {
         const [start, end] = this.getSelectionRange();
+        const blockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId);
+        if (this.document.blocks[blockIndex]?.type === 'image') {
+            this.imageHandler.addStyleToImage(this.document.selectedBlockId || "");
+        } else {
+            if (this.imageHandler.isImageHighlighted) {
+                this.imageHandler.clearImageStyling();
+            }
+        }
         if (start === end) {
             const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
             if (piece) {
