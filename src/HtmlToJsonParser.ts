@@ -57,7 +57,7 @@ class HtmlToJsonParser {
         const listItems = element.querySelectorAll("li");
         listItems.forEach((li) => {
             const piece = this.extractTextAttributes(li);
-            console.log("blocks ------",piece)
+            
             if (piece) pieces.push(new Piece(piece.text, piece.attributes));
         });
     }
@@ -66,7 +66,7 @@ class HtmlToJsonParser {
         const spans = element.querySelectorAll("span");
         spans.forEach((span) => {
             const piece = this.extractTextAttributes(span);
-            console.log("blocks ------",piece)
+            
             if (piece) pieces.push(new Piece(piece.text, piece.attributes));
         });
     }

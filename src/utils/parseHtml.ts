@@ -18,7 +18,7 @@ export function extractPiecesFromNode(node: Node, inheritedAttrs: {bold: boolean
         if (node.tagName === 'U') currentAttrs.underline = true;
 
         node.childNodes.forEach(child => {
-            console.log({child})
+            
             pieces.push(...extractPiecesFromNode(child, currentAttrs));
         });
     } else if (node instanceof Text) {

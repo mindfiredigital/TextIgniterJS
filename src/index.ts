@@ -62,15 +62,12 @@ class TextIgniter {
         document.addEventListener('mouseup', () => {
             this.syncCurrentAttributesWithCursor();
             const dataId = this.document.getAllSelectedDataIds();
-            // const dataId = this.document.handleCtrlASelection();
-            console.log('run1 id mouseup Selected text is inside element with data-id:', dataId);
-            console.log(this.document.dataIds, "this.document.dataIds mouseup run1 id")
         });
         document.getElementById('fontColor')?.addEventListener('click', (e) => {
-            console.log(e, "attribute1")
+
             const fontColorPicker = document.getElementById("fontColorPicker") as HTMLInputElement;
             const fontColorButton = document.querySelector(`[data-feature="fontColor"]`);
-            console.log("fontColorPicker, attribute1", fontColorPicker, fontColorButton)
+
             fontColorPicker.style.display = 'inline';
             const colorWrapper = document.getElementById('colorWrapper') as HTMLElement;
             // Get the button's position (x, y)
@@ -91,8 +88,7 @@ class TextIgniter {
                 fontColorPicker.addEventListener("input", (event) => {
                     const selectedColor = (event.target as HTMLInputElement).value;
                     const [start, end] = this.getSelectionRange();
-                    console.log("fontColorPicker", selectedColor, start, end)
-                    // applyFontColor(selectedColor);
+
 
                     if (this.document.dataIds.length > 1) {
                         this.document.blocks.forEach((block: any) => {
@@ -113,7 +109,7 @@ class TextIgniter {
                         }
                         this.debounceTimer = setTimeout(() => {
                             this.document.applyFontColor(start, end, selectedColor);
-                            console.log("Color applied:", selectedColor);
+
                         }, 300);
                     }
 
@@ -122,9 +118,9 @@ class TextIgniter {
         })
 
         document.getElementById('bgColor')?.addEventListener('click', (e) => {
-            console.log(e, "attribute1")
+
             const bgColorPicker = document.getElementById("bgColorPicker") as HTMLInputElement;
-            console.log("bgColorPicker, attribute1", bgColorPicker)
+
             bgColorPicker.style.display = 'inline';
             const colorBgWrapper = document.getElementById('colorBgWrapper') as HTMLElement;
             // Get the button's position (x, y)
@@ -143,8 +139,7 @@ class TextIgniter {
                 bgColorPicker.addEventListener("input", (event) => {
                     const selectedColor = (event.target as HTMLInputElement).value;
                     const [start, end] = this.getSelectionRange();
-                    console.log("bgColorPicker", selectedColor, start, end)
-                    // applybgColor(selectedColor);
+
 
 
                     if (this.document.dataIds.length > 1) {
@@ -166,7 +161,7 @@ class TextIgniter {
                         }
                         this.debounceTimer = setTimeout(() => {
                             this.document.applyBgColor(start, end, selectedColor);
-                            console.log("Color applied:", selectedColor);
+
                         }, 300);
                     }
 
@@ -178,23 +173,16 @@ class TextIgniter {
         })
 
         document.getElementById("getHtmlButton")?.addEventListener('click', (e) => {
-            console.log("Editor HTML Content:")
             const htmlString = this.document.getHtmlContent();
-            // const str = '<div data-id="data-id-1734604240404" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(160, 39, 39);"><span style="color: rgb(255, 255, 255);"> ajsh diujaksd</span></span></span></div><div data-id="data-id-1739337267195" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(160, 39, 39);"><span style="color: rgb(255, 255, 255);"> asd iasgiuda</span></span></span></div><div data-id="data-id-1739337267885" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(160, 39, 39);"><span style="color: rgb(255, 255, 255);"> sdoa ihsd</span></span></span></div><div data-id="data-id-1739346059031" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(160, 39, 39);"><span style="color: rgb(255, 255, 255);"> asod9b8ahisod</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);">asdasdasdaishd yaiusjd 09ioasd</span></span></span></div><div data-id="data-id-1739346084169" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> alsdk g78tasuid 09ausidoj</span></span></span></div><ul data-id="data-id-1739355369739" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asdj oiasd</span></span></span></li></ul><ul data-id="data-id-1739355373160" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asdj oaisd</span></span></span></li></ul><ul data-id="data-id-1739355374849" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asdpjo oasd</span></span></span></li></ul><ol start="1" data-id="data-id-1739355376025" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asd oinasd</span></span></span></li></ol><ol start="2" data-id="data-id-1739355379576" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> sdj oiasd</span></span></span></li></ol><ol start="3" data-id="data-id-1739355384505" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asdj a9sdio</span></span></span></li></ol><ol start="4" data-id="data-id-1739355385545" class="paragraph-block" style="text-align: left;"><li><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asd jhuasid</span></span></span></li></ol><div data-id="data-id-1739355388595" class="paragraph-block" style="text-align: center;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> alsid uoaisjd u09asd</span></span></span></div><div data-id="data-id-1739355406320" class="paragraph-block" style="text-align: right;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> asdj oaihsd</span></span></span></div><div data-id="data-id-1739355414447" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><strong> asdh 98hasiud</strong></span></span></span></div><div data-id="data-id-1739355425249" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> a;</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><u>sdj </u></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><em>09asuj</em></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);">dio</span></span></span></div><div data-id="data-id-1739355441165" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><strong>  a;</strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><strong><u>sdj </u></strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><strong><em>09asuj</em></strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><strong>dio</strong></span></span></span></div><div data-id="data-id-1739355452982" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"><a href="asd 90auoisjdn 9asiod" target="_blank"> oiasda90 uasd y98asiod</a></span></span></span></div><div data-id="data-id-1739355466282" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> </span></span></span><span style="font-family: &quot;Courier New&quot;; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);">asdj</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);"> a9sudoij </span></span></span><span style="font-family: Arial; font-size: 16px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(145, 145, 145);">a90sdo</span></span></span></div>'
-            // const str = '<div data-id="data-id-1734604240404" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> ajsh diujaksdajsh diujaksdajsh </span></span></span></div><div data-id="data-id-1739430551701" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> diujaksdasd </span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong>asdh 98hasiudasdh 98</strong></span></span></span></div><div data-id="data-id-1739430553412" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong> hasiudasdh </strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);">a;a;a;</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><u>sdjsdjsdj</u></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><em>09asuj09asuj09asuj</em></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);">diodiodio</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong>a;a;a</strong></span></span></span></div><div data-id="data-id-1739430554776" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(97, 89, 35);"><span style="color: rgb(255, 255, 255);"> ;sdjsdjsdj09asuj09asuj09asujdiodiod</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);">iooiasda90 </span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong>a;a;a;</strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong><u>sdjsdjsdj</u></strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong><em>09asuj09as</em></strong></span></span></span></div><div data-id="data-id-1739430558023" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong><em> uj09asujdi</em></strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><a href="a;lsjd 98aiosd" target="_blank"><strong><em>odiodiooias </em></strong></a></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><a href="a;lsjd 98aiosd" target="_blank"><strong>diodiodio</strong></a></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><a href="a;lsjd 98aiosd" target="_blank">oias</a></span></span></span></div><div data-id="data-id-1739430556280" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> da90 uasd y98asiodoiasda90 uasd y9</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(140, 180, 80);">8asiodoiasda90 uasd y98asioda</span></span></span></div><div data-id="data-id-1739430559464" class="paragraph-block" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(171, 158, 73);"><span style="color: rgb(0, 0, 0);"> sdjasdjasdja9sudoija9sudoija9sudoija90sdoa90sdoa90sdo</span></span></span></div>';
+            console.log("Editor HTML Content:", htmlString)
             this.htmlToJsonParser = new HtmlToJsonParser(htmlString as string);
             const jsonOutput = this.htmlToJsonParser.parse();
 
-            // this.document.blocks = jsonOutput;
-            // this.document.dataIds[0] = jsonOutput[0].dataId;
-            // this.document.selectedBlockId = 'data-id-1734604240404';
-            // this.document.emit('documentChanged', this);
-            // console.log("blocks", this.document.blocks, this.document.dataIds, this.document.currentOffset)
             console.log("htmltoJson", JSON.stringify(jsonOutput, null, 2), jsonOutput);
         })
 
         document.getElementById("loadHtmlButton")?.addEventListener('click', (e) => {
-            console.log("Editor HTML Content:")
+            
             // const htmlString = this.document.getHtmlContent();
             const str = strings.TEST_HTML_CODE;
             this.htmlToJsonParser = new HtmlToJsonParser(str as string);
@@ -213,7 +201,7 @@ class TextIgniter {
                         countE += obj.text.length;
                     })
                     let countS = start - countE;
-                    console.log(countS, countE, "load html", window.getSelection())
+                    
                     this.document.setFontSize(countS, countE, block.fontSize);
                 }
             })
@@ -221,7 +209,7 @@ class TextIgniter {
             console.log("htmltoJson", JSON.stringify(jsonOutput, null, 2), jsonOutput);
         })
 
-        console.log('block dataIds', this.document.dataIds);
+        
 
         document.getElementById('fontFamily')?.addEventListener('change', (e) => {
             const fontFamily = (e.target as HTMLSelectElement).value;
@@ -229,8 +217,7 @@ class TextIgniter {
             if (this.document.dataIds.length > 1) {
                 this.document.blocks.forEach((block: any) => {
                     if (this.document.dataIds.includes(block.dataId)) {
-                        console.log(document.getElementById(block.dataId))
-                        console.log(block.dataId, this.document.dataIds, "attribute1")
+                       
                         this.document.selectedBlockId = block.dataId;
                         let countE = 0;
                         block.pieces.forEach((obj: any) => {
@@ -336,7 +323,7 @@ class TextIgniter {
                     e.preventDefault();
                     this.document.setAlignment('right', this.document.selectedBlockId);
                 }
-                console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
+                // console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
             }
         });
 
@@ -421,7 +408,7 @@ class TextIgniter {
     handleToolbarAction(action: string, dataId: string[] = []): void {
 
         const [start, end] = this.getSelectionRange();
-        console.log(action, "action---")
+        
         switch (action) {
             case 'orderedList':
                 this.document.dataIds.map((obj: string, i: number) => this.document.toggleOrderedList(obj, i + 1))
@@ -521,7 +508,7 @@ class TextIgniter {
             this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'] = !this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'];
             this.manualOverride = true;
         }
-        console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
+        // console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
         this.toolbarView.updateActiveStates(this.currentAttributes);
     }
 
@@ -534,14 +521,14 @@ class TextIgniter {
         this.imageHandler.currentCursorLocation = start;
 
         const selection = window.getSelection();
-        console.log("run1 id ---- ", selection)
+        
         if (!selection || selection.rangeCount === 0) {
             // this.document.selectedBlockId = null;
-            console.log("run1 id ---- if1")
+            
             return;
         }
         if (selection && (selection.isCollapsed === true)) {
-            console.log("run1 id ---- if2")
+            
             this.document.dataIds = [];
             // this.document.selectedBlockId = 'data-id-1734604240404';
             // return;
@@ -574,7 +561,7 @@ class TextIgniter {
                 let parentId = '';
                 let _start = 1;
                 let blockListType = ListType;
-                console.log('action -', ListType2, ListType)
+               
                 if (ListType === 'ol') {
                     _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
                     _start += 1;
@@ -588,7 +575,7 @@ class TextIgniter {
                 //  else if (ListType === 'ol' && ListType2 === null) {
                 //     blockListType = 'li';
                 // }
-                console.log('vk11   0', this.getCurrentCursorBlock())
+                
                 this.document.blocks.push({
                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
                     "type": "text",
@@ -598,7 +585,7 @@ class TextIgniter {
                     listStart: ListType === 'ol' || ListType === 'li' ? _start : '',
                 })
             } else {
-                console.log('vk11   1', this.getCurrentCursorBlock())
+                
                 const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
                 if (this.document.blocks[currentBlockIndex].type === "image") {
                     this.document.blocks.push({
@@ -613,21 +600,21 @@ class TextIgniter {
                     const { remainingText, piece } = this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString());
                     const extractedContent = " " + remainingText;
                     let updatedBlock = this.document.blocks;
-                    console.log({ extractedContent })
+                    
                     if (extractedContent.length > 0) {
                         const _extractedContent = remainingText.split(' ');
                         let _pieces = []
-                        console.log("extractTextFromDataId run if0", _extractedContent, piece)
+                        
                         if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
                             if (piece.length === 1) {
                                 _pieces = [new Piece(extractedContent, piece[0].attributes)]
-                                console.log("extractTextFromDataId run if1", _extractedContent, piece, "_pieces", _pieces)
+                                
 
                             } else {
-                                console.log("extractTextFromDataId run else1", _extractedContent, piece)
+                               
                                 _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes))
                                 if (piece.length >= 2) {
-                                    console.log("extractTextFromDataId run if2")
+                                    
                                     piece.forEach((obj: any, i: number) => {
                                         if (i !== 0) {
                                             _pieces.push(obj)
@@ -639,16 +626,16 @@ class TextIgniter {
 
 
                         } else {
-                            console.log("extractTextFromDataId run else0")
+                           
                             _pieces = [new Piece(" ")]
                         }
-                        console.log(" extractTextFromDataId pieces", _pieces, piece);
+                        
                         updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
                             "dataId": uniqueId, "class": "paragraph-block", "pieces": _pieces,
                             "type": "text"
                             // listType: null, // null | 'ol' | 'ul'
                         });
-                        console.log('schenerio1');
+                        
                         ending = start + extractedContent.length - 1;
                     } else {
                         updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
@@ -659,9 +646,9 @@ class TextIgniter {
                     }
 
                     this.document.blocks = updatedBlock
-                    console.log("vk11", this.document.blocks, " updatedBlock", updatedBlock)
+                    
                 } else {
-                    console.log('jagdiii 1')
+                    
                     this.document.blocks.push({
                         "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
                         "type": "text"
@@ -682,16 +669,16 @@ class TextIgniter {
             e.preventDefault();
             if (this.imageHandler.isImageHighlighted) {
                 const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.imageHandler.highLightedImageDataId);
-                console.log('jagdish5', currentBlockIndex, this.document.blocks[currentBlockIndex - 1])
+                
                 this.imageHandler.deleteImage();
                 this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
                 return;
             }
             const selection = window.getSelection();
-            console.log("selection", selection, " ", this.document.dataIds.length, "run1 id1 length rn1", this.document.dataIds, "this.document.selectedBlockId", this.document.selectedBlockId)
+           
 
             if (this.document.dataIds.length >= 1 && this.document.selectAll) {
-                console.log(this.document.dataIds, "run1 id this.document.dataIds rn1")
+                
                 // this.document.dataIds.forEach(obj => {
                 //     this.document.deleteBlocks(obj)
                 // })
@@ -705,7 +692,7 @@ class TextIgniter {
                 this.setCursorPosition(start - 1);
                 const index = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
                 const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement
-                console.log(chkBlock, " _block index action r1 1")
+                
                 if (chkBlock === null) {
                     // const listType = this.document.blocks[index].listType;
                     // let parentId = this.document.blocks[index]?.parentId;
@@ -722,11 +709,11 @@ class TextIgniter {
                         }
                         return block;
                     });
-                    console.log(_blocks, " _block index action----- rn1 2")
+                    
                     this.document.emit('documentChanged', this);
                 }
             } else if (end > start) {
-                console.log("else if rn1 3", end, start)
+                
                 // this.document.deleteBlocks();
                 // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
                 // this.document.deleteBlocks();
@@ -794,7 +781,7 @@ class TextIgniter {
                 }
             })
         }
-        console.log("v11, element", element, "_block", _block, textPosition, _piece)
+        
 
         if (!element) {
             console.error(`Element with data-id "${dataId}" not found.`);
@@ -814,7 +801,7 @@ class TextIgniter {
         // const cursorOffset = range.startOffset;
         const cursorOffset = textPosition?.offset;
 
-        console.log("v11 fullText", fullText, fText, cursorOffset, range)
+       
         // Extract text from the cursor position to the end
         const remainingText = fullText.slice(cursorOffset);
 
@@ -822,8 +809,7 @@ class TextIgniter {
         const newContent = fullText.slice(0, cursorOffset);
         element.textContent = newContent; // Update the element content with remaining text
 
-        console.log('v11 Extracted text:', remainingText);
-        console.log('v11 Updated element content:', newContent);
+        
 
         return { remainingText: remainingText, piece: _piece }; // Return the extracted text
     }

@@ -140,7 +140,7 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
             const x = rect.left + window.scrollX;
             const y = rect.top + window.scrollY;
 
-            console.log(`bgColor Button Position - X: ${x}, Y: ${y}`);
+            
             // Create input element
             const span1 = document.createElement("span");
             span1.id = "colorBgWrapper"; // Unique ID for span

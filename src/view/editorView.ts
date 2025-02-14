@@ -20,7 +20,7 @@ class EditorView {
         const savedSel = saveSelection(this.container);
         this.container.innerHTML = "";
         // Create a wrapper div with a unique data-id
-        console.log(this.document.blocks, "action -- block editorview")
+        
         this.document.blocks.forEach((block: any) => {
             if (block.dataId !== '') {
                 let wrapperDiv: HTMLElement;
@@ -98,7 +98,7 @@ class EditorView {
             }
 
             // Wrap with a span to apply font family and size
-            console.log(attrs, "attribute----1", document.getElementById('fontFamily'));
+            
             const fontFamilySelect = document.getElementById('fontFamily') as HTMLSelectElement;
             const fontSizeSelect = document.getElementById('fontSize') as HTMLSelectElement;
             let selectedFontFamilyValue = "Arial";
@@ -107,12 +107,12 @@ class EditorView {
 
             if (fontFamilySelect) {
                 selectedFontFamilyValue = fontFamilySelect.value; // Get the selected value
-                console.log(selectedFontFamilyValue, "Selected Font Family");
+                
             }
 
             if (fontSizeSelect) {
                 selectedFontSizeValue = fontSizeSelect.value; // Get the selected value
-                console.log(selectedFontSizeValue, "Selected Font size");
+                
             }
 
             if (attrs.hyperlink && typeof attrs.hyperlink === 'string') {
