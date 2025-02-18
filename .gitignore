@@ -5,3 +5,5 @@
 /coverage/
 
 /.vscode
+
+# do not add dist here
