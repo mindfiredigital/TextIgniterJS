@@ -15,6 +15,8 @@ declare class Piece {
         fontFamily?: string;
         fontSize?: string;
         hyperlink?: string | boolean;
+        fontColor?: string;
+        bgColor: string;
     };
     constructor(text: string, attributes?: {
         bold?: boolean;
@@ -25,6 +27,8 @@ declare class Piece {
         fontFamily?: string;
         fontSize?: string;
         hyperlink?: string | boolean;
+        fontColor?: string;
+        bgColor?: string;
     });
     isBold(): boolean;
     setBold(v: boolean): void;
@@ -100,12 +104,15 @@ declare class TextDocument extends EventEmitter {
     toggleUnderlineRange(start: number, end: number, id?: string): void;
     toggleUndoRange(start: number, end: number, id?: string): void;
     toggleRedoRange(start: number, end: number): void;
+    applyFontColor(start: number, end: number, color: string, id?: string): void;
+    applyBgColor(start: number, end: number, color: string, id?: string): void;
     isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline' | 'undo' | 'redo'): boolean;
     mergePieces(pieces: Piece[]): Piece[];
     findPieceAtOffset(offset: number, dataId?: string | null): Piece | null;
     setFontFamily(start: number, end: number, fontFamily: string): void;
     setFontSize(start: number, end: number, fontSize: string): void;
     setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void;
+    getHtmlContent(): string | undefined;
     getCursorOffsetInParent(parentSelector: string): {
         offset: number;
         childNode: Node | null;
@@ -114,10 +121,31 @@ declare class TextDocument extends EventEmitter {
     } | null;
 }
 
+declare class ImageHandler {
+    private editor;
+    private editorView;
+    private document;
+    isImageHighlighted: boolean;
+    highLightedImageDataId: string;
+    currentCursorLocation: number;
+    constructor(editor: HTMLElement, document: TextDocument);
+    setEditorView(editorView: EditorView): void;
+    insertImage(): void;
+    insertImageAtCursor(dataUrl: string): void;
+    setCursorPostion(postion: number, dataId: string): void;
+    insertImageAtPosition(dataUrl: string, position: number, dataId: string | null): void;
+    createImageFragment(imageUrl: string, dataId: string): HTMLSpanElement;
+    addStyleToImage(dataId: string): void;
+    clearImageStyling(): void;
+    deleteImage(): void;
+}
+
 declare class EditorView {
     container: HTMLElement;
     document: TextDocument;
+    imageHandler: ImageHandler;
     constructor(container: HTMLElement, document: TextDocument);
+    setImageHandler(imageHandler: ImageHandler): void;
     render(): void;
     renderPiece(piece: Piece): DocumentFragment;
     wrapAttributes(lines: string[], attrs: {
@@ -127,6 +155,8 @@ declare class EditorView {
         fontFamily?: string;
         fontSize?: string;
         hyperlink?: string | boolean;
+        fontColor?: string;
+        bgColor?: string;
     }): DocumentFragment;
 }
 
@@ -159,6 +189,18 @@ declare class HyperlinkHandler {
     hideHyperlinkViewButton(): void;
 }
 
+declare class HtmlToJsonParser {
+    private htmlString;
+    private doc;
+    constructor(htmlString: string);
+    parse(): any[];
+    private parseElement;
+    private parseListItems;
+    private parseParagraphText;
+    private extractTextAttributes;
+    private rgbToHex;
+}
+
 type EditorConfig = {
     features: string[];
 };
@@ -172,12 +214,15 @@ interface CurrentAttributeDTO {
     hyperlink?: string | boolean;
     fontFamily?: string;
     fontSize?: string;
+    fontColor?: string;
 }
 declare class TextIgniter {
     document: TextDocument;
+    htmlToJsonParser: HtmlToJsonParser | undefined;
     editorView: EditorView;
     toolbarView: ToolbarView;
     hyperlinkHandler: HyperlinkHandler;
+    imageHandler: ImageHandler;
     currentAttributes: CurrentAttributeDTO;
     manualOverride: boolean;
     lastPiece: Piece | null;
@@ -187,8 +232,10 @@ declare class TextIgniter {
         start: number;
         end: number;
     } | null;
+    debounceTimer: NodeJS.Timeout | null;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];
+    applyFontColor(color: string): void;
     handleToolbarAction(action: string, dataId?: string[]): void;
     handleSelectionChange(): void;
     handleKeydown(e: KeyboardEvent): void;

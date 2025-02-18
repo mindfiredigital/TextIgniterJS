@@ -6,4 +6,4 @@
 
 /.vscode
 
-/dist
+# do not add dist here
