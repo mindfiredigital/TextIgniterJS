@@ -676,27 +676,52 @@ class TextDocument extends EventEmitter {
         return merged;
     }
 
-    findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
-        let currentOffset = 0;
-        if (dataId !== null && dataId !== '') {
-            for (let i = 0; i < this.blocks.length; i++) {
-                let block = this.blocks[i];
-                const blockLenght = block.pieces.reduce((acc: number, currVal: Piece) => acc + currVal.text.length, 0);
-                if (block.dataId == dataId) {
-                    for (let piece of block.pieces) {
-                        const pieceEnd = currentOffset + piece.text.length;
-                        if (offset >= currentOffset && offset < pieceEnd) {
-                            return piece;
-                        }
-                        currentOffset = pieceEnd;
+    // findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
+    //     let currentOffset = 0;
+    //     if (dataId !== null && dataId !== '') {
+    //         for (let i = 0; i < this.blocks.length; i++) {
+    //             let block = this.blocks[i];
+    //             const blockLenght = block.pieces.reduce((acc: number, currVal: Piece) => acc + currVal.text.length, 0);
+    //             if (block.dataId == dataId) {
+    //                 for (let piece of block.pieces) {
+    //                     const pieceEnd = currentOffset + piece.text.length;
+    //                     if (offset >= currentOffset && offset < pieceEnd) {
+    //                         return piece;
+    //                     }
+    //                     currentOffset = pieceEnd;
+    //                 }
+    //             } else {
+    //                 currentOffset += blockLenght;
+    //             }
+    //         }
+    //     }
+    //     return null;
+    // }
+
+ 
+findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
+    let currentOffset = 0;
+    if (dataId) {
+        for (let block of this.blocks) {
+            const blockLength = block.pieces.reduce((acc:number, curr:any) => acc + curr.text.length, 0);
+            if (block.dataId == dataId) {
+                let prevPiece: Piece | null = null;
+                for (let piece of block.pieces) {
+                    const pieceStart = currentOffset;
+                    const pieceEnd = pieceStart + piece.text.length;
+                    if (offset >= pieceStart && offset < pieceEnd) {
+                        return offset === pieceStart && prevPiece ? prevPiece : piece;
                     }
-                } else {
-                    currentOffset += blockLenght;
+                    prevPiece = piece;
+                    currentOffset = pieceEnd;
                 }
+            } else {
+                currentOffset += blockLength;
             }
         }
-        return null;
     }
+    return null;
+}
 
     setFontFamily(start: number, end: number, fontFamily: string): void {
         this.formatAttribute(start, end, 'fontFamily', fontFamily);
