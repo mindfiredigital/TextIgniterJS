@@ -100,3 +100,7 @@
 #fontColorWrapper {
   display: block;
 }
+
+.toolbar > button:hover {
+  background-color: #ddd;
+}

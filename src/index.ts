@@ -862,7 +862,7 @@ class TextIgniter {
             }
         }
         if (start === end) {
-            const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
+            const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);            
             if (piece) {
                 if (piece !== this.lastPiece) {
                     this.manualOverride = false;
@@ -871,12 +871,12 @@ class TextIgniter {
 
                 if (!this.manualOverride) {
                     this.currentAttributes = {
-                        bold: this.currentAttributes.bold || piece.attributes.bold,
-                        italic: this.currentAttributes.italic || piece.attributes.italic,
-                        underline: this.currentAttributes.underline || piece.attributes.underline,
-                        hyperlink: this.currentAttributes.hyperlink || piece.attributes.hyperlink || false,
-                        fontFamily: this.currentAttributes.fontFamily || piece.attributes.fontFamily,
-                        fontSize: this.currentAttributes.fontSize || piece.attributes.fontSize,
+                        bold:  piece.attributes.bold,
+                        italic:  piece.attributes.italic,
+                        underline: piece.attributes.underline,
+                        hyperlink: piece.attributes.hyperlink || false,
+                        fontFamily: piece.attributes.fontFamily,
+                        fontSize:  piece.attributes.fontSize,
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
                 }
