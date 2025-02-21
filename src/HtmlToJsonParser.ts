@@ -11,10 +11,12 @@ class HtmlToJsonParser {
         const elements = this.doc.body.children;
         let jsonData: any[] = [];
 
-        Array.from(elements).forEach((element) => {
-            jsonData.push(this.parseElement(element as HTMLElement));
+        Array.from(elements).forEach((element, i) => {
+            const _element = this.parseElement(element as HTMLElement)
+            console.log(element, 'element', i, _element)
+            jsonData.push(_element);
         });
-
+        console.log(jsonData, "element--jsondata")
         return jsonData;
     }
 
@@ -57,18 +59,45 @@ class HtmlToJsonParser {
         const listItems = element.querySelectorAll("li");
         listItems.forEach((li) => {
             const piece = this.extractTextAttributes(li);
-            
+
             if (piece) pieces.push(new Piece(piece.text, piece.attributes));
         });
     }
 
+    // private parseParagraphText(element: HTMLElement, pieces: any[]): void {
+    //     const spans = element.querySelectorAll("span");
+    //     spans.forEach((span, i) => {
+    //         const piece = this.extractTextAttributes(span);
+    //         console.log(span, i, "parseParagraphText", piece)
+
+    //         if (piece) pieces.push(new Piece(piece.text, piece.attributes));
+    //     });
+    //     console.log(pieces, "pieces--parseParagraphText")
+    // }
     private parseParagraphText(element: HTMLElement, pieces: any[]): void {
         const spans = element.querySelectorAll("span");
+
         spans.forEach((span) => {
             const piece = this.extractTextAttributes(span);
-            
-            if (piece) pieces.push(new Piece(piece.text, piece.attributes));
+
+            if (piece) {
+                // Check if the same text and attributes already exist
+                const isDuplicate = pieces.some(
+                    (existing) => {
+                        console.log("parseParagraphText :: ", existing.text === piece.text, JSON.stringify(existing.attributes) === JSON.stringify(piece.attributes))
+                        return existing.text === piece.text
+                        //  &&
+                        //     JSON.stringify(existing.attributes) === JSON.stringify(piece.attributes)
+                    }
+                );
+                console.log(pieces, "parseParagraphText :: ", isDuplicate)
+                if (!isDuplicate) {
+                    pieces.push(new Piece(piece.text, piece.attributes));
+                }
+            }
         });
+
+        console.log(pieces, "pieces--parseParagraphText");
     }
 
     private extractTextAttributes(node: any): any {
