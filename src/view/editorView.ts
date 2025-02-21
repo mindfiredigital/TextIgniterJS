@@ -20,7 +20,7 @@ class EditorView {
         const savedSel = saveSelection(this.container);
         this.container.innerHTML = "";
         // Create a wrapper div with a unique data-id
-        
+
         this.document.blocks.forEach((block: any) => {
             if (block.dataId !== '') {
                 let wrapperDiv: HTMLElement;
@@ -46,11 +46,11 @@ class EditorView {
                     wrapperDiv.append(olWrapper)
 
                 } else {
-                    if(block?.type === "image"){
+                    if (block?.type === "image") {
                         if (block?.image) {
-                            wrapperDiv.appendChild(this.imageHandler.createImageFragment(block.image,block.dataId));
-                          }
-                    }else{
+                            wrapperDiv.appendChild(this.imageHandler.createImageFragment(block.image, block.dataId));
+                        }
+                    } else {
                         block.pieces.forEach((piece: Piece) => {
                             wrapperDiv.appendChild(this.renderPiece(piece));
                         });
@@ -71,8 +71,8 @@ class EditorView {
 
     renderPiece(piece: Piece): DocumentFragment {
 
-              const lines = piece.text.split('\n');
-              return this.wrapAttributes(lines, piece.attributes);
+        const lines = piece.text.split('\n');
+        return this.wrapAttributes(lines, piece.attributes);
 
     }
 
@@ -98,7 +98,7 @@ class EditorView {
             }
 
             // Wrap with a span to apply font family and size
-            
+
             const fontFamilySelect = document.getElementById('fontFamily') as HTMLSelectElement;
             const fontSizeSelect = document.getElementById('fontSize') as HTMLSelectElement;
             let selectedFontFamilyValue = "Arial";
@@ -107,12 +107,12 @@ class EditorView {
 
             if (fontFamilySelect) {
                 selectedFontFamilyValue = fontFamilySelect.value; // Get the selected value
-                
+
             }
 
             if (fontSizeSelect) {
                 selectedFontSizeValue = fontSizeSelect.value; // Get the selected value
-                
+
             }
 
             if (attrs.hyperlink && typeof attrs.hyperlink === 'string') {
@@ -124,6 +124,7 @@ class EditorView {
             }
             if (attrs.fontColor && typeof attrs.fontColor === 'string') {
                 const span = document.createElement('span');
+                console.log(lines, "attrs.fontColor", attrs.fontColor)
                 span.style.color = attrs.fontColor;
                 span.appendChild(textNode);
                 textNode = span;
