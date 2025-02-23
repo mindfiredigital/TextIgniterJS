@@ -182,10 +182,11 @@ class TextIgniter {
         })
 
         document.getElementById("loadHtmlButton")?.addEventListener('click', (e) => {
-            
+
             // const htmlString = this.document.getHtmlContent();
             const str = strings.TEST_HTML_CODE;
             this.htmlToJsonParser = new HtmlToJsonParser(str as string);
+            console.log(this.htmlToJsonParser, "this.htmlToJsonParser")
             const jsonOutput = this.htmlToJsonParser.parse();
 
             this.document.blocks = jsonOutput;
@@ -201,7 +202,7 @@ class TextIgniter {
                         countE += obj.text.length;
                     })
                     let countS = start - countE;
-                    
+
                     this.document.setFontSize(countS, countE, block.fontSize);
                 }
             })
@@ -209,7 +210,7 @@ class TextIgniter {
             console.log("htmltoJson", JSON.stringify(jsonOutput, null, 2), jsonOutput);
         })
 
-        
+
 
         document.getElementById('fontFamily')?.addEventListener('change', (e) => {
             const fontFamily = (e.target as HTMLSelectElement).value;
@@ -217,7 +218,7 @@ class TextIgniter {
             if (this.document.dataIds.length > 1) {
                 this.document.blocks.forEach((block: any) => {
                     if (this.document.dataIds.includes(block.dataId)) {
-                       
+
                         this.document.selectedBlockId = block.dataId;
                         let countE = 0;
                         block.pieces.forEach((obj: any) => {
@@ -408,7 +409,7 @@ class TextIgniter {
     handleToolbarAction(action: string, dataId: string[] = []): void {
 
         const [start, end] = this.getSelectionRange();
-        
+
         switch (action) {
             case 'orderedList':
                 this.document.dataIds.map((obj: string, i: number) => this.document.toggleOrderedList(obj, i + 1))
@@ -521,14 +522,14 @@ class TextIgniter {
         this.imageHandler.currentCursorLocation = start;
 
         const selection = window.getSelection();
-        
+
         if (!selection || selection.rangeCount === 0) {
             // this.document.selectedBlockId = null;
-            
+
             return;
         }
         if (selection && (selection.isCollapsed === true)) {
-            
+
             this.document.dataIds = [];
             // this.document.selectedBlockId = 'data-id-1734604240404';
             // return;
@@ -561,7 +562,7 @@ class TextIgniter {
                 let parentId = '';
                 let _start = 1;
                 let blockListType = ListType;
-               
+
                 if (ListType === 'ol') {
                     _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
                     _start += 1;
@@ -575,7 +576,7 @@ class TextIgniter {
                 //  else if (ListType === 'ol' && ListType2 === null) {
                 //     blockListType = 'li';
                 // }
-                
+
                 this.document.blocks.push({
                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
                     "type": "text",
@@ -585,7 +586,7 @@ class TextIgniter {
                     listStart: ListType === 'ol' || ListType === 'li' ? _start : '',
                 })
             } else {
-                
+
                 const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
                 if (this.document.blocks[currentBlockIndex].type === "image") {
                     this.document.blocks.push({
@@ -598,44 +599,47 @@ class TextIgniter {
                 }
                 if (this.getCurrentCursorBlock() !== null) {
                     const { remainingText, piece } = this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString());
+                    console.log(this.document.blocks, "this.getCurrentCursorBlock()!.toString()", this.getCurrentCursorBlock()!.toString(), remainingText, piece)
                     const extractedContent = " " + remainingText;
                     let updatedBlock = this.document.blocks;
-                    
+                    console.log('blocks--->> if', this.getCurrentCursorBlock())
                     if (extractedContent.length > 0) {
                         const _extractedContent = remainingText.split(' ');
                         let _pieces = []
-                        
+                        console.log('blocks--->> if1 piece  ', _extractedContent, piece)
                         if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
                             if (piece.length === 1) {
                                 _pieces = [new Piece(extractedContent, piece[0].attributes)]
-                                
 
+                                console.log('blocks--->> if2 _extractedContent', _extractedContent, extractedContent, piece[0].attributes)
                             } else {
-                               
+                                console.log('blocks--->> else2', _extractedContent, _extractedContent[0] + " ", piece[0].attributes, piece[0], start, end)
                                 _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes))
                                 if (piece.length >= 2) {
-                                    
+                                    console.log("blocks--->>if 33_pieces.", _pieces, piece)
                                     piece.forEach((obj: any, i: number) => {
+                                        console.log("blocks--->>if foreach", i, obj)
                                         if (i !== 0) {
                                             _pieces.push(obj)
                                         }
 
                                     })
+                                    console.log("blocks--->>if 33_pieces..", _pieces, piece)
                                 }
                             }
 
 
                         } else {
-                           
+
                             _pieces = [new Piece(" ")]
                         }
-                        
+                        console.log("blocks--->>_pieces:", _pieces)
                         updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
                             "dataId": uniqueId, "class": "paragraph-block", "pieces": _pieces,
                             "type": "text"
                             // listType: null, // null | 'ol' | 'ul'
                         });
-                        
+
                         ending = start + extractedContent.length - 1;
                     } else {
                         updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
@@ -646,9 +650,9 @@ class TextIgniter {
                     }
 
                     this.document.blocks = updatedBlock
-                    
+
                 } else {
-                    
+
                     this.document.blocks.push({
                         "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
                         "type": "text"
@@ -669,16 +673,16 @@ class TextIgniter {
             e.preventDefault();
             if (this.imageHandler.isImageHighlighted) {
                 const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.imageHandler.highLightedImageDataId);
-                
+
                 this.imageHandler.deleteImage();
                 this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
                 return;
             }
             const selection = window.getSelection();
-           
+            console.log(selection, "selection backspace", start === end && start > 0)
 
             if (this.document.dataIds.length >= 1 && this.document.selectAll) {
-                
+
                 // this.document.dataIds.forEach(obj => {
                 //     this.document.deleteBlocks(obj)
                 // })
@@ -692,7 +696,7 @@ class TextIgniter {
                 this.setCursorPosition(start - 1);
                 const index = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
                 const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement
-                
+
                 if (chkBlock === null) {
                     // const listType = this.document.blocks[index].listType;
                     // let parentId = this.document.blocks[index]?.parentId;
@@ -709,11 +713,11 @@ class TextIgniter {
                         }
                         return block;
                     });
-                    
+
                     this.document.emit('documentChanged', this);
                 }
             } else if (end > start) {
-                
+
                 // this.document.deleteBlocks();
                 // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
                 // this.document.deleteBlocks();
@@ -747,6 +751,7 @@ class TextIgniter {
 
     extractTextFromDataId(dataId: string): { remainingText: string, piece: any } {
         const selection = window.getSelection();
+        console.log("selection::", selection)
         if (!selection || selection.rangeCount === 0) {
             return { remainingText: '', piece: null }; // No valid selection
         }
@@ -781,7 +786,7 @@ class TextIgniter {
                 }
             })
         }
-        
+
 
         if (!element) {
             console.error(`Element with data-id "${dataId}" not found.`);
@@ -801,7 +806,7 @@ class TextIgniter {
         // const cursorOffset = range.startOffset;
         const cursorOffset = textPosition?.offset;
 
-       
+
         // Extract text from the cursor position to the end
         const remainingText = fullText.slice(cursorOffset);
 
@@ -809,7 +814,7 @@ class TextIgniter {
         const newContent = fullText.slice(0, cursorOffset);
         element.textContent = newContent; // Update the element content with remaining text
 
-        
+
 
         return { remainingText: remainingText, piece: _piece }; // Return the extracted text
     }
