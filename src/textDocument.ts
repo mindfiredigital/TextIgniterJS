@@ -535,8 +535,9 @@ class TextDocument extends EventEmitter {
                 this.toggleUnderlineRange(action.start, action.end, action.id);
                 break
             case 'insert':
-                
+                console.log('action.start, action.end, this.selectedBlockId, this.currentOffset',action.start, action.end, this.selectedBlockId, this.currentOffset)
                 this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
+                
                 break;
             // Add cases for other actions like italic, underline, insert, delete
             // ...

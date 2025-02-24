@@ -302,10 +302,21 @@ class TextIgniter {
 
                 if (key === 'z') {
                     e.preventDefault();
+                    const [start, end] = this.getSelectionRange();
                     this.document.undo();
+                    if (this.document.undoStack.length > 0)
+                        this.setCursorPosition(start - 1);
+                    console.log("undoStack", this.document.undoStack)
+                    console.log("redoStack", this.document.redoStack)
+
                 } else if (key === 'y') {
                     e.preventDefault();
+                    const [start, end] = this.getSelectionRange();
                     this.document.redo();
+                    if (this.document.redoStack.length > 0)
+                        this.setCursorPosition(start + 1);
+                    console.log("undoStack", this.document.undoStack)
+                    console.log("redoStack", this.document.redoStack)
                 }
                 if (key === 'a') {
                     // e.preventDefault();
@@ -671,6 +682,7 @@ class TextIgniter {
 
         } else if (e.key === 'Backspace') {
             e.preventDefault();
+            console.log('this.document.currentOffset', this.document.currentOffset)
             if (this.imageHandler.isImageHighlighted) {
                 const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.imageHandler.highLightedImageDataId);
 
@@ -867,7 +879,7 @@ class TextIgniter {
             }
         }
         if (start === end) {
-            const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);            
+            const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
             if (piece) {
                 if (piece !== this.lastPiece) {
                     this.manualOverride = false;
@@ -876,12 +888,12 @@ class TextIgniter {
 
                 if (!this.manualOverride) {
                     this.currentAttributes = {
-                        bold:  piece.attributes.bold,
-                        italic:  piece.attributes.italic,
+                        bold: piece.attributes.bold,
+                        italic: piece.attributes.italic,
                         underline: piece.attributes.underline,
                         hyperlink: piece.attributes.hyperlink || false,
                         fontFamily: piece.attributes.fontFamily,
-                        fontSize:  piece.attributes.fontSize,
+                        fontSize: piece.attributes.fontSize,
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
                 }
