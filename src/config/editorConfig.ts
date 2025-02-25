@@ -26,7 +26,9 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
     toolbar.className = 'toolbar';
     toolbar.id = toolbarId;
     container.appendChild(toolbar);
-
+    if(!config?.showToolbar){
+        toolbar.style.display = 'none';
+    }
     const editor = document.createElement('div');
     editor.id = mainEditorId;
     editor.contentEditable = 'true';
@@ -295,6 +297,9 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
     //  // Append the container to the toolbar
 
     toolbar.appendChild(viewHyperlinkContainer);
+
+
+  
 
     return { mainEditorId, toolbarId };
 }
