@@ -548,206 +548,388 @@ class TextIgniter {
         this.syncCurrentAttributesWithCursor();
     }
 
+    // handleKeydown(e: KeyboardEvent): void {
+    //     const [start, end] = this.getSelectionRange();
+    //     this.imageHandler.currentCursorLocation = start;
+    //     let ending = end;
+    //     if (e.key === 'Enter') {
+    //         console.log('blocks--->>', this.document.blocks)
+    //         e.preventDefault();
+    //         const uniqueId = `data-id-${Date.now()}`;
+    //         if (this.document.blocks[this.document.blocks.length - 1]?.listType === 'ol' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'ul' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'li') {
+    //             const ListType2 = this.document.blocks[this.document.blocks.length - 2]?.listType;
+    //             const ListType = this.document.blocks[this.document.blocks.length - 1]?.listType;
+    //             let parentId = '';
+    //             let _start = 1;
+    //             let blockListType = ListType;
+
+    //             if (ListType === 'ol') {
+    //                 _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
+    //                 _start += 1;
+    //                 blockListType = 'li';
+    //                 parentId = this.document.blocks[this.document.blocks.length - 1]?.dataId;
+    //             } else if (ListType === 'li') {
+    //                 _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
+    //                 _start += 1;
+    //                 parentId = this.document.blocks[this.document.blocks.length - 1]?.parentId;
+    //             }
+    //             //  else if (ListType === 'ol' && ListType2 === null) {
+    //             //     blockListType = 'li';
+    //             // }
+
+    //             this.document.blocks.push({
+    //                 "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+    //                 "type": "text",
+    //                 // listType: ListType, // null | 'ol' | 'ul'
+    //                 listType: blockListType,
+    //                 parentId: parentId,
+    //                 listStart: ListType === 'ol' || ListType === 'li' ? _start : '',
+    //             })
+    //         } else {
+
+    //             const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
+    //             if (this.document.blocks[currentBlockIndex].type === "image") {
+    //                 this.document.blocks.push({
+    //                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+    //                     "type": "text"
+    //                 });
+    //                 this.document.emit('documentChanged', this);
+    //                 this.imageHandler.setCursorPostion(1, uniqueId);
+    //                 return;
+    //             }
+    //             if (this.getCurrentCursorBlock() !== null) {
+    //                 const { remainingText, piece } = this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString());
+    //                 console.log(this.document.blocks, "this.getCurrentCursorBlock()!.toString()", this.getCurrentCursorBlock()!.toString(), remainingText, piece)
+    //                 const extractedContent = " " + remainingText;
+    //                 let updatedBlock = this.document.blocks;
+    //                 console.log('blocks--->> if', this.getCurrentCursorBlock())
+    //                 if (extractedContent.length > 0) {
+    //                     const _extractedContent = remainingText.split(' ');
+    //                     let _pieces = []
+    //                     console.log('blocks--->> if1 piece  ', _extractedContent, piece)
+    //                     if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
+    //                         if (piece.length === 1) {
+    //                             _pieces = [new Piece(extractedContent, piece[0].attributes)]
+
+    //                             console.log('blocks--->> if2 _extractedContent', _extractedContent, extractedContent, piece[0].attributes)
+    //                         } else {
+    //                             console.log('blocks--->> else2', _extractedContent, _extractedContent[0] + " ", piece[0].attributes, piece[0], start, end)
+    //                             _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes))
+    //                             if (piece.length >= 2) {
+    //                                 console.log("blocks--->>if 33_pieces.", _pieces, piece)
+    //                                 piece.forEach((obj: any, i: number) => {
+    //                                     console.log("blocks--->>if foreach", i, obj)
+    //                                     if (i !== 0) {
+    //                                         _pieces.push(obj)
+    //                                     }
+
+    //                                 })
+    //                                 console.log("blocks--->>if 33_pieces..", _pieces, piece)
+    //                             }
+    //                         }
+
+
+    //                     } else {
+
+    //                         _pieces = [new Piece(" ")]
+    //                     }
+    //                     console.log("blocks--->>_pieces:", _pieces)
+    //                     updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
+    //                         "dataId": uniqueId, "class": "paragraph-block", "pieces": _pieces,
+    //                         "type": "text"
+    //                         // listType: null, // null | 'ol' | 'ul'
+    //                     });
+
+    //                     ending = start + extractedContent.length - 1;
+    //                 } else {
+    //                     updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
+    //                         "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+    //                         "type": "text"
+    //                         // listType: null, // null | 'ol' | 'ul'
+    //                     });
+    //                 }
+
+    //                 this.document.blocks = updatedBlock
+
+    //             } else {
+
+    //                 this.document.blocks.push({
+    //                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+    //                     "type": "text"
+    //                     // listType: null, // null | 'ol' | 'ul'
+    //                 })
+    //             }
+    //         }
+
+    //         this.syncCurrentAttributesWithCursor();
+    //         this.editorView.render()
+    //         this.setCursorPosition(ending + 1, uniqueId);
+    //         if (ending > start) {
+    //             this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
+
+    //         }
+
+    //     } else if (e.key === 'Backspace') {
+    //         e.preventDefault();
+    //         if (this.imageHandler.isImageHighlighted) {
+    //             const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.imageHandler.highLightedImageDataId);
+
+    //             this.imageHandler.deleteImage();
+    //             this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
+    //             return;
+    //         }
+    //         const selection = window.getSelection();
+    //         console.log(selection, "selection backspace", start === end && start > 0)
+
+    //         if (this.document.dataIds.length >= 1 && this.document.selectAll) {
+
+    //             // this.document.dataIds.forEach(obj => {
+    //             //     this.document.deleteBlocks(obj)
+    //             // })
+    //             this.document.deleteBlocks();
+    //             this.setCursorPosition(start + 1);
+    //         }
+
+    //         if (start === end && start > 0) {
+    //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start - 1, start, obj, this.document.currentOffset))
+    //             this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
+    //             this.setCursorPosition(start - 1);
+    //             const index = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
+    //             const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement
+
+    //             if (chkBlock === null) {
+    //                 // const listType = this.document.blocks[index].listType;
+    //                 // let parentId = this.document.blocks[index]?.parentId;
+    //                 let listStart = 0;
+    //                 const _blocks = this.document.blocks.map((block: any, index: number) => {
+    //                     if (block?.listType !== undefined || block?.listType !== null) {
+    //                         if (block?.listType === 'ol') {
+    //                             listStart = 1;
+    //                             block.listStart = 1;
+    //                         } else if (block?.listType === 'li') {
+    //                             listStart = listStart + 1
+    //                             block.listStart = listStart;
+    //                         }
+    //                     }
+    //                     return block;
+    //                 });
+
+    //                 this.document.emit('documentChanged', this);
+    //             }
+    //         } else if (end > start) {
+
+    //             // this.document.deleteBlocks();
+    //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
+    //             // this.document.deleteBlocks();
+    //             this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+    //             this.setCursorPosition(start + 1);
+
+    //         }
+    //     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    //         e.preventDefault();
+    //         if (end > start) {
+    //             this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+    //         }
+    //         this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset);
+    //         this.setCursorPosition(start + 1);
+    //     } else if (e.key === "Delete") {
+    //         e.preventDefault();
+    //         if (start === end) { // just a char
+    //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start, start + 1, obj))
+    //             this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
+    //             this.setCursorPosition(start);
+    //         } else if (end > start) { //Selection
+    //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj))
+    //             this.document.deleteRange(start, end, this.document.selectedBlockId);
+    //             this.setCursorPosition(start);
+    //         }
+    //     }
+
+    //     this.hyperlinkHandler.hideHyperlinkViewButton();
+    // }
+
     handleKeydown(e: KeyboardEvent): void {
         const [start, end] = this.getSelectionRange();
         this.imageHandler.currentCursorLocation = start;
         let ending = end;
         if (e.key === 'Enter') {
-            console.log('blocks--->>', this.document.blocks)
-            e.preventDefault();
-            const uniqueId = `data-id-${Date.now()}`;
-            if (this.document.blocks[this.document.blocks.length - 1]?.listType === 'ol' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'ul' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'li') {
-                const ListType2 = this.document.blocks[this.document.blocks.length - 2]?.listType;
-                const ListType = this.document.blocks[this.document.blocks.length - 1]?.listType;
-                let parentId = '';
-                let _start = 1;
-                let blockListType = ListType;
-
-                if (ListType === 'ol') {
-                    _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
-                    _start += 1;
-                    blockListType = 'li';
-                    parentId = this.document.blocks[this.document.blocks.length - 1]?.dataId;
-                } else if (ListType === 'li') {
-                    _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
-                    _start += 1;
-                    parentId = this.document.blocks[this.document.blocks.length - 1]?.parentId;
-                }
-                //  else if (ListType === 'ol' && ListType2 === null) {
-                //     blockListType = 'li';
-                // }
-
-                this.document.blocks.push({
-                    "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                    "type": "text",
-                    // listType: ListType, // null | 'ol' | 'ul'
-                    listType: blockListType,
-                    parentId: parentId,
-                    listStart: ListType === 'ol' || ListType === 'li' ? _start : '',
-                })
-            } else {
-
-                const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
-                if (this.document.blocks[currentBlockIndex].type === "image") {
-                    this.document.blocks.push({
-                        "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                        "type": "text"
-                    });
-                    this.document.emit('documentChanged', this);
-                    this.imageHandler.setCursorPostion(1, uniqueId);
-                    return;
-                }
-                if (this.getCurrentCursorBlock() !== null) {
-                    const { remainingText, piece } = this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString());
-                    console.log(this.document.blocks, "this.getCurrentCursorBlock()!.toString()", this.getCurrentCursorBlock()!.toString(), remainingText, piece)
-                    const extractedContent = " " + remainingText;
-                    let updatedBlock = this.document.blocks;
-                    console.log('blocks--->> if', this.getCurrentCursorBlock())
-                    if (extractedContent.length > 0) {
-                        const _extractedContent = remainingText.split(' ');
-                        let _pieces = []
-                        console.log('blocks--->> if1 piece  ', _extractedContent, piece)
-                        if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
-                            if (piece.length === 1) {
-                                _pieces = [new Piece(extractedContent, piece[0].attributes)]
-
-                                console.log('blocks--->> if2 _extractedContent', _extractedContent, extractedContent, piece[0].attributes)
-                            } else {
-                                console.log('blocks--->> else2', _extractedContent, _extractedContent[0] + " ", piece[0].attributes, piece[0], start, end)
-                                _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes))
-                                if (piece.length >= 2) {
-                                    console.log("blocks--->>if 33_pieces.", _pieces, piece)
-                                    piece.forEach((obj: any, i: number) => {
-                                        console.log("blocks--->>if foreach", i, obj)
-                                        if (i !== 0) {
-                                            _pieces.push(obj)
-                                        }
-
-                                    })
-                                    console.log("blocks--->>if 33_pieces..", _pieces, piece)
-                                }
-                            }
-
-
-                        } else {
-
-                            _pieces = [new Piece(" ")]
+          e.preventDefault();
+          const uniqueId = `data-id-${Date.now()}`;
+      
+          // Get the current selected block
+          const currentBlockIndex = this.document.blocks.findIndex(
+            (block: any) => block.dataId === this.document.selectedBlockId
+          );
+          const currentBlock = this.document.blocks[currentBlockIndex];
+      
+          // If current block is an image, simply add a new text block after it
+          if (currentBlock && currentBlock.type === "image") {
+            this.document.blocks.splice(currentBlockIndex + 1, 0, {
+              dataId: uniqueId,
+              class: "paragraph-block",
+              pieces: [new Piece(" ")],
+              type: "text"
+            });
+            this.document.emit('documentChanged', this);
+            this.imageHandler.setCursorPostion(1, uniqueId);
+          }
+          // If current block is a list block, continue the list sequence even if an image block exists later
+          else if (
+            currentBlock &&
+            (currentBlock.listType === 'ol' ||
+              currentBlock.listType === 'ul' ||
+              currentBlock.listType === 'li')
+          ) {
+            let newBlock: any = {
+              dataId: uniqueId,
+              class: "paragraph-block",
+              pieces: [new Piece(" ")],
+              type: "text"
+            };
+            if (currentBlock.listType === 'ol') {
+              newBlock.listType = 'li';
+              newBlock.listStart = currentBlock.listStart + 1;
+              newBlock.parentId = currentBlock.dataId;
+            } else if (currentBlock.listType === 'li') {
+              newBlock.listType = 'li';
+              newBlock.listStart = currentBlock.listStart + 1;
+              newBlock.parentId = currentBlock.parentId;
+            } else if (currentBlock.listType === 'ul') {
+              newBlock.listType = 'ul';
+              newBlock.parentId = currentBlock.parentId || currentBlock.dataId;
+            }
+            // Insert newBlock right after the current block
+            this.document.blocks.splice(currentBlockIndex + 1, 0, newBlock);
+          } else {
+            // Normal text block insertion (with text splitting logic if applicable)
+            if (this.getCurrentCursorBlock() !== null) {
+              const { remainingText, piece } = this.extractTextFromDataId(
+                this.getCurrentCursorBlock()!.toString()
+              );
+              const extractedContent = " " + remainingText;
+              let updatedBlock = this.document.blocks;
+              if (extractedContent.length > 0) {
+                const _extractedContent = remainingText.split(' ');
+                let _pieces: Piece[] = [];
+                if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
+                  if (piece.length === 1) {
+                    _pieces = [new Piece(extractedContent, piece[0].attributes)];
+                  } else {
+                    _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes));
+                    if (piece.length >= 2) {
+                      piece.forEach((obj: any, i: number) => {
+                        if (i !== 0) {
+                          _pieces.push(obj);
                         }
-                        console.log("blocks--->>_pieces:", _pieces)
-                        updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
-                            "dataId": uniqueId, "class": "paragraph-block", "pieces": _pieces,
-                            "type": "text"
-                            // listType: null, // null | 'ol' | 'ul'
-                        });
-
-                        ending = start + extractedContent.length - 1;
-                    } else {
-                        updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
-                            "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                            "type": "text"
-                            // listType: null, // null | 'ol' | 'ul'
-                        });
+                      });
                     }
-
-                    this.document.blocks = updatedBlock
-
+                  }
                 } else {
-
-                    this.document.blocks.push({
-                        "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                        "type": "text"
-                        // listType: null, // null | 'ol' | 'ul'
-                    })
+                  _pieces = [new Piece(" ")];
                 }
+                updatedBlock = this.addBlockAfter(
+                  this.document.blocks,
+                  this.getCurrentCursorBlock()!.toString(),
+                  {
+                    dataId: uniqueId,
+                    class: "paragraph-block",
+                    pieces: _pieces,
+                    type: "text"
+                  }
+                );
+                ending = start + extractedContent.length - 1;
+              } else {
+                updatedBlock = this.addBlockAfter(
+                  this.document.blocks,
+                  this.getCurrentCursorBlock()!.toString(),
+                  {
+                    dataId: uniqueId,
+                    class: "paragraph-block",
+                    pieces: [new Piece(" ")],
+                    type: "text"
+                  }
+                );
+              }
+              this.document.blocks = updatedBlock;
+            } else {
+              this.document.blocks.push({
+                dataId: uniqueId,
+                class: "paragraph-block",
+                pieces: [new Piece(" ")],
+                type: "text"
+              });
             }
-
-            this.syncCurrentAttributesWithCursor();
-            this.editorView.render()
-            this.setCursorPosition(ending + 1, uniqueId);
-            if (ending > start) {
-                this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
-
-            }
-
+          }
+          this.syncCurrentAttributesWithCursor();
+          this.editorView.render();
+          this.setCursorPosition(ending + 1, uniqueId);
+          if (ending > start) {
+            this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
+          }
         } else if (e.key === 'Backspace') {
-            e.preventDefault();
-            if (this.imageHandler.isImageHighlighted) {
-                const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.imageHandler.highLightedImageDataId);
-
-                this.imageHandler.deleteImage();
-                this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
-                return;
-            }
-            const selection = window.getSelection();
-            console.log(selection, "selection backspace", start === end && start > 0)
-
-            if (this.document.dataIds.length >= 1 && this.document.selectAll) {
-
-                // this.document.dataIds.forEach(obj => {
-                //     this.document.deleteBlocks(obj)
-                // })
-                this.document.deleteBlocks();
-                this.setCursorPosition(start + 1);
-            }
-
-            if (start === end && start > 0) {
-                // this.document.dataIds.forEach(obj => this.document.deleteRange(start - 1, start, obj, this.document.currentOffset))
-                this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
-                this.setCursorPosition(start - 1);
-                const index = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
-                const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement
-
-                if (chkBlock === null) {
-                    // const listType = this.document.blocks[index].listType;
-                    // let parentId = this.document.blocks[index]?.parentId;
-                    let listStart = 0;
-                    const _blocks = this.document.blocks.map((block: any, index: number) => {
-                        if (block?.listType !== undefined || block?.listType !== null) {
-                            if (block?.listType === 'ol') {
-                                listStart = 1;
-                                block.listStart = 1;
-                            } else if (block?.listType === 'li') {
-                                listStart = listStart + 1
-                                block.listStart = listStart;
-                            }
-                        }
-                        return block;
-                    });
-
-                    this.document.emit('documentChanged', this);
-                }
-            } else if (end > start) {
-
-                // this.document.deleteBlocks();
-                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
-                // this.document.deleteBlocks();
-                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
-                this.setCursorPosition(start + 1);
-
-            }
-        } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            e.preventDefault();
-            if (end > start) {
-                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
-            }
-            this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset);
+          e.preventDefault();
+          if (this.imageHandler.isImageHighlighted) {
+            const currentBlockIndex = this.document.blocks.findIndex(
+              (block: any) => block.dataId === this.imageHandler.highLightedImageDataId
+            );
+            this.imageHandler.deleteImage();
+            this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
+            return;
+          }
+          const selection = window.getSelection();
+          if (this.document.dataIds.length >= 1 && this.document.selectAll) {
+            this.document.deleteBlocks();
             this.setCursorPosition(start + 1);
-        } else if (e.key === "Delete") {
-            e.preventDefault();
-            if (start === end) { // just a char
-                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, start + 1, obj))
-                this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
-                this.setCursorPosition(start);
-            } else if (end > start) { //Selection
-                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj))
-                this.document.deleteRange(start, end, this.document.selectedBlockId);
-                this.setCursorPosition(start);
+          }
+          if (start === end && start > 0) {
+            this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
+            this.setCursorPosition(start - 1);
+            const index = this.document.blocks.findIndex(
+              (block: any) => block.dataId === this.document.selectedBlockId
+            );
+            const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement;
+            if (chkBlock === null) {
+              let listStart = 0;
+              const _blocks = this.document.blocks.map((block: any, index: number) => {
+                if (block?.listType !== undefined || block?.listType !== null) {
+                  if (block?.listType === 'ol') {
+                    listStart = 1;
+                    block.listStart = 1;
+                  } else if (block?.listType === 'li') {
+                    listStart = listStart + 1;
+                    block.listStart = listStart;
+                  }
+                }
+                return block;
+              });
+              this.document.emit('documentChanged', this);
             }
+          } else if (end > start) {
+            this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+            this.setCursorPosition(start + 1);
+          }
+        } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          if (end > start) {
+            this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+          }
+          this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset);
+          this.setCursorPosition(start + 1);
+        } else if (e.key === "Delete") {
+          e.preventDefault();
+          if (start === end) {
+            this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
+            this.setCursorPosition(start);
+          } else if (end > start) {
+            this.document.deleteRange(start, end, this.document.selectedBlockId);
+            this.setCursorPosition(start);
+          }
         }
-
         this.hyperlinkHandler.hideHyperlinkViewButton();
-    }
-
+      }
+      
+      
+      
 
     extractTextFromDataId(dataId: string): { remainingText: string, piece: any } {
         const selection = window.getSelection();
