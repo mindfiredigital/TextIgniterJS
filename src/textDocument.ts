@@ -582,6 +582,12 @@ class TextDocument extends EventEmitter {
             case 'fontSize':
                 this.setFontSize(action.start, action.end, action.previousValue, action.id);
                 break;
+            case 'fontColor':
+                this.applyFontColor(action.start, action.end, action.previousValue, action.id);
+                break;
+            case 'bgColor':
+                this.applyBgColor(action.start, action.end, action.previousValue, action.id);
+                break;
             // case 'alignment':
             //     this.formatAttribute(action.start, action.end, action.action as keyof Piece["attributes"], action.previousValue || "");
             //     break;
@@ -611,6 +617,12 @@ class TextDocument extends EventEmitter {
                 break;
             case 'fontSize':
                 this.setFontSize1(action.start, action.end, action.newValue, action.id)
+                break;
+            case 'fontColor':
+                this.applyFontColor1(action.start, action.end, action.newValue, action.id)
+                break;
+            case 'bgColor':
+                this.applyBgColor1(action.start, action.end, action.newValue, action.id)
                 break;
             // case 'alignment':
             //     this.formatAttribute(action.start, action.end, action.action as keyof Piece["attributes"], action.newValue || "");
@@ -688,14 +700,45 @@ class TextDocument extends EventEmitter {
     }
 
     applyFontColor(start: number, end: number, color: string, id = ""): void {
+        if (start < end) {
+            const { rangeText, piece } = this.getRangeTextPiece(start, end);
+            const previousValue = piece.attributes.fontColor;
+            // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
+
+            this.formatAttribute(start, end, "fontColor", color);
+            console.log('applyFontColor-color', color, start, end)
+            const newValue = color;
+            const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+            if (_redoStackIds.length === 0) {
+                this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontColor', previousValue, newValue });
+                this.redoStack = [];
+            }
+        }
+    }
+    applyFontColor1(start: number, end: number, color: string, id = ""): void {
         // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
         if (start < end) {
-
+            console.log('applyFontColor 1-color', color, start, end)
             this.formatAttribute(start, end, "fontColor", color);
         }
     }
 
     applyBgColor(start: number, end: number, color: string, id = ""): void {
+        // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
+        if (start < end) {
+            const { rangeText, piece } = this.getRangeTextPiece(start, end);
+            const previousValue = piece.attributes.bgColor;
+
+            this.formatAttribute(start, end, "bgColor", color);
+            const newValue = color;
+            const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+            if (_redoStackIds.length === 0) {
+                this.undoStack.push({ id: Date.now().toString(), start, end, action: 'bgColor', previousValue, newValue });
+                this.redoStack = [];
+            }
+        }
+    }
+    applyBgColor1(start: number, end: number, color: string, id = ""): void {
         // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
         if (start < end) {
 
@@ -820,6 +863,13 @@ class TextDocument extends EventEmitter {
         this.formatAttribute(start, end, 'fontSize', fontSize);
     }
     setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void {
+        const block = this.blocks.find((block: any) => block.dataId === dataId);
+        if (!block) return;
+
+        block.alignment = alignment; // Update alignment
+        this.emit('documentChanged', this); // Trigger re-render
+    }
+    setAlignment1(alignment: 'left' | 'center' | 'right', dataId: string | null): void {
         const block = this.blocks.find((block: any) => block.dataId === dataId);
         if (!block) return;
 
