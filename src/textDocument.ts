@@ -3,8 +3,8 @@ import Piece from "./piece";
 
 // text document extend
 class TextDocument extends EventEmitter {
-    undoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any }[] = [];
-    redoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any }[] = [];
+    undoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }[] = [];
+    redoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }[] = [];
     dataIds: string[] = [];
     pieces: Piece[];
     blocks: any;
@@ -478,6 +478,31 @@ class TextDocument extends EventEmitter {
         this.emit('documentChanged', this);
     }
 
+    // toggleUnorderedList(dataId: string | null, id: string = ''): void {
+    //     const block = this.blocks.find((block: any) => block.dataId === dataId);
+    //     console.log("toggleUnorderedList: ", block)
+    //     const previousValue = block.listType;
+    //     const start = 0;
+    //     const end = 0;
+    //     if (!block) return;
+
+    //     block.listType = block.listType === 'ul' ? null : 'ul'; // Toggle between 'ul' and null
+    //     const newValue = block.listType;
+    //     const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+    //     if (_redoStackIds.length === 0) {
+    //         this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType', previousValue, newValue, dataId });
+    //         this.redoStack = [];
+    //     }
+    //     this.emit('documentChanged', this);
+    // }
+
+    // toggleUnorderedList1(dataId: string | null, id: string = ''): void {
+    //     const block = this.blocks.find((block: any) => block.dataId === dataId);
+    //     if (!block) return;
+
+    //     block.listType = block.listType === 'ul' ? null : 'ul'; // Toggle between 'ul' and null
+    //     this.emit('documentChanged', this);
+    // }
     toggleUnorderedList(dataId: string | null): void {
         const block = this.blocks.find((block: any) => block.dataId === dataId);
         if (!block) return;
@@ -565,7 +590,7 @@ class TextDocument extends EventEmitter {
         this.applyAction(action);
     }
 
-    private revertAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any }): void {
+    private revertAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
         switch (action.action) {
             case 'bold':
                 this.toggleBoldRange(action.start, action.end, action.id); // Reverse bold toggle
@@ -588,8 +613,13 @@ class TextDocument extends EventEmitter {
             case 'bgColor':
                 this.applyBgColor(action.start, action.end, action.previousValue, action.id);
                 break;
-            // case 'alignment':
-            //     this.formatAttribute(action.start, action.end, action.action as keyof Piece["attributes"], action.previousValue || "");
+            case 'alignment':
+                if (action.dataId !== undefined)
+                    this.setAlignment(action.previousValue, action.dataId, action.id)
+                break;
+            // case 'listType':
+            //     if (action.dataId !== undefined)
+            //         this.toggleUnorderedList(action.dataId, action.id)
             //     break;
             case 'insert':
                 console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
@@ -601,7 +631,7 @@ class TextDocument extends EventEmitter {
         }
     }
 
-    private applyAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any }): void {
+    private applyAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
         switch (action.action) {
             case 'bold':
                 this.toggleBoldRange1(action.start, action.end, action.id); // Reapply bold toggle
@@ -624,8 +654,13 @@ class TextDocument extends EventEmitter {
             case 'bgColor':
                 this.applyBgColor1(action.start, action.end, action.newValue, action.id)
                 break;
-            // case 'alignment':
-            //     this.formatAttribute(action.start, action.end, action.action as keyof Piece["attributes"], action.newValue || "");
+            case 'alignment':
+                if (action.dataId !== undefined)
+                    this.setAlignment1(action.newValue, action.dataId, action.id);
+                break;
+            // case 'listType':
+            //     if (action.dataId !== undefined)
+            //         this.toggleUnorderedList1(action.dataId, action.id)
             //     break;
             case 'insert':
 
@@ -862,14 +897,24 @@ class TextDocument extends EventEmitter {
     setFontSize1(start: number, end: number, fontSize: string, id: string = ''): void {
         this.formatAttribute(start, end, 'fontSize', fontSize);
     }
-    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void {
+
+    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null, id: string = ''): void {
         const block = this.blocks.find((block: any) => block.dataId === dataId);
+        const previousValue = block.alignment;
+        const start = 0;
+        const end = 0;
         if (!block) return;
 
         block.alignment = alignment; // Update alignment
+        const newValue = alignment;
+        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        if (_redoStackIds.length === 0) {
+            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'alignment', previousValue, newValue, dataId });
+            this.redoStack = [];
+        }
         this.emit('documentChanged', this); // Trigger re-render
     }
-    setAlignment1(alignment: 'left' | 'center' | 'right', dataId: string | null): void {
+    setAlignment1(alignment: 'left' | 'center' | 'right', dataId: string | null, id: string = ''): void {
         const block = this.blocks.find((block: any) => block.dataId === dataId);
         if (!block) return;
 
