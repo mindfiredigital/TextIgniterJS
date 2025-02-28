@@ -23,48 +23,51 @@ class EditorView {
 
         this.document.blocks.forEach((block: any) => {
             if (block.dataId !== '') {
-                let wrapperDiv: HTMLElement;
-                let olWrapper: HTMLElement;
-                if (block.listType === 'ol' || block.listType === 'li') {
-                    wrapperDiv = document.createElement('ol');
-                    wrapperDiv.setAttribute('start', block?.listStart.toString());
-                } else if (block.listType === 'ul') {
-                    wrapperDiv = document.createElement('ul');
-                } else {
-                    wrapperDiv = document.createElement('div'); // Default to a paragraph block
-                }
-                // const wrapperDiv = document.createElement("div");
+              let wrapperDiv: HTMLElement;
+          
+              // If block is an image, ignore list handling.
+              if (block.type === "image") {
+                wrapperDiv = document.createElement("div");
                 wrapperDiv.setAttribute("data-id", block.dataId);
                 wrapperDiv.setAttribute("class", block.class);
                 wrapperDiv.setAttribute("type", block.type);
                 wrapperDiv.style.textAlign = block.alignment || "left";
-                if (block.listType === 'ol' || block.listType === 'ul' || block.listType === 'li') {
-                    olWrapper = document.createElement('li');
-                    block.pieces.forEach((piece: Piece) => {
-                        olWrapper.appendChild(this.renderPiece(piece));
-                    });
-                    wrapperDiv.append(olWrapper)
-
-                } else {
-                    if (block?.type === "image") {
-                        if (block?.image) {
-                            wrapperDiv.appendChild(this.imageHandler.createImageFragment(block.image, block.dataId));
-                        }
-                    } else {
-                        block.pieces.forEach((piece: Piece) => {
-                            wrapperDiv.appendChild(this.renderPiece(piece));
-                        });
-                    }
+                if (block.image) {
+                  wrapperDiv.appendChild(
+                    this.imageHandler.createImageFragment(block.image, block.dataId)
+                  );
                 }
-                // this.document.pieces.forEach(piece => {
-                //     console.log(piece, "this.document.pieces", this.renderPiece(piece))
-                //     // this.container.appendChild(this.renderPiece(piece));
-                //     wrapperDiv.appendChild(this.renderPiece(piece));
-                // });
-                this.container.appendChild(wrapperDiv);
+              } else {
+                // For text blocks, use list wrappers if needed.
+                if (block.listType === "ol" || block.listType === "li") {
+                  wrapperDiv = document.createElement("ol");
+                  wrapperDiv.setAttribute("start", block?.listStart.toString());
+                } else if (block.listType === "ul") {
+                  wrapperDiv = document.createElement("ul");
+                } else {
+                  wrapperDiv = document.createElement("div");
+                }
+                wrapperDiv.setAttribute("data-id", block.dataId);
+                wrapperDiv.setAttribute("class", block.class);
+                wrapperDiv.setAttribute("type", block.type);
+                wrapperDiv.style.textAlign = block.alignment || "left";
+          
+                if (block.listType === "ol" || block.listType === "ul" || block.listType === "li") {
+                  const li = document.createElement("li");
+                  block.pieces.forEach((piece: Piece) => {
+                    li.appendChild(this.renderPiece(piece));
+                  });
+                  wrapperDiv.appendChild(li);
+                } else {
+                  block.pieces.forEach((piece: Piece) => {
+                    wrapperDiv.appendChild(this.renderPiece(piece));
+                  });
+                }
+              }
+              this.container.appendChild(wrapperDiv);
             }
-
-        })
+          });
+          
 
         restoreSelection(this.container, savedSel);
     }
