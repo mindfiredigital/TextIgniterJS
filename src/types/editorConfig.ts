@@ -1,5 +1,6 @@
 export type EditorConfig = {
-    features: string[]
+    features: string[],
+    showToolbar?: boolean
 }
 
 export type EditorConfigReturnType = {

@@ -14,7 +14,7 @@ import EventEmitter from "./utils/events";
 import { strings } from "./constants/strings";
 
 
-export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string }
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string,bgColor?: string}
 
 class TextIgniter {
     document: TextDocument;
@@ -182,10 +182,11 @@ class TextIgniter {
         })
 
         document.getElementById("loadHtmlButton")?.addEventListener('click', (e) => {
-            
+
             // const htmlString = this.document.getHtmlContent();
             const str = strings.TEST_HTML_CODE;
             this.htmlToJsonParser = new HtmlToJsonParser(str as string);
+            console.log(this.htmlToJsonParser, "this.htmlToJsonParser")
             const jsonOutput = this.htmlToJsonParser.parse();
 
             this.document.blocks = jsonOutput;
@@ -201,7 +202,7 @@ class TextIgniter {
                         countE += obj.text.length;
                     })
                     let countS = start - countE;
-                    
+
                     this.document.setFontSize(countS, countE, block.fontSize);
                 }
             })
@@ -209,7 +210,7 @@ class TextIgniter {
             console.log("htmltoJson", JSON.stringify(jsonOutput, null, 2), jsonOutput);
         })
 
-        
+
 
         document.getElementById('fontFamily')?.addEventListener('change', (e) => {
             const fontFamily = (e.target as HTMLSelectElement).value;
@@ -217,7 +218,7 @@ class TextIgniter {
             if (this.document.dataIds.length > 1) {
                 this.document.blocks.forEach((block: any) => {
                     if (this.document.dataIds.includes(block.dataId)) {
-                       
+
                         this.document.selectedBlockId = block.dataId;
                         let countE = 0;
                         block.pieces.forEach((obj: any) => {
@@ -301,10 +302,21 @@ class TextIgniter {
 
                 if (key === 'z') {
                     e.preventDefault();
+                    const [start, end] = this.getSelectionRange();
                     this.document.undo();
+                    if (this.document.undoStack.length > 0)
+                        this.setCursorPosition(start - 1);
+                    console.log("undoStack", this.document.undoStack)
+                    console.log("redoStack", this.document.redoStack)
+
                 } else if (key === 'y') {
                     e.preventDefault();
+                    const [start, end] = this.getSelectionRange();
                     this.document.redo();
+                    if (this.document.redoStack.length > 0)
+                        this.setCursorPosition(start + 1);
+                    console.log("undoStack", this.document.undoStack)
+                    console.log("redoStack", this.document.redoStack)
                 }
                 if (key === 'a') {
                     // e.preventDefault();
@@ -405,113 +417,110 @@ class TextIgniter {
         // this.applyFontColor(selection, color);
     }
 
-    handleToolbarAction(action: string, dataId: string[] = []): void {
-
-        const [start, end] = this.getSelectionRange();
-        
-        switch (action) {
-            case 'orderedList':
-                this.document.dataIds.map((obj: string, i: number) => this.document.toggleOrderedList(obj, i + 1))
-                // this.document.toggleOrderedList(this.document.selectedBlockId)
-
-                break;
-            case 'unorderedList':
-                this.document.dataIds.map(obj => this.document.toggleUnorderedList(obj))
-
-                // this.document.toggleUnorderedList(this.document.selectedBlockId);
-                break;
-        }
-        if (action === 'image') {
-            this.imageHandler.insertImage();
-        }
-        else if (start < end) {
-
-            switch (action) {
-                case 'bold':
-                    // this.document.dataIds.forEach(obj => {
-                    //     console.log(obj, "vicky", this.document.selectedBlockId)
-                    //     this.document.selectedBlockId = obj;
-                    //     this.document.toggleBoldRange(start, end)
-                    // })
-                    if (this.document.dataIds.length > 1) {
-                        this.document.blocks.forEach((block: any) => {
-                            if (this.document.dataIds.includes(block.dataId)) {
-                                this.document.selectedBlockId = block.dataId;
-                                let countE = 0;
-                                block.pieces.forEach((obj: any) => {
-                                    countE += obj.text.length;
-                                })
-                                let countS = start - countE;
-                                this.document.toggleBoldRange(countS, countE);
-                            }
-                        })
-                    } else {
-                        this.document.toggleBoldRange(start, end);
-                    }
-
-                    break;
-                case 'italic':
-                    if (this.document.dataIds.length > 1) {
-                        this.document.blocks.forEach((block: any) => {
-                            if (this.document.dataIds.includes(block.dataId)) {
-                                this.document.selectedBlockId = block.dataId;
-                                let countE = 0;
-                                block.pieces.forEach((obj: any) => {
-                                    countE += obj.text.length;
-                                })
-                                let countS = start - countE;
-                                this.document.toggleItalicRange(countS, countE);
-                            }
-                        })
-                    } else {
-                        this.document.toggleItalicRange(start, end);
-                    }
-                    // this.document.toggleItalicRange(start, end);
-                    break;
-                case 'underline':
-                    if (this.document.dataIds.length > 1) {
-                        this.document.blocks.forEach((block: any) => {
-                            if (this.document.dataIds.includes(block.dataId)) {
-                                this.document.selectedBlockId = block.dataId;
-                                let countE = 0;
-                                block.pieces.forEach((obj: any) => {
-                                    countE += obj.text.length;
-                                })
-                                let countS = start - countE;
-                                this.document.toggleUnderlineRange(countS, countE);
-                            }
-                        })
-                    } else {
-                        this.document.toggleUnderlineRange(start, end);
-                    }
-                    // this.document.toggleUnderlineRange(start, end);
-                    break;
-                // case 'orderedList':
-                //     this.document.toggleOrderedList(this.document.selectedBlockId);
-                //     break;
-                // case 'unorderedList':
-                //     this.document.toggleUnorderedList(this.document.selectedBlockId);
-                //     break;
-                case 'undo':
-                    // this.document.toggleUndoRange(start, end);
-                    this.document.undo();
-                    break;
-                case 'redo':
-                    // this.document.toggleRedoRange(start, end);
-                    this.document.redo();
-                    break;
-                case 'hyperlink':
-                    this.hyperlinkHandler.hanldeHyperlinkClick(start, end, this.document.currentOffset, this.document.selectedBlockId, this.document.blocks);
-                    break;
-            }
+   // Toolbar action handler
+handleToolbarAction(action: string, dataId: string[] = []): void {
+    const [start, end] = this.getSelectionRange();
+  
+    switch (action) {
+      case 'orderedList':
+        // Toggle ordered list for each selected block
+        this.document.dataIds.forEach((id: string) => {
+          this.document.toggleOrderedList(id);
+        });
+        // Recalculate numbering for contiguous ordered list blocks
+        this.document.updateOrderedListNumbers();
+        break;
+      case 'unorderedList':
+        this.document.dataIds.forEach((id: string) => {
+          this.document.toggleUnorderedList(id);
+        });
+        break;
+      case 'image':
+        this.imageHandler.insertImage();
+        break;
+      default:
+        if (start < end) {
+          switch (action) {
+            case 'bold':
+              if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                  if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                      countE += obj.text.length;
+                    });
+                    let countS = start - countE;
+                    this.document.toggleBoldRange(countS, countE);
+                  }
+                });
+              } else {
+                this.document.toggleBoldRange(start, end);
+              }
+              break;
+            case 'italic':
+              if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                  if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                      countE += obj.text.length;
+                    });
+                    let countS = start - countE;
+                    this.document.toggleItalicRange(countS, countE);
+                  }
+                });
+              } else {
+                this.document.toggleItalicRange(start, end);
+              }
+              break;
+            case 'underline':
+              if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                  if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                      countE += obj.text.length;
+                    });
+                    let countS = start - countE;
+                    this.document.toggleUnderlineRange(countS, countE);
+                  }
+                });
+              } else {
+                this.document.toggleUnderlineRange(start, end);
+              }
+              break;
+            case 'undo':
+              this.document.undo();
+              break;
+            case 'redo':
+              this.document.redo();
+              break;
+            case 'hyperlink':
+              this.hyperlinkHandler.hanldeHyperlinkClick(
+                start,
+                end,
+                this.document.currentOffset,
+                this.document.selectedBlockId,
+                this.document.blocks
+              );
+              break;
+          }
         } else {
-            this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'] = !this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'];
-            this.manualOverride = true;
+          this.currentAttributes[
+            action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'
+          ] = !this.currentAttributes[
+            action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'
+          ];
+          this.manualOverride = true;
         }
-        // console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
-        this.toolbarView.updateActiveStates(this.currentAttributes);
+        break;
     }
-
+    this.toolbarView.updateActiveStates(this.currentAttributes);
+  }
+  
 
 
 
@@ -521,14 +530,14 @@ class TextIgniter {
         this.imageHandler.currentCursorLocation = start;
 
         const selection = window.getSelection();
-        
+
         if (!selection || selection.rangeCount === 0) {
             // this.document.selectedBlockId = null;
-            
+
             return;
         }
         if (selection && (selection.isCollapsed === true)) {
-            
+
             this.document.dataIds = [];
             // this.document.selectedBlockId = 'data-id-1734604240404';
             // return;
@@ -547,206 +556,407 @@ class TextIgniter {
         this.syncCurrentAttributesWithCursor();
     }
 
+    // handleKeydown(e: KeyboardEvent): void {
+    //     const [start, end] = this.getSelectionRange();
+    //     this.imageHandler.currentCursorLocation = start;
+    //     let ending = end;
+    //     if (e.key === 'Enter') {
+    //         console.log('blocks--->>', this.document.blocks)
+    //         e.preventDefault();
+    //         const uniqueId = `data-id-${Date.now()}`;
+    //         if (this.document.blocks[this.document.blocks.length - 1]?.listType === 'ol' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'ul' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'li') {
+    //             const ListType2 = this.document.blocks[this.document.blocks.length - 2]?.listType;
+    //             const ListType = this.document.blocks[this.document.blocks.length - 1]?.listType;
+    //             let parentId = '';
+    //             let _start = 1;
+    //             let blockListType = ListType;
+
+    //             if (ListType === 'ol') {
+    //                 _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
+    //                 _start += 1;
+    //                 blockListType = 'li';
+    //                 parentId = this.document.blocks[this.document.blocks.length - 1]?.dataId;
+    //             } else if (ListType === 'li') {
+    //                 _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
+    //                 _start += 1;
+    //                 parentId = this.document.blocks[this.document.blocks.length - 1]?.parentId;
+    //             }
+    //             //  else if (ListType === 'ol' && ListType2 === null) {
+    //             //     blockListType = 'li';
+    //             // }
+
+    //             this.document.blocks.push({
+    //                 "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+    //                 "type": "text",
+    //                 // listType: ListType, // null | 'ol' | 'ul'
+    //                 listType: blockListType,
+    //                 parentId: parentId,
+    //                 listStart: ListType === 'ol' || ListType === 'li' ? _start : '',
+    //             })
+    //         } else {
+
+    //             const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
+    //             if (this.document.blocks[currentBlockIndex].type === "image") {
+    //                 this.document.blocks.push({
+    //                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+    //                     "type": "text"
+    //                 });
+    //                 this.document.emit('documentChanged', this);
+    //                 this.imageHandler.setCursorPostion(1, uniqueId);
+    //                 return;
+    //             }
+    //             if (this.getCurrentCursorBlock() !== null) {
+    //                 const { remainingText, piece } = this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString());
+    //                 console.log(this.document.blocks, "this.getCurrentCursorBlock()!.toString()", this.getCurrentCursorBlock()!.toString(), remainingText, piece)
+    //                 const extractedContent = " " + remainingText;
+    //                 let updatedBlock = this.document.blocks;
+    //                 console.log('blocks--->> if', this.getCurrentCursorBlock())
+    //                 if (extractedContent.length > 0) {
+    //                     const _extractedContent = remainingText.split(' ');
+    //                     let _pieces = []
+    //                     console.log('blocks--->> if1 piece  ', _extractedContent, piece)
+    //                     if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
+    //                         if (piece.length === 1) {
+    //                             _pieces = [new Piece(extractedContent, piece[0].attributes)]
+
+    //                             console.log('blocks--->> if2 _extractedContent', _extractedContent, extractedContent, piece[0].attributes)
+    //                         } else {
+    //                             console.log('blocks--->> else2', _extractedContent, _extractedContent[0] + " ", piece[0].attributes, piece[0], start, end)
+    //                             _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes))
+    //                             if (piece.length >= 2) {
+    //                                 console.log("blocks--->>if 33_pieces.", _pieces, piece)
+    //                                 piece.forEach((obj: any, i: number) => {
+    //                                     console.log("blocks--->>if foreach", i, obj)
+    //                                     if (i !== 0) {
+    //                                         _pieces.push(obj)
+    //                                     }
+
+    //                                 })
+    //                                 console.log("blocks--->>if 33_pieces..", _pieces, piece)
+    //                             }
+    //                         }
+
+
+    //                     } else {
+
+    //                         _pieces = [new Piece(" ")]
+    //                     }
+    //                     console.log("blocks--->>_pieces:", _pieces)
+    //                     updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
+    //                         "dataId": uniqueId, "class": "paragraph-block", "pieces": _pieces,
+    //                         "type": "text"
+    //                         // listType: null, // null | 'ol' | 'ul'
+    //                     });
+
+    //                     ending = start + extractedContent.length - 1;
+    //                 } else {
+    //                     updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
+    //                         "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+    //                         "type": "text"
+    //                         // listType: null, // null | 'ol' | 'ul'
+    //                     });
+    //                 }
+
+    //                 this.document.blocks = updatedBlock
+
+    //             } else {
+
+    //                 this.document.blocks.push({
+    //                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
+    //                     "type": "text"
+    //                     // listType: null, // null | 'ol' | 'ul'
+    //                 })
+    //             }
+    //         }
+
+    //         this.syncCurrentAttributesWithCursor();
+    //         this.editorView.render()
+    //         this.setCursorPosition(ending + 1, uniqueId);
+    //         if (ending > start) {
+    //             this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
+
+    //         }
+
+    //     } else if (e.key === 'Backspace') {
+    //         e.preventDefault();
+    //         if (this.imageHandler.isImageHighlighted) {
+    //             const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.imageHandler.highLightedImageDataId);
+
+    //             this.imageHandler.deleteImage();
+    //             this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
+    //             return;
+    //         }
+    //         const selection = window.getSelection();
+    //         console.log(selection, "selection backspace", start === end && start > 0)
+
+    //         if (this.document.dataIds.length >= 1 && this.document.selectAll) {
+
+    //             // this.document.dataIds.forEach(obj => {
+    //             //     this.document.deleteBlocks(obj)
+    //             // })
+    //             this.document.deleteBlocks();
+    //             this.setCursorPosition(start + 1);
+    //         }
+
+    //         if (start === end && start > 0) {
+    //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start - 1, start, obj, this.document.currentOffset))
+    //             this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
+    //             this.setCursorPosition(start - 1);
+    //             const index = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
+    //             const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement
+
+    //             if (chkBlock === null) {
+    //                 // const listType = this.document.blocks[index].listType;
+    //                 // let parentId = this.document.blocks[index]?.parentId;
+    //                 let listStart = 0;
+    //                 const _blocks = this.document.blocks.map((block: any, index: number) => {
+    //                     if (block?.listType !== undefined || block?.listType !== null) {
+    //                         if (block?.listType === 'ol') {
+    //                             listStart = 1;
+    //                             block.listStart = 1;
+    //                         } else if (block?.listType === 'li') {
+    //                             listStart = listStart + 1
+    //                             block.listStart = listStart;
+    //                         }
+    //                     }
+    //                     return block;
+    //                 });
+
+    //                 this.document.emit('documentChanged', this);
+    //             }
+    //         } else if (end > start) {
+
+    //             // this.document.deleteBlocks();
+    //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
+    //             // this.document.deleteBlocks();
+    //             this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+    //             this.setCursorPosition(start + 1);
+
+    //         }
+    //     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    //         e.preventDefault();
+    //         if (end > start) {
+    //             this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+    //         }
+    //         this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset);
+    //         this.setCursorPosition(start + 1);
+    //     } else if (e.key === "Delete") {
+    //         e.preventDefault();
+    //         if (start === end) { // just a char
+    //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start, start + 1, obj))
+    //             this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
+    //             this.setCursorPosition(start);
+    //         } else if (end > start) { //Selection
+    //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj))
+    //             this.document.deleteRange(start, end, this.document.selectedBlockId);
+    //             this.setCursorPosition(start);
+    //         }
+    //     }
+
+    //     this.hyperlinkHandler.hideHyperlinkViewButton();
+    // }
+
     handleKeydown(e: KeyboardEvent): void {
         const [start, end] = this.getSelectionRange();
         this.imageHandler.currentCursorLocation = start;
         let ending = end;
         if (e.key === 'Enter') {
-            console.log('blocks--->>', this.document.blocks)
-            e.preventDefault();
-            const uniqueId = `data-id-${Date.now()}`;
-            if (this.document.blocks[this.document.blocks.length - 1]?.listType === 'ol' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'ul' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'li') {
-                const ListType2 = this.document.blocks[this.document.blocks.length - 2]?.listType;
-                const ListType = this.document.blocks[this.document.blocks.length - 1]?.listType;
-                let parentId = '';
-                let _start = 1;
-                let blockListType = ListType;
-               
-                if (ListType === 'ol') {
-                    _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
-                    _start += 1;
-                    blockListType = 'li';
-                    parentId = this.document.blocks[this.document.blocks.length - 1]?.dataId;
-                } else if (ListType === 'li') {
-                    _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
-                    _start += 1;
-                    parentId = this.document.blocks[this.document.blocks.length - 1]?.parentId;
-                }
-                //  else if (ListType === 'ol' && ListType2 === null) {
-                //     blockListType = 'li';
-                // }
-                
-                this.document.blocks.push({
-                    "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                    "type": "text",
-                    // listType: ListType, // null | 'ol' | 'ul'
-                    listType: blockListType,
-                    parentId: parentId,
-                    listStart: ListType === 'ol' || ListType === 'li' ? _start : '',
-                })
-            } else {
-                
-                const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
-                if (this.document.blocks[currentBlockIndex].type === "image") {
-                    this.document.blocks.push({
-                        "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                        "type": "text"
-                    });
-                    this.document.emit('documentChanged', this);
-                    this.imageHandler.setCursorPostion(1, uniqueId);
-                    return;
-                }
-                if (this.getCurrentCursorBlock() !== null) {
-                    const { remainingText, piece } = this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString());
-                    const extractedContent = " " + remainingText;
-                    let updatedBlock = this.document.blocks;
-                    
-                    if (extractedContent.length > 0) {
-                        const _extractedContent = remainingText.split(' ');
-                        let _pieces = []
-                        
-                        if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
-                            if (piece.length === 1) {
-                                _pieces = [new Piece(extractedContent, piece[0].attributes)]
-                                
-
-                            } else {
-                               
-                                _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes))
-                                if (piece.length >= 2) {
-                                    
-                                    piece.forEach((obj: any, i: number) => {
-                                        if (i !== 0) {
-                                            _pieces.push(obj)
-                                        }
-
-                                    })
-                                }
-                            }
-
-
-                        } else {
-                           
-                            _pieces = [new Piece(" ")]
-                        }
-                        
-                        updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
-                            "dataId": uniqueId, "class": "paragraph-block", "pieces": _pieces,
-                            "type": "text"
-                            // listType: null, // null | 'ol' | 'ul'
-                        });
-                        
-                        ending = start + extractedContent.length - 1;
-                    } else {
-                        updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
-                            "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                            "type": "text"
-                            // listType: null, // null | 'ol' | 'ul'
-                        });
-                    }
-
-                    this.document.blocks = updatedBlock
-                    
+          e.preventDefault();
+          const uniqueId = `data-id-${Date.now()}`;
+      
+          // Get the current selected block
+          const currentBlockIndex = this.document.blocks.findIndex(
+            (block: any) => block.dataId === this.document.selectedBlockId
+          );
+          const currentBlock = this.document.blocks[currentBlockIndex];
+      
+          // If current block is an image, simply add a new text block after it
+          if (currentBlock && currentBlock.type === "image") {
+            this.document.blocks.splice(currentBlockIndex + 1, 0, {
+              dataId: uniqueId,
+              class: "paragraph-block",
+              pieces: [new Piece(" ")],
+              type: "text"
+            });
+            this.document.emit('documentChanged', this);
+            this.imageHandler.setCursorPostion(1, uniqueId);
+          }
+          // If current block is a list block, continue the list sequence even if an image block exists later
+          else if (
+            currentBlock &&
+            (currentBlock.listType === 'ol' ||
+              currentBlock.listType === 'ul' ||
+              currentBlock.listType === 'li')
+          ) {
+            let newBlock: any = {
+              dataId: uniqueId,
+              class: "paragraph-block",
+              pieces: [new Piece(" ")],
+              type: "text"
+            };
+            let listParentId = "";
+            if (currentBlock.listType === 'ol') {
+              newBlock.listType = 'li';
+              newBlock.listStart = currentBlock.listStart + 1;
+              newBlock.parentId = currentBlock.dataId;
+              listParentId = currentBlock.dataId;
+            } else if (currentBlock.listType === 'li') {
+              newBlock.listType = 'li';
+              newBlock.listStart = currentBlock.listStart + 1;
+              newBlock.parentId = currentBlock.parentId;
+              listParentId = currentBlock.parentId;
+            } else if (currentBlock.listType === 'ul') {
+              newBlock.listType = 'ul';
+              newBlock.parentId = currentBlock.parentId || currentBlock.dataId;
+            }
+            // Insert newBlock right after the current block
+            this.document.blocks.splice(currentBlockIndex + 1, 0, newBlock);
+      
+            // For ordered lists, update subsequent list items to increment their listStart
+            if (currentBlock.listType === 'ol' || currentBlock.listType === 'li') {
+              for (let i = currentBlockIndex + 2; i < this.document.blocks.length; i++) {
+                const block = this.document.blocks[i];
+                if (block.listType === 'li' && block.parentId === listParentId) {
+                  block.listStart += 1;
                 } else {
-                    
-                    this.document.blocks.push({
-                        "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-                        "type": "text"
-                        // listType: null, // null | 'ol' | 'ul'
-                    })
+                  break;
                 }
+              }
             }
-
-            this.syncCurrentAttributesWithCursor();
-            this.editorView.render()
-            this.setCursorPosition(ending + 1, uniqueId);
-            if (ending > start) {
-                this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
-
-            }
-
-        } else if (e.key === 'Backspace') {
-            e.preventDefault();
-            if (this.imageHandler.isImageHighlighted) {
-                const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.imageHandler.highLightedImageDataId);
-                
-                this.imageHandler.deleteImage();
-                this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
-                return;
-            }
-            const selection = window.getSelection();
-           
-
-            if (this.document.dataIds.length >= 1 && this.document.selectAll) {
-                
-                // this.document.dataIds.forEach(obj => {
-                //     this.document.deleteBlocks(obj)
-                // })
-                this.document.deleteBlocks();
-                this.setCursorPosition(start + 1);
-            }
-
-            if (start === end && start > 0) {
-                // this.document.dataIds.forEach(obj => this.document.deleteRange(start - 1, start, obj, this.document.currentOffset))
-                this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
-                this.setCursorPosition(start - 1);
-                const index = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
-                const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement
-                
-                if (chkBlock === null) {
-                    // const listType = this.document.blocks[index].listType;
-                    // let parentId = this.document.blocks[index]?.parentId;
-                    let listStart = 0;
-                    const _blocks = this.document.blocks.map((block: any, index: number) => {
-                        if (block?.listType !== undefined || block?.listType !== null) {
-                            if (block?.listType === 'ol') {
-                                listStart = 1;
-                                block.listStart = 1;
-                            } else if (block?.listType === 'li') {
-                                listStart = listStart + 1
-                                block.listStart = listStart;
-                            }
+          } else {
+            // Normal text block insertion (with text splitting logic if applicable)
+            if (this.getCurrentCursorBlock() !== null) {
+              const { remainingText, piece } = this.extractTextFromDataId(
+                this.getCurrentCursorBlock()!.toString()
+              );
+              const extractedContent = " " + remainingText;
+              let updatedBlock = this.document.blocks;
+              if (extractedContent.length > 0) {
+                const _extractedContent = remainingText.split(' ');
+                let _pieces: Piece[] = [];
+                if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
+                  if (piece.length === 1) {
+                    _pieces = [new Piece(extractedContent, piece[0].attributes)];
+                  } else {
+                    _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes));
+                    if (piece.length >= 2) {
+                      piece.forEach((obj: any, i: number) => {
+                        if (i !== 0) {
+                          _pieces.push(obj);
                         }
-                        return block;
-                    });
-                    
-                    this.document.emit('documentChanged', this);
+                      });
+                    }
+                  }
+                } else {
+                  _pieces = [new Piece(" ")];
                 }
-            } else if (end > start) {
-                
-                // this.document.deleteBlocks();
-                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
-                // this.document.deleteBlocks();
-                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
-                this.setCursorPosition(start + 1);
-
+                updatedBlock = this.addBlockAfter(
+                  this.document.blocks,
+                  this.getCurrentCursorBlock()!.toString(),
+                  {
+                    dataId: uniqueId,
+                    class: "paragraph-block",
+                    pieces: _pieces,
+                    type: "text"
+                  }
+                );
+                ending = start + extractedContent.length - 1;
+              } else {
+                updatedBlock = this.addBlockAfter(
+                  this.document.blocks,
+                  this.getCurrentCursorBlock()!.toString(),
+                  {
+                    dataId: uniqueId,
+                    class: "paragraph-block",
+                    pieces: [new Piece(" ")],
+                    type: "text"
+                  }
+                );
+              }
+              this.document.blocks = updatedBlock;
+            } else {
+              this.document.blocks.push({
+                dataId: uniqueId,
+                class: "paragraph-block",
+                pieces: [new Piece(" ")],
+                type: "text"
+              });
             }
-        } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            e.preventDefault();
-            if (end > start) {
-                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
-            }
-            this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset);
+          }
+          this.syncCurrentAttributesWithCursor();
+          this.editorView.render();
+          this.setCursorPosition(ending + 1, uniqueId);
+          if (ending > start) {
+            this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
+          }
+        } else if (e.key === 'Backspace') {
+          e.preventDefault();
+          if (this.imageHandler.isImageHighlighted) {
+            const currentBlockIndex = this.document.blocks.findIndex(
+              (block: any) => block.dataId === this.imageHandler.highLightedImageDataId
+            );
+            this.imageHandler.deleteImage();
+            this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
+            return;
+          }
+          const selection = window.getSelection();
+          if (this.document.dataIds.length >= 1 && this.document.selectAll) {
+            this.document.deleteBlocks();
             this.setCursorPosition(start + 1);
-        } else if (e.key === "Delete") {
-            e.preventDefault();
-            if (start === end) { // just a char
-                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, start + 1, obj))
-                this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
-                this.setCursorPosition(start);
-            } else if (end > start) { //Selection
-                // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj))
-                this.document.deleteRange(start, end, this.document.selectedBlockId);
-                this.setCursorPosition(start);
+          }
+          if (start === end && start > 0) {
+            this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
+            this.setCursorPosition(start - 1);
+            const index = this.document.blocks.findIndex(
+              (block: any) => block.dataId === this.document.selectedBlockId
+            );
+            const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement;
+            if (chkBlock === null) {
+              let listStart = 0;
+              const _blocks = this.document.blocks.map((block: any, index: number) => {
+                if (block?.listType !== undefined || block?.listType !== null) {
+                  if (block?.listType === 'ol') {
+                    listStart = 1;
+                    block.listStart = 1;
+                  } else if (block?.listType === 'li') {
+                    listStart = listStart + 1;
+                    block.listStart = listStart;
+                  }
+                }
+                return block;
+              });
+              this.document.emit('documentChanged', this);
             }
+          } else if (end > start) {
+            this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+            this.setCursorPosition(start + 1);
+          }
+        } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          if (end > start) {
+            this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+          }
+          this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset);
+          this.setCursorPosition(start + 1);
+        } else if (e.key === "Delete") {
+          e.preventDefault();
+          if (start === end) {
+            this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
+            this.setCursorPosition(start);
+          } else if (end > start) {
+            this.document.deleteRange(start, end, this.document.selectedBlockId);
+            this.setCursorPosition(start);
+          }
         }
-
         this.hyperlinkHandler.hideHyperlinkViewButton();
-    }
-
+      }
+      
+      
+      
 
     extractTextFromDataId(dataId: string): { remainingText: string, piece: any } {
         const selection = window.getSelection();
+        console.log("selection::", selection)
         if (!selection || selection.rangeCount === 0) {
             return { remainingText: '', piece: null }; // No valid selection
         }
@@ -781,7 +991,7 @@ class TextIgniter {
                 }
             })
         }
-        
+
 
         if (!element) {
             console.error(`Element with data-id "${dataId}" not found.`);
@@ -801,7 +1011,7 @@ class TextIgniter {
         // const cursorOffset = range.startOffset;
         const cursorOffset = textPosition?.offset;
 
-       
+
         // Extract text from the cursor position to the end
         const remainingText = fullText.slice(cursorOffset);
 
@@ -809,7 +1019,7 @@ class TextIgniter {
         const newContent = fullText.slice(0, cursorOffset);
         element.textContent = newContent; // Update the element content with remaining text
 
-        
+
 
         return { remainingText: remainingText, piece: _piece }; // Return the extracted text
     }
@@ -856,7 +1066,7 @@ class TextIgniter {
         const blockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId);
         if (this.document.blocks[blockIndex]?.type === 'image') {
             this.imageHandler.addStyleToImage(this.document.selectedBlockId || "");
-        } else {
+        } else {    
             if (this.imageHandler.isImageHighlighted) {
                 this.imageHandler.clearImageStyling();
             }
@@ -871,12 +1081,14 @@ class TextIgniter {
 
                 if (!this.manualOverride) {
                     this.currentAttributes = {
-                        bold: this.currentAttributes.bold || piece.attributes.bold,
-                        italic: this.currentAttributes.italic || piece.attributes.italic,
-                        underline: this.currentAttributes.underline || piece.attributes.underline,
-                        hyperlink: this.currentAttributes.hyperlink || piece.attributes.hyperlink || false,
-                        fontFamily: this.currentAttributes.fontFamily || piece.attributes.fontFamily,
-                        fontSize: this.currentAttributes.fontSize || piece.attributes.fontSize,
+                        bold: piece.attributes.bold,
+                        italic: piece.attributes.italic,
+                        underline: piece.attributes.underline,
+                        hyperlink: piece.attributes.hyperlink || false,
+                        fontFamily: piece.attributes.fontFamily,
+                        fontColor: piece.attributes.fontColor,
+                        bgColor: piece.attributes.bgColor,
+                        fontSize:  piece.attributes.fontSize,
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
                 }

@@ -14,6 +14,7 @@ export class ImageHandler {
   public isImageHighlighted: boolean;
   public highLightedImageDataId: string;
   public currentCursorLocation: number;
+  public isCrossIconVisible: boolean;
 
   constructor(editor: HTMLElement, document: TextDocument) {
     this.editor = editor;
@@ -21,6 +22,7 @@ export class ImageHandler {
     this.isImageHighlighted = false;
     this.highLightedImageDataId = "";
     this.currentCursorLocation = 0;
+    this.isCrossIconVisible = false;
   }
 
   setEditorView(editorView: EditorView) {
@@ -202,6 +204,7 @@ export class ImageHandler {
   }
 
   public addStyleToImage(dataId: string) {
+   if(!this.isCrossIconVisible){
     const div = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
     const span = div?.querySelector("span");
     if (span) span.style.position = "relative";
@@ -236,19 +239,18 @@ export class ImageHandler {
       "mouseout",
       () => (cross.style.border = "3px solid blue")
     );
-    // cross.addEventListener("click", (e) => {  e.stopPropagation();      console.log('delete1',this.highLightedImageDataId);this.deleteImage()});
-    cross.addEventListener("click", (e: MouseEvent) => {
-      // e.stopImmediatePropagation();
-      // e.stopPropagation();
-      e.preventDefault();
-      // this.deleteImage();
-      
-    });
-    
 
+    cross.addEventListener("click", (e) => {  
+      e.stopPropagation();  
+          this.deleteImage()    
+    });
+
+  
     span?.appendChild(cross);
     this.isImageHighlighted = true;
     this.highLightedImageDataId = dataId;
+    this.isCrossIconVisible = true;
+  }
   }
 
   public clearImageStyling() {
@@ -267,6 +269,8 @@ export class ImageHandler {
       cross?.remove();
       this.highLightedImageDataId = "";
     }
+    this.isCrossIconVisible = false;
+
   }
 
   public deleteImage() {
@@ -276,6 +280,7 @@ export class ImageHandler {
     );
     this.highLightedImageDataId = "";
     this.isImageHighlighted = false;
+    this.clearImageStyling();
     this.document.emit("documentChanged", this);
   }
 }
