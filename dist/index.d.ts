@@ -52,16 +52,18 @@ declare class TextDocument extends EventEmitter {
         start: number;
         end: number;
         action: string;
-        previousValue: string | null;
-        newValue: string | null;
+        previousValue: any;
+        newValue: any;
+        dataId?: string | null;
     }[];
     redoStack: {
         id: string;
         start: number;
         end: number;
         action: string;
-        previousValue: string | null;
-        newValue: string | null;
+        previousValue: any;
+        newValue: any;
+        dataId?: string | null;
     }[];
     dataIds: string[];
     pieces: Piece[];
@@ -92,6 +94,10 @@ declare class TextDocument extends EventEmitter {
     toggleOrderedList(dataId: string | null, listStart?: number): void;
     toggleUnorderedList(dataId: string | null): void;
     getRangeText(start: number, end: number): string;
+    getRangeTextPiece(start: number, end: number): {
+        rangeText: string;
+        piece: any;
+    };
     undo(): void;
     redo(): void;
     private revertAction;
@@ -105,13 +111,18 @@ declare class TextDocument extends EventEmitter {
     toggleUndoRange(start: number, end: number, id?: string): void;
     toggleRedoRange(start: number, end: number): void;
     applyFontColor(start: number, end: number, color: string, id?: string): void;
+    applyFontColor1(start: number, end: number, color: string, id?: string): void;
     applyBgColor(start: number, end: number, color: string, id?: string): void;
+    applyBgColor1(start: number, end: number, color: string, id?: string): void;
     isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline' | 'undo' | 'redo'): boolean;
     mergePieces(pieces: Piece[]): Piece[];
     findPieceAtOffset(offset: number, dataId?: string | null): Piece | null;
-    setFontFamily(start: number, end: number, fontFamily: string): void;
-    setFontSize(start: number, end: number, fontSize: string): void;
-    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void;
+    setFontFamily(start: number, end: number, fontFamily: string, id?: string): void;
+    setFontFamily1(start: number, end: number, fontFamily: string, id?: string): void;
+    setFontSize(start: number, end: number, fontSize: string, id?: string): void;
+    setFontSize1(start: number, end: number, fontSize: string, id?: string): void;
+    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null, id?: string): void;
+    setAlignment1(alignment: 'left' | 'center' | 'right', dataId: string | null, id?: string): void;
     getHtmlContent(): string | undefined;
     getCursorOffsetInParent(parentSelector: string): {
         offset: number;
@@ -128,6 +139,7 @@ declare class ImageHandler {
     isImageHighlighted: boolean;
     highLightedImageDataId: string;
     currentCursorLocation: number;
+    isCrossIconVisible: boolean;
     constructor(editor: HTMLElement, document: TextDocument);
     setEditorView(editorView: EditorView): void;
     insertImage(): void;
@@ -203,6 +215,7 @@ declare class HtmlToJsonParser {
 
 type EditorConfig = {
     features: string[];
+    showToolbar?: boolean;
 };
 
 interface CurrentAttributeDTO {
