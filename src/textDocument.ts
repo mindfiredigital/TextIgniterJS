@@ -466,50 +466,52 @@ class TextDocument extends EventEmitter {
         this.emit('documentChanged', this);
     }
 
-    toggleOrderedList(dataId: string | null, listStart: number = 1): void {
-        const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-        const block = this.blocks.find((block: any) => block.dataId === dataId);
-        if (!block) return;
-
-        block.listType = block.listType === 'ol' ? null : 'ol'; // Toggle between 'ol' and null
-        block.listStart = listStart;
-        this.blocks[index].listType = block.listType;
-
-        this.emit('documentChanged', this);
+    toggleOrderedList(dataId: string | null): void {
+    const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+    if (index === -1) return;
+    const block = this.blocks[index];
+    // Toggle: if already ordered, turn it off; otherwise, turn it on
+    if (block.listType === 'ol' || block.listType === 'li') {
+      block.listType = null;
+      block.listStart = undefined;
+      block.parentId = undefined;
+    } else {
+      block.listType = 'ol';
+      block.listStart = 1;
+      // Mark the block as the start (parent) of its list group
+      block.parentId = block.dataId;
     }
-
-    // toggleUnorderedList(dataId: string | null, id: string = ''): void {
-    //     const block = this.blocks.find((block: any) => block.dataId === dataId);
-    //     console.log("toggleUnorderedList: ", block)
-    //     const previousValue = block.listType;
-    //     const start = 0;
-    //     const end = 0;
-    //     if (!block) return;
-
-    //     block.listType = block.listType === 'ul' ? null : 'ul'; // Toggle between 'ul' and null
-    //     const newValue = block.listType;
-    //     const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-    //     if (_redoStackIds.length === 0) {
-    //         this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType', previousValue, newValue, dataId });
-    //         this.redoStack = [];
-    //     }
-    //     this.emit('documentChanged', this);
-    // }
-
-    // toggleUnorderedList1(dataId: string | null, id: string = ''): void {
-    //     const block = this.blocks.find((block: any) => block.dataId === dataId);
-    //     if (!block) return;
-
-    //     block.listType = block.listType === 'ul' ? null : 'ul'; // Toggle between 'ul' and null
-    //     this.emit('documentChanged', this);
-    // }
-    toggleUnorderedList(dataId: string | null): void {
-        const block = this.blocks.find((block: any) => block.dataId === dataId);
-        if (!block) return;
-
-        block.listType = block.listType === 'ul' ? null : 'ul'; // Toggle between 'ul' and null
-        this.emit('documentChanged', this);
+    this.emit('documentChanged', this);
+  }
+  
+  toggleUnorderedList(dataId: string | null): void {
+    const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+    if (index === -1) return;
+    const block = this.blocks[index];
+    block.listType = block.listType === 'ul' ? null : 'ul';
+    this.emit('documentChanged', this);
+  }
+  
+  updateOrderedListNumbers(): void {
+    let currentNumber = 1;
+    let currentParentId: string | null = null;
+    for (let i = 0; i < this.blocks.length; i++) {
+      const block = this.blocks[i];
+      if (block.listType === 'ol' || block.listType === 'li') {
+        // If this block is the start of a new list group, reset the counter.
+        if (block.listType === 'ol' || block.parentId !== currentParentId) {
+          currentNumber = 1;
+          currentParentId = block.listType === 'ol' ? block.dataId : block.parentId;
+        }
+        block.listStart = currentNumber;
+        currentNumber++;
+      } else {
+        currentNumber = 1;
+        currentParentId = null;
+      }
     }
+    this.emit('documentChanged', this);
+  }
 
     getRangeText(start: number, end: number): string {
         let rangeText = '';
