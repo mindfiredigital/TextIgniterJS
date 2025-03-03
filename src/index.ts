@@ -14,7 +14,7 @@ import EventEmitter from "./utils/events";
 import { strings } from "./constants/strings";
 
 
-export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string }
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string,bgColor?: string}
 
 class TextIgniter {
     document: TextDocument;
@@ -406,113 +406,110 @@ class TextIgniter {
         // this.applyFontColor(selection, color);
     }
 
-    handleToolbarAction(action: string, dataId: string[] = []): void {
-
-        const [start, end] = this.getSelectionRange();
-
-        switch (action) {
-            case 'orderedList':
-                this.document.dataIds.map((obj: string, i: number) => this.document.toggleOrderedList(obj, i + 1))
-                // this.document.toggleOrderedList(this.document.selectedBlockId)
-
-                break;
-            case 'unorderedList':
-                this.document.dataIds.map(obj => this.document.toggleUnorderedList(obj))
-
-                // this.document.toggleUnorderedList(this.document.selectedBlockId);
-                break;
-        }
-        if (action === 'image') {
-            this.imageHandler.insertImage();
-        }
-        else if (start < end) {
-
-            switch (action) {
-                case 'bold':
-                    // this.document.dataIds.forEach(obj => {
-                    //     console.log(obj, "vicky", this.document.selectedBlockId)
-                    //     this.document.selectedBlockId = obj;
-                    //     this.document.toggleBoldRange(start, end)
-                    // })
-                    if (this.document.dataIds.length > 1) {
-                        this.document.blocks.forEach((block: any) => {
-                            if (this.document.dataIds.includes(block.dataId)) {
-                                this.document.selectedBlockId = block.dataId;
-                                let countE = 0;
-                                block.pieces.forEach((obj: any) => {
-                                    countE += obj.text.length;
-                                })
-                                let countS = start - countE;
-                                this.document.toggleBoldRange(countS, countE);
-                            }
-                        })
-                    } else {
-                        this.document.toggleBoldRange(start, end);
-                    }
-
-                    break;
-                case 'italic':
-                    if (this.document.dataIds.length > 1) {
-                        this.document.blocks.forEach((block: any) => {
-                            if (this.document.dataIds.includes(block.dataId)) {
-                                this.document.selectedBlockId = block.dataId;
-                                let countE = 0;
-                                block.pieces.forEach((obj: any) => {
-                                    countE += obj.text.length;
-                                })
-                                let countS = start - countE;
-                                this.document.toggleItalicRange(countS, countE);
-                            }
-                        })
-                    } else {
-                        this.document.toggleItalicRange(start, end);
-                    }
-                    // this.document.toggleItalicRange(start, end);
-                    break;
-                case 'underline':
-                    if (this.document.dataIds.length > 1) {
-                        this.document.blocks.forEach((block: any) => {
-                            if (this.document.dataIds.includes(block.dataId)) {
-                                this.document.selectedBlockId = block.dataId;
-                                let countE = 0;
-                                block.pieces.forEach((obj: any) => {
-                                    countE += obj.text.length;
-                                })
-                                let countS = start - countE;
-                                this.document.toggleUnderlineRange(countS, countE);
-                            }
-                        })
-                    } else {
-                        this.document.toggleUnderlineRange(start, end);
-                    }
-                    // this.document.toggleUnderlineRange(start, end);
-                    break;
-                // case 'orderedList':
-                //     this.document.toggleOrderedList(this.document.selectedBlockId);
-                //     break;
-                // case 'unorderedList':
-                //     this.document.toggleUnorderedList(this.document.selectedBlockId);
-                //     break;
-                case 'undo':
-                    // this.document.toggleUndoRange(start, end);
-                    this.document.undo();
-                    break;
-                case 'redo':
-                    // this.document.toggleRedoRange(start, end);
-                    this.document.redo();
-                    break;
-                case 'hyperlink':
-                    this.hyperlinkHandler.hanldeHyperlinkClick(start, end, this.document.currentOffset, this.document.selectedBlockId, this.document.blocks);
-                    break;
-            }
+   // Toolbar action handler
+handleToolbarAction(action: string, dataId: string[] = []): void {
+    const [start, end] = this.getSelectionRange();
+  
+    switch (action) {
+      case 'orderedList':
+        // Toggle ordered list for each selected block
+        this.document.dataIds.forEach((id: string) => {
+          this.document.toggleOrderedList(id);
+        });
+        // Recalculate numbering for contiguous ordered list blocks
+        this.document.updateOrderedListNumbers();
+        break;
+      case 'unorderedList':
+        this.document.dataIds.forEach((id: string) => {
+          this.document.toggleUnorderedList(id);
+        });
+        break;
+      case 'image':
+        this.imageHandler.insertImage();
+        break;
+      default:
+        if (start < end) {
+          switch (action) {
+            case 'bold':
+              if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                  if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                      countE += obj.text.length;
+                    });
+                    let countS = start - countE;
+                    this.document.toggleBoldRange(countS, countE);
+                  }
+                });
+              } else {
+                this.document.toggleBoldRange(start, end);
+              }
+              break;
+            case 'italic':
+              if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                  if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                      countE += obj.text.length;
+                    });
+                    let countS = start - countE;
+                    this.document.toggleItalicRange(countS, countE);
+                  }
+                });
+              } else {
+                this.document.toggleItalicRange(start, end);
+              }
+              break;
+            case 'underline':
+              if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                  if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                      countE += obj.text.length;
+                    });
+                    let countS = start - countE;
+                    this.document.toggleUnderlineRange(countS, countE);
+                  }
+                });
+              } else {
+                this.document.toggleUnderlineRange(start, end);
+              }
+              break;
+            case 'undo':
+              this.document.undo();
+              break;
+            case 'redo':
+              this.document.redo();
+              break;
+            case 'hyperlink':
+              this.hyperlinkHandler.hanldeHyperlinkClick(
+                start,
+                end,
+                this.document.currentOffset,
+                this.document.selectedBlockId,
+                this.document.blocks
+              );
+              break;
+          }
         } else {
-            this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'] = !this.currentAttributes[action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'];
-            this.manualOverride = true;
+          this.currentAttributes[
+            action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'
+          ] = !this.currentAttributes[
+            action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'
+          ];
+          this.manualOverride = true;
         }
-        // console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
-        this.toolbarView.updateActiveStates(this.currentAttributes);
+        break;
     }
-
+    this.toolbarView.updateActiveStates(this.currentAttributes);
+  }
+  
 
 
 
@@ -786,20 +783,35 @@ class TextIgniter {
               pieces: [new Piece(" ")],
               type: "text"
             };
+            let listParentId = "";
             if (currentBlock.listType === 'ol') {
               newBlock.listType = 'li';
               newBlock.listStart = currentBlock.listStart + 1;
               newBlock.parentId = currentBlock.dataId;
+              listParentId = currentBlock.dataId;
             } else if (currentBlock.listType === 'li') {
               newBlock.listType = 'li';
               newBlock.listStart = currentBlock.listStart + 1;
               newBlock.parentId = currentBlock.parentId;
+              listParentId = currentBlock.parentId;
             } else if (currentBlock.listType === 'ul') {
               newBlock.listType = 'ul';
               newBlock.parentId = currentBlock.parentId || currentBlock.dataId;
             }
             // Insert newBlock right after the current block
             this.document.blocks.splice(currentBlockIndex + 1, 0, newBlock);
+      
+            // For ordered lists, update subsequent list items to increment their listStart
+            if (currentBlock.listType === 'ol' || currentBlock.listType === 'li') {
+              for (let i = currentBlockIndex + 2; i < this.document.blocks.length; i++) {
+                const block = this.document.blocks[i];
+                if (block.listType === 'li' && block.parentId === listParentId) {
+                  block.listStart += 1;
+                } else {
+                  break;
+                }
+              }
+            }
           } else {
             // Normal text block insertion (with text splitting logic if applicable)
             if (this.getCurrentCursorBlock() !== null) {
@@ -1043,7 +1055,7 @@ class TextIgniter {
         const blockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId);
         if (this.document.blocks[blockIndex]?.type === 'image') {
             this.imageHandler.addStyleToImage(this.document.selectedBlockId || "");
-        } else {
+        } else {    
             if (this.imageHandler.isImageHighlighted) {
                 this.imageHandler.clearImageStyling();
             }
@@ -1063,6 +1075,8 @@ class TextIgniter {
                         underline: piece.attributes.underline,
                         hyperlink: piece.attributes.hyperlink || false,
                         fontFamily: piece.attributes.fontFamily,
+                        fontColor: piece.attributes.fontColor,
+                        bgColor: piece.attributes.bgColor,
                         fontSize:  piece.attributes.fontSize,
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
