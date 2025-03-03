@@ -3,8 +3,8 @@ import Piece from "./piece";
 
 // text document extend
 class TextDocument extends EventEmitter {
-    undoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
-    redoStack: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }[] = [];
+    undoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }[] = [];
+    redoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }[] = [];
     dataIds: string[] = [];
     pieces: Piece[];
     blocks: any;
@@ -31,7 +31,7 @@ class TextDocument extends EventEmitter {
         this.pieces = [new Piece("")];
         this.blocks = [
             {
-                "type" : "text",
+                "type": "text",
                 "dataId": 'data-id-1734604240404',
                 "class": "paragraph-block",
                 "alignment": "left",
@@ -60,7 +60,7 @@ class TextDocument extends EventEmitter {
             offset = this.currentOffset;
         }
         const previousValue = this.getRangeText(position, position);
-        
+
         // for (let piece of this.pieces) {
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
@@ -92,8 +92,8 @@ class TextDocument extends EventEmitter {
         const _data = this.mergePieces(newPieces)
         // this.pieces = _data;
 
-                this.blocks[index].pieces = _data
-                const newValue = this.getRangeText(position, position + text.length);
+        this.blocks[index].pieces = _data
+        const newValue = this.getRangeText(position, position + text.length);
         // if (dataId !== '' || dataId !== null) {
         //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
         // }
@@ -134,7 +134,7 @@ class TextDocument extends EventEmitter {
 
                 const textNode = node as Text;
                 const nextOffset = currentOffset + textNode.length;
-                
+
                 if (offset >= currentOffset && offset <= nextOffset) {
                     range.setStart(textNode, offset - currentOffset); // Set the cursor position
                     range.collapse(true); // Collapse the range to a single point (cursor)
@@ -153,14 +153,14 @@ class TextDocument extends EventEmitter {
 
         traverseNodes(element);
 
-        
+
         // Clear any previous selection and apply the new range
         selection.removeAllRanges();
         selection.addRange(range);
     }
 
     deleteRange(start: number, end: number, dataId: string | null = "", currentOffset: number = 0): void {
-        
+
         if (start === end) return;
         let newPieces: Piece[] = [];
         let offset = 0;
@@ -168,21 +168,21 @@ class TextDocument extends EventEmitter {
         let runBackspace = false;
         if (dataId !== '' || dataId !== null) {
             index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-            
+
             offset = currentOffset;
         }
 
         const previousValue = this.getRangeText(start, end);
         let previousTextBlockIndex = 0;
-        
+
         if (start === offset) {
-            if(index -1 >= 0 && this.blocks[index - 1].type === 'image'){
-                previousTextBlockIndex = index -2;
-            }else{
-                previousTextBlockIndex = index -1;
+            if (index - 1 >= 0 && this.blocks[index - 1].type === 'image') {
+                previousTextBlockIndex = index - 2;
+            } else {
+                previousTextBlockIndex = index - 1;
             }
             for (let piece1 of this.blocks[previousTextBlockIndex].pieces) {
-                
+
                 newPieces.push(piece1.clone());
                 runBackspace = true;
             }
@@ -203,12 +203,12 @@ class TextDocument extends EventEmitter {
             }
             offset = pieceEnd;
         }
-        
+
         const _data = this.mergePieces(newPieces)
 
         if (runBackspace) {
             this.blocks[previousTextBlockIndex].pieces = _data
-            
+
             this.blocks[index].pieces = [new Piece(" ")]
             this.blocks = this.blocks.filter((block: any, i: number) => {
                 if (i !== index)
@@ -225,7 +225,7 @@ class TextDocument extends EventEmitter {
             });
         }
         const newValue = this.getRangeText(start - 1, end - 1);
-        
+
 
         this.emit('documentChanged', this);
         // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
@@ -320,7 +320,7 @@ class TextDocument extends EventEmitter {
             });
         }
         this.dataIds = selectedDataIds;
-        
+
         return selectedDataIds;
         // Now you can use `selectedDataIds` as needed
     }
@@ -395,20 +395,20 @@ class TextDocument extends EventEmitter {
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'],
         // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
         value: string | boolean): void {
-        
+
 
         let newPieces: Piece[] = [];
         let offset = 0;
         let index = -1;
         if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
-            
+
             index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
             offset = this.currentOffset;
-           
+
         }
 
         for (let piece of this.blocks[index].pieces) {
-            
+
             const pieceEnd = offset + piece.text.length;
 
             if (pieceEnd <= start || offset >= end) {
@@ -419,29 +419,40 @@ class TextDocument extends EventEmitter {
                 const startInPiece = Math.max(start - pieceStart, 0);
                 const endInPiece = Math.min(end - pieceStart, pieceText.length);
                 if (startInPiece > 0) {
-                    
+
                     newPieces.push(new Piece(pieceText.slice(0, startInPiece), { ...piece.attributes }));
-                    
+
 
                 }
                 const selectedPiece = new Piece(pieceText.slice(startInPiece, endInPiece), { ...piece.attributes });
                 // selectedPiece.attributes[attribute] = value;
-                
+
                 if (
                     (attribute === 'bold' || attribute === 'italic' || attribute === 'underline' || attribute === 'undo' || attribute === 'redo' || attribute === 'hyperlink') &&
                     typeof value === 'boolean'
                 ) {
-                   
+
                     selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
                 } else if (
                     (attribute === 'fontFamily' || attribute === 'fontSize' || attribute === 'hyperlink' || attribute === 'fontColor' || attribute === 'bgColor') &&
                     typeof value === 'string'
                 ) {
-                    
+
                     selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
                 }
+                // // Store undo action
+                // const previousValue = selectedPiece.attributes[attribute] || "";
+                // this.undoStack.push({
+                //     id: Date.now().toString(),
+                //     start,
+                //     end,
+                //     action: attribute,
+                //     previousValue,
+                //     newValue: value,
+                // });
+
                 newPieces.push(selectedPiece);
-                
+
                 if (endInPiece < pieceText.length) {
                     newPieces.push(new Piece(pieceText.slice(endInPiece), { ...piece.attributes }));
                 }
@@ -450,7 +461,7 @@ class TextDocument extends EventEmitter {
         }
 
         const _data = this.mergePieces(newPieces)
-        
+
         this.blocks[index].pieces = _data
         this.emit('documentChanged', this);
     }
@@ -509,8 +520,8 @@ class TextDocument extends EventEmitter {
         for (const block of this.blocks) {
             for (const piece of block.pieces) {
                 const pieceLength = piece.text.length;
-
                 if (currentOffset + pieceLength >= start && currentOffset < end) {
+                    console.log(piece, "piece getRangeText")
                     const rangeStart = Math.max(0, start - currentOffset);
                     const rangeEnd = Math.min(pieceLength, end - currentOffset);
                     rangeText += piece.text.substring(rangeStart, rangeEnd);
@@ -531,9 +542,40 @@ class TextDocument extends EventEmitter {
         return rangeText;
     }
 
+    getRangeTextPiece(start: number, end: number): { rangeText: string, piece: any } {
+        let rangeText = '';
+        let currentOffset = 0;
+        let _piece = {};
+        for (const block of this.blocks) {
+            for (const piece of block.pieces) {
+                const pieceLength = piece.text.length;
+
+                if (currentOffset + pieceLength >= start && currentOffset < end) {
+                    console.log(piece, "piece getRangeText")
+                    _piece = piece;
+                    const rangeStart = Math.max(0, start - currentOffset);
+                    const rangeEnd = Math.min(pieceLength, end - currentOffset);
+                    rangeText += piece.text.substring(rangeStart, rangeEnd);
+                }
+
+                currentOffset += pieceLength;
+
+                if (currentOffset >= end) {
+                    break;
+                }
+            }
+
+            if (currentOffset >= end) {
+                break;
+            }
+        }
+
+        return { rangeText: rangeText, piece: _piece };
+    }
+
     undo(): void {
         const action = this.undoStack.pop();
-        
+
         if (!action) return;
 
         this.redoStack.push(action);
@@ -542,7 +584,7 @@ class TextDocument extends EventEmitter {
 
     redo(): void {
         const action = this.redoStack.pop();
-        
+
 
         if (!action) return;
 
@@ -550,7 +592,7 @@ class TextDocument extends EventEmitter {
         this.applyAction(action);
     }
 
-    private revertAction(action: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }): void {
+    private revertAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
         switch (action.action) {
             case 'bold':
                 this.toggleBoldRange(action.start, action.end, action.id); // Reverse bold toggle
@@ -561,16 +603,37 @@ class TextDocument extends EventEmitter {
             case 'underline':
                 this.toggleUnderlineRange(action.start, action.end, action.id);
                 break
+            case 'fontFamily':
+                this.setFontFamily(action.start, action.end, action.previousValue, action.id);
+                break;
+            case 'fontSize':
+                this.setFontSize(action.start, action.end, action.previousValue, action.id);
+                break;
+            case 'fontColor':
+                this.applyFontColor(action.start, action.end, action.previousValue, action.id);
+                break;
+            case 'bgColor':
+                this.applyBgColor(action.start, action.end, action.previousValue, action.id);
+                break;
+            case 'alignment':
+                if (action.dataId !== undefined)
+                    this.setAlignment(action.previousValue, action.dataId, action.id)
+                break;
+            // case 'listType':
+            //     if (action.dataId !== undefined)
+            //         this.toggleUnorderedList(action.dataId, action.id)
+            //     break;
             case 'insert':
-                
+                console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
                 this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
+
                 break;
             // Add cases for other actions like italic, underline, insert, delete
             // ...
         }
     }
 
-    private applyAction(action: { id: string, start: number; end: number; action: string; previousValue: string | null; newValue: string | null }): void {
+    private applyAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
         switch (action.action) {
             case 'bold':
                 this.toggleBoldRange1(action.start, action.end, action.id); // Reapply bold toggle
@@ -581,8 +644,28 @@ class TextDocument extends EventEmitter {
             case 'underline':
                 this.toggleUnderlineRange1(action.start, action.end, action.id);
                 break;
+            case 'fontFamily':
+                this.setFontFamily1(action.start, action.end, action.newValue, action.id)
+                break;
+            case 'fontSize':
+                this.setFontSize1(action.start, action.end, action.newValue, action.id)
+                break;
+            case 'fontColor':
+                this.applyFontColor1(action.start, action.end, action.newValue, action.id)
+                break;
+            case 'bgColor':
+                this.applyBgColor1(action.start, action.end, action.newValue, action.id)
+                break;
+            case 'alignment':
+                if (action.dataId !== undefined)
+                    this.setAlignment1(action.newValue, action.dataId, action.id);
+                break;
+            // case 'listType':
+            //     if (action.dataId !== undefined)
+            //         this.toggleUnorderedList1(action.dataId, action.id)
+            //     break;
             case 'insert':
-                
+
                 this.insertAt(action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo');
                 // this.setCursorPosition(action.start, action.end, action.id)
                 break;
@@ -654,9 +737,25 @@ class TextDocument extends EventEmitter {
     }
 
     applyFontColor(start: number, end: number, color: string, id = ""): void {
+        if (start < end) {
+            const { rangeText, piece } = this.getRangeTextPiece(start, end);
+            const previousValue = piece.attributes.fontColor;
+            // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
+
+            this.formatAttribute(start, end, "fontColor", color);
+            console.log('applyFontColor-color', color, start, end)
+            const newValue = color;
+            const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+            if (_redoStackIds.length === 0) {
+                this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontColor', previousValue, newValue });
+                this.redoStack = [];
+            }
+        }
+    }
+    applyFontColor1(start: number, end: number, color: string, id = ""): void {
         // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
         if (start < end) {
-            
+            console.log('applyFontColor 1-color', color, start, end)
             this.formatAttribute(start, end, "fontColor", color);
         }
     }
@@ -664,7 +763,22 @@ class TextDocument extends EventEmitter {
     applyBgColor(start: number, end: number, color: string, id = ""): void {
         // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
         if (start < end) {
-           
+            const { rangeText, piece } = this.getRangeTextPiece(start, end);
+            const previousValue = piece.attributes.bgColor;
+
+            this.formatAttribute(start, end, "bgColor", color);
+            const newValue = color;
+            const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+            if (_redoStackIds.length === 0) {
+                this.undoStack.push({ id: Date.now().toString(), start, end, action: 'bgColor', previousValue, newValue });
+                this.redoStack = [];
+            }
+        }
+    }
+    applyBgColor1(start: number, end: number, color: string, id = ""): void {
+        // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
+        if (start < end) {
+
             this.formatAttribute(start, end, "bgColor", color);
         }
     }
@@ -675,7 +789,7 @@ class TextDocument extends EventEmitter {
 
         if (this.selectedBlockId !== '') {
             const index = this.blocks.findIndex((block: any) => block.dataId === this.selectedBlockId)
-            
+
             for (let piece of this.blocks[index].pieces) {
                 const pieceEnd = offset + piece.text.length;
                 if (pieceEnd > start && offset < end) {
@@ -725,39 +839,84 @@ class TextDocument extends EventEmitter {
     //     return null;
     // }
 
- 
-findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
-    let currentOffset = 0;
-    if (dataId) {
-        for (let block of this.blocks) {
-            const blockLength = block.pieces.reduce((acc:number, curr:any) => acc + curr.text.length, 0);
-            if (block.dataId == dataId) {
-                let prevPiece: Piece | null = null;
-                for (let piece of block.pieces) {
-                    const pieceStart = currentOffset;
-                    const pieceEnd = pieceStart + piece.text.length;
-                    if (offset >= pieceStart && offset < pieceEnd) {
-                        return offset === pieceStart && prevPiece ? prevPiece : piece;
+
+    findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
+        let currentOffset = 0;
+        if (dataId) {
+            for (let block of this.blocks) {
+                const blockLength = block.pieces.reduce((acc: number, curr: any) => acc + curr.text.length, 0);
+                if (block.dataId == dataId) {
+                    let prevPiece: Piece | null = null;
+                    for (let piece of block.pieces) {
+                        const pieceStart = currentOffset;
+                        const pieceEnd = pieceStart + piece.text.length;
+                        if (offset >= pieceStart && offset < pieceEnd) {
+                            return offset === pieceStart && prevPiece ? prevPiece : piece;
+                        }
+                        prevPiece = piece;
+                        currentOffset = pieceEnd;
                     }
-                    prevPiece = piece;
-                    currentOffset = pieceEnd;
+                } else {
+                    currentOffset += blockLength;
                 }
-            } else {
-                currentOffset += blockLength;
             }
         }
+        return null;
     }
-    return null;
-}
 
-    setFontFamily(start: number, end: number, fontFamily: string): void {
+    setFontFamily(start: number, end: number, fontFamily: string, id: string = ''): void {
+        const { rangeText, piece } = this.getRangeTextPiece(start, end);
+        const previousValue = piece.attributes.fontFamily;
+
+        console.log(rangeText, piece, "setFontFamily", this.blocks);
+        // const _previousValueTxt = this.getRangeText(start, end);
+        // if(block){
+        //     block[0].
+        // }
+        this.formatAttribute(start, end, 'fontFamily', fontFamily);
+        const newValue = fontFamily;
+        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        if (_redoStackIds.length === 0) {
+            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontFamily', previousValue, newValue });
+            this.redoStack = [];
+        }
+    }
+    setFontFamily1(start: number, end: number, fontFamily: string, id: string = ''): void {
         this.formatAttribute(start, end, 'fontFamily', fontFamily);
     }
 
-    setFontSize(start: number, end: number, fontSize: string): void {
+    setFontSize(start: number, end: number, fontSize: string, id: string = ''): void {
+        const { rangeText, piece } = this.getRangeTextPiece(start, end);
+        const previousValue = piece.attributes.fontSize;
+        this.formatAttribute(start, end, 'fontSize', fontSize);
+        const newValue = fontSize;
+        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        if (_redoStackIds.length === 0) {
+            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontSize', previousValue, newValue });
+            this.redoStack = [];
+        }
+    }
+    setFontSize1(start: number, end: number, fontSize: string, id: string = ''): void {
         this.formatAttribute(start, end, 'fontSize', fontSize);
     }
-    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void {
+
+    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null, id: string = ''): void {
+        const block = this.blocks.find((block: any) => block.dataId === dataId);
+        const previousValue = block.alignment;
+        const start = 0;
+        const end = 0;
+        if (!block) return;
+
+        block.alignment = alignment; // Update alignment
+        const newValue = alignment;
+        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        if (_redoStackIds.length === 0) {
+            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'alignment', previousValue, newValue, dataId });
+            this.redoStack = [];
+        }
+        this.emit('documentChanged', this); // Trigger re-render
+    }
+    setAlignment1(alignment: 'left' | 'center' | 'right', dataId: string | null, id: string = ''): void {
         const block = this.blocks.find((block: any) => block.dataId === dataId);
         if (!block) return;
 
@@ -773,7 +932,7 @@ findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
         }
 
         const htmlContent = editorContainer.innerHTML;
-        
+
 
         // You can also copy it to the clipboard
         navigator.clipboard.writeText(htmlContent).then(() => {
