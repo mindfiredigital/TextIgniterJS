@@ -7,6 +7,7 @@ export declare class ImageHandler {
     isImageHighlighted: boolean;
     highLightedImageDataId: string;
     currentCursorLocation: number;
+    isCrossIconVisible: boolean;
     constructor(editor: HTMLElement, document: TextDocument);
     setEditorView(editorView: EditorView): void;
     insertImage(): void;
