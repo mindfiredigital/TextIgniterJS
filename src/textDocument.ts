@@ -467,51 +467,70 @@ class TextDocument extends EventEmitter {
     }
 
     toggleOrderedList(dataId: string | null): void {
-    const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-    if (index === -1) return;
-    const block = this.blocks[index];
-    // Toggle: if already ordered, turn it off; otherwise, turn it on
-    if (block.listType === 'ol' || block.listType === 'li') {
-      block.listType = null;
-      block.listStart = undefined;
-      block.parentId = undefined;
-    } else {
-      block.listType = 'ol';
-      block.listStart = 1;
-      // Mark the block as the start (parent) of its list group
-      block.parentId = block.dataId;
-    }
-    this.emit('documentChanged', this);
-  }
-  
-  toggleUnorderedList(dataId: string | null): void {
-    const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-    if (index === -1) return;
-    const block = this.blocks[index];
-    block.listType = block.listType === 'ul' ? null : 'ul';
-    this.emit('documentChanged', this);
-  }
-  
-  updateOrderedListNumbers(): void {
-    let currentNumber = 1;
-    let currentParentId: string | null = null;
-    for (let i = 0; i < this.blocks.length; i++) {
-      const block = this.blocks[i];
-      if (block.listType === 'ol' || block.listType === 'li') {
-        // If this block is the start of a new list group, reset the counter.
-        if (block.listType === 'ol' || block.parentId !== currentParentId) {
-          currentNumber = 1;
-          currentParentId = block.listType === 'ol' ? block.dataId : block.parentId;
+        const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+        if (index === -1) return;
+        const block = this.blocks[index];
+        // Toggle: if already ordered, turn it off; otherwise, turn it on
+        if (block.listType === 'ol' || block.listType === 'li') {
+            block.listType = null;
+            block.listStart = undefined;
+            block.parentId = undefined;
+        } else {
+            block.listType = 'ol';
+            block.listStart = 1;
+            // Mark the block as the start (parent) of its list group
+            block.parentId = block.dataId;
         }
-        block.listStart = currentNumber;
-        currentNumber++;
-      } else {
-        currentNumber = 1;
-        currentParentId = null;
-      }
+        this.emit('documentChanged', this);
     }
-    this.emit('documentChanged', this);
-  }
+
+   
+
+    toggleUnorderedList(dataId: string | null, id: string = ''): void {
+        const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+        if (index === -1) return;
+        const block = this.blocks[index];
+        const previousValue = block.listType;
+        const start = 0;
+        const end = 0;
+        block.listType = block.listType === 'ul' ? null : 'ul';
+        const newValue = block.listType;
+        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        if (_redoStackIds.length === 0) {
+            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType', previousValue, newValue, dataId });
+            this.redoStack = [];
+        }
+        this.emit('documentChanged', this);
+    }
+
+    toggleUnorderedList1(dataId: string | null, id: string = ''): void {
+        const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+        if (index === -1) return;
+        const block = this.blocks[index];
+        block.listType = block.listType === 'ul' ? null : 'ul';
+        this.emit('documentChanged', this);
+    }
+
+    updateOrderedListNumbers(): void {
+        let currentNumber = 1;
+        let currentParentId: string | null = null;
+        for (let i = 0; i < this.blocks.length; i++) {
+            const block = this.blocks[i];
+            if (block.listType === 'ol' || block.listType === 'li') {
+                // If this block is the start of a new list group, reset the counter.
+                if (block.listType === 'ol' || block.parentId !== currentParentId) {
+                    currentNumber = 1;
+                    currentParentId = block.listType === 'ol' ? block.dataId : block.parentId;
+                }
+                block.listStart = currentNumber;
+                currentNumber++;
+            } else {
+                currentNumber = 1;
+                currentParentId = null;
+            }
+        }
+        this.emit('documentChanged', this);
+    }
 
     getRangeText(start: number, end: number): string {
         let rangeText = '';
@@ -619,10 +638,10 @@ class TextDocument extends EventEmitter {
                 if (action.dataId !== undefined)
                     this.setAlignment(action.previousValue, action.dataId, action.id)
                 break;
-            // case 'listType':
-            //     if (action.dataId !== undefined)
-            //         this.toggleUnorderedList(action.dataId, action.id)
-            //     break;
+            case 'listType':
+                if (action.dataId !== undefined)
+                    this.toggleUnorderedList(action.dataId, action.id)
+                break;
             case 'insert':
                 console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
                 this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
@@ -660,10 +679,10 @@ class TextDocument extends EventEmitter {
                 if (action.dataId !== undefined)
                     this.setAlignment1(action.newValue, action.dataId, action.id);
                 break;
-            // case 'listType':
-            //     if (action.dataId !== undefined)
-            //         this.toggleUnorderedList1(action.dataId, action.id)
-            //     break;
+            case 'listType':
+                if (action.dataId !== undefined)
+                    this.toggleUnorderedList1(action.dataId, action.id)
+                break;
             case 'insert':
 
                 this.insertAt(action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo');
