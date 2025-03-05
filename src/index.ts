@@ -14,7 +14,7 @@ import EventEmitter from "./utils/events";
 import { strings } from "./constants/strings";
 
 
-export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string }
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string;bgColor?:string; }
 
 class TextIgniter {
     document: TextDocument;
@@ -877,6 +877,25 @@ class TextIgniter {
           if (ending > start) {
             this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
           }
+        
+          // Insert entry in undo stack
+          if (e.isTrusted) {
+            const _redoStackIds = this.document.redoStack.filter(obj => obj.id === "")
+            if (_redoStackIds.length === 0) {
+                this.document.undoStack.push({
+                    id: Date.now().toString(),
+                    start: 0,
+                    end: 0 ,
+                    action: 'enter',
+                    previousValue:"",
+                    newValue:'enter'
+                });
+
+                // Clear redo stack
+                this.document.redoStack = [];
+            }
+        }
+
         } else if (e.key === 'Backspace') {
           e.preventDefault();
           if (this.imageHandler.isImageHighlighted) {
@@ -924,7 +943,7 @@ class TextIgniter {
           if (end > start) {
             this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
           }
-          this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset);
+          this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset,"","",!e.isTrusted || false);
           this.setCursorPosition(start + 1);
         } else if (e.key === "Delete") {
           e.preventDefault();
@@ -1066,7 +1085,6 @@ class TextIgniter {
                     this.manualOverride = false;
                     this.lastPiece = piece;
                 }
-
                 if (!this.manualOverride) {
                     this.currentAttributes = {
                         bold: piece.attributes.bold,
@@ -1075,6 +1093,8 @@ class TextIgniter {
                         hyperlink: piece.attributes.hyperlink || false,
                         fontFamily: piece.attributes.fontFamily,
                         fontSize: piece.attributes.fontSize,
+                        fontColor:piece.attributes.fontColor,
+                        bgColor:piece.attributes.bgColor,
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
                 }
