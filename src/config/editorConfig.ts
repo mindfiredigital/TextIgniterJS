@@ -116,6 +116,7 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
             // fontColorPicker.value = '#171717'
             fontColorPicker.type = "color";
             fontColorPicker.id = "fontColorPicker";
+            fontColorPicker.setAttribute("data-action","fontColor");
             fontColorPicker.style.display = "none"; // Hide it initially
             span1.appendChild(fontColorPicker)
             span.appendChild(span1)
@@ -148,6 +149,7 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
             span1.id = "colorBgWrapper"; // Unique ID for span
             span1.style.display = "hidden";
             const bgColorPicker = document.createElement("input");
+            bgColorPicker.setAttribute("data-action","bgColor");
             bgColorPicker.value = '#f7f7f7'
             bgColorPicker.type = "color";
             bgColorPicker.id = "bgColorPicker";

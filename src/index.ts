@@ -14,7 +14,7 @@ import EventEmitter from "./utils/events";
 import { strings } from "./constants/strings";
 
 
-export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string,bgColor?: string}
+export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string;bgColor?:string; }
 
 class TextIgniter {
     document: TextDocument;
@@ -889,6 +889,25 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
           if (ending > start) {
             this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
           }
+        
+          // Insert entry in undo stack
+          if (e.isTrusted) {
+            const _redoStackIds = this.document.redoStack.filter(obj => obj.id === "")
+            if (_redoStackIds.length === 0) {
+                this.document.undoStack.push({
+                    id: Date.now().toString(),
+                    start: 0,
+                    end: 0 ,
+                    action: 'enter',
+                    previousValue:"",
+                    newValue:'enter'
+                });
+
+                // Clear redo stack
+                this.document.redoStack = [];
+            }
+        }
+
         } else if (e.key === 'Backspace') {
           e.preventDefault();
           if (this.imageHandler.isImageHighlighted) {
@@ -936,7 +955,7 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
           if (end > start) {
             this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
           }
-          this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset);
+          this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset,"","",!e.isTrusted || false);
           this.setCursorPosition(start + 1);
         } else if (e.key === "Delete") {
           e.preventDefault();
@@ -1078,7 +1097,6 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
                     this.manualOverride = false;
                     this.lastPiece = piece;
                 }
-
                 if (!this.manualOverride) {
                     this.currentAttributes = {
                         bold: piece.attributes.bold,
@@ -1086,9 +1104,9 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
                         underline: piece.attributes.underline,
                         hyperlink: piece.attributes.hyperlink || false,
                         fontFamily: piece.attributes.fontFamily,
-                        fontColor: piece.attributes.fontColor,
-                        bgColor: piece.attributes.bgColor,
-                        fontSize:  piece.attributes.fontSize,
+                        fontSize: piece.attributes.fontSize,
+                        fontColor:piece.attributes.fontColor,
+                        bgColor:piece.attributes.bgColor,
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
                 }
