@@ -466,7 +466,34 @@ class TextDocument extends EventEmitter {
         this.emit('documentChanged', this);
     }
 
-    toggleOrderedList(dataId: string | null): void {
+    toggleOrderedList(dataId: string | null, id: string = ""): void {
+        const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+        if (index === -1) return;
+        const block = this.blocks[index];
+        const previousValue = block.listType;
+        const start = 0;
+        const end = 0;
+        // Toggle: if already ordered, turn it off; otherwise, turn it on
+        if (block.listType === 'ol' || block.listType === 'li') {
+            block.listType = null;
+            block.listStart = undefined;
+            block.parentId = undefined;
+        } else {
+            block.listType = 'ol';
+            block.listStart = 1;
+            // Mark the block as the start (parent) of its list group
+            block.parentId = block.dataId;
+        }
+        const newValue = block.listType;
+        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        if (_redoStackIds.length === 0) {
+            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType-ol', previousValue, newValue, dataId });
+            this.redoStack = [];
+        }
+        this.emit('documentChanged', this);
+    }
+
+    toggleOrderedList1(dataId: string | null, id: string = ""): void {
         const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
         if (index === -1) return;
         const block = this.blocks[index];
@@ -484,7 +511,7 @@ class TextDocument extends EventEmitter {
         this.emit('documentChanged', this);
     }
 
-   
+
 
     toggleUnorderedList(dataId: string | null, id: string = ''): void {
         const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
@@ -642,6 +669,10 @@ class TextDocument extends EventEmitter {
                 if (action.dataId !== undefined)
                     this.toggleUnorderedList(action.dataId, action.id)
                 break;
+            case 'listType-ol':
+                if (action.dataId !== undefined)
+                    this.toggleOrderedList(action.dataId, action.id)
+                break;
             case 'insert':
                 console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
                 this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
@@ -682,6 +713,11 @@ class TextDocument extends EventEmitter {
             case 'listType':
                 if (action.dataId !== undefined)
                     this.toggleUnorderedList1(action.dataId, action.id)
+                break;
+            case 'listType-ol':
+                if (action.dataId !== undefined)
+                    this.toggleOrderedList1(action.dataId, action.id)
+                break;
                 break;
             case 'insert':
 
