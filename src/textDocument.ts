@@ -49,7 +49,62 @@ class TextDocument extends EventEmitter {
         return this.pieces.map(p => p.text).join("");
     }
 
-    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean, hyperlink?: boolean | string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = ''): void {
+    triggerBackspaceEvents(target:any) {
+        const options = {
+          key: "Backspace",
+          keyCode: 8,
+          code: "Backspace",
+          which: 8,
+          bubbles: true,
+          cancelable: true,
+        };
+      
+        ["keydown", "keypress", "keyup"].forEach(eventType => {
+          const event = new KeyboardEvent(eventType, options);
+          target.dispatchEvent(event);
+        });
+      }
+
+      triggerKeyPress(target:any, key:any) {
+        const keyCode = key.toUpperCase().charCodeAt(0);
+        const options = {
+          key: key,
+          keyCode: keyCode,
+          code: 'Key' + key.toUpperCase(),
+          which: keyCode,
+          bubbles: true,
+          cancelable: true
+        };
+      
+        ['keydown', 'keypress', 'keyup'].forEach(type => {
+          const event = new KeyboardEvent(type, options);
+          target.dispatchEvent(event);
+        });
+      }
+
+      simulateEnterPress(target:any) {
+        const events = ["keydown", "keypress", "keyup"];
+        events.forEach(type => {
+          let event;
+          try {
+            event = new KeyboardEvent(type, {
+              key: "Enter",
+              code: "Enter",
+              keyCode: 13,
+              which: 13,
+              bubbles: true,
+              cancelable: true,
+              view: window
+            });
+          } catch (e) {
+            event = document.createEvent("KeyboardEvent");
+            event.initKeyboardEvent(type, true, true, window, "Enter", 0, false, false, false);
+          }
+          target.dispatchEvent(event);
+        });
+      }
+
+    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean, hyperlink?: boolean | string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = '',isSynthetic=false): void {
         let offset = 0;
         let newPieces: Piece[] = [];
         let inserted = false;
@@ -98,7 +153,7 @@ class TextDocument extends EventEmitter {
         //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
         // }
         // Push to undo stack
-        if (actionType !== 'redo') {
+        if (actionType !== 'redo' && !isSynthetic) {
             const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
             if (_redoStackIds.length === 0) {
                 this.undoStack.push({
@@ -115,9 +170,9 @@ class TextDocument extends EventEmitter {
             }
         }
         this.emit('documentChanged', this);
-        const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
-        ele.focus();
-        this.setCursorPositionUsingOffset(ele, offset);
+        // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
+        // ele.focus();
+        // this.setCursorPositionUsingOffset(ele, offset);
     }
 
     setCursorPositionUsingOffset(element: HTMLElement, offset: number): void {
@@ -230,7 +285,7 @@ class TextDocument extends EventEmitter {
         this.emit('documentChanged', this);
         // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
         // ele.focus();
-        // this.setCursorPositionUsingOffset(ele, offset);
+        // this.setCursorPosition(offset,dataId || "");
 
     }
 
@@ -466,52 +521,98 @@ class TextDocument extends EventEmitter {
         this.emit('documentChanged', this);
     }
 
-    toggleOrderedList(dataId: string | null): void {
-    const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-    if (index === -1) return;
-    const block = this.blocks[index];
-    // Toggle: if already ordered, turn it off; otherwise, turn it on
-    if (block.listType === 'ol' || block.listType === 'li') {
-      block.listType = null;
-      block.listStart = undefined;
-      block.parentId = undefined;
-    } else {
-      block.listType = 'ol';
-      block.listStart = 1;
-      // Mark the block as the start (parent) of its list group
-      block.parentId = block.dataId;
-    }
-    this.emit('documentChanged', this);
-  }
-  
-  toggleUnorderedList(dataId: string | null): void {
-    const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-    if (index === -1) return;
-    const block = this.blocks[index];
-    block.listType = block.listType === 'ul' ? null : 'ul';
-    this.emit('documentChanged', this);
-  }
-  
-  updateOrderedListNumbers(): void {
-    let currentNumber = 1;
-    let currentParentId: string | null = null;
-    for (let i = 0; i < this.blocks.length; i++) {
-      const block = this.blocks[i];
-      if (block.listType === 'ol' || block.listType === 'li') {
-        // If this block is the start of a new list group, reset the counter.
-        if (block.listType === 'ol' || block.parentId !== currentParentId) {
-          currentNumber = 1;
-          currentParentId = block.listType === 'ol' ? block.dataId : block.parentId;
+    toggleOrderedList(dataId: string | null, id: string = ""): void {
+        const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+        if (index === -1) return;
+        const block = this.blocks[index];
+        const previousValue = block.listType;
+        const start = 0;
+        const end = 0;
+        // Toggle: if already ordered, turn it off; otherwise, turn it on
+        if (block.listType === 'ol' || block.listType === 'li') {
+            block.listType = null;
+            block.listStart = undefined;
+            block.parentId = undefined;
+        } else {
+            block.listType = 'ol';
+            block.listStart = 1;
+            // Mark the block as the start (parent) of its list group
+            block.parentId = block.dataId;
         }
-        block.listStart = currentNumber;
-        currentNumber++;
-      } else {
-        currentNumber = 1;
-        currentParentId = null;
-      }
+        const newValue = block.listType;
+        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        if (_redoStackIds.length === 0) {
+            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType-ol', previousValue, newValue, dataId });
+            this.redoStack = [];
+        }
+        this.emit('documentChanged', this);
     }
-    this.emit('documentChanged', this);
-  }
+
+    toggleOrderedList1(dataId: string | null, id: string = ""): void {
+        const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+        if (index === -1) return;
+        const block = this.blocks[index];
+        // Toggle: if already ordered, turn it off; otherwise, turn it on
+        if (block.listType === 'ol' || block.listType === 'li') {
+            block.listType = null;
+            block.listStart = undefined;
+            block.parentId = undefined;
+        } else {
+            block.listType = 'ol';
+            block.listStart = 1;
+            // Mark the block as the start (parent) of its list group
+            block.parentId = block.dataId;
+        }
+        this.emit('documentChanged', this);
+    }
+
+
+
+    toggleUnorderedList(dataId: string | null, id: string = ''): void {
+        const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+        if (index === -1) return;
+        const block = this.blocks[index];
+        const previousValue = block.listType;
+        const start = 0;
+        const end = 0;
+        block.listType = block.listType === 'ul' ? null : 'ul';
+        const newValue = block.listType;
+        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        if (_redoStackIds.length === 0) {
+            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType', previousValue, newValue, dataId });
+            this.redoStack = [];
+        }
+        this.emit('documentChanged', this);
+    }
+
+    toggleUnorderedList1(dataId: string | null, id: string = ''): void {
+        const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+        if (index === -1) return;
+        const block = this.blocks[index];
+        block.listType = block.listType === 'ul' ? null : 'ul';
+        this.emit('documentChanged', this);
+    }
+
+    updateOrderedListNumbers(): void {
+        let currentNumber = 1;
+        let currentParentId: string | null = null;
+        for (let i = 0; i < this.blocks.length; i++) {
+            const block = this.blocks[i];
+            if (block.listType === 'ol' || block.listType === 'li') {
+                // If this block is the start of a new list group, reset the counter.
+                if (block.listType === 'ol' || block.parentId !== currentParentId) {
+                    currentNumber = 1;
+                    currentParentId = block.listType === 'ol' ? block.dataId : block.parentId;
+                }
+                block.listStart = currentNumber;
+                currentNumber++;
+            } else {
+                currentNumber = 1;
+                currentParentId = null;
+            }
+        }
+        this.emit('documentChanged', this);
+    }
 
     getRangeText(start: number, end: number): string {
         let rangeText = '';
@@ -619,13 +720,24 @@ class TextDocument extends EventEmitter {
                 if (action.dataId !== undefined)
                     this.setAlignment(action.previousValue, action.dataId, action.id)
                 break;
+            case 'listType':
+                if (action.dataId !== undefined)
+                    this.toggleUnorderedList(action.dataId, action.id)
+                break;
+            case 'listType-ol':
+                if (action.dataId !== undefined)
+                    this.toggleOrderedList(action.dataId, action.id)
+                break;
             // case 'listType':
             //     if (action.dataId !== undefined)
             //         this.toggleUnorderedList(action.dataId, action.id)
             //     break;
+            case 'enter':
+              this.triggerBackspaceEvents(document.activeElement);
             case 'insert':
-                console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
-                this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
+              this.triggerBackspaceEvents(document.activeElement);
+                // console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
+                // this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
 
                 break;
             // Add cases for other actions like italic, underline, insert, delete
@@ -660,13 +772,25 @@ class TextDocument extends EventEmitter {
                 if (action.dataId !== undefined)
                     this.setAlignment1(action.newValue, action.dataId, action.id);
                 break;
+            case 'listType':
+                if (action.dataId !== undefined)
+                    this.toggleUnorderedList1(action.dataId, action.id)
+                break;
+            case 'listType-ol':
+                if (action.dataId !== undefined)
+                    this.toggleOrderedList1(action.dataId, action.id)
+                break;
+                break;
             // case 'listType':
             //     if (action.dataId !== undefined)
             //         this.toggleUnorderedList1(action.dataId, action.id)
             //     break;
+            case 'enter':
+                this.simulateEnterPress(document.activeElement);
             case 'insert':
-
-                this.insertAt(action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo');
+            this.triggerKeyPress(document.activeElement, action.newValue);
+                // console.log(`action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo'`, action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo')
+                // this.insertAt(action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo');
                 // this.setCursorPosition(action.start, action.end, action.id)
                 break;
             // Add cases for other actions
