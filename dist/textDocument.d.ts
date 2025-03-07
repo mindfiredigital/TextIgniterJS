@@ -29,12 +29,15 @@ declare class TextDocument extends EventEmitter {
     currentOffset: number;
     constructor();
     getPlainText(): string;
+    triggerBackspaceEvents(target: any): void;
+    triggerKeyPress(target: any, key: any): void;
+    simulateEnterPress(target: any): void;
     insertAt(text: string, attributes: {
         bold?: boolean;
         italic?: boolean;
         underline?: boolean;
         hyperlink?: boolean | string;
-    }, position: number, dataId?: string | null, currentOffset?: number, id?: string, actionType?: string): void;
+    }, position: number, dataId?: string | null, currentOffset?: number, id?: string, actionType?: string, isSynthetic?: boolean): void;
     setCursorPositionUsingOffset(element: HTMLElement, offset: number): void;
     deleteRange(start: number, end: number, dataId?: string | null, currentOffset?: number): void;
     deleteBlocks(): void;
@@ -45,8 +48,11 @@ declare class TextDocument extends EventEmitter {
     private getDataIdFromNode;
     getCursorOffset(container: HTMLElement): number;
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'], value: string | boolean): void;
-    toggleOrderedList(dataId: string | null, listStart?: number): void;
-    toggleUnorderedList(dataId: string | null): void;
+    toggleOrderedList(dataId: string | null, id?: string): void;
+    toggleOrderedList1(dataId: string | null, id?: string): void;
+    toggleUnorderedList(dataId: string | null, id?: string): void;
+    toggleUnorderedList1(dataId: string | null, id?: string): void;
+    updateOrderedListNumbers(): void;
     getRangeText(start: number, end: number): string;
     getRangeTextPiece(start: number, end: number): {
         rangeText: string;
