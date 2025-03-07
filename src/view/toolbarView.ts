@@ -31,7 +31,7 @@ class ToolbarView extends EventEmitter {
     updateActiveStates(attributes: CurrentAttributeDTO): void {
         this.container.querySelectorAll('button').forEach(btn => {
             const action = btn.getAttribute('data-action');
-
+        
             let isActive = false;
             if (action === 'bold' && attributes.bold) isActive = true;
             if (action === 'italic' && attributes.italic) isActive = true;
@@ -46,6 +46,23 @@ class ToolbarView extends EventEmitter {
             if(action === 'fontFamily' && attributes.fontFamily) select.value = attributes.fontFamily;
             if(action === 'fontSize' && attributes.fontSize) select.value = attributes.fontSize;
         });
+
+        if (attributes.fontColor){
+            const fontColorPicker = document.getElementById('fontColorPicker') as HTMLInputElement;
+            if (fontColorPicker) {
+                fontColorPicker.value = attributes.fontColor;
+                fontColorPicker.dispatchEvent(new Event('input', { bubbles: true }));
+            } 
+        }
+        
+        if (attributes.bgColor){
+            const fontColorPicker = document.getElementById('bgColorPicker') as HTMLInputElement;
+            if (fontColorPicker) {
+                fontColorPicker.value = attributes.bgColor;
+                fontColorPicker.dispatchEvent(new Event('input', { bubbles: true }));
+            } 
+        }
+
     }
 }
 

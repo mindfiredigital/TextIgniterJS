@@ -49,7 +49,62 @@ class TextDocument extends EventEmitter {
         return this.pieces.map(p => p.text).join("");
     }
 
-    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean, hyperlink?: boolean | string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = ''): void {
+    triggerBackspaceEvents(target:any) {
+        const options = {
+          key: "Backspace",
+          keyCode: 8,
+          code: "Backspace",
+          which: 8,
+          bubbles: true,
+          cancelable: true,
+        };
+      
+        ["keydown", "keypress", "keyup"].forEach(eventType => {
+          const event = new KeyboardEvent(eventType, options);
+          target.dispatchEvent(event);
+        });
+      }
+
+      triggerKeyPress(target:any, key:any) {
+        const keyCode = key.toUpperCase().charCodeAt(0);
+        const options = {
+          key: key,
+          keyCode: keyCode,
+          code: 'Key' + key.toUpperCase(),
+          which: keyCode,
+          bubbles: true,
+          cancelable: true
+        };
+      
+        ['keydown', 'keypress', 'keyup'].forEach(type => {
+          const event = new KeyboardEvent(type, options);
+          target.dispatchEvent(event);
+        });
+      }
+
+      simulateEnterPress(target:any) {
+        const events = ["keydown", "keypress", "keyup"];
+        events.forEach(type => {
+          let event;
+          try {
+            event = new KeyboardEvent(type, {
+              key: "Enter",
+              code: "Enter",
+              keyCode: 13,
+              which: 13,
+              bubbles: true,
+              cancelable: true,
+              view: window
+            });
+          } catch (e) {
+            event = document.createEvent("KeyboardEvent");
+            event.initKeyboardEvent(type, true, true, window, "Enter", 0, false, false, false);
+          }
+          target.dispatchEvent(event);
+        });
+      }
+
+    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean, hyperlink?: boolean | string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = '',isSynthetic=false): void {
         let offset = 0;
         let newPieces: Piece[] = [];
         let inserted = false;
@@ -98,7 +153,7 @@ class TextDocument extends EventEmitter {
         //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
         // }
         // Push to undo stack
-        if (actionType !== 'redo') {
+        if (actionType !== 'redo' && !isSynthetic) {
             const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
             if (_redoStackIds.length === 0) {
                 this.undoStack.push({
@@ -115,9 +170,9 @@ class TextDocument extends EventEmitter {
             }
         }
         this.emit('documentChanged', this);
-        const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
-        ele.focus();
-        this.setCursorPositionUsingOffset(ele, offset);
+        // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
+        // ele.focus();
+        // this.setCursorPositionUsingOffset(ele, offset);
     }
 
     setCursorPositionUsingOffset(element: HTMLElement, offset: number): void {
@@ -230,7 +285,7 @@ class TextDocument extends EventEmitter {
         this.emit('documentChanged', this);
         // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
         // ele.focus();
-        // this.setCursorPositionUsingOffset(ele, offset);
+        // this.setCursorPosition(offset,dataId || "");
 
     }
 
@@ -673,9 +728,16 @@ class TextDocument extends EventEmitter {
                 if (action.dataId !== undefined)
                     this.toggleOrderedList(action.dataId, action.id)
                 break;
+            // case 'listType':
+            //     if (action.dataId !== undefined)
+            //         this.toggleUnorderedList(action.dataId, action.id)
+            //     break;
+            case 'enter':
+              this.triggerBackspaceEvents(document.activeElement);
             case 'insert':
-                console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
-                this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
+              this.triggerBackspaceEvents(document.activeElement);
+                // console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
+                // this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
 
                 break;
             // Add cases for other actions like italic, underline, insert, delete
@@ -719,9 +781,16 @@ class TextDocument extends EventEmitter {
                     this.toggleOrderedList1(action.dataId, action.id)
                 break;
                 break;
+            // case 'listType':
+            //     if (action.dataId !== undefined)
+            //         this.toggleUnorderedList1(action.dataId, action.id)
+            //     break;
+            case 'enter':
+                this.simulateEnterPress(document.activeElement);
             case 'insert':
-
-                this.insertAt(action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo');
+            this.triggerKeyPress(document.activeElement, action.newValue);
+                // console.log(`action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo'`, action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo')
+                // this.insertAt(action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo');
                 // this.setCursorPosition(action.start, action.end, action.id)
                 break;
             // Add cases for other actions
