@@ -48,6 +48,7 @@ class TextIgniter {
         this.imageHandler = new ImageHandler(this.editorContainer, this.document);
         this.editorView.setImageHandler(this.imageHandler);
         this.imageHandler.setEditorView(this.editorView);
+        this.document.setEditorView(this.editorView);
         this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, hyperlink: false };
         this.manualOverride = false;
         this.lastPiece = null;
@@ -955,6 +956,7 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
           if (end > start) {
             this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
           }
+          
           this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset,"","",!e.isTrusted || false);
           this.setCursorPosition(start + 1);
         } else if (e.key === "Delete") {
@@ -1082,6 +1084,7 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
     }
     syncCurrentAttributesWithCursor(): void {
         const [start, end] = this.getSelectionRange();
+        console.log('log1',{start:start, end:end})
         const blockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId);
         if (this.document.blocks[blockIndex]?.type === 'image') {
             this.imageHandler.addStyleToImage(this.document.selectedBlockId || "");
