@@ -12,8 +12,8 @@ class TextDocument extends EventEmitter {
     blocks: any;
     selectAll: boolean = false;
     editorView!: EditorView;
-    undoRedoManager! : UndoRedoManager;
-    
+    undoRedoManager!: UndoRedoManager;
+
     // selectedBlockId: string | null;
     private _selectedBlockId: string | null = null;
     get selectedBlockId(): string | null {
@@ -50,146 +50,146 @@ class TextDocument extends EventEmitter {
         this.currentOffset = 0;
         // this.editorView="";
     }
-    setEditorView(editorView:EditorView):void {
-        this.editorView=editorView;
+    setEditorView(editorView: EditorView): void {
+        this.editorView = editorView;
     }
     getPlainText(): string {
         return this.pieces.map(p => p.text).join("");
     }
 
-    setUndoRedoManager(undoRedoManager:UndoRedoManager):void{
+    setUndoRedoManager(undoRedoManager: UndoRedoManager): void {
         this.undoRedoManager = undoRedoManager;
     }
-    triggerBackspaceEvents(target:any) {
+    triggerBackspaceEvents(target: any) {
         const options = {
-          key: "Backspace",
-          keyCode: 8,
-          code: "Backspace",
-          which: 8,
-          bubbles: true,
-          cancelable: true,
+            key: "Backspace",
+            keyCode: 8,
+            code: "Backspace",
+            which: 8,
+            bubbles: true,
+            cancelable: true,
         };
-      
-        ["keydown", "keypress", "keyup"].forEach(eventType => {
-          const event = new KeyboardEvent(eventType, options);
-          target.dispatchEvent(event);
-        });
-      }
 
-      triggerKeyPress(target:any, key:any) {
+        ["keydown", "keypress", "keyup"].forEach(eventType => {
+            const event = new KeyboardEvent(eventType, options);
+            target.dispatchEvent(event);
+        });
+    }
+
+    triggerKeyPress(target: any, key: any) {
         const keyCode = key.toUpperCase().charCodeAt(0);
         const options = {
-          key: key,
-          keyCode: keyCode,
-          code: 'Key' + key.toUpperCase(),
-          which: keyCode,
-          bubbles: true,
-          cancelable: true
+            key: key,
+            keyCode: keyCode,
+            code: 'Key' + key.toUpperCase(),
+            which: keyCode,
+            bubbles: true,
+            cancelable: true
         };
-      
+
         ['keydown', 'keypress', 'keyup'].forEach(type => {
-          const event = new KeyboardEvent(type, options);
-          target.dispatchEvent(event);
+            const event = new KeyboardEvent(type, options);
+            target.dispatchEvent(event);
         });
-      }
+    }
 
-      simulateEnterPress(target:any) {
-        const events = ["keydown", "keypress", "keyup"];
-        events.forEach(type => {
-          let event;
-          try {
-            event = new KeyboardEvent(type, {
-              key: "Enter",
-              code: "Enter",
-              keyCode: 13,
-              which: 13,
-              bubbles: true,
-              cancelable: true,
-              view: window
-            });
-          } catch (e) {
-            event = document.createEvent("KeyboardEvent");
-            event.initKeyboardEvent(type, true, true, window, "Enter", 0, false, false, false);
-          }
-          target.dispatchEvent(event);
-        });
-      }
+    //   simulateEnterPress(target:any) {
+    //     const events = ["keydown", "keypress", "keyup"];
+    //     events.forEach(type => {
+    //       let event;
+    //       try {
+    //         event = new KeyboardEvent(type, {
+    //           key: "Enter",
+    //           code: "Enter",
+    //           keyCode: 13,
+    //           which: 13,
+    //           bubbles: true,
+    //           cancelable: true,
+    //           view: window
+    //         });
+    //       } catch (e) {
+    //         event = document.createEvent("KeyboardEvent");
+    //         event.initKeyboardEvent(type, true, true, window, "Enter", 0, false, false, false);
+    //       }
+    //       target.dispatchEvent(event);
+    //     });
+    //   }
 
-        insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean, hyperlink?: boolean | string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = '',isSynthetic=false): void {
-            if (!isSynthetic) {
-                this.undoRedoManager.saveUndoSnapshot();
-            }
-            console.log('inserted,',{start:position,text});
-            let offset = 0;
-            let newPieces: Piece[] = [];
-            let inserted = false;
-            let index = 0;
-            if (dataId) {
-                index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-                // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-                offset = this.currentOffset;
-            }
-            const previousValue = this.getRangeText(position, position);
-
-            // for (let piece of this.pieces) {
-            for (let piece of this.blocks[index].pieces) {
-                const pieceEnd = offset + piece.text.length;
-                if (!inserted && position <= pieceEnd) {
-                    const relPos = position - offset;
-                    if (relPos > 0) {
-                        newPieces.push(new Piece(piece.text.slice(0, relPos), { ...piece.attributes }));
-                    }
-                    newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }));
-                    if (relPos < piece.text.length) {
-                        newPieces.push(new Piece(piece.text.slice(relPos), { ...piece.attributes }));
-                    }
-                    inserted = true;
-                } else {
-                    newPieces.push(piece.clone());
-                }
-                offset = pieceEnd;
-            }
-
-            if (!inserted) {
-                const lastPiece = newPieces[newPieces.length - 1];
-                if (lastPiece && lastPiece.hasSameAttributes(new Piece("", { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }))) {
-                    lastPiece.text += text;
-                } else {
-                    newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }));
-                }
-            }
-
-            const _data = this.mergePieces(newPieces)
-            // this.pieces = _data;
-
-            this.blocks[index].pieces = _data
-            const newValue = this.getRangeText(position, position + text.length);
-            console.log({position});
-            // if (dataId !== '' || dataId !== null) {
-            //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-            // }
-            // Push to undo stack
-            if (actionType !== 'redo' && !isSynthetic) {
-                const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-                if (_redoStackIds.length === 0) {
-                    this.undoStack.push({
-                        id: Date.now().toString(),
-                        start: position,
-                        end: position + text.length,
-                        action: 'insert',
-                        previousValue,
-                        newValue
-                    });
-
-                    // Clear redo stack
-                    this.redoStack = [];
-                }
-            }
-            this.emit('documentChanged', this);
-            // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
-            // ele.focus();
-            // this.setCursorPositionUsingOffset(ele, offset);
+    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean, hyperlink?: boolean | string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = '', isSynthetic = false): void {
+        if (!isSynthetic) {
+            this.undoRedoManager.saveUndoSnapshot();
         }
+        console.log('inserted,', { start: position, text });
+        let offset = 0;
+        let newPieces: Piece[] = [];
+        let inserted = false;
+        let index = 0;
+        if (dataId) {
+            index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+            // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+            offset = this.currentOffset;
+        }
+        const previousValue = this.getRangeText(position, position);
+
+        // for (let piece of this.pieces) {
+        for (let piece of this.blocks[index].pieces) {
+            const pieceEnd = offset + piece.text.length;
+            if (!inserted && position <= pieceEnd) {
+                const relPos = position - offset;
+                if (relPos > 0) {
+                    newPieces.push(new Piece(piece.text.slice(0, relPos), { ...piece.attributes }));
+                }
+                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }));
+                if (relPos < piece.text.length) {
+                    newPieces.push(new Piece(piece.text.slice(relPos), { ...piece.attributes }));
+                }
+                inserted = true;
+            } else {
+                newPieces.push(piece.clone());
+            }
+            offset = pieceEnd;
+        }
+
+        if (!inserted) {
+            const lastPiece = newPieces[newPieces.length - 1];
+            if (lastPiece && lastPiece.hasSameAttributes(new Piece("", { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }))) {
+                lastPiece.text += text;
+            } else {
+                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }));
+            }
+        }
+
+        const _data = this.mergePieces(newPieces)
+        // this.pieces = _data;
+
+        this.blocks[index].pieces = _data
+        const newValue = this.getRangeText(position, position + text.length);
+        console.log({ position });
+        // if (dataId !== '' || dataId !== null) {
+        //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+        // }
+        // Push to undo stack
+        if (actionType !== 'redo' && !isSynthetic) {
+            const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+            if (_redoStackIds.length === 0) {
+                this.undoStack.push({
+                    id: Date.now().toString(),
+                    start: position,
+                    end: position + text.length,
+                    action: 'insert',
+                    previousValue,
+                    newValue
+                });
+
+                // Clear redo stack
+                this.redoStack = [];
+            }
+        }
+        this.emit('documentChanged', this);
+        // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
+        // ele.focus();
+        // this.setCursorPositionUsingOffset(ele, offset);
+    }
 
     public setCursorPositionUsingOffset(element: HTMLElement, offset: number): void {
         element.focus(); // Ensure the element is focusable and focused
@@ -231,7 +231,7 @@ class TextDocument extends EventEmitter {
     }
 
     deleteRange(start: number, end: number, dataId: string | null = "", currentOffset: number = 0): void {
-        console.log('deleted2,',{start,end});
+        console.log('deleted2,', { start, end });
         if (start === end) return;
         let newPieces: Piece[] = [];
         let offset = 0;
@@ -541,9 +541,9 @@ class TextDocument extends EventEmitter {
         const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
         if (index === -1) return;
         const block = this.blocks[index];
-        const previousValue = block.listType;
-        const start = 0;
-        const end = 0;
+        // const previousValue = block.listType;
+        // const start = 0;
+        // const end = 0;
         // Toggle: if already ordered, turn it off; otherwise, turn it on
         if (block.listType === 'ol' || block.listType === 'li') {
             block.listType = null;
@@ -555,32 +555,32 @@ class TextDocument extends EventEmitter {
             // Mark the block as the start (parent) of its list group
             block.parentId = block.dataId;
         }
-        const newValue = block.listType;
-        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        if (_redoStackIds.length === 0) {
-            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType-ol', previousValue, newValue, dataId });
-            this.redoStack = [];
-        }
+        // const newValue = block.listType;
+        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        // if (_redoStackIds.length === 0) {
+        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType-ol', previousValue, newValue, dataId });
+        //     this.redoStack = [];
+        // }
         this.emit('documentChanged', this);
     }
 
-    toggleOrderedList1(dataId: string | null, id: string = ""): void {
-        const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-        if (index === -1) return;
-        const block = this.blocks[index];
-        // Toggle: if already ordered, turn it off; otherwise, turn it on
-        if (block.listType === 'ol' || block.listType === 'li') {
-            block.listType = null;
-            block.listStart = undefined;
-            block.parentId = undefined;
-        } else {
-            block.listType = 'ol';
-            block.listStart = 1;
-            // Mark the block as the start (parent) of its list group
-            block.parentId = block.dataId;
-        }
-        this.emit('documentChanged', this);
-    }
+    // toggleOrderedList1(dataId: string | null, id: string = ""): void {
+    //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+    //     if (index === -1) return;
+    //     const block = this.blocks[index];
+    //     // Toggle: if already ordered, turn it off; otherwise, turn it on
+    //     if (block.listType === 'ol' || block.listType === 'li') {
+    //         block.listType = null;
+    //         block.listStart = undefined;
+    //         block.parentId = undefined;
+    //     } else {
+    //         block.listType = 'ol';
+    //         block.listStart = 1;
+    //         // Mark the block as the start (parent) of its list group
+    //         block.parentId = block.dataId;
+    //     }
+    //     this.emit('documentChanged', this);
+    // }
 
 
 
@@ -588,26 +588,26 @@ class TextDocument extends EventEmitter {
         const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
         if (index === -1) return;
         const block = this.blocks[index];
-        const previousValue = block.listType;
-        const start = 0;
-        const end = 0;
+        // const previousValue = block.listType;
+        // const start = 0;
+        // const end = 0;
         block.listType = block.listType === 'ul' ? null : 'ul';
-        const newValue = block.listType;
-        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        if (_redoStackIds.length === 0) {
-            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType', previousValue, newValue, dataId });
-            this.redoStack = [];
-        }
+        // const newValue = block.listType;
+        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        // if (_redoStackIds.length === 0) {
+        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType', previousValue, newValue, dataId });
+        //     this.redoStack = [];
+        // }
         this.emit('documentChanged', this);
     }
 
-    toggleUnorderedList1(dataId: string | null, id: string = ''): void {
-        const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-        if (index === -1) return;
-        const block = this.blocks[index];
-        block.listType = block.listType === 'ul' ? null : 'ul';
-        this.emit('documentChanged', this);
-    }
+    // toggleUnorderedList1(dataId: string | null, id: string = ''): void {
+    //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+    //     if (index === -1) return;
+    //     const block = this.blocks[index];
+    //     block.listType = block.listType === 'ul' ? null : 'ul';
+    //     this.emit('documentChanged', this);
+    // }
 
     updateOrderedListNumbers(): void {
         let currentNumber = 1;
@@ -659,36 +659,36 @@ class TextDocument extends EventEmitter {
         return rangeText;
     }
 
-    getRangeTextPiece(start: number, end: number): { rangeText: string, piece: any } {
-        let rangeText = '';
-        let currentOffset = 0;
-        let _piece = {};
-        for (const block of this.blocks) {
-            for (const piece of block.pieces) {
-                const pieceLength = piece.text.length;
+    // getRangeTextPiece(start: number, end: number): { rangeText: string, piece: any } {
+    //     let rangeText = '';
+    //     let currentOffset = 0;
+    //     let _piece = {};
+    //     for (const block of this.blocks) {
+    //         for (const piece of block.pieces) {
+    //             const pieceLength = piece.text.length;
 
-                if (currentOffset + pieceLength >= start && currentOffset < end) {
-                    console.log(piece, "piece getRangeText")
-                    _piece = piece;
-                    const rangeStart = Math.max(0, start - currentOffset);
-                    const rangeEnd = Math.min(pieceLength, end - currentOffset);
-                    rangeText += piece.text.substring(rangeStart, rangeEnd);
-                }
+    //             if (currentOffset + pieceLength >= start && currentOffset < end) {
+    //                 console.log(piece, "piece getRangeText")
+    //                 _piece = piece;
+    //                 const rangeStart = Math.max(0, start - currentOffset);
+    //                 const rangeEnd = Math.min(pieceLength, end - currentOffset);
+    //                 rangeText += piece.text.substring(rangeStart, rangeEnd);
+    //             }
 
-                currentOffset += pieceLength;
+    //             currentOffset += pieceLength;
 
-                if (currentOffset >= end) {
-                    break;
-                }
-            }
+    //             if (currentOffset >= end) {
+    //                 break;
+    //             }
+    //         }
 
-            if (currentOffset >= end) {
-                break;
-            }
-        }
+    //         if (currentOffset >= end) {
+    //             break;
+    //         }
+    //     }
 
-        return { rangeText: rangeText, piece: _piece };
-    }
+    //     return { rangeText: rangeText, piece: _piece };
+    // }
 
     undo(): void {
         console.log('undo')
@@ -759,52 +759,52 @@ class TextDocument extends EventEmitter {
     //     sel.addRange(range);
     // }
 
-    setNewCursorPosition(position: number): void {
-        this.editorView.container.focus();
-    
-        const sel = window.getSelection();
-        if (!sel) return;
-    
-        const range = document.createRange();
-        let charIndex = 0;
-        const nodeStack: Node[] = [this.editorView.container];
-        let node: Node | undefined;
-    
-        const totalLength = this.editorView.container.textContent?.length || 0;
-        if (position < 0 || position > totalLength) return;
-    
-        while ((node = nodeStack.pop())) {
-            if (node.nodeType === 3) { // Text node
-                const textNode = node as Text;
-                const nextCharIndex = charIndex + textNode.length;
-                if (position >= charIndex && position <= nextCharIndex) {
-                    range.setStart(textNode, Math.min(position - charIndex, textNode.length));
-                    range.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                    return;
-                }
-                charIndex = nextCharIndex;
-            } else if ((node as HTMLElement).tagName === 'BR' || (node as HTMLElement).tagName === 'DIV') {
-                if (position === charIndex) {
-                    range.setStartBefore(node);
-                    range.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                    return;
-                }
-                charIndex++;
-            } else {
-                const el = node as HTMLElement;
-                for (let i = el.childNodes.length - 1; i >= 0; i--) {
-                    nodeStack.push(el.childNodes[i]);
-                }
-            }
-        }
-    }
-    
+    // setNewCursorPosition(position: number): void {
+    //     this.editorView.container.focus();
 
-    
+    //     const sel = window.getSelection();
+    //     if (!sel) return;
+
+    //     const range = document.createRange();
+    //     let charIndex = 0;
+    //     const nodeStack: Node[] = [this.editorView.container];
+    //     let node: Node | undefined;
+
+    //     const totalLength = this.editorView.container.textContent?.length || 0;
+    //     if (position < 0 || position > totalLength) return;
+
+    //     while ((node = nodeStack.pop())) {
+    //         if (node.nodeType === 3) { // Text node
+    //             const textNode = node as Text;
+    //             const nextCharIndex = charIndex + textNode.length;
+    //             if (position >= charIndex && position <= nextCharIndex) {
+    //                 range.setStart(textNode, Math.min(position - charIndex, textNode.length));
+    //                 range.collapse(true);
+    //                 sel.removeAllRanges();
+    //                 sel.addRange(range);
+    //                 return;
+    //             }
+    //             charIndex = nextCharIndex;
+    //         } else if ((node as HTMLElement).tagName === 'BR' || (node as HTMLElement).tagName === 'DIV') {
+    //             if (position === charIndex) {
+    //                 range.setStartBefore(node);
+    //                 range.collapse(true);
+    //                 sel.removeAllRanges();
+    //                 sel.addRange(range);
+    //                 return;
+    //             }
+    //             charIndex++;
+    //         } else {
+    //             const el = node as HTMLElement;
+    //             for (let i = el.childNodes.length - 1; i >= 0; i--) {
+    //                 nodeStack.push(el.childNodes[i]);
+    //             }
+    //         }
+    //     }
+    // }
+
+
+
     setCursorPosition(position: number, dataId: string | null = ''): void {
         if (dataId !== '') {
             const divDataid = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
@@ -817,18 +817,18 @@ class TextDocument extends EventEmitter {
         } else {
             this.editorView.container.focus();
         }
-    
+
         const sel = window.getSelection();
         if (!sel) return;
-    
+
         const range = document.createRange();
         let charIndex = 0;
         const nodeStack: Node[] = [this.editorView.container];
         let node: Node | undefined;
-    
+
         const totalLength = this.editorView.container.textContent?.length || 0;
         if (position < 0 || position > totalLength) return;
-    
+
         while ((node = nodeStack.pop())) {
             if (node.nodeType === 3) { // Text node
                 const textNode = node as Text;
@@ -854,14 +854,14 @@ class TextDocument extends EventEmitter {
                 }
             }
         }
-    
+
         sel.removeAllRanges();
         sel.addRange(range);
     }
-    
-    
 
-    private revertAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
+
+
+    /*private revertAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
         const noOfBlocks = this.blocks.length;
         switch (action.action) {
             case 'bold':
@@ -988,83 +988,84 @@ class TextDocument extends EventEmitter {
             // Add cases for other actions like italic, underline, insert, delete
             // ...
         }
-    }
+    }*/
 
-    
 
-    private applyAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
-        const noOfBlocks = this.blocks.length;
-        switch (action.action) {
-            case 'bold':
-                this.toggleBoldRange1(action.start, action.end, action.id); // Reapply bold toggle
-                break;
-            case 'italic':
-                this.toggleItalicRange1(action.start, action.end, action.id);
-                break;
-            case 'underline':
-                this.toggleUnderlineRange1(action.start, action.end, action.id);
-                break;
-            case 'fontFamily':
-                this.setFontFamily1(action.start, action.end, action.newValue, action.id)
-                break;
-            case 'fontSize':
-                this.setFontSize1(action.start, action.end, action.newValue, action.id)
-                break;
-            case 'fontColor':
-                this.applyFontColor1(action.start, action.end, action.newValue, action.id)
-                break;
-            case 'bgColor':
-                this.applyBgColor1(action.start, action.end, action.newValue, action.id)
-                break;
-            case 'alignment':
-                if (action.dataId !== undefined)
-                    this.setAlignment1(action.newValue, action.dataId, action.id);
-                break;
-            case 'listType':
-                if (action.dataId !== undefined)
-                    this.toggleUnorderedList1(action.dataId, action.id)
-                break;
-            case 'listType-ol':
-                if (action.dataId !== undefined)
-                    this.toggleOrderedList1(action.dataId, action.id)
-                break;
-                break;
-            // case 'listType':
-            //     if (action.dataId !== undefined)
-            //         this.toggleUnorderedList1(action.dataId, action.id)
-            //     break;
-            case 'enter':
-                console.log('jagdish....03',{id:this.selectedBlockId,offset:this.currentOffset,action:action.start,end:action.end})
-                
-                this.simulateEnterPress(document.activeElement);
-                this.setNewCursorPosition(action.start+1);
-            case 'insert':
-                console.log('jagdish....0',{id:this.selectedBlockId,offset:this.currentOffset,action:action.start,end:action.end})
-              
-                // this.triggerKeyPress(document.activeElement, action.newValue);
-                // this.setNewCursorPosition(action.start+1);
-                // console.log(`action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo'`, action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo')
-                this.insertAt(action.newValue || '', {}, action.start === 1 ? 2 : action.start , this.selectedBlockId, this.currentOffset, action.id, 'redo');
-                this.setCursorPosition(action.start +1,action.dataId)
-                break;
-            // Add cases for other actions
-            // ...
-        }
-    }
 
-    toggleBoldRange1(start: number, end: number, id = ""): void {
-        const allBold = this.isRangeEntirelyAttribute(start, end, 'bold');
-        this.formatAttribute(start, end, 'bold', !allBold);
-    }
-    toggleItalicRange1(start: number, end: number, id = ""): void {
-        const allItalic = this.isRangeEntirelyAttribute(start, end, 'italic');
-        this.formatAttribute(start, end, 'italic', !allItalic);
-    }
+    /* private applyAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
+         const noOfBlocks = this.blocks.length;
+         switch (action.action) {
+             // case 'bold':
+             //     this.toggleBoldRange1(action.start, action.end, action.id); // Reapply bold toggle
+             //     break;
+             // case 'italic':
+             //     this.toggleItalicRange1(action.start, action.end, action.id);
+             //     break;
+             // case 'underline':
+             //     this.toggleUnderlineRange1(action.start, action.end, action.id);
+             //     break;
+             // case 'fontFamily':
+             //     this.setFontFamily1(action.start, action.end, action.newValue, action.id)
+             //     break;
+             // case 'fontSize':
+             //     this.setFontSize1(action.start, action.end, action.newValue, action.id)
+             //     break;
+             // case 'fontColor':
+             //     this.applyFontColor1(action.start, action.end, action.newValue, action.id)
+             //     break;
+             // case 'bgColor':
+             //     this.applyBgColor1(action.start, action.end, action.newValue, action.id)
+             //     break;
+             // case 'alignment':
+             //     if (action.dataId !== undefined)
+             //         this.setAlignment1(action.newValue, action.dataId, action.id);
+             //     break;
+             // case 'listType':
+             //     if (action.dataId !== undefined)
+             //         this.toggleUnorderedList1(action.dataId, action.id)
+             //     break;
+             // case 'listType-ol':
+             //     if (action.dataId !== undefined)
+             //         this.toggleOrderedList1(action.dataId, action.id)
+             //     break;
+ 
+             // case 'listType':
+             //     if (action.dataId !== undefined)
+             //         this.toggleUnorderedList1(action.dataId, action.id)
+             //     break;
+             // case 'enter':
+             //     console.log('jagdish....03',{id:this.selectedBlockId,offset:this.currentOffset,action:action.start,end:action.end})
+ 
+             //     this.simulateEnterPress(document.activeElement);
+             //     this.setNewCursorPosition(action.start+1);
+             case 'insert':
+                 console.log('jagdish....0', { id: this.selectedBlockId, offset: this.currentOffset, action: action.start, end: action.end })
+ 
+                 // this.triggerKeyPress(document.activeElement, action.newValue);
+                 // this.setNewCursorPosition(action.start+1);
+                 // console.log(`action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo'`, action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo')
+                 this.insertAt(action.newValue || '', {}, action.start === 1 ? 2 : action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo');
+                 this.setCursorPosition(action.start + 1, action.dataId)
+                 break;
+             // Add cases for other actions
+             // ...
+         }
+     }
+         */
 
-    toggleUnderlineRange1(start: number, end: number, id = ""): void {
-        const allUnderline = this.isRangeEntirelyAttribute(start, end, 'underline');
-        this.formatAttribute(start, end, 'underline', !allUnderline);
-    }
+    // toggleBoldRange1(start: number, end: number, id = ""): void {
+    //     const allBold = this.isRangeEntirelyAttribute(start, end, 'bold');
+    //     this.formatAttribute(start, end, 'bold', !allBold);
+    // }
+    // toggleItalicRange1(start: number, end: number, id = ""): void {
+    //     const allItalic = this.isRangeEntirelyAttribute(start, end, 'italic');
+    //     this.formatAttribute(start, end, 'italic', !allItalic);
+    // }
+
+    // toggleUnderlineRange1(start: number, end: number, id = ""): void {
+    //     const allUnderline = this.isRangeEntirelyAttribute(start, end, 'underline');
+    //     this.formatAttribute(start, end, 'underline', !allUnderline);
+    // }
 
     toggleBoldRange(start: number, end: number, id = ""): void {
         const previousValue = this.getRangeText(start, end);
@@ -1072,38 +1073,38 @@ class TextDocument extends EventEmitter {
         this.formatAttribute(start, end, 'bold', !allBold);
         const newValue = this.getRangeText(start, end);
 
-        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        if (_redoStackIds.length === 0) {
-            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'bold', previousValue, newValue });
-            this.redoStack = [];
-        }
+        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        // if (_redoStackIds.length === 0) {
+        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'bold', previousValue, newValue });
+        //     this.redoStack = [];
+        // }
     }
 
     toggleItalicRange(start: number, end: number, id = ""): void {
-        const previousValue = this.getRangeText(start, end);
+        // const previousValue = this.getRangeText(start, end);
 
         const allItalic = this.isRangeEntirelyAttribute(start, end, 'italic');
         this.formatAttribute(start, end, 'italic', !allItalic);
 
-        const newValue = this.getRangeText(start, end);
-        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        if (_redoStackIds.length === 0) {
-            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'italic', previousValue, newValue });
-            this.redoStack = [];
-        }
+        // const newValue = this.getRangeText(start, end);
+        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        // if (_redoStackIds.length === 0) {
+        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'italic', previousValue, newValue });
+        //     this.redoStack = [];
+        // }
     }
 
     toggleUnderlineRange(start: number, end: number, id = ""): void {
-        const previousValue = this.getRangeText(start, end);
+        // const previousValue = this.getRangeText(start, end);
         const allUnderline = this.isRangeEntirelyAttribute(start, end, 'underline');
         this.formatAttribute(start, end, 'underline', !allUnderline);
 
-        const newValue = this.getRangeText(start, end);
-        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        if (_redoStackIds.length === 0) {
-            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'underline', previousValue, newValue });
-            this.redoStack = [];
-        }
+        // const newValue = this.getRangeText(start, end);
+        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        // if (_redoStackIds.length === 0) {
+        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'underline', previousValue, newValue });
+        //     this.redoStack = [];
+        // }
     }
     toggleUndoRange(start: number, end: number, id = ""): void {
         const allUndo = this.isRangeEntirelyAttribute(start, end, 'undo');
@@ -1116,50 +1117,50 @@ class TextDocument extends EventEmitter {
 
     applyFontColor(start: number, end: number, color: string, id = ""): void {
         if (start < end) {
-            const { rangeText, piece } = this.getRangeTextPiece(start, end);
-            const previousValue = piece.attributes.fontColor;
+            // const { rangeText, piece } = this.getRangeTextPiece(start, end);
+            // const previousValue = piece.attributes.fontColor;
             // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
 
             this.formatAttribute(start, end, "fontColor", color);
             console.log('applyFontColor-color', color, start, end)
-            const newValue = color;
-            const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-            if (_redoStackIds.length === 0) {
-                this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontColor', previousValue, newValue });
-                this.redoStack = [];
-            }
+            // const newValue = color;
+            // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+            // if (_redoStackIds.length === 0) {
+            //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontColor', previousValue, newValue });
+            //     this.redoStack = [];
+            // }
         }
     }
-    applyFontColor1(start: number, end: number, color: string, id = ""): void {
-        // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
-        if (start < end) {
-            console.log('applyFontColor 1-color', color, start, end)
-            this.formatAttribute(start, end, "fontColor", color);
-        }
-    }
+    // applyFontColor1(start: number, end: number, color: string, id = ""): void {
+    //     // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
+    //     if (start < end) {
+    //         console.log('applyFontColor 1-color', color, start, end)
+    //         this.formatAttribute(start, end, "fontColor", color);
+    //     }
+    // }
 
     applyBgColor(start: number, end: number, color: string, id = ""): void {
         // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
         if (start < end) {
-            const { rangeText, piece } = this.getRangeTextPiece(start, end);
-            const previousValue = piece.attributes.bgColor;
+            // const { rangeText, piece } = this.getRangeTextPiece(start, end);
+            // const previousValue = piece.attributes.bgColor;
 
             this.formatAttribute(start, end, "bgColor", color);
-            const newValue = color;
-            const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-            if (_redoStackIds.length === 0) {
-                this.undoStack.push({ id: Date.now().toString(), start, end, action: 'bgColor', previousValue, newValue });
-                this.redoStack = [];
-            }
+            // const newValue = color;
+            // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+            // if (_redoStackIds.length === 0) {
+            //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'bgColor', previousValue, newValue });
+            //     this.redoStack = [];
+            // }
         }
     }
-    applyBgColor1(start: number, end: number, color: string, id = ""): void {
-        // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
-        if (start < end) {
+    // applyBgColor1(start: number, end: number, color: string, id = ""): void {
+    //     // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
+    //     if (start < end) {
 
-            this.formatAttribute(start, end, "bgColor", color);
-        }
-    }
+    //         this.formatAttribute(start, end, "bgColor", color);
+    //     }
+    // }
 
     isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline' | 'undo' | 'redo'): boolean {
         let offset = this.currentOffset;
@@ -1243,64 +1244,64 @@ class TextDocument extends EventEmitter {
     }
 
     setFontFamily(start: number, end: number, fontFamily: string, id: string = ''): void {
-        const { rangeText, piece } = this.getRangeTextPiece(start, end);
-        const previousValue = piece.attributes.fontFamily;
+        // const { rangeText, piece } = this.getRangeTextPiece(start, end);
+        // const previousValue = piece.attributes.fontFamily;
 
-        console.log(rangeText, piece, "setFontFamily", this.blocks);
+        // console.log(rangeText, piece, "setFontFamily", this.blocks);
         // const _previousValueTxt = this.getRangeText(start, end);
         // if(block){
         //     block[0].
         // }
         this.formatAttribute(start, end, 'fontFamily', fontFamily);
-        const newValue = fontFamily;
-        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        if (_redoStackIds.length === 0) {
-            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontFamily', previousValue, newValue });
-            this.redoStack = [];
-        }
+        // const newValue = fontFamily;
+        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        // if (_redoStackIds.length === 0) {
+        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontFamily', previousValue, newValue });
+        //     this.redoStack = [];
+        // }
     }
-    setFontFamily1(start: number, end: number, fontFamily: string, id: string = ''): void {
-        this.formatAttribute(start, end, 'fontFamily', fontFamily);
-    }
+    // setFontFamily1(start: number, end: number, fontFamily: string, id: string = ''): void {
+    //     this.formatAttribute(start, end, 'fontFamily', fontFamily);
+    // }
 
     setFontSize(start: number, end: number, fontSize: string, id: string = ''): void {
-        const { rangeText, piece } = this.getRangeTextPiece(start, end);
-        const previousValue = piece.attributes.fontSize;
+        // const { rangeText, piece } = this.getRangeTextPiece(start, end);
+        // const previousValue = piece.attributes.fontSize;
         this.formatAttribute(start, end, 'fontSize', fontSize);
-        const newValue = fontSize;
-        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        if (_redoStackIds.length === 0) {
-            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontSize', previousValue, newValue });
-            this.redoStack = [];
-        }
+        // const newValue = fontSize;
+        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        // if (_redoStackIds.length === 0) {
+        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontSize', previousValue, newValue });
+        //     this.redoStack = [];
+        // }
     }
-    setFontSize1(start: number, end: number, fontSize: string, id: string = ''): void {
-        this.formatAttribute(start, end, 'fontSize', fontSize);
-    }
+    // setFontSize1(start: number, end: number, fontSize: string, id: string = ''): void {
+    //     this.formatAttribute(start, end, 'fontSize', fontSize);
+    // }
 
     setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null, id: string = ''): void {
         const block = this.blocks.find((block: any) => block.dataId === dataId);
-        const previousValue = block.alignment;
-        const start = 0;
-        const end = 0;
+        // const previousValue = block.alignment;
+        // const start = 0;
+        // const end = 0;
         if (!block) return;
 
         block.alignment = alignment; // Update alignment
-        const newValue = alignment;
-        const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        if (_redoStackIds.length === 0) {
-            this.undoStack.push({ id: Date.now().toString(), start, end, action: 'alignment', previousValue, newValue, dataId });
-            this.redoStack = [];
-        }
+        // const newValue = alignment;
+        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        // if (_redoStackIds.length === 0) {
+        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'alignment', previousValue, newValue, dataId });
+        //     this.redoStack = [];
+        // }
         this.emit('documentChanged', this); // Trigger re-render
     }
-    setAlignment1(alignment: 'left' | 'center' | 'right', dataId: string | null, id: string = ''): void {
-        const block = this.blocks.find((block: any) => block.dataId === dataId);
-        if (!block) return;
+    // setAlignment1(alignment: 'left' | 'center' | 'right', dataId: string | null, id: string = ''): void {
+    //     const block = this.blocks.find((block: any) => block.dataId === dataId);
+    //     if (!block) return;
 
-        block.alignment = alignment; // Update alignment
-        this.emit('documentChanged', this); // Trigger re-render
-    }
+    //     block.alignment = alignment; // Update alignment
+    //     this.emit('documentChanged', this); // Trigger re-render
+    // }
 
     getHtmlContent() {
         const editorContainer = document.getElementById("editor"); // Adjust to your editor's ID

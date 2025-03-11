@@ -16,7 +16,7 @@ export default class UndoRedoManager {
   private document: TextDocument;
   private snapshotUndoStack: DocumentSnapshot[] = [];
   private snapshotRedoStack: DocumentSnapshot[] = [];
-  private maxSnapshots = 50;
+  private maxSnapshots = 5000;
   private editorView: EditorView;
 
   constructor(document: TextDocument,editorView: EditorView) {
