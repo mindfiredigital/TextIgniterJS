@@ -1,6 +1,7 @@
 import EventEmitter from "./utils/events";
 import Piece from "./piece";
 import EditorView from "./view/editorView";
+import UndoRedoManager from "./handlers/undoRedoManager";
 
 // text document extend
 class TextDocument extends EventEmitter {
@@ -11,7 +12,8 @@ class TextDocument extends EventEmitter {
     blocks: any;
     selectAll: boolean = false;
     editorView!: EditorView;
-
+    undoRedoManager! : UndoRedoManager;
+    
     // selectedBlockId: string | null;
     private _selectedBlockId: string | null = null;
     get selectedBlockId(): string | null {
@@ -55,6 +57,9 @@ class TextDocument extends EventEmitter {
         return this.pieces.map(p => p.text).join("");
     }
 
+    setUndoRedoManager(undoRedoManager:UndoRedoManager):void{
+        this.undoRedoManager = undoRedoManager;
+    }
     triggerBackspaceEvents(target:any) {
         const options = {
           key: "Backspace",
@@ -111,6 +116,9 @@ class TextDocument extends EventEmitter {
       }
 
         insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean, hyperlink?: boolean | string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = '',isSynthetic=false): void {
+            if (!isSynthetic) {
+                this.undoRedoManager.saveUndoSnapshot();
+            }
             console.log('inserted,',{start:position,text});
             let offset = 0;
             let newPieces: Piece[] = [];
@@ -637,22 +645,27 @@ class TextDocument extends EventEmitter {
     }
 
     undo(): void {
-        const action = this.undoStack.pop();
+        console.log('undo')
 
-        if (!action) return;
+        this.undoRedoManager.undo();
+        // const action = this.undoStack.pop();
 
-        this.redoStack.push(action);
-        this.revertAction(action);
+        // if (!action) return;
+
+        // this.redoStack.push(action);
+        // this.revertAction(action);
     }
 
     redo(): void {
-        const action = this.redoStack.pop();
+        this.undoRedoManager.redo();
+        console.log('redo')
+        // const action = this.redoStack.pop();
 
 
-        if (!action) return;
+        // if (!action) return;
 
-        this.undoStack.push(action);
-        this.applyAction(action);
+        // this.undoStack.push(action);
+        // this.applyAction(action);
     }
 
     // setCursorPosition(position: number, dataId: string | null = ''): void {
