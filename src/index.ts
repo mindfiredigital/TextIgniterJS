@@ -12,6 +12,7 @@ import { EditorConfig } from "./types/editorConfig";
 import { ImageHandler } from "./handlers/image";
 import EventEmitter from "./utils/events";
 import { strings } from "./constants/strings";
+import UndoRedoManager from "./handlers/undoRedoManager";
 
 
 export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string;bgColor?:string; }
@@ -30,6 +31,7 @@ class TextIgniter {
     toolbarContainer: HTMLElement | null;
     savedSelection: { start: number; end: number } | null = null;
     debounceTimer: NodeJS.Timeout | null = null;
+    undoRedoManager: UndoRedoManager;
     constructor(editorId: string, config: EditorConfig) {
 
         const { mainEditorId, toolbarId } = createEditor(editorId, config);
@@ -46,8 +48,11 @@ class TextIgniter {
         this.toolbarView = new ToolbarView(this.toolbarContainer);
         this.hyperlinkHandler = new HyperlinkHandler(this.editorContainer, this.editorView, this.document);
         this.imageHandler = new ImageHandler(this.editorContainer, this.document);
+        this.undoRedoManager = new UndoRedoManager(this.document,this.editorView);
         this.editorView.setImageHandler(this.imageHandler);
         this.imageHandler.setEditorView(this.editorView);
+        this.document.setEditorView(this.editorView);
+        this.document.setUndoRedoManager(this.undoRedoManager);
         this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, hyperlink: false };
         this.manualOverride = false;
         this.lastPiece = null;
@@ -302,21 +307,23 @@ class TextIgniter {
 
                 if (key === 'z') {
                     e.preventDefault();
-                    const [start, end] = this.getSelectionRange();
-                    this.document.undo();
-                    if (this.document.undoStack.length > 0)
-                        this.setCursorPosition(start - 1);
-                    console.log("undoStack", this.document.undoStack)
-                    console.log("redoStack", this.document.redoStack)
+                    // const [start, end] = this.getSelectionRange();
+                    this.undoRedoManager.undo(); 
+                    // this.document.undo();
+                    // if (this.document.undoStack.length > 0)
+                        // this.setCursorPosition(start - 1);
+                    // console.log("undoStack", this.document.undoStack)
+                    // console.log("redoStack", this.document.redoStack)
 
                 } else if (key === 'y') {
                     e.preventDefault();
-                    const [start, end] = this.getSelectionRange();
-                    this.document.redo();
-                    if (this.document.redoStack.length > 0)
-                        this.setCursorPosition(start + 1);
-                    console.log("undoStack", this.document.undoStack)
-                    console.log("redoStack", this.document.redoStack)
+                    // const [start, end] = this.getSelectionRange();
+                    // this.document.redo();
+                    this.undoRedoManager.redo();
+                    // if (this.document.redoStack.length > 0)
+                        // this.setCursorPosition(start + 1);
+                    // console.log("undoStack", this.document.undoStack)
+                    // console.log("redoStack", this.document.redoStack)
                 }
                 if (key === 'a') {
                     // e.preventDefault();
@@ -955,6 +962,7 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
           if (end > start) {
             this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
           }
+          
           this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset,"","",!e.isTrusted || false);
           this.setCursorPosition(start + 1);
         } else if (e.key === "Delete") {
@@ -1082,6 +1090,7 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
     }
     syncCurrentAttributesWithCursor(): void {
         const [start, end] = this.getSelectionRange();
+        console.log('log1',{start:start, end:end})
         const blockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId);
         if (this.document.blocks[blockIndex]?.type === 'image') {
             this.imageHandler.addStyleToImage(this.document.selectedBlockId || "");

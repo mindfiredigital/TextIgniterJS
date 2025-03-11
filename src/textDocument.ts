@@ -1,5 +1,7 @@
 import EventEmitter from "./utils/events";
 import Piece from "./piece";
+import EditorView from "./view/editorView";
+import UndoRedoManager from "./handlers/undoRedoManager";
 
 // text document extend
 class TextDocument extends EventEmitter {
@@ -9,7 +11,9 @@ class TextDocument extends EventEmitter {
     pieces: Piece[];
     blocks: any;
     selectAll: boolean = false;
-
+    editorView!: EditorView;
+    undoRedoManager! : UndoRedoManager;
+    
     // selectedBlockId: string | null;
     private _selectedBlockId: string | null = null;
     get selectedBlockId(): string | null {
@@ -44,11 +48,18 @@ class TextDocument extends EventEmitter {
         // this.selectedBlockId = '';
 
         this.currentOffset = 0;
+        // this.editorView="";
+    }
+    setEditorView(editorView:EditorView):void {
+        this.editorView=editorView;
     }
     getPlainText(): string {
         return this.pieces.map(p => p.text).join("");
     }
 
+    setUndoRedoManager(undoRedoManager:UndoRedoManager):void{
+        this.undoRedoManager = undoRedoManager;
+    }
     triggerBackspaceEvents(target:any) {
         const options = {
           key: "Backspace",
@@ -104,78 +115,83 @@ class TextDocument extends EventEmitter {
         });
       }
 
-    insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean, hyperlink?: boolean | string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = '',isSynthetic=false): void {
-        let offset = 0;
-        let newPieces: Piece[] = [];
-        let inserted = false;
-        let index = 0;
-        if (dataId) {
-            index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-            // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-            offset = this.currentOffset;
-        }
-        const previousValue = this.getRangeText(position, position);
+        insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean, hyperlink?: boolean | string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = '',isSynthetic=false): void {
+            if (!isSynthetic) {
+                this.undoRedoManager.saveUndoSnapshot();
+            }
+            console.log('inserted,',{start:position,text});
+            let offset = 0;
+            let newPieces: Piece[] = [];
+            let inserted = false;
+            let index = 0;
+            if (dataId) {
+                index = this.blocks.findIndex((block: any) => block.dataId === dataId);
+                // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+                offset = this.currentOffset;
+            }
+            const previousValue = this.getRangeText(position, position);
 
-        // for (let piece of this.pieces) {
-        for (let piece of this.blocks[index].pieces) {
-            const pieceEnd = offset + piece.text.length;
-            if (!inserted && position <= pieceEnd) {
-                const relPos = position - offset;
-                if (relPos > 0) {
-                    newPieces.push(new Piece(piece.text.slice(0, relPos), { ...piece.attributes }));
+            // for (let piece of this.pieces) {
+            for (let piece of this.blocks[index].pieces) {
+                const pieceEnd = offset + piece.text.length;
+                if (!inserted && position <= pieceEnd) {
+                    const relPos = position - offset;
+                    if (relPos > 0) {
+                        newPieces.push(new Piece(piece.text.slice(0, relPos), { ...piece.attributes }));
+                    }
+                    newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }));
+                    if (relPos < piece.text.length) {
+                        newPieces.push(new Piece(piece.text.slice(relPos), { ...piece.attributes }));
+                    }
+                    inserted = true;
+                } else {
+                    newPieces.push(piece.clone());
                 }
-                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }));
-                if (relPos < piece.text.length) {
-                    newPieces.push(new Piece(piece.text.slice(relPos), { ...piece.attributes }));
+                offset = pieceEnd;
+            }
+
+            if (!inserted) {
+                const lastPiece = newPieces[newPieces.length - 1];
+                if (lastPiece && lastPiece.hasSameAttributes(new Piece("", { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }))) {
+                    lastPiece.text += text;
+                } else {
+                    newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }));
                 }
-                inserted = true;
-            } else {
-                newPieces.push(piece.clone());
             }
-            offset = pieceEnd;
+
+            const _data = this.mergePieces(newPieces)
+            // this.pieces = _data;
+
+            this.blocks[index].pieces = _data
+            const newValue = this.getRangeText(position, position + text.length);
+            console.log({position});
+            // if (dataId !== '' || dataId !== null) {
+            //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+            // }
+            // Push to undo stack
+            if (actionType !== 'redo' && !isSynthetic) {
+                const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+                if (_redoStackIds.length === 0) {
+                    this.undoStack.push({
+                        id: Date.now().toString(),
+                        start: position,
+                        end: position + text.length,
+                        action: 'insert',
+                        previousValue,
+                        newValue
+                    });
+
+                    // Clear redo stack
+                    this.redoStack = [];
+                }
+            }
+            this.emit('documentChanged', this);
+            // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
+            // ele.focus();
+            // this.setCursorPositionUsingOffset(ele, offset);
         }
 
-        if (!inserted) {
-            const lastPiece = newPieces[newPieces.length - 1];
-            if (lastPiece && lastPiece.hasSameAttributes(new Piece("", { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }))) {
-                lastPiece.text += text;
-            } else {
-                newPieces.push(new Piece(text, { bold: attributes.bold || false, italic: attributes.italic || false, underline: attributes.underline || false, hyperlink: attributes.hyperlink || false }));
-            }
-        }
-
-        const _data = this.mergePieces(newPieces)
-        // this.pieces = _data;
-
-        this.blocks[index].pieces = _data
-        const newValue = this.getRangeText(position, position + text.length);
-        // if (dataId !== '' || dataId !== null) {
-        //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-        // }
-        // Push to undo stack
-        if (actionType !== 'redo' && !isSynthetic) {
-            const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-            if (_redoStackIds.length === 0) {
-                this.undoStack.push({
-                    id: Date.now().toString(),
-                    start: position,
-                    end: position + text.length,
-                    action: 'insert',
-                    previousValue,
-                    newValue
-                });
-
-                // Clear redo stack
-                this.redoStack = [];
-            }
-        }
-        this.emit('documentChanged', this);
-        // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
-        // ele.focus();
-        // this.setCursorPositionUsingOffset(ele, offset);
-    }
-
-    setCursorPositionUsingOffset(element: HTMLElement, offset: number): void {
+    public setCursorPositionUsingOffset(element: HTMLElement, offset: number): void {
         element.focus(); // Ensure the element is focusable and focused
 
         const selection = window.getSelection();
@@ -215,7 +231,7 @@ class TextDocument extends EventEmitter {
     }
 
     deleteRange(start: number, end: number, dataId: string | null = "", currentOffset: number = 0): void {
-
+        console.log('deleted2,',{start,end});
         if (start === end) return;
         let newPieces: Piece[] = [];
         let offset = 0;
@@ -675,25 +691,178 @@ class TextDocument extends EventEmitter {
     }
 
     undo(): void {
-        const action = this.undoStack.pop();
+        console.log('undo')
 
-        if (!action) return;
+        this.undoRedoManager.undo();
+        // const action = this.undoStack.pop();
 
-        this.redoStack.push(action);
-        this.revertAction(action);
+        // if (!action) return;
+
+        // this.redoStack.push(action);
+        // this.revertAction(action);
     }
 
     redo(): void {
-        const action = this.redoStack.pop();
+        this.undoRedoManager.redo();
+        console.log('redo')
+        // const action = this.redoStack.pop();
 
 
-        if (!action) return;
+        // if (!action) return;
 
-        this.undoStack.push(action);
-        this.applyAction(action);
+        // this.undoStack.push(action);
+        // this.applyAction(action);
     }
 
+    // setCursorPosition(position: number, dataId: string | null = ''): void {
+    //     if (dataId === '')
+    //         this.editorView.container.focus();
+    //     else {
+    //         const divDataid = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement
+    //         divDataid.focus();
+
+    //     }
+    //     const sel = window.getSelection();
+    //     if (!sel) return;
+    //     const range = document.createRange();
+    //     let charIndex = 0;
+    //     const nodeStack: Node[] = [this.editorView.container];
+    //     let node: Node | undefined;
+
+    //     while ((node = nodeStack.pop())) {
+    //         if (node.nodeType === 3) {
+    //             const textNode = node as Text;
+    //             const nextCharIndex = charIndex + textNode.length;
+    //             if (position >= charIndex && position <= nextCharIndex) {
+    //                 range.setStart(textNode, position - charIndex);
+    //                 range.collapse(true);
+    //                 break;
+    //             }
+    //             charIndex = nextCharIndex;
+    //         } else if ((node as HTMLElement).tagName === 'BR') {
+    //             if (position === charIndex) {
+    //                 range.setStartBefore(node);
+    //                 range.collapse(true);
+    //                 break;
+    //             }
+    //             charIndex++;
+    //         } else {
+    //             const el = node as HTMLElement;
+    //             let i = el.childNodes.length;
+    //             while (i--) {
+    //                 nodeStack.push(el.childNodes[i]);
+    //             }
+    //         }
+    //     }
+
+    //     sel.removeAllRanges();
+    //     sel.addRange(range);
+    // }
+
+    setNewCursorPosition(position: number): void {
+        this.editorView.container.focus();
+    
+        const sel = window.getSelection();
+        if (!sel) return;
+    
+        const range = document.createRange();
+        let charIndex = 0;
+        const nodeStack: Node[] = [this.editorView.container];
+        let node: Node | undefined;
+    
+        const totalLength = this.editorView.container.textContent?.length || 0;
+        if (position < 0 || position > totalLength) return;
+    
+        while ((node = nodeStack.pop())) {
+            if (node.nodeType === 3) { // Text node
+                const textNode = node as Text;
+                const nextCharIndex = charIndex + textNode.length;
+                if (position >= charIndex && position <= nextCharIndex) {
+                    range.setStart(textNode, Math.min(position - charIndex, textNode.length));
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    return;
+                }
+                charIndex = nextCharIndex;
+            } else if ((node as HTMLElement).tagName === 'BR' || (node as HTMLElement).tagName === 'DIV') {
+                if (position === charIndex) {
+                    range.setStartBefore(node);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    return;
+                }
+                charIndex++;
+            } else {
+                const el = node as HTMLElement;
+                for (let i = el.childNodes.length - 1; i >= 0; i--) {
+                    nodeStack.push(el.childNodes[i]);
+                }
+            }
+        }
+    }
+    
+
+    
+    setCursorPosition(position: number, dataId: string | null = ''): void {
+        if (dataId !== '') {
+            const divDataid = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
+            if (divDataid) {
+                setTimeout(() => divDataid.focus(), 0);
+            } else {
+                console.warn(`Element with data-id="${dataId}" not found.`);
+                return;
+            }
+        } else {
+            this.editorView.container.focus();
+        }
+    
+        const sel = window.getSelection();
+        if (!sel) return;
+    
+        const range = document.createRange();
+        let charIndex = 0;
+        const nodeStack: Node[] = [this.editorView.container];
+        let node: Node | undefined;
+    
+        const totalLength = this.editorView.container.textContent?.length || 0;
+        if (position < 0 || position > totalLength) return;
+    
+        while ((node = nodeStack.pop())) {
+            if (node.nodeType === 3) { // Text node
+                const textNode = node as Text;
+                const nextCharIndex = charIndex + textNode.length;
+                if (position >= charIndex && position <= nextCharIndex) {
+                    range.setStart(textNode, Math.min(position - charIndex, textNode.length));
+                    range.collapse(true);
+                    break;
+                }
+                charIndex = nextCharIndex;
+            } else if ((node as HTMLElement).tagName === 'BR') {
+                if (position === charIndex) {
+                    range.setStartBefore(node);
+                    range.collapse(true);
+                    break;
+                }
+                charIndex++;
+            } else {
+                const el = node as HTMLElement;
+                let i = el.childNodes.length;
+                while (i--) {
+                    nodeStack.push(el.childNodes[i]);
+                }
+            }
+        }
+    
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+    
+    
+
     private revertAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
+        const noOfBlocks = this.blocks.length;
         switch (action.action) {
             case 'bold':
                 this.toggleBoldRange(action.start, action.end, action.id); // Reverse bold toggle
@@ -733,11 +902,87 @@ class TextDocument extends EventEmitter {
             //         this.toggleUnorderedList(action.dataId, action.id)
             //     break;
             case 'enter':
-              this.triggerBackspaceEvents(document.activeElement);
-            case 'insert':
-              this.triggerBackspaceEvents(document.activeElement);
-                // console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
+                //backspace should be press as opposite of enter.
+                // But at which blockId and at which location enter is pressed that should be exact same.
+                console.log('jagdish....00',{id:this.selectedBlockId,offset:this.currentOffset,action:action.start,end:action.end})
+
+
+                // this.setCursorPosition(action.start+1 , this.selectedBlockId);
+                // this.triggerBackspaceEvents(document.activeElement);
+                // this.setNewCursorPosition(action.start+1);
                 // this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
+
+                // if (action.start === action.end && action.start > 0) {
+                //     this.deleteRange(action.start - 1, action.start, this.selectedBlockId, this.currentOffset);
+                //     // this.setCursorPosition(start - 1);
+                //     const index = this.blocks.findIndex(
+                //       (block: any) => block.dataId === this.selectedBlockId
+                //     );
+                //     const chkBlock = document.querySelector(`[data-id="${this.selectedBlockId}"]`) as HTMLElement;
+                //     if (chkBlock === null) {
+                //       let listStart = 0;
+                //       const _blocks = this.blocks.map((block: any, index: number) => {
+                //         if (block?.listType !== undefined || block?.listType !== null) {
+                //           if (block?.listType === 'ol') {
+                //             listStart = 1;
+                //             block.listStart = 1;
+                //           } else if (block?.listType === 'li') {
+                //             listStart = listStart + 1;
+                //             block.listStart = listStart;
+                //           }
+                //         }
+                //         return block;
+                //       });
+                //       this.emit('documentChanged', this);
+                //     }
+                //   } else if (action.end > action.start) {
+                //     this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
+                //     this.setCursorPosition(action.start + 1,);
+                //   }
+
+                // this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
+                // this.setCursorPosition(action.start - 1);
+
+            case 'insert':
+                //At which block and at which position.
+                console.log('jagdish....01',{id:this.selectedBlockId,offset:this.currentOffset,action:action.start,end:action.end})
+                
+                // this.triggerBackspaceEvents(document.activeElement);
+                // this.setNewCursorPosition(action.start+1);
+                // // console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
+                this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
+                this.setCursorPosition(action.start == 1 ? action.start : action.start - 1, action.dataId);
+
+
+                  console.log('updated code22')
+
+                // if (action.start === action.end && action.start > 0) {
+                //     this.deleteRange(action.start - 1, action.start, this.selectedBlockId, this.currentOffset);
+                //     // this.setCursorPosition(start - 1);
+                //     const index = this.blocks.findIndex(
+                //       (block: any) => block.dataId === this.selectedBlockId
+                //     );
+                //     const chkBlock = document.querySelector(`[data-id="${this.selectedBlockId}"]`) as HTMLElement;
+                //     if (chkBlock === null) {
+                //       let listStart = 0;
+                //       const _blocks = this.blocks.map((block: any, index: number) => {
+                //         if (block?.listType !== undefined || block?.listType !== null) {
+                //           if (block?.listType === 'ol') {
+                //             listStart = 1;
+                //             block.listStart = 1;
+                //           } else if (block?.listType === 'li') {
+                //             listStart = listStart + 1;
+                //             block.listStart = listStart;
+                //           }
+                //         }
+                //         return block;
+                //       });
+                //       this.emit('documentChanged', this);
+                //     }
+                //   } else if (action.end > action.start) {
+                //     this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
+                //     this.setCursorPosition(action.start + 1);
+                //   }
 
                 break;
             // Add cases for other actions like italic, underline, insert, delete
@@ -745,7 +990,10 @@ class TextDocument extends EventEmitter {
         }
     }
 
+    
+
     private applyAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
+        const noOfBlocks = this.blocks.length;
         switch (action.action) {
             case 'bold':
                 this.toggleBoldRange1(action.start, action.end, action.id); // Reapply bold toggle
@@ -786,12 +1034,18 @@ class TextDocument extends EventEmitter {
             //         this.toggleUnorderedList1(action.dataId, action.id)
             //     break;
             case 'enter':
+                console.log('jagdish....03',{id:this.selectedBlockId,offset:this.currentOffset,action:action.start,end:action.end})
+                
                 this.simulateEnterPress(document.activeElement);
+                this.setNewCursorPosition(action.start+1);
             case 'insert':
-            this.triggerKeyPress(document.activeElement, action.newValue);
+                console.log('jagdish....0',{id:this.selectedBlockId,offset:this.currentOffset,action:action.start,end:action.end})
+              
+                // this.triggerKeyPress(document.activeElement, action.newValue);
+                // this.setNewCursorPosition(action.start+1);
                 // console.log(`action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo'`, action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo')
-                // this.insertAt(action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo');
-                // this.setCursorPosition(action.start, action.end, action.id)
+                this.insertAt(action.newValue || '', {}, action.start === 1 ? 2 : action.start , this.selectedBlockId, this.currentOffset, action.id, 'redo');
+                this.setCursorPosition(action.start +1,action.dataId)
                 break;
             // Add cases for other actions
             // ...
