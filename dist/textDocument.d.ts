@@ -1,5 +1,7 @@
 import EventEmitter from "./utils/events";
 import Piece from "./piece";
+import EditorView from "./view/editorView";
+import UndoRedoManager from "./handlers/undoRedoManager";
 declare class TextDocument extends EventEmitter {
     undoStack: {
         id: string;
@@ -23,15 +25,18 @@ declare class TextDocument extends EventEmitter {
     pieces: Piece[];
     blocks: any;
     selectAll: boolean;
+    editorView: EditorView;
+    undoRedoManager: UndoRedoManager;
     private _selectedBlockId;
     get selectedBlockId(): string | null;
     set selectedBlockId(value: string | null);
     currentOffset: number;
     constructor();
+    setEditorView(editorView: EditorView): void;
     getPlainText(): string;
+    setUndoRedoManager(undoRedoManager: UndoRedoManager): void;
     triggerBackspaceEvents(target: any): void;
     triggerKeyPress(target: any, key: any): void;
-    simulateEnterPress(target: any): void;
     insertAt(text: string, attributes: {
         bold?: boolean;
         italic?: boolean;
@@ -49,40 +54,25 @@ declare class TextDocument extends EventEmitter {
     getCursorOffset(container: HTMLElement): number;
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'], value: string | boolean): void;
     toggleOrderedList(dataId: string | null, id?: string): void;
-    toggleOrderedList1(dataId: string | null, id?: string): void;
     toggleUnorderedList(dataId: string | null, id?: string): void;
-    toggleUnorderedList1(dataId: string | null, id?: string): void;
     updateOrderedListNumbers(): void;
     getRangeText(start: number, end: number): string;
-    getRangeTextPiece(start: number, end: number): {
-        rangeText: string;
-        piece: any;
-    };
     undo(): void;
     redo(): void;
-    private revertAction;
-    private applyAction;
-    toggleBoldRange1(start: number, end: number, id?: string): void;
-    toggleItalicRange1(start: number, end: number, id?: string): void;
-    toggleUnderlineRange1(start: number, end: number, id?: string): void;
+    setCursorPosition(position: number, dataId?: string | null): void;
     toggleBoldRange(start: number, end: number, id?: string): void;
     toggleItalicRange(start: number, end: number, id?: string): void;
     toggleUnderlineRange(start: number, end: number, id?: string): void;
     toggleUndoRange(start: number, end: number, id?: string): void;
     toggleRedoRange(start: number, end: number): void;
     applyFontColor(start: number, end: number, color: string, id?: string): void;
-    applyFontColor1(start: number, end: number, color: string, id?: string): void;
     applyBgColor(start: number, end: number, color: string, id?: string): void;
-    applyBgColor1(start: number, end: number, color: string, id?: string): void;
     isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline' | 'undo' | 'redo'): boolean;
     mergePieces(pieces: Piece[]): Piece[];
     findPieceAtOffset(offset: number, dataId?: string | null): Piece | null;
     setFontFamily(start: number, end: number, fontFamily: string, id?: string): void;
-    setFontFamily1(start: number, end: number, fontFamily: string, id?: string): void;
     setFontSize(start: number, end: number, fontSize: string, id?: string): void;
-    setFontSize1(start: number, end: number, fontSize: string, id?: string): void;
     setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null, id?: string): void;
-    setAlignment1(alignment: 'left' | 'center' | 'right', dataId: string | null, id?: string): void;
     getHtmlContent(): string | undefined;
     getCursorOffsetInParent(parentSelector: string): {
         offset: number;

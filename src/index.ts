@@ -898,22 +898,22 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
           }
         
           // Insert entry in undo stack
-          if (e.isTrusted) {
-            const _redoStackIds = this.document.redoStack.filter(obj => obj.id === "")
-            if (_redoStackIds.length === 0) {
-                this.document.undoStack.push({
-                    id: Date.now().toString(),
-                    start: 0,
-                    end: 0 ,
-                    action: 'enter',
-                    previousValue:"",
-                    newValue:'enter'
-                });
+        //   if (e.isTrusted) {
+        //     const _redoStackIds = this.document.redoStack.filter(obj => obj.id === "")
+        //     if (_redoStackIds.length === 0) {
+        //         this.document.undoStack.push({
+        //             id: Date.now().toString(),
+        //             start: 0,
+        //             end: 0 ,
+        //             action: 'enter',
+        //             previousValue:"",
+        //             newValue:'enter'
+        //         });
 
-                // Clear redo stack
-                this.document.redoStack = [];
-            }
-        }
+        //         // Clear redo stack
+        //         this.document.redoStack = [];
+        //     }
+        // }
 
         } else if (e.key === 'Backspace') {
           e.preventDefault();
