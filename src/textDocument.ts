@@ -60,66 +60,13 @@ class TextDocument extends EventEmitter {
     setUndoRedoManager(undoRedoManager: UndoRedoManager): void {
         this.undoRedoManager = undoRedoManager;
     }
-    triggerBackspaceEvents(target: any) {
-        const options = {
-            key: "Backspace",
-            keyCode: 8,
-            code: "Backspace",
-            which: 8,
-            bubbles: true,
-            cancelable: true,
-        };
-
-        ["keydown", "keypress", "keyup"].forEach(eventType => {
-            const event = new KeyboardEvent(eventType, options);
-            target.dispatchEvent(event);
-        });
-    }
-
-    triggerKeyPress(target: any, key: any) {
-        const keyCode = key.toUpperCase().charCodeAt(0);
-        const options = {
-            key: key,
-            keyCode: keyCode,
-            code: 'Key' + key.toUpperCase(),
-            which: keyCode,
-            bubbles: true,
-            cancelable: true
-        };
-
-        ['keydown', 'keypress', 'keyup'].forEach(type => {
-            const event = new KeyboardEvent(type, options);
-            target.dispatchEvent(event);
-        });
-    }
-
-    //   simulateEnterPress(target:any) {
-    //     const events = ["keydown", "keypress", "keyup"];
-    //     events.forEach(type => {
-    //       let event;
-    //       try {
-    //         event = new KeyboardEvent(type, {
-    //           key: "Enter",
-    //           code: "Enter",
-    //           keyCode: 13,
-    //           which: 13,
-    //           bubbles: true,
-    //           cancelable: true,
-    //           view: window
-    //         });
-    //       } catch (e) {
-    //         event = document.createEvent("KeyboardEvent");
-    //         event.initKeyboardEvent(type, true, true, window, "Enter", 0, false, false, false);
-    //       }
-    //       target.dispatchEvent(event);
-    //     });
-    //   }
 
     insertAt(text: string, attributes: { bold?: boolean; italic?: boolean; underline?: boolean, hyperlink?: boolean | string }, position: number, dataId: string | null = "", currentOffset: number = 0, id = "", actionType = '', isSynthetic = false): void {
         if (!isSynthetic) {
             this.undoRedoManager.saveUndoSnapshot();
         }
         console.log('inserted,', { start: position, text });
+        console.log('inserted,',this.blocks );
         let offset = 0;
         let newPieces: Piece[] = [];
         let inserted = false;
@@ -189,45 +136,6 @@ class TextDocument extends EventEmitter {
         // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
         // ele.focus();
         // this.setCursorPositionUsingOffset(ele, offset);
-    }
-
-    public setCursorPositionUsingOffset(element: HTMLElement, offset: number): void {
-        element.focus(); // Ensure the element is focusable and focused
-
-        const selection = window.getSelection();
-        if (!selection) return;
-
-        const range = document.createRange();
-        let currentOffset = 0;
-
-        const traverseNodes = (node: Node): boolean => {
-            if (node.nodeType === 3) { // Text node
-
-                const textNode = node as Text;
-                const nextOffset = currentOffset + textNode.length;
-
-                if (offset >= currentOffset && offset <= nextOffset) {
-                    range.setStart(textNode, offset - currentOffset); // Set the cursor position
-                    range.collapse(true); // Collapse the range to a single point (cursor)
-                    return true; // Cursor set
-                }
-
-                currentOffset = nextOffset;
-            } else if (node.nodeType === 1) { // Element node
-                const childNodes = Array.from(node.childNodes);
-                for (const child of childNodes) {
-                    if (traverseNodes(child)) return true;
-                }
-            }
-            return false;
-        };
-
-        traverseNodes(element);
-
-
-        // Clear any previous selection and apply the new range
-        selection.removeAllRanges();
-        selection.addRange(range);
     }
 
     deleteRange(start: number, end: number, dataId: string | null = "", currentOffset: number = 0): void {

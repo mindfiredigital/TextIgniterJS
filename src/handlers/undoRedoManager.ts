@@ -1,6 +1,7 @@
 import { getSelectionRange,saveSelection, restoreSelection } from "../utils/selectionManager";
 import TextDocument from "../textDocument";
 import EditorView from "../view/editorView";
+import Piece from "../piece";
 
 export interface DocumentSnapshot {
   blocks: any[];
@@ -58,6 +59,12 @@ export default class UndoRedoManager {
     (this.document as any)._selectedBlockId = snapshot.selectedBlockId;
     this.document.currentOffset = snapshot.currentOffset;
     // Let TextDocument’s event listeners know that things have changed.
+    // IMPORTANT: Recreate the Piece instances.
+    for (let block of this.document.blocks) {
+      if (block.pieces && Array.isArray(block.pieces)) {
+      block.pieces = block.pieces.map((piece: any) => new Piece(piece.text, piece.attributes));
+      }
+      }
     this.document.emit("documentChanged", this.document);
     this.document.setCursorPosition(snapshot.cursorPosition || 0);
     // Restore selection using your helper.
