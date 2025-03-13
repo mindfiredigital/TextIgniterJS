@@ -116,15 +116,12 @@ declare class TextDocument extends EventEmitter {
     setEditorView(editorView: EditorView): void;
     getPlainText(): string;
     setUndoRedoManager(undoRedoManager: UndoRedoManager): void;
-    triggerBackspaceEvents(target: any): void;
-    triggerKeyPress(target: any, key: any): void;
     insertAt(text: string, attributes: {
         bold?: boolean;
         italic?: boolean;
         underline?: boolean;
         hyperlink?: boolean | string;
     }, position: number, dataId?: string | null, currentOffset?: number, id?: string, actionType?: string, isSynthetic?: boolean): void;
-    setCursorPositionUsingOffset(element: HTMLElement, offset: number): void;
     deleteRange(start: number, end: number, dataId?: string | null, currentOffset?: number): void;
     deleteBlocks(): void;
     getSelectedTextDataId(): string | null;
@@ -179,7 +176,9 @@ declare class HyperlinkHandler {
     editorContainer: HTMLElement | null;
     editorView: EditorView;
     document: TextDocument;
+    undoRedoManager: UndoRedoManager;
     constructor(editorContainer: HTMLElement, editorView: EditorView, document: TextDocument);
+    setUndoRedoManager(undoRedoManager: UndoRedoManager): void;
     hanldeHyperlinkClick(start: number, end: number, currentOffset: number, selectedBlockId: string | null, blocks: blockType): void;
     getCommonHyperlinkInRange(start: number, end: number, currentOffset: number, selectedBlockId: string | null, blocks: blockType): string | null;
     showHyperlinkInput(existingLink: string | null): void;
