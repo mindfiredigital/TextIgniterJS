@@ -1,4 +1,4 @@
-import { getSelectionRange,saveSelection, restoreSelection } from "../utils/selectionManager";
+import { getSelectionRange, saveSelection, restoreSelection } from "../utils/selectionManager";
 import TextDocument from "../textDocument";
 import EditorView from "../view/editorView";
 import Piece from "../piece";
@@ -9,7 +9,7 @@ export interface DocumentSnapshot {
   selectedBlockId: string | null;
   currentOffset: number;
   selection?: { start: number; end: number };
-  cursorPosition?:number;
+  cursorPosition?: number;
 }
 
 
@@ -20,7 +20,7 @@ export default class UndoRedoManager {
   private maxSnapshots = 5000;
   private editorView: EditorView;
 
-  constructor(document: TextDocument,editorView: EditorView) {
+  constructor(document: TextDocument, editorView: EditorView) {
     this.document = document;
     this.editorView = editorView;
   }
@@ -33,7 +33,7 @@ export default class UndoRedoManager {
       selectedBlockId: this.document.selectedBlockId,
       currentOffset: this.document.currentOffset,
       selection: this.getCurrentSelection(),
-      cursorPosition:start, 
+      cursorPosition: start,
     };
   }
 
@@ -78,8 +78,8 @@ export default class UndoRedoManager {
   }
 
   public undo(): void {
-    console.log('   ',this.snapshotUndoStack);
-    console.log('uuuno',this.snapshotRedoStack);
+    console.log('   ', this.snapshotUndoStack);
+    console.log('uuuno', this.snapshotRedoStack);
     if (this.snapshotUndoStack.length === 0) return;
     const currentSnapshot = this.createSnapshot();
     this.snapshotRedoStack.push(currentSnapshot);

@@ -3,24 +3,6 @@ import Piece from "./piece";
 import EditorView from "./view/editorView";
 import UndoRedoManager from "./handlers/undoRedoManager";
 declare class TextDocument extends EventEmitter {
-    undoStack: {
-        id: string;
-        start: number;
-        end: number;
-        action: string;
-        previousValue: any;
-        newValue: any;
-        dataId?: string | null;
-    }[];
-    redoStack: {
-        id: string;
-        start: number;
-        end: number;
-        action: string;
-        previousValue: any;
-        newValue: any;
-        dataId?: string | null;
-    }[];
     dataIds: string[];
     pieces: Piece[];
     blocks: any;
@@ -35,15 +17,12 @@ declare class TextDocument extends EventEmitter {
     setEditorView(editorView: EditorView): void;
     getPlainText(): string;
     setUndoRedoManager(undoRedoManager: UndoRedoManager): void;
-    triggerBackspaceEvents(target: any): void;
-    triggerKeyPress(target: any, key: any): void;
     insertAt(text: string, attributes: {
         bold?: boolean;
         italic?: boolean;
         underline?: boolean;
         hyperlink?: boolean | string;
     }, position: number, dataId?: string | null, currentOffset?: number, id?: string, actionType?: string, isSynthetic?: boolean): void;
-    setCursorPositionUsingOffset(element: HTMLElement, offset: number): void;
     deleteRange(start: number, end: number, dataId?: string | null, currentOffset?: number): void;
     deleteBlocks(): void;
     getSelectedTextDataId(): string | null;
@@ -54,9 +33,8 @@ declare class TextDocument extends EventEmitter {
     getCursorOffset(container: HTMLElement): number;
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'], value: string | boolean): void;
     toggleOrderedList(dataId: string | null, id?: string): void;
-    toggleUnorderedList(dataId: string | null, id?: string): void;
+    toggleUnorderedList(dataId: string | null): void;
     updateOrderedListNumbers(): void;
-    getRangeText(start: number, end: number): string;
     undo(): void;
     redo(): void;
     setCursorPosition(position: number, dataId?: string | null): void;
@@ -70,9 +48,9 @@ declare class TextDocument extends EventEmitter {
     isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline' | 'undo' | 'redo'): boolean;
     mergePieces(pieces: Piece[]): Piece[];
     findPieceAtOffset(offset: number, dataId?: string | null): Piece | null;
-    setFontFamily(start: number, end: number, fontFamily: string, id?: string): void;
-    setFontSize(start: number, end: number, fontSize: string, id?: string): void;
-    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null, id?: string): void;
+    setFontFamily(start: number, end: number, fontFamily: string): void;
+    setFontSize(start: number, end: number, fontSize: string): void;
+    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void;
     getHtmlContent(): string | undefined;
     getCursorOffsetInParent(parentSelector: string): {
         offset: number;
