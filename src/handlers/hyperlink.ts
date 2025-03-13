@@ -6,11 +6,15 @@ import {
 } from "../utils/selectionManager";
 import EditorView from "../view/editorView";
 import TextDocument from "../textDocument";
+import UndoRedoManager from "./undoRedoManager";
+import { strings } from "../constants/strings";
+
 class HyperlinkHandler {
   savedSelection: { start: number; end: number } | null = null;
   editorContainer: HTMLElement | null;
   editorView: EditorView;
   document: TextDocument;
+  undoRedoManager!: UndoRedoManager;
 
   constructor(
     editorContainer: HTMLElement,
@@ -22,7 +26,9 @@ class HyperlinkHandler {
     this.document = document;
   }
 
-  // Method to save the current selection or caret position
+  setUndoRedoManager(undoRedoManager: UndoRedoManager): void {
+    this.undoRedoManager = undoRedoManager;
+  }
 
   hanldeHyperlinkClick(
     start: number,
@@ -48,7 +54,6 @@ class HyperlinkHandler {
     selectedBlockId: string | null,
     blocks: blockType
   ): string | null {
-    // let offset = this.currentOffset;
     let offset = currentOffset;
     let index = 0;
     if (selectedBlockId) {
@@ -66,7 +71,6 @@ class HyperlinkHandler {
         if (commonLink === null) {
           commonLink = pieceLink;
         } else if (commonLink !== pieceLink) {
-          // Different hyperlinks in selection
           return null;
         }
       }
@@ -76,18 +80,14 @@ class HyperlinkHandler {
   }
 
   showHyperlinkInput(existingLink: string | null): void {
-    // Get the elements
-    const hyperlinkContainer = document.getElementById("hyperlink-container");
-    const hyperlinkInput = document.getElementById(
-      "hyperlink-input"
-    ) as HTMLInputElement;
-    const applyButton = document.getElementById("apply-hyperlink");
-    const cancelButton = document.getElementById("cancel-hyperlink");
+    const hyperlinkContainer = document.getElementById(strings.HYPERLINK_CONTAINER_ID);
+    const hyperlinkInput = document.getElementById(strings.HYPERLINK_INPUT_ID) as HTMLInputElement;
+    const applyButton = document.getElementById(strings.HYPERLINK_APPLY_BTN_ID);
+    const cancelButton = document.getElementById(strings.HYPERLINK_CANCEL_BTN_ID);
 
     if (hyperlinkContainer && hyperlinkInput && applyButton && cancelButton) {
       hyperlinkContainer.style.display = "block";
 
-      // position the container near the selection or toolbar
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
@@ -96,34 +96,24 @@ class HyperlinkHandler {
         hyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
       }
 
-      // Set the existing link
       hyperlinkInput.value = existingLink || "";
-
-      // Save the current selection
       this.savedSelection = saveSelection(this.editorView.container);
-
-      // Show temporary selection
       this.highlightSelection();
-
-      // Ensure the hyperlink input is focused
       hyperlinkInput.focus();
 
-      // Remove any previous event listeners
       applyButton.onclick = null;
       cancelButton.onclick = null;
 
       const dataIdsSnapshot = this.document.dataIds;
 
-      // Handle the 'Link' button
       applyButton.onclick = () => {
         const url = hyperlinkInput.value.trim();
         if (url) {
-          this.applyHyperlink(url,dataIdsSnapshot);
+          this.applyHyperlink(url, dataIdsSnapshot);
         }
         hyperlinkContainer.style.display = "none";
       };
 
-      // Handle the 'Unlink' button
       cancelButton.onclick = () => {
         this.removeHyperlink(dataIdsSnapshot);
         hyperlinkContainer.style.display = "none";
@@ -132,22 +122,15 @@ class HyperlinkHandler {
   }
 
   highlightSelection(): void {
-    // Remove any existing temporary highlights
     this.removeHighlightSelection();
 
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
-
-      // Create a wrapper span
       const span = document.createElement("span");
-      span.className = "temporary-selection-highlight";
-
-      // Extract the selected content and wrap it
+      span.className = strings.TEMPORARY_SELECTION_HIGHLIGHT_CLASS;
       span.appendChild(range.extractContents());
       range.insertNode(span);
-
-      // Adjust the selection to encompass the new span
       selection.removeAllRanges();
       const newRange = document.createRange();
       newRange.selectNodeContents(span);
@@ -157,7 +140,7 @@ class HyperlinkHandler {
 
   removeHighlightSelection(): void {
     const highlights = this.editorContainer?.querySelectorAll(
-      "span.temporary-selection-highlight"
+      `span.${strings.TEMPORARY_SELECTION_HIGHLIGHT_CLASS}`
     );
     highlights?.forEach((span) => {
       const parent = span.parentNode;
@@ -170,13 +153,10 @@ class HyperlinkHandler {
     });
   }
 
-  applyHyperlink(url: string,dataIdsSnapshot:any): void {
-    // Remove any existing temporary highlights
+  applyHyperlink(url: string, dataIdsSnapshot: any): void {
+    this.undoRedoManager.saveUndoSnapshot();
     this.removeHighlightSelection();
-
-    // Restore the selection
     restoreSelection(this.editorView.container, this.savedSelection);
-
     const [start, end] = getSelectionRange(this.editorView);
     if (start < end) {
       if (dataIdsSnapshot.length > 1) {
@@ -188,32 +168,23 @@ class HyperlinkHandler {
               countE += obj.text.length;
             });
             let countS = start - countE;
-            // this.document.applyHyperlinkRange(countS, countE,url);
             this.document.formatAttribute(countS, countE, "hyperlink", url);
           }
         });
       } else {
-        // this.document.applyHyperlinkRange(start, end,url);
         this.document.formatAttribute(start, end, "hyperlink", url);
       }
-
-      // this.document.applyHyperlinkRange(start, end, url);
-
       this.editorView.render();
-      // Restore selection and focus
       restoreSelection(this.editorView.container, this.savedSelection);
       this.editorView.container.focus();
     }
     this.savedSelection = null;
   }
 
-  removeHyperlink(dataIdsSnapshot:any): void {
-    // Remove any existing temporary highlights
+  removeHyperlink(dataIdsSnapshot: any): void {
+    this.undoRedoManager.saveUndoSnapshot();
     this.removeHighlightSelection();
-
-    // Restore the selection
     restoreSelection(this.editorView.container, this.savedSelection);
-
     const [start, end] = getSelectionRange(this.editorView);
     if (start < end) {
       if (dataIdsSnapshot.length > 1) {
@@ -231,9 +202,7 @@ class HyperlinkHandler {
       } else {
         this.document.formatAttribute(start, end, "hyperlink", false);
       }
-
       this.editorView.render();
-      // Restore selection and focus
       restoreSelection(this.editorView.container, this.savedSelection);
       this.editorView.container.focus();
     }
@@ -241,39 +210,29 @@ class HyperlinkHandler {
   }
 
   showHyperlinkViewButton(link: string | ""): void {
-    const viewHyperlinkContainer = document.getElementById(
-      "hyperlink-container-view"
-    ) as HTMLDivElement;
-    const hyperLinkAnchor = document.getElementById(
-      "hyperlink-view-link"
-    ) as HTMLAnchorElement;
+    const viewHyperlinkContainer = document.getElementById(strings.VIEW_HYPERLINK_CONTAINER_ID) as HTMLDivElement;
+    const hyperLinkAnchor = document.getElementById(strings.VIEW_HYPERLINK_ANCHOR_ID) as HTMLAnchorElement;
 
     if (viewHyperlinkContainer && hyperLinkAnchor) {
       viewHyperlinkContainer.style.display = "block";
 
-      // position the container near the selection or toolbar
       const selection = window.getSelection();
       if (selection) {
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
-        viewHyperlinkContainer.style.top = `${
-          rect.bottom + window.scrollY + 5
-        }px`;
+        viewHyperlinkContainer.style.top = `${rect.bottom + window.scrollY + 5}px`;
         viewHyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
       }
 
-      // Set the existing link
       if (link) {
-        hyperLinkAnchor.innerText = link || "";
-        hyperLinkAnchor.href = link || "";
+        hyperLinkAnchor.innerText = link;
+        hyperLinkAnchor.href = link;
       }
     }
   }
 
   hideHyperlinkViewButton() {
-    const hyperlinkContainer = document.getElementById(
-      "hyperlink-container-view"
-    );
+    const hyperlinkContainer = document.getElementById(strings.VIEW_HYPERLINK_CONTAINER_ID);
     if (hyperlinkContainer) {
       hyperlinkContainer.style.display = "none";
     }
