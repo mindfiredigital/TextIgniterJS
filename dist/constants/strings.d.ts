@@ -3,6 +3,19 @@ export declare const strings: {
     TOOLBAR_ID: string;
     EDITOR_CLASSNAME: string;
     EDITOR_ID: string;
+    EDITOR_ELEMENT_NT_FOUND: string;
+    FONT_FAMILY_SELECT_ID: string;
+    FONT_SIZE_SELECT_ID: string;
+    FONT_COLOR_WRAPPER_ID: string;
+    FONT_COLOR_ID: string;
+    FONT_COLOR_PICKER_WRAPPER_ID: string;
+    FONT_COLOR_PICKER_ID: string;
+    BG_COLOR_WRAPPER_ID: string;
+    BG_COLOR_ID: string;
+    BG_COLOR_PICKER_WRAPPER_ID: string;
+    BG_COLOR_PICKER_ID: string;
+    GET_HTML_BUTTON_ID: string;
+    LOAD_HTML_BUTTON_ID: string;
     HYPERLINK_CONTAINER_ID: string;
     HYPERLINK_INPUT_ID: string;
     HYPERLINK_PLACEHOLDER: string;
@@ -11,5 +24,8 @@ export declare const strings: {
     VIEW_HYPERLINK_CONTAINER_ID: string;
     VIEW_HYPERLINK_LABEL_ID: string;
     VIEW_HYPERLINK_ANCHOR_ID: string;
+    TEMPORARY_SELECTION_HIGHLIGHT_CLASS: string;
+    PARAGRAPH_BLOCK_CLASS: string;
+    IMAGE_CROSS_CLASS: string;
     TEST_HTML_CODE: string;
 };
