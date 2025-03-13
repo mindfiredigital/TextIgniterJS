@@ -6,11 +6,13 @@ import {
 } from "../utils/selectionManager";
 import EditorView from "../view/editorView";
 import TextDocument from "../textDocument";
+import UndoRedoManager from "./undoRedoManager";
 class HyperlinkHandler {
   savedSelection: { start: number; end: number } | null = null;
   editorContainer: HTMLElement | null;
   editorView: EditorView;
   document: TextDocument;
+  undoRedoManager!:UndoRedoManager;
 
   constructor(
     editorContainer: HTMLElement,
@@ -24,6 +26,9 @@ class HyperlinkHandler {
 
   // Method to save the current selection or caret position
 
+  setUndoRedoManager(undoRedoManager: UndoRedoManager): void {
+    this.undoRedoManager = undoRedoManager;
+  }
   hanldeHyperlinkClick(
     start: number,
     end: number,
@@ -171,6 +176,7 @@ class HyperlinkHandler {
   }
 
   applyHyperlink(url: string,dataIdsSnapshot:any): void {
+    this.undoRedoManager.saveUndoSnapshot();
     // Remove any existing temporary highlights
     this.removeHighlightSelection();
 
@@ -208,6 +214,8 @@ class HyperlinkHandler {
   }
 
   removeHyperlink(dataIdsSnapshot:any): void {
+    this.undoRedoManager.saveUndoSnapshot();
+
     // Remove any existing temporary highlights
     this.removeHighlightSelection();
 
