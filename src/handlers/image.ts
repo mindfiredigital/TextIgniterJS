@@ -2,11 +2,12 @@ import { getSelectionRange } from "../utils/selectionManager";
 import EditorView from "../view/editorView";
 import TextDocument from "../textDocument";
 import Piece from "../piece";
-import { setCursorPosition } from "../utils/cursor";
 import {
   extractTextFromDataId,
   addBlockAfter,
 } from "../utils/selectionManager";
+import { strings } from "../constants/strings";
+
 export class ImageHandler {
   private editor: HTMLElement;
   private editorView!: EditorView;
@@ -58,7 +59,6 @@ export class ImageHandler {
   public setCursorPostion(postion: number, dataId: string): void {
     const div = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
     div.focus();
-
     setTimeout(() => {
       const range = document.createRange();
       const sel = window.getSelection();
@@ -74,6 +74,7 @@ export class ImageHandler {
       sel?.addRange(range);
     }, 0);
   }
+
   public insertImageAtPosition(
     dataUrl: string,
     position: number,
@@ -84,14 +85,14 @@ export class ImageHandler {
     const uniqueId3 = `data-id-${Date.now()}-${Math.random() * 1000}`;
     const newImageBlock = {
       dataId: uniqueId1,
-      class: "paragraph-block",
+      class: strings.PARAGRAPH_BLOCK_CLASS,
       pieces: [new Piece(" ")],
       type: "image",
       image: dataUrl,
     };
     const newTextBlock = {
       dataId: uniqueId2,
-      class: "paragraph-block",
+      class: strings.PARAGRAPH_BLOCK_CLASS,
       pieces: [new Piece(" ")],
       type: "text",
     };
@@ -135,7 +136,7 @@ export class ImageHandler {
         this.document.selectedBlockId || "",
         {
           dataId: uniqueId3,
-          class: "paragraph-block",
+          class: strings.PARAGRAPH_BLOCK_CLASS,
           pieces: _pieces,
           type: "text",
         }
@@ -144,12 +145,12 @@ export class ImageHandler {
 
     this.document.blocks = updatedBlock;
 
-      this.document.deleteRange(
-        this.currentCursorLocation,
-        this.currentCursorLocation + remainingText.length,
-        this.document.selectedBlockId,
-        this.document.currentOffset
-      );
+    this.document.deleteRange(
+      this.currentCursorLocation,
+      this.currentCursorLocation + remainingText.length,
+      this.document.selectedBlockId,
+      this.document.currentOffset
+    );
 
     if (this.document.blocks.length > indexOfCurrentBlock + 1) {
       this.document.blocks.forEach((block: any, idx: number) => {
@@ -204,53 +205,50 @@ export class ImageHandler {
   }
 
   public addStyleToImage(dataId: string) {
-   if(!this.isCrossIconVisible){
-    const div = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
-    const span = div?.querySelector("span");
-    if (span) span.style.position = "relative";
-    const img = div?.querySelector("img");
-    if (img) {
-      img.style.border = "2px solid blue";
+    if (!this.isCrossIconVisible) {
+      const div = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
+      const span = div?.querySelector("span");
+      if (span) span.style.position = "relative";
+      const img = div?.querySelector("img");
+      if (img) {
+        img.style.border = "2px solid blue";
+      }
+      const cross = document.createElement("div");
+      cross.className = strings.IMAGE_CROSS_CLASS;
+      cross.innerHTML = "x";
+      Object.assign(cross.style, {
+        position: "absolute",
+        top: "0",
+        left: "50%",
+        transform: "translate(-50%, 0)",
+        background: "#fff",
+        borderRadius: "50%",
+        width: "30px",
+        height: "30px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        border: "3px solid blue",
+        zIndex: "999",
+      });
+      cross.addEventListener(
+        "mouseover",
+        () => (cross.style.border = "3px solid black")
+      );
+      cross.addEventListener(
+        "mouseout",
+        () => (cross.style.border = "3px solid blue")
+      );
+      cross.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.deleteImage();
+      });
+      span?.appendChild(cross);
+      this.isImageHighlighted = true;
+      this.highLightedImageDataId = dataId;
+      this.isCrossIconVisible = true;
     }
-    const cross = document.createElement("div");
-    cross.className = "image-cross";
-    cross.innerHTML = "x";
-    Object.assign(cross.style, {
-      position: "absolute",
-      top: "0",
-      left: "50%",
-      transform: "translate(-50%, 0)",
-      background: "#fff",
-      borderRadius: "50%",
-      width: "30px",
-      height: "30px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer",
-      border: "3px solid blue",
-      zIndex: "999",
-    });
-    cross.addEventListener(
-      "mouseover",
-      () => (cross.style.border = "3px solid black")
-    );
-    cross.addEventListener(
-      "mouseout",
-      () => (cross.style.border = "3px solid blue")
-    );
-
-    cross.addEventListener("click", (e) => {  
-      e.stopPropagation();  
-          this.deleteImage()    
-    });
-
-  
-    span?.appendChild(cross);
-    this.isImageHighlighted = true;
-    this.highLightedImageDataId = dataId;
-    this.isCrossIconVisible = true;
-  }
   }
 
   public clearImageStyling() {
@@ -263,18 +261,15 @@ export class ImageHandler {
       const img = span?.querySelector("img");
       if (img) {
         img.removeAttribute("style");
-        // img.addEventListener("click", this.styleImageOnClick);
       }
-      const cross = span?.querySelector(".image-cross");
+      const cross = span?.querySelector(`.${strings.IMAGE_CROSS_CLASS}`);
       cross?.remove();
       this.highLightedImageDataId = "";
     }
     this.isCrossIconVisible = false;
-
   }
 
   public deleteImage() {
-    
     this.document.blocks = this.document.blocks.filter(
       (block: any) => block.dataId !== this.highLightedImageDataId
     );

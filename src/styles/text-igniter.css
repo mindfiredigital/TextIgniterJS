@@ -33,9 +33,9 @@
 }
 
 .paragraph-block {
-  padding: 10px;
-  background: #f7f7f7;
-  margin: 5px;
+  padding: 2px;
+  /* background: #f7f7f7; */
+  margin: 1px;
 }
 
 #hyperlink-container {

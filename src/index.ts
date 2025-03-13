@@ -190,6 +190,7 @@ class TextIgniter {
         document.getElementById("loadHtmlButton")?.addEventListener('click', (e) => {
 
             // const htmlString = this.document.getHtmlContent();
+            this.undoRedoManager.saveUndoSnapshot();
             const str = strings.TEST_HTML_CODE;
             this.htmlToJsonParser = new HtmlToJsonParser(str as string);
             console.log(this.htmlToJsonParser, "this.htmlToJsonParser")
@@ -219,6 +220,7 @@ class TextIgniter {
 
 
         document.getElementById('fontFamily')?.addEventListener('change', (e) => {
+          this.undoRedoManager.saveUndoSnapshot();
             const fontFamily = (e.target as HTMLSelectElement).value;
             const [start, end] = this.getSelectionRange();
             if (this.document.dataIds.length > 1) {
@@ -244,6 +246,7 @@ class TextIgniter {
 
 
         document.getElementById('fontSize')?.addEventListener('change', (e) => {
+          this.undoRedoManager.saveUndoSnapshot();
             const fontSize = (e.target as HTMLSelectElement).value;
             const [start, end] = this.getSelectionRange();
             if (this.document.dataIds.length > 1) {
@@ -352,6 +355,7 @@ class TextIgniter {
         this.document.emit('documentChanged', this.document);
 
         this.editorContainer.addEventListener('paste', (e: ClipboardEvent) => {
+          this.undoRedoManager.saveUndoSnapshot();
             e.preventDefault();
             const html = e.clipboardData?.getData('text/html');
             const [start, end] = this.getSelectionRange();
