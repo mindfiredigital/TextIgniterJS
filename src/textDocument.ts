@@ -5,8 +5,8 @@ import UndoRedoManager from "./handlers/undoRedoManager";
 
 // text document extend
 class TextDocument extends EventEmitter {
-    undoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }[] = [];
-    redoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }[] = [];
+    // undoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }[] = [];
+    // redoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }[] = [];
     dataIds: string[] = [];
     pieces: Piece[];
     blocks: any;
@@ -129,7 +129,7 @@ class TextDocument extends EventEmitter {
             // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
             offset = this.currentOffset;
         }
-        const previousValue = this.getRangeText(position, position);
+        // const previousValue = this.getRangeText(position, position);
 
         // for (let piece of this.pieces) {
         for (let piece of this.blocks[index].pieces) {
@@ -163,28 +163,28 @@ class TextDocument extends EventEmitter {
         // this.pieces = _data;
 
         this.blocks[index].pieces = _data
-        const newValue = this.getRangeText(position, position + text.length);
+        // const newValue = this.getRangeText(position, position + text.length);
         console.log({ position });
         // if (dataId !== '' || dataId !== null) {
         //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
         // }
         // Push to undo stack
-        if (actionType !== 'redo' && !isSynthetic) {
-            const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-            if (_redoStackIds.length === 0) {
-                this.undoStack.push({
-                    id: Date.now().toString(),
-                    start: position,
-                    end: position + text.length,
-                    action: 'insert',
-                    previousValue,
-                    newValue
-                });
+        // if (actionType !== 'redo' && !isSynthetic) {
+        //     const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
+        //     if (_redoStackIds.length === 0) {
+        //         this.undoStack.push({
+        //             id: Date.now().toString(),
+        //             start: position,
+        //             end: position + text.length,
+        //             action: 'insert',
+        //             previousValue,
+        //             newValue
+        //         });
 
-                // Clear redo stack
-                this.redoStack = [];
-            }
-        }
+        //         // Clear redo stack
+        //         this.redoStack = [];
+        //     }
+        // }
         this.emit('documentChanged', this);
         // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
         // ele.focus();
@@ -243,7 +243,7 @@ class TextDocument extends EventEmitter {
             offset = currentOffset;
         }
 
-        const previousValue = this.getRangeText(start, end);
+        // const previousValue = this.getRangeText(start, end);
         let previousTextBlockIndex = 0;
 
         if (start === offset) {
@@ -295,7 +295,7 @@ class TextDocument extends EventEmitter {
                 return blocks.pieces.length !== 0;
             });
         }
-        const newValue = this.getRangeText(start - 1, end - 1);
+        // const newValue = this.getRangeText(start - 1, end - 1);
 
 
         this.emit('documentChanged', this);
@@ -467,7 +467,7 @@ class TextDocument extends EventEmitter {
         // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
         value: string | boolean): void {
 
-
+        console.log("formatAttribute", start, end, attribute, value)
         let newPieces: Piece[] = [];
         let offset = 0;
         let index = -1;
@@ -584,7 +584,7 @@ class TextDocument extends EventEmitter {
 
 
 
-    toggleUnorderedList(dataId: string | null, id: string = ''): void {
+    toggleUnorderedList(dataId: string | null): void {
         const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
         if (index === -1) return;
         const block = this.blocks[index];
@@ -630,6 +630,7 @@ class TextDocument extends EventEmitter {
         this.emit('documentChanged', this);
     }
 
+    /*
     getRangeText(start: number, end: number): string {
         let rangeText = '';
         let currentOffset = 0;
@@ -658,6 +659,7 @@ class TextDocument extends EventEmitter {
 
         return rangeText;
     }
+        */
 
     // getRangeTextPiece(start: number, end: number): { rangeText: string, piece: any } {
     //     let rangeText = '';
@@ -1068,10 +1070,10 @@ class TextDocument extends EventEmitter {
     // }
 
     toggleBoldRange(start: number, end: number, id = ""): void {
-        const previousValue = this.getRangeText(start, end);
+        // const previousValue = this.getRangeText(start, end);
         const allBold = this.isRangeEntirelyAttribute(start, end, 'bold');
         this.formatAttribute(start, end, 'bold', !allBold);
-        const newValue = this.getRangeText(start, end);
+        // const newValue = this.getRangeText(start, end);
 
         // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
         // if (_redoStackIds.length === 0) {
@@ -1243,7 +1245,7 @@ class TextDocument extends EventEmitter {
         return null;
     }
 
-    setFontFamily(start: number, end: number, fontFamily: string, id: string = ''): void {
+    setFontFamily(start: number, end: number, fontFamily: string): void {
         // const { rangeText, piece } = this.getRangeTextPiece(start, end);
         // const previousValue = piece.attributes.fontFamily;
 
@@ -1264,7 +1266,7 @@ class TextDocument extends EventEmitter {
     //     this.formatAttribute(start, end, 'fontFamily', fontFamily);
     // }
 
-    setFontSize(start: number, end: number, fontSize: string, id: string = ''): void {
+    setFontSize(start: number, end: number, fontSize: string): void {
         // const { rangeText, piece } = this.getRangeTextPiece(start, end);
         // const previousValue = piece.attributes.fontSize;
         this.formatAttribute(start, end, 'fontSize', fontSize);
@@ -1279,7 +1281,7 @@ class TextDocument extends EventEmitter {
     //     this.formatAttribute(start, end, 'fontSize', fontSize);
     // }
 
-    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null, id: string = ''): void {
+    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void {
         const block = this.blocks.find((block: any) => block.dataId === dataId);
         // const previousValue = block.alignment;
         // const start = 0;
