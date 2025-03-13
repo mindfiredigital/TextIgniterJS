@@ -53,6 +53,7 @@ class TextIgniter {
         this.imageHandler.setEditorView(this.editorView);
         this.document.setEditorView(this.editorView);
         this.document.setUndoRedoManager(this.undoRedoManager);
+        this.hyperlinkHandler.setUndoRedoManager(this.undoRedoManager);
         this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, hyperlink: false };
         this.manualOverride = false;
         this.lastPiece = null;
@@ -426,6 +427,7 @@ class TextIgniter {
 
    // Toolbar action handler
 handleToolbarAction(action: string, dataId: string[] = []): void {
+ 
     const [start, end] = this.getSelectionRange();
   
     switch (action) {
@@ -447,6 +449,7 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
         break;
       default:
         if (start < end) {
+          this.undoRedoManager.saveUndoSnapshot();
           switch (action) {
             case 'bold':
               if (this.document.dataIds.length > 1) {
@@ -499,12 +502,12 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
                 this.document.toggleUnderlineRange(start, end);
               }
               break;
-            case 'undo':
-              this.document.undo();
-              break;
-            case 'redo':
-              this.document.redo();
-              break;
+            // case 'undo':
+            //   this.document.undo();
+            //   break;
+            // case 'redo':
+            //   this.document.redo();
+            //   break;
             case 'hyperlink':
               this.hyperlinkHandler.hanldeHyperlinkClick(
                 start,
@@ -523,6 +526,7 @@ handleToolbarAction(action: string, dataId: string[] = []): void {
           ];
           this.manualOverride = true;
         }
+        
         break;
     }
     this.toolbarView.updateActiveStates(this.currentAttributes);
