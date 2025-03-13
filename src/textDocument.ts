@@ -5,8 +5,6 @@ import UndoRedoManager from "./handlers/undoRedoManager";
 
 // text document extend
 class TextDocument extends EventEmitter {
-    undoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }[] = [];
-    redoStack: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }[] = [];
     dataIds: string[] = [];
     pieces: Piece[];
     blocks: any;
@@ -66,7 +64,7 @@ class TextDocument extends EventEmitter {
             this.undoRedoManager.saveUndoSnapshot();
         }
         console.log('inserted,', { start: position, text });
-        console.log('inserted,',this.blocks );
+        console.log('inserted,', this.blocks);
         let offset = 0;
         let newPieces: Piece[] = [];
         let inserted = false;
@@ -76,7 +74,7 @@ class TextDocument extends EventEmitter {
             // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
             offset = this.currentOffset;
         }
-        const previousValue = this.getRangeText(position, position);
+        // const previousValue = this.getRangeText(position, position);
 
         // for (let piece of this.pieces) {
         for (let piece of this.blocks[index].pieces) {
@@ -107,35 +105,12 @@ class TextDocument extends EventEmitter {
         }
 
         const _data = this.mergePieces(newPieces)
-        // this.pieces = _data;
 
         this.blocks[index].pieces = _data
-        const newValue = this.getRangeText(position, position + text.length);
         console.log({ position });
-        // if (dataId !== '' || dataId !== null) {
-        //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId)
-        // }
-        // Push to undo stack
-        if (actionType !== 'redo' && !isSynthetic) {
-            const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-            if (_redoStackIds.length === 0) {
-                this.undoStack.push({
-                    id: Date.now().toString(),
-                    start: position,
-                    end: position + text.length,
-                    action: 'insert',
-                    previousValue,
-                    newValue
-                });
 
-                // Clear redo stack
-                this.redoStack = [];
-            }
-        }
         this.emit('documentChanged', this);
-        // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
-        // ele.focus();
-        // this.setCursorPositionUsingOffset(ele, offset);
+
     }
 
     deleteRange(start: number, end: number, dataId: string | null = "", currentOffset: number = 0): void {
@@ -151,7 +126,7 @@ class TextDocument extends EventEmitter {
             offset = currentOffset;
         }
 
-        const previousValue = this.getRangeText(start, end);
+        // const previousValue = this.getRangeText(start, end);
         let previousTextBlockIndex = 0;
 
         if (start === offset) {
@@ -203,22 +178,15 @@ class TextDocument extends EventEmitter {
                 return blocks.pieces.length !== 0;
             });
         }
-        const newValue = this.getRangeText(start - 1, end - 1);
 
 
         this.emit('documentChanged', this);
-        // const ele = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement;
-        // ele.focus();
-        // this.setCursorPosition(offset,dataId || "");
 
     }
 
     deleteBlocks() {
         this.blocks = this.blocks.filter((block: any) => {
-            // if (block.dataId === 'data-id-1734604240404') {
-            //     block.pieces = [new Piece(" ")]
-            //     return block;
-            // }
+
             if (!this.dataIds.includes(block.dataId)) {
                 return block;
             }
@@ -375,7 +343,7 @@ class TextDocument extends EventEmitter {
         // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
         value: string | boolean): void {
 
-
+        console.log("formatAttribute", start, end, attribute, value)
         let newPieces: Piece[] = [];
         let offset = 0;
         let index = -1;
@@ -419,16 +387,6 @@ class TextDocument extends EventEmitter {
 
                     selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
                 }
-                // // Store undo action
-                // const previousValue = selectedPiece.attributes[attribute] || "";
-                // this.undoStack.push({
-                //     id: Date.now().toString(),
-                //     start,
-                //     end,
-                //     action: attribute,
-                //     previousValue,
-                //     newValue: value,
-                // });
 
                 newPieces.push(selectedPiece);
 
@@ -449,9 +407,6 @@ class TextDocument extends EventEmitter {
         const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
         if (index === -1) return;
         const block = this.blocks[index];
-        // const previousValue = block.listType;
-        // const start = 0;
-        // const end = 0;
         // Toggle: if already ordered, turn it off; otherwise, turn it on
         if (block.listType === 'ol' || block.listType === 'li') {
             block.listType = null;
@@ -463,59 +418,22 @@ class TextDocument extends EventEmitter {
             // Mark the block as the start (parent) of its list group
             block.parentId = block.dataId;
         }
-        // const newValue = block.listType;
-        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        // if (_redoStackIds.length === 0) {
-        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType-ol', previousValue, newValue, dataId });
-        //     this.redoStack = [];
-        // }
+
         this.emit('documentChanged', this);
     }
 
-    // toggleOrderedList1(dataId: string | null, id: string = ""): void {
-    //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-    //     if (index === -1) return;
-    //     const block = this.blocks[index];
-    //     // Toggle: if already ordered, turn it off; otherwise, turn it on
-    //     if (block.listType === 'ol' || block.listType === 'li') {
-    //         block.listType = null;
-    //         block.listStart = undefined;
-    //         block.parentId = undefined;
-    //     } else {
-    //         block.listType = 'ol';
-    //         block.listStart = 1;
-    //         // Mark the block as the start (parent) of its list group
-    //         block.parentId = block.dataId;
-    //     }
-    //     this.emit('documentChanged', this);
-    // }
 
 
 
-    toggleUnorderedList(dataId: string | null, id: string = ''): void {
+    toggleUnorderedList(dataId: string | null): void {
         const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
         if (index === -1) return;
         const block = this.blocks[index];
-        // const previousValue = block.listType;
-        // const start = 0;
-        // const end = 0;
         block.listType = block.listType === 'ul' ? null : 'ul';
-        // const newValue = block.listType;
-        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        // if (_redoStackIds.length === 0) {
-        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'listType', previousValue, newValue, dataId });
-        //     this.redoStack = [];
-        // }
         this.emit('documentChanged', this);
     }
 
-    // toggleUnorderedList1(dataId: string | null, id: string = ''): void {
-    //     const index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-    //     if (index === -1) return;
-    //     const block = this.blocks[index];
-    //     block.listType = block.listType === 'ul' ? null : 'ul';
-    //     this.emit('documentChanged', this);
-    // }
+
 
     updateOrderedListNumbers(): void {
         let currentNumber = 1;
@@ -538,6 +456,7 @@ class TextDocument extends EventEmitter {
         this.emit('documentChanged', this);
     }
 
+    /*
     getRangeText(start: number, end: number): string {
         let rangeText = '';
         let currentOffset = 0;
@@ -565,153 +484,20 @@ class TextDocument extends EventEmitter {
         }
 
         return rangeText;
+       // return { rangeText: rangeText, piece: _piece };
     }
+        */
 
-    // getRangeTextPiece(start: number, end: number): { rangeText: string, piece: any } {
-    //     let rangeText = '';
-    //     let currentOffset = 0;
-    //     let _piece = {};
-    //     for (const block of this.blocks) {
-    //         for (const piece of block.pieces) {
-    //             const pieceLength = piece.text.length;
-
-    //             if (currentOffset + pieceLength >= start && currentOffset < end) {
-    //                 console.log(piece, "piece getRangeText")
-    //                 _piece = piece;
-    //                 const rangeStart = Math.max(0, start - currentOffset);
-    //                 const rangeEnd = Math.min(pieceLength, end - currentOffset);
-    //                 rangeText += piece.text.substring(rangeStart, rangeEnd);
-    //             }
-
-    //             currentOffset += pieceLength;
-
-    //             if (currentOffset >= end) {
-    //                 break;
-    //             }
-    //         }
-
-    //         if (currentOffset >= end) {
-    //             break;
-    //         }
-    //     }
-
-    //     return { rangeText: rangeText, piece: _piece };
-    // }
 
     undo(): void {
         console.log('undo')
-
         this.undoRedoManager.undo();
-        // const action = this.undoStack.pop();
-
-        // if (!action) return;
-
-        // this.redoStack.push(action);
-        // this.revertAction(action);
     }
 
     redo(): void {
         this.undoRedoManager.redo();
         console.log('redo')
-        // const action = this.redoStack.pop();
-
-
-        // if (!action) return;
-
-        // this.undoStack.push(action);
-        // this.applyAction(action);
     }
-
-    // setCursorPosition(position: number, dataId: string | null = ''): void {
-    //     if (dataId === '')
-    //         this.editorView.container.focus();
-    //     else {
-    //         const divDataid = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement
-    //         divDataid.focus();
-
-    //     }
-    //     const sel = window.getSelection();
-    //     if (!sel) return;
-    //     const range = document.createRange();
-    //     let charIndex = 0;
-    //     const nodeStack: Node[] = [this.editorView.container];
-    //     let node: Node | undefined;
-
-    //     while ((node = nodeStack.pop())) {
-    //         if (node.nodeType === 3) {
-    //             const textNode = node as Text;
-    //             const nextCharIndex = charIndex + textNode.length;
-    //             if (position >= charIndex && position <= nextCharIndex) {
-    //                 range.setStart(textNode, position - charIndex);
-    //                 range.collapse(true);
-    //                 break;
-    //             }
-    //             charIndex = nextCharIndex;
-    //         } else if ((node as HTMLElement).tagName === 'BR') {
-    //             if (position === charIndex) {
-    //                 range.setStartBefore(node);
-    //                 range.collapse(true);
-    //                 break;
-    //             }
-    //             charIndex++;
-    //         } else {
-    //             const el = node as HTMLElement;
-    //             let i = el.childNodes.length;
-    //             while (i--) {
-    //                 nodeStack.push(el.childNodes[i]);
-    //             }
-    //         }
-    //     }
-
-    //     sel.removeAllRanges();
-    //     sel.addRange(range);
-    // }
-
-    // setNewCursorPosition(position: number): void {
-    //     this.editorView.container.focus();
-
-    //     const sel = window.getSelection();
-    //     if (!sel) return;
-
-    //     const range = document.createRange();
-    //     let charIndex = 0;
-    //     const nodeStack: Node[] = [this.editorView.container];
-    //     let node: Node | undefined;
-
-    //     const totalLength = this.editorView.container.textContent?.length || 0;
-    //     if (position < 0 || position > totalLength) return;
-
-    //     while ((node = nodeStack.pop())) {
-    //         if (node.nodeType === 3) { // Text node
-    //             const textNode = node as Text;
-    //             const nextCharIndex = charIndex + textNode.length;
-    //             if (position >= charIndex && position <= nextCharIndex) {
-    //                 range.setStart(textNode, Math.min(position - charIndex, textNode.length));
-    //                 range.collapse(true);
-    //                 sel.removeAllRanges();
-    //                 sel.addRange(range);
-    //                 return;
-    //             }
-    //             charIndex = nextCharIndex;
-    //         } else if ((node as HTMLElement).tagName === 'BR' || (node as HTMLElement).tagName === 'DIV') {
-    //             if (position === charIndex) {
-    //                 range.setStartBefore(node);
-    //                 range.collapse(true);
-    //                 sel.removeAllRanges();
-    //                 sel.addRange(range);
-    //                 return;
-    //             }
-    //             charIndex++;
-    //         } else {
-    //             const el = node as HTMLElement;
-    //             for (let i = el.childNodes.length - 1; i >= 0; i--) {
-    //                 nodeStack.push(el.childNodes[i]);
-    //             }
-    //         }
-    //     }
-    // }
-
-
 
     setCursorPosition(position: number, dataId: string | null = ''): void {
         if (dataId !== '') {
@@ -768,251 +554,19 @@ class TextDocument extends EventEmitter {
     }
 
 
-
-    /*private revertAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
-        const noOfBlocks = this.blocks.length;
-        switch (action.action) {
-            case 'bold':
-                this.toggleBoldRange(action.start, action.end, action.id); // Reverse bold toggle
-                break;
-            case 'italic':
-                this.toggleItalicRange(action.start, action.end, action.id);
-                break;
-            case 'underline':
-                this.toggleUnderlineRange(action.start, action.end, action.id);
-                break
-            case 'fontFamily':
-                this.setFontFamily(action.start, action.end, action.previousValue, action.id);
-                break;
-            case 'fontSize':
-                this.setFontSize(action.start, action.end, action.previousValue, action.id);
-                break;
-            case 'fontColor':
-                this.applyFontColor(action.start, action.end, action.previousValue, action.id);
-                break;
-            case 'bgColor':
-                this.applyBgColor(action.start, action.end, action.previousValue, action.id);
-                break;
-            case 'alignment':
-                if (action.dataId !== undefined)
-                    this.setAlignment(action.previousValue, action.dataId, action.id)
-                break;
-            case 'listType':
-                if (action.dataId !== undefined)
-                    this.toggleUnorderedList(action.dataId, action.id)
-                break;
-            case 'listType-ol':
-                if (action.dataId !== undefined)
-                    this.toggleOrderedList(action.dataId, action.id)
-                break;
-            // case 'listType':
-            //     if (action.dataId !== undefined)
-            //         this.toggleUnorderedList(action.dataId, action.id)
-            //     break;
-            case 'enter':
-                //backspace should be press as opposite of enter.
-                // But at which blockId and at which location enter is pressed that should be exact same.
-                console.log('jagdish....00',{id:this.selectedBlockId,offset:this.currentOffset,action:action.start,end:action.end})
-
-
-                // this.setCursorPosition(action.start+1 , this.selectedBlockId);
-                // this.triggerBackspaceEvents(document.activeElement);
-                // this.setNewCursorPosition(action.start+1);
-                // this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
-
-                // if (action.start === action.end && action.start > 0) {
-                //     this.deleteRange(action.start - 1, action.start, this.selectedBlockId, this.currentOffset);
-                //     // this.setCursorPosition(start - 1);
-                //     const index = this.blocks.findIndex(
-                //       (block: any) => block.dataId === this.selectedBlockId
-                //     );
-                //     const chkBlock = document.querySelector(`[data-id="${this.selectedBlockId}"]`) as HTMLElement;
-                //     if (chkBlock === null) {
-                //       let listStart = 0;
-                //       const _blocks = this.blocks.map((block: any, index: number) => {
-                //         if (block?.listType !== undefined || block?.listType !== null) {
-                //           if (block?.listType === 'ol') {
-                //             listStart = 1;
-                //             block.listStart = 1;
-                //           } else if (block?.listType === 'li') {
-                //             listStart = listStart + 1;
-                //             block.listStart = listStart;
-                //           }
-                //         }
-                //         return block;
-                //       });
-                //       this.emit('documentChanged', this);
-                //     }
-                //   } else if (action.end > action.start) {
-                //     this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
-                //     this.setCursorPosition(action.start + 1,);
-                //   }
-
-                // this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
-                // this.setCursorPosition(action.start - 1);
-
-            case 'insert':
-                //At which block and at which position.
-                console.log('jagdish....01',{id:this.selectedBlockId,offset:this.currentOffset,action:action.start,end:action.end})
-                
-                // this.triggerBackspaceEvents(document.activeElement);
-                // this.setNewCursorPosition(action.start+1);
-                // // console.log('action.start, action.end, this.selectedBlockId, this.currentOffset', action.start, action.end, this.selectedBlockId, this.currentOffset)
-                this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
-                this.setCursorPosition(action.start == 1 ? action.start : action.start - 1, action.dataId);
-
-
-                  console.log('updated code22')
-
-                // if (action.start === action.end && action.start > 0) {
-                //     this.deleteRange(action.start - 1, action.start, this.selectedBlockId, this.currentOffset);
-                //     // this.setCursorPosition(start - 1);
-                //     const index = this.blocks.findIndex(
-                //       (block: any) => block.dataId === this.selectedBlockId
-                //     );
-                //     const chkBlock = document.querySelector(`[data-id="${this.selectedBlockId}"]`) as HTMLElement;
-                //     if (chkBlock === null) {
-                //       let listStart = 0;
-                //       const _blocks = this.blocks.map((block: any, index: number) => {
-                //         if (block?.listType !== undefined || block?.listType !== null) {
-                //           if (block?.listType === 'ol') {
-                //             listStart = 1;
-                //             block.listStart = 1;
-                //           } else if (block?.listType === 'li') {
-                //             listStart = listStart + 1;
-                //             block.listStart = listStart;
-                //           }
-                //         }
-                //         return block;
-                //       });
-                //       this.emit('documentChanged', this);
-                //     }
-                //   } else if (action.end > action.start) {
-                //     this.deleteRange(action.start, action.end, this.selectedBlockId, this.currentOffset);
-                //     this.setCursorPosition(action.start + 1);
-                //   }
-
-                break;
-            // Add cases for other actions like italic, underline, insert, delete
-            // ...
-        }
-    }*/
-
-
-
-    /* private applyAction(action: { id: string, start: number; end: number; action: string; previousValue: any; newValue: any, dataId?: string | null }): void {
-         const noOfBlocks = this.blocks.length;
-         switch (action.action) {
-             // case 'bold':
-             //     this.toggleBoldRange1(action.start, action.end, action.id); // Reapply bold toggle
-             //     break;
-             // case 'italic':
-             //     this.toggleItalicRange1(action.start, action.end, action.id);
-             //     break;
-             // case 'underline':
-             //     this.toggleUnderlineRange1(action.start, action.end, action.id);
-             //     break;
-             // case 'fontFamily':
-             //     this.setFontFamily1(action.start, action.end, action.newValue, action.id)
-             //     break;
-             // case 'fontSize':
-             //     this.setFontSize1(action.start, action.end, action.newValue, action.id)
-             //     break;
-             // case 'fontColor':
-             //     this.applyFontColor1(action.start, action.end, action.newValue, action.id)
-             //     break;
-             // case 'bgColor':
-             //     this.applyBgColor1(action.start, action.end, action.newValue, action.id)
-             //     break;
-             // case 'alignment':
-             //     if (action.dataId !== undefined)
-             //         this.setAlignment1(action.newValue, action.dataId, action.id);
-             //     break;
-             // case 'listType':
-             //     if (action.dataId !== undefined)
-             //         this.toggleUnorderedList1(action.dataId, action.id)
-             //     break;
-             // case 'listType-ol':
-             //     if (action.dataId !== undefined)
-             //         this.toggleOrderedList1(action.dataId, action.id)
-             //     break;
- 
-             // case 'listType':
-             //     if (action.dataId !== undefined)
-             //         this.toggleUnorderedList1(action.dataId, action.id)
-             //     break;
-             // case 'enter':
-             //     console.log('jagdish....03',{id:this.selectedBlockId,offset:this.currentOffset,action:action.start,end:action.end})
- 
-             //     this.simulateEnterPress(document.activeElement);
-             //     this.setNewCursorPosition(action.start+1);
-             case 'insert':
-                 console.log('jagdish....0', { id: this.selectedBlockId, offset: this.currentOffset, action: action.start, end: action.end })
- 
-                 // this.triggerKeyPress(document.activeElement, action.newValue);
-                 // this.setNewCursorPosition(action.start+1);
-                 // console.log(`action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo'`, action.newValue || '', {}, action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo')
-                 this.insertAt(action.newValue || '', {}, action.start === 1 ? 2 : action.start, this.selectedBlockId, this.currentOffset, action.id, 'redo');
-                 this.setCursorPosition(action.start + 1, action.dataId)
-                 break;
-             // Add cases for other actions
-             // ...
-         }
-     }
-         */
-
-    // toggleBoldRange1(start: number, end: number, id = ""): void {
-    //     const allBold = this.isRangeEntirelyAttribute(start, end, 'bold');
-    //     this.formatAttribute(start, end, 'bold', !allBold);
-    // }
-    // toggleItalicRange1(start: number, end: number, id = ""): void {
-    //     const allItalic = this.isRangeEntirelyAttribute(start, end, 'italic');
-    //     this.formatAttribute(start, end, 'italic', !allItalic);
-    // }
-
-    // toggleUnderlineRange1(start: number, end: number, id = ""): void {
-    //     const allUnderline = this.isRangeEntirelyAttribute(start, end, 'underline');
-    //     this.formatAttribute(start, end, 'underline', !allUnderline);
-    // }
-
     toggleBoldRange(start: number, end: number, id = ""): void {
-        const previousValue = this.getRangeText(start, end);
         const allBold = this.isRangeEntirelyAttribute(start, end, 'bold');
         this.formatAttribute(start, end, 'bold', !allBold);
-        const newValue = this.getRangeText(start, end);
-
-        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        // if (_redoStackIds.length === 0) {
-        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'bold', previousValue, newValue });
-        //     this.redoStack = [];
-        // }
     }
 
     toggleItalicRange(start: number, end: number, id = ""): void {
-        // const previousValue = this.getRangeText(start, end);
-
         const allItalic = this.isRangeEntirelyAttribute(start, end, 'italic');
         this.formatAttribute(start, end, 'italic', !allItalic);
-
-        // const newValue = this.getRangeText(start, end);
-        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        // if (_redoStackIds.length === 0) {
-        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'italic', previousValue, newValue });
-        //     this.redoStack = [];
-        // }
     }
 
     toggleUnderlineRange(start: number, end: number, id = ""): void {
-        // const previousValue = this.getRangeText(start, end);
         const allUnderline = this.isRangeEntirelyAttribute(start, end, 'underline');
         this.formatAttribute(start, end, 'underline', !allUnderline);
-
-        // const newValue = this.getRangeText(start, end);
-        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        // if (_redoStackIds.length === 0) {
-        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'underline', previousValue, newValue });
-        //     this.redoStack = [];
-        // }
     }
     toggleUndoRange(start: number, end: number, id = ""): void {
         const allUndo = this.isRangeEntirelyAttribute(start, end, 'undo');
@@ -1025,50 +579,16 @@ class TextDocument extends EventEmitter {
 
     applyFontColor(start: number, end: number, color: string, id = ""): void {
         if (start < end) {
-            // const { rangeText, piece } = this.getRangeTextPiece(start, end);
-            // const previousValue = piece.attributes.fontColor;
-            // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
-
             this.formatAttribute(start, end, "fontColor", color);
             console.log('applyFontColor-color', color, start, end)
-            // const newValue = color;
-            // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-            // if (_redoStackIds.length === 0) {
-            //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontColor', previousValue, newValue });
-            //     this.redoStack = [];
-            // }
         }
     }
-    // applyFontColor1(start: number, end: number, color: string, id = ""): void {
-    //     // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
-    //     if (start < end) {
-    //         console.log('applyFontColor 1-color', color, start, end)
-    //         this.formatAttribute(start, end, "fontColor", color);
-    //     }
-    // }
 
     applyBgColor(start: number, end: number, color: string, id = ""): void {
-        // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
         if (start < end) {
-            // const { rangeText, piece } = this.getRangeTextPiece(start, end);
-            // const previousValue = piece.attributes.bgColor;
-
             this.formatAttribute(start, end, "bgColor", color);
-            // const newValue = color;
-            // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-            // if (_redoStackIds.length === 0) {
-            //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'bgColor', previousValue, newValue });
-            //     this.redoStack = [];
-            // }
         }
     }
-    // applyBgColor1(start: number, end: number, color: string, id = ""): void {
-    //     // const _color = this.isRangeEntirelyAttribute(start, end, 'fontColor');
-    //     if (start < end) {
-
-    //         this.formatAttribute(start, end, "bgColor", color);
-    //     }
-    // }
 
     isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline' | 'undo' | 'redo'): boolean {
         let offset = this.currentOffset;
@@ -1104,29 +624,6 @@ class TextDocument extends EventEmitter {
         return merged;
     }
 
-    // findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
-    //     let currentOffset = 0;
-    //     if (dataId !== null && dataId !== '') {
-    //         for (let i = 0; i < this.blocks.length; i++) {
-    //             let block = this.blocks[i];
-    //             const blockLenght = block.pieces.reduce((acc: number, currVal: Piece) => acc + currVal.text.length, 0);
-    //             if (block.dataId == dataId) {
-    //                 for (let piece of block.pieces) {
-    //                     const pieceEnd = currentOffset + piece.text.length;
-    //                     if (offset >= currentOffset && offset < pieceEnd) {
-    //                         return piece;
-    //                     }
-    //                     currentOffset = pieceEnd;
-    //                 }
-    //             } else {
-    //                 currentOffset += blockLenght;
-    //             }
-    //         }
-    //     }
-    //     return null;
-    // }
-
-
     findPieceAtOffset(offset: number, dataId: string | null = ""): Piece | null {
         let currentOffset = 0;
         if (dataId) {
@@ -1151,66 +648,22 @@ class TextDocument extends EventEmitter {
         return null;
     }
 
-    setFontFamily(start: number, end: number, fontFamily: string, id: string = ''): void {
-        // const { rangeText, piece } = this.getRangeTextPiece(start, end);
-        // const previousValue = piece.attributes.fontFamily;
-
-        // console.log(rangeText, piece, "setFontFamily", this.blocks);
-        // const _previousValueTxt = this.getRangeText(start, end);
-        // if(block){
-        //     block[0].
-        // }
+    setFontFamily(start: number, end: number, fontFamily: string): void {
         this.formatAttribute(start, end, 'fontFamily', fontFamily);
-        // const newValue = fontFamily;
-        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        // if (_redoStackIds.length === 0) {
-        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontFamily', previousValue, newValue });
-        //     this.redoStack = [];
-        // }
     }
-    // setFontFamily1(start: number, end: number, fontFamily: string, id: string = ''): void {
-    //     this.formatAttribute(start, end, 'fontFamily', fontFamily);
-    // }
-
-    setFontSize(start: number, end: number, fontSize: string, id: string = ''): void {
-        // const { rangeText, piece } = this.getRangeTextPiece(start, end);
-        // const previousValue = piece.attributes.fontSize;
+    
+    setFontSize(start: number, end: number, fontSize: string): void {
         this.formatAttribute(start, end, 'fontSize', fontSize);
-        // const newValue = fontSize;
-        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        // if (_redoStackIds.length === 0) {
-        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'fontSize', previousValue, newValue });
-        //     this.redoStack = [];
-        // }
     }
-    // setFontSize1(start: number, end: number, fontSize: string, id: string = ''): void {
-    //     this.formatAttribute(start, end, 'fontSize', fontSize);
-    // }
-
-    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null, id: string = ''): void {
+    
+    setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void {
         const block = this.blocks.find((block: any) => block.dataId === dataId);
-        // const previousValue = block.alignment;
-        // const start = 0;
-        // const end = 0;
         if (!block) return;
 
         block.alignment = alignment; // Update alignment
-        // const newValue = alignment;
-        // const _redoStackIds = this.redoStack.filter(obj => obj.id === id)
-        // if (_redoStackIds.length === 0) {
-        //     this.undoStack.push({ id: Date.now().toString(), start, end, action: 'alignment', previousValue, newValue, dataId });
-        //     this.redoStack = [];
-        // }
         this.emit('documentChanged', this); // Trigger re-render
     }
-    // setAlignment1(alignment: 'left' | 'center' | 'right', dataId: string | null, id: string = ''): void {
-    //     const block = this.blocks.find((block: any) => block.dataId === dataId);
-    //     if (!block) return;
-
-    //     block.alignment = alignment; // Update alignment
-    //     this.emit('documentChanged', this); // Trigger re-render
-    // }
-
+    
     getHtmlContent() {
         const editorContainer = document.getElementById("editor"); // Adjust to your editor's ID
         if (!editorContainer) {
