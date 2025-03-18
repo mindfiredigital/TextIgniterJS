@@ -14,10 +14,11 @@ export const strings = {
   FONT_COLOR_ID: "fontColor",
   FONT_COLOR_PICKER_WRAPPER_ID: "colorWrapper",
   FONT_COLOR_PICKER_ID: "fontColorPicker",
-
+  FONT_COLOR_RESET_ID:"colorResetFont",
   BG_COLOR_WRAPPER_ID: "bgColorWrapper",
   BG_COLOR_ID: "bgColor",
   BG_COLOR_PICKER_WRAPPER_ID: "colorBgWrapper",
+  BG_COLOR_RESET_ID:"colorResetBG",
   BG_COLOR_PICKER_ID: "bgColorPicker",
 
   GET_HTML_BUTTON_ID: "getHtmlButton",

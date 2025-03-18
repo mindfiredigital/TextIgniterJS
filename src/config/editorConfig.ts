@@ -98,6 +98,16 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
             fontColorPicker.setAttribute("data-action", "fontColor");
             fontColorPicker.style.display = "none";
             span1.appendChild(fontColorPicker);
+
+            const resetButton = document.createElement("button");
+            resetButton.id = strings.FONT_COLOR_RESET_ID;
+            resetButton.type = "button";
+            resetButton.textContent = "⟳"; 
+            resetButton.style.margin = "-10px"; 
+            resetButton.style.display = "none"; 
+            resetButton.style.fontSize = "x-small";
+            span1.appendChild(resetButton);
+
             span.appendChild(span1);
             toolbar.appendChild(span);
         } else if (feature === 'bgColor') {
@@ -113,9 +123,12 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
             button.textContent = "B";
             span.appendChild(button);
 
-            const span1 = document.createElement("span");
+            const span1 = document.createElement("div");
             span1.id = strings.BG_COLOR_PICKER_WRAPPER_ID;
-            span1.style.display = "hidden";
+            // span1.style.display = "hidden";
+            span1.style.display = "block";
+            span1.style.margin = "0";
+
             const bgColorPicker = document.createElement("input");
             bgColorPicker.setAttribute("data-action", "bgColor");
             bgColorPicker.value = '#ffffff';
@@ -123,6 +136,17 @@ export function createEditor(editorId: string, config: EditorConfig): EditorConf
             bgColorPicker.id = strings.BG_COLOR_PICKER_ID;
             bgColorPicker.style.display = "none";
             span1.appendChild(bgColorPicker);
+
+            const resetButton = document.createElement("button");
+            resetButton.id = strings.BG_COLOR_RESET_ID;
+            resetButton.type = "button";
+            resetButton.textContent = "⟳"; 
+            resetButton.style.margin = "-10px"; 
+            resetButton.style.display = "none"; 
+            resetButton.style.fontSize = "x-small";
+            span1.appendChild(resetButton);
+
+
             span.appendChild(span1);
             toolbar.appendChild(span);
         } else if (feature === 'getHtmlContent') {

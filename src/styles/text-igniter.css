@@ -104,3 +104,11 @@
 .toolbar > button:hover {
   background-color: #ddd;
 }
+
+#fontFamily, #fontSize{
+  padding: 6px;
+}
+#fontSize{
+  margin-left: 1px;
+}
+

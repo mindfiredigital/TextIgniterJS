@@ -10,9 +10,11 @@ export declare const strings: {
     FONT_COLOR_ID: string;
     FONT_COLOR_PICKER_WRAPPER_ID: string;
     FONT_COLOR_PICKER_ID: string;
+    FONT_COLOR_RESET_ID: string;
     BG_COLOR_WRAPPER_ID: string;
     BG_COLOR_ID: string;
     BG_COLOR_PICKER_WRAPPER_ID: string;
+    BG_COLOR_RESET_ID: string;
     BG_COLOR_PICKER_ID: string;
     GET_HTML_BUTTON_ID: string;
     LOAD_HTML_BUTTON_ID: string;
