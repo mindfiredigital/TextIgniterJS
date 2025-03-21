@@ -651,11 +651,11 @@ class TextDocument extends EventEmitter {
     setFontFamily(start: number, end: number, fontFamily: string): void {
         this.formatAttribute(start, end, 'fontFamily', fontFamily);
     }
-    
+
     setFontSize(start: number, end: number, fontSize: string): void {
         this.formatAttribute(start, end, 'fontSize', fontSize);
     }
-    
+
     setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void {
         const block = this.blocks.find((block: any) => block.dataId === dataId);
         if (!block) return;
@@ -663,7 +663,7 @@ class TextDocument extends EventEmitter {
         block.alignment = alignment; // Update alignment
         this.emit('documentChanged', this); // Trigger re-render
     }
-    
+
     getHtmlContent() {
         const editorContainer = document.getElementById("editor"); // Adjust to your editor's ID
         if (!editorContainer) {
@@ -687,6 +687,7 @@ class TextDocument extends EventEmitter {
         offset: number; childNode: Node | null, innerHTML: string;
         innerText: string;
     } | null {
+        console.log("textPosition -1:vicky", parentSelector)
         const parentElement = document.querySelector(parentSelector);
         if (!parentElement) return null;
 
@@ -705,6 +706,7 @@ class TextDocument extends EventEmitter {
         // Traverse text nodes to calculate the total offset
         while (walker.nextNode()) {
             const currentNode = walker.currentNode;
+            console.log(currentNode,"textPosition - currentNode: vicky")
             if (currentNode === range.startContainer) {
                 offset += range.startOffset; // Add the offset in the current node
                 targetNode = currentNode; // This is the child containing the cursor
@@ -715,7 +717,10 @@ class TextDocument extends EventEmitter {
             }
         }
 
-
+        console.log({
+            offset, childNode: targetNode, innerHTML: matchedChild!.innerHTML,
+            innerText: matchedChild!.innerText
+        },"textPosition - return values: vicky")
         return {
             offset, childNode: targetNode, innerHTML: matchedChild!.innerHTML,
             innerText: matchedChild!.innerText

@@ -107,6 +107,8 @@ export class ImageHandler {
       selectedBlockId || "",
       this.document
     );
+    console.log(selectedBlockId || "",
+      this.document, "extractTextFromDataId-vicky", remainingText, piece)
     const extractedContent = " " + remainingText;
     let updatedBlock = this.document.blocks;
 
@@ -131,6 +133,7 @@ export class ImageHandler {
       } else {
         _pieces = [new Piece(" ")];
       }
+      console.log(this.document.selectedBlockId, 'uniqueId3 extractTextFromDataId-vicky', uniqueId3)
       updatedBlock = addBlockAfter(
         this.document.blocks,
         this.document.selectedBlockId || "",
@@ -142,9 +145,8 @@ export class ImageHandler {
         }
       );
     }
-
     this.document.blocks = updatedBlock;
-
+    
     this.document.deleteRange(
       this.currentCursorLocation,
       this.currentCursorLocation + remainingText.length,

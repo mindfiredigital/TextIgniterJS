@@ -62,7 +62,7 @@ export function restoreSelection(container: HTMLElement, savedSel: { start: numb
 }
 
 
-export function getSelectionRange(editorView:EditorView): [number, number] {
+export function getSelectionRange(editorView: EditorView): [number, number] {
     const sel = saveSelection(editorView.container);
     if (!sel) return [0, 0];
     return [sel.start, sel.end];
@@ -70,7 +70,7 @@ export function getSelectionRange(editorView:EditorView): [number, number] {
 
 
 
-export function  extractTextFromDataId(dataId: string,textDocument:TextDocument): { remainingText: string, piece: any } {
+export function extractTextFromDataId(dataId: string, textDocument: TextDocument): { remainingText: string, piece: any } {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
         return { remainingText: '', piece: null }; // No valid selection
@@ -90,6 +90,7 @@ export function  extractTextFromDataId(dataId: string,textDocument:TextDocument)
     })
     const element = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
     const textPosition = textDocument.getCursorOffsetInParent(`[data-id="${dataId}"]`)
+    console.log(textPosition, "textPosition:vicky")
     let _piece: any = [];
     let index = 0;
     _block[0].pieces.forEach((obj: any, i: number) => {
@@ -106,7 +107,7 @@ export function  extractTextFromDataId(dataId: string,textDocument:TextDocument)
             }
         })
     }
-    
+
 
     if (!element) {
         console.error(`Element with data-id "${dataId}" not found.`);
@@ -126,7 +127,7 @@ export function  extractTextFromDataId(dataId: string,textDocument:TextDocument)
     // const cursorOffset = range.startOffset;
     const cursorOffset = textPosition?.offset;
 
-    
+
     // Extract text from the cursor position to the end
     const remainingText = fullText.slice(cursorOffset);
 
@@ -134,7 +135,7 @@ export function  extractTextFromDataId(dataId: string,textDocument:TextDocument)
     const newContent = fullText.slice(0, cursorOffset);
     element.textContent = newContent; // Update the element content with remaining text
 
-    
+
 
     return { remainingText: remainingText, piece: _piece }; // Return the extracted text
 }

@@ -84,7 +84,7 @@ class TextIgniter {
       const resetButton = document.getElementById('colorResetFont') as HTMLElement;
       resetButton.style.display = "inline-block";
       resetButton.addEventListener("click", () => {
-        fontColorPicker.value = "#000000"; 
+        fontColorPicker.value = "#000000";
         resetButton.style.display = "none";
       });
       // Position the color picker
@@ -132,14 +132,14 @@ class TextIgniter {
 
 
     document.getElementById('bgColor')?.addEventListener('click', (e) => {
-      
+
 
       const bgColorPicker = document.getElementById("bgColorPicker") as HTMLInputElement;
 
       bgColorPicker.style.display = 'inline';
       const colorBgWrapper = document.getElementById('colorBgWrapper') as HTMLElement;
 
-     
+
 
 
       // Get the button's position (x, y)
@@ -150,9 +150,9 @@ class TextIgniter {
       const resetButton = document.getElementById('colorResetBG') as HTMLElement;
       resetButton.style.display = "inline-block";
       resetButton.addEventListener("click", () => {
-        bgColorPicker.value = "#ffffff"; 
+        bgColorPicker.value = "#ffffff";
         resetButton.style.display = "none";
-        console.log(y,"resetb")
+        console.log(y, "resetb")
       });
 
       // Position the color picker
@@ -815,6 +815,7 @@ class TextIgniter {
           type: "text"
         });
         this.document.emit('documentChanged', this);
+        console.log("image - vicky", uniqueId)
         this.imageHandler.setCursorPostion(1, uniqueId);
       }
       // If current block is a list block, continue the list sequence even if an image block exists later
@@ -991,7 +992,7 @@ class TextIgniter {
       if (end > start) {
         this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
       }
-
+      console.log("insertat", e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset, "", "", !e.isTrusted || false)
       this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset, "", "", !e.isTrusted || false);
       this.setCursorPosition(start + 1);
     } else if (e.key === "Delete") {
