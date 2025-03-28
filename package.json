@@ -1,69 +1,49 @@
 {
-  "name": "@mindfiredigital/textigniterjs",
-  "version": "1.0.0",
-  "description": "TextIgniter JS is a lightweight, powerful, and intuitive HTML editor built using TypeScript.",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
-  },
-  "files": [
-    "dist"
-  ],
-  "types": "dist/index.d.ts",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
-    "check": "rollup -c --verbose"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
+    "private": true,
+    "name": "textigniter-monorepo",
+    "workspaces": [
+        "packages/core",
+        "packages/web-component"
     ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "keywords": [
-    "rich-text-editor",
-    "html-editor",
-    "typescript",
-    "npm-package"
-  ],
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@babel/preset-env": "^7.25.4",
-    "@rollup/plugin-babel": "^6.0.4",
-    "@rollup/plugin-commonjs": "^26.0.1",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^11.1.6",
-    "@types/node": "^22.5.4",
-    "rollup": "^4.21.2",
-    "rollup-plugin-copy": "^3.5.0",
-    "rollup-plugin-dts": "^6.1.1",
-    "rollup-plugin-postcss": "^4.0.2",
-    "tslib": "^2.7.0",
-    "typescript": "^5.6.2"
-  },
-  "engines": {
-    "node": ">=12.0.0"
-  },
-  "release": {
-    "repositoryUrl": "https://github.com/mindfiredigital/TextIgniterJS.git",
-    "branches": [
-      "main",
-      "next",
-      {
-        "name": "beta",
-        "prerelease": true
-      }
-    ]
-  }
+    "devDependencies": {
+        "typescript": "^5.6.2",
+        "rollup": "^4.21.2",
+        "pnpm": "^8.0.0",
+        "husky": "^9.1.5",
+        "turbo": "^1.10.0",
+        "tsc-alias": "^1.8.10",
+        "tslib": "^2.8.1",
+        "eslint": "^9.10.0",
+        "prettier": "^3.3.3",
+        "@changesets/changelog-github": "^0.5.0",
+        "@changesets/cli": "^2.27.12",
+        "@commitlint/cli": "^19.4.0",
+        "@commitlint/config-conventional": "^19.2.2",
+        "@typescript-eslint/parser": "^8.12.1",
+        "globals": "^15.9.0"
+    },
+    "lint-staged": {
+        "**/*.{js,ts}": [
+            "prettier --write",
+            "eslint ."
+        ],
+        "**/*.json": [
+            "prettier --write"
+        ],
+        "**/*.md": [
+            "prettier --write"
+        ]
+    },
+    "scripts": {
+        "build": "tsc && node script/fix-imports.js && npm run copy-assets",
+        "lint": "turbo run lint",
+        "prepare": "npx husky install",
+        "release": "turbo run build && pnpm publish --access public",
+        "changeset:autogenerate": "node .github/changeset-autogenerate.mjs",
+        "start": "lite-server"
+    },
+    "engines": {
+        "node": ">=12.0.0"
+    },
+    "packageManager": "pnpm@8.6.0"
 }
