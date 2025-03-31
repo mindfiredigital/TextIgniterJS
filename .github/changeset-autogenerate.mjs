@@ -43,9 +43,14 @@ if (packageName) {
   packageName = packageName.trim();
   description = description?.trim() || 'No description provided.';
 
+  const formattedPackageName =
+    packageName === 'core'
+      ? '@mindfiredigital/textigniterjs'
+      : `@mindfiredigital/textigniterjs-${packageName}`;
+
   // Generate changeset content
   const changesetContent = `---
-'@mindfiredigital/page-builder-${packageName}': ${changeType}
+'${formattedPackageName}': ${changeType}
 ---
 ${description}
 `;
@@ -53,7 +58,7 @@ ${description}
   // Write to a changeset file
   fs.writeFileSync(`.changeset/auto-${Date.now()}.md`, changesetContent);
   console.log(
-    `✅ Changeset file created for package: page-builder-${packageName}`
+    `✅ Changeset file created for package: textigniterjs-${packageName}`
   );
 } else {
   console.log(
