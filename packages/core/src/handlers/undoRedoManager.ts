@@ -1,7 +1,7 @@
-import { getSelectionRange, saveSelection, restoreSelection } from "../utils/selectionManager";
-import TextDocument from "../textDocument";
-import EditorView from "../view/editorView";
-import Piece from "../piece";
+import { getSelectionRange, saveSelection } from '../utils/selectionManager';
+import TextDocument from '../textDocument';
+import EditorView from '../view/editorView';
+import Piece from '../piece';
 
 export interface DocumentSnapshot {
   blocks: any[];
@@ -11,7 +11,6 @@ export interface DocumentSnapshot {
   selection?: { start: number; end: number };
   cursorPosition?: number;
 }
-
 
 export default class UndoRedoManager {
   private document: TextDocument;
@@ -26,6 +25,7 @@ export default class UndoRedoManager {
   }
 
   private createSnapshot(): DocumentSnapshot {
+    // eslint-disable-next-line no-unused-vars
     const [start, end] = getSelectionRange(this.editorView);
     return {
       blocks: JSON.parse(JSON.stringify(this.document.blocks)),
@@ -62,10 +62,12 @@ export default class UndoRedoManager {
     // IMPORTANT: Recreate the Piece instances.
     for (let block of this.document.blocks) {
       if (block.pieces && Array.isArray(block.pieces)) {
-      block.pieces = block.pieces.map((piece: any) => new Piece(piece.text, piece.attributes));
+        block.pieces = block.pieces.map(
+          (piece: any) => new Piece(piece.text, piece.attributes)
+        );
       }
-      }
-    this.document.emit("documentChanged", this.document);
+    }
+    this.document.emit('documentChanged', this.document);
     this.document.setCursorPosition(snapshot.cursorPosition || 0);
     // Restore selection using your helper.
     // if (snapshot.selection) {
