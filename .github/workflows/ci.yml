@@ -33,7 +33,7 @@ jobs:
         run: pnpm install
 
       - name: 'Build application'
-        run: pnpm turbo run build
+        run: pnpm run build
 
       - name: 'Set Git user name and email'
         run: |
