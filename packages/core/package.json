@@ -12,7 +12,7 @@
   "types": "dist/index.d.ts",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && rollup -c && pnpm run copy",
+    "build": "tsc && rollup -c --no-dts && pnpm run copy",
     "copy-styles": "ncp ./src/styles ./dist/styles",
     "copy": "npm run copy-styles",
     "dev": "rollup -c -w",

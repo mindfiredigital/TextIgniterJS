@@ -1,21 +1,31 @@
-import TextDocument from "./textDocument";
-import EditorView from "./view/editorView";
-import ToolbarView from "./view/toolbarView";
-import HyperlinkHandler from "./handlers/hyperlink";
-import Piece from "./piece";
-import { saveSelection, restoreSelection } from "./utils/selectionManager";
-import { parseHtmlToPieces } from "./utils/parseHtml";
-import { createEditor } from "./config/editorConfig";
-import "./styles/text-igniter.css"
-import HtmlToJsonParser from "./HtmlToJsonParser"
-import { EditorConfig } from "./types/editorConfig";
-import { ImageHandler } from "./handlers/image";
-import EventEmitter from "./utils/events";
-import { strings } from "./constants/strings";
-import UndoRedoManager from "./handlers/undoRedoManager";
+/* eslint-disable no-unused-vars */
+import TextDocument from './textDocument';
+import EditorView from './view/editorView';
+import ToolbarView from './view/toolbarView';
+import HyperlinkHandler from './handlers/hyperlink';
+import Piece from './piece';
+import { saveSelection } from './utils/selectionManager';
+import { parseHtmlToPieces } from './utils/parseHtml';
+import { createEditor } from './config/editorConfig';
+import './styles/text-igniter.css';
+import HtmlToJsonParser from './HtmlToJsonParser';
+import { EditorConfig } from './types/editorConfig';
+import { ImageHandler } from './handlers/image';
+import { strings } from './constants/strings';
+import UndoRedoManager from './handlers/undoRedoManager';
 
-
-export interface CurrentAttributeDTO { bold: boolean; italic: boolean; underline: boolean; undo?: boolean; redo?: boolean, hyperlink?: string | boolean, fontFamily?: string; fontSize?: string; fontColor?: string; bgColor?: string; }
+export interface CurrentAttributeDTO {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  undo?: boolean;
+  redo?: boolean;
+  hyperlink?: string | boolean;
+  fontFamily?: string;
+  fontSize?: string;
+  fontColor?: string;
+  bgColor?: string;
+}
 
 export class TextIgniter {
   document: TextDocument;
@@ -33,20 +43,23 @@ export class TextIgniter {
   debounceTimer: NodeJS.Timeout | null = null;
   undoRedoManager: UndoRedoManager;
   constructor(editorId: string, config: EditorConfig) {
-
     const { mainEditorId, toolbarId } = createEditor(editorId, config);
 
     this.editorContainer = document.getElementById(mainEditorId) || null;
     this.toolbarContainer = document.getElementById(toolbarId) || null;
 
     if (!this.editorContainer || !this.toolbarContainer) {
-      throw new Error("Editor element not found or incorrect element type.");
+      throw new Error('Editor element not found or incorrect element type.');
     }
 
     this.document = new TextDocument();
     this.editorView = new EditorView(this.editorContainer, this.document);
     this.toolbarView = new ToolbarView(this.toolbarContainer);
-    this.hyperlinkHandler = new HyperlinkHandler(this.editorContainer, this.editorView, this.document);
+    this.hyperlinkHandler = new HyperlinkHandler(
+      this.editorContainer,
+      this.editorView,
+      this.document
+    );
     this.imageHandler = new ImageHandler(this.editorContainer, this.document);
     this.undoRedoManager = new UndoRedoManager(this.document, this.editorView);
     this.editorView.setImageHandler(this.imageHandler);
@@ -54,53 +67,69 @@ export class TextIgniter {
     this.document.setEditorView(this.editorView);
     this.document.setUndoRedoManager(this.undoRedoManager);
     this.hyperlinkHandler.setUndoRedoManager(this.undoRedoManager);
-    this.currentAttributes = { bold: false, italic: false, underline: false, undo: false, redo: false, hyperlink: false };
+    this.currentAttributes = {
+      bold: false,
+      italic: false,
+      underline: false,
+      undo: false,
+      redo: false,
+      hyperlink: false,
+    };
     this.manualOverride = false;
     this.lastPiece = null;
-    this.toolbarView.on('toolbarAction', (action: string, dataId: string[] = []) => this.handleToolbarAction(action, dataId));
+    this.toolbarView.on(
+      'toolbarAction',
+      (action: string, dataId: string[] = []) =>
+        this.handleToolbarAction(action, dataId)
+    );
     this.document.on('documentChanged', () => this.editorView.render());
-    this.editorContainer.addEventListener('keydown', (e) => { this.syncCurrentAttributesWithCursor(); this.handleKeydown(e as KeyboardEvent); });
-    this.editorContainer.addEventListener('keyup', () => this.syncCurrentAttributesWithCursor());
-    this.editorContainer.addEventListener("blur", () => {
+    this.editorContainer.addEventListener('keydown', e => {
+      this.syncCurrentAttributesWithCursor();
+      this.handleKeydown(e as KeyboardEvent);
+    });
+    this.editorContainer.addEventListener('keyup', () =>
+      this.syncCurrentAttributesWithCursor()
+    );
+    this.editorContainer.addEventListener('blur', () => {
       this.hyperlinkHandler.hideHyperlinkViewButton();
     });
 
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
-      const dataId = this.document.getAllSelectedDataIds();
     });
-    document.getElementById('fontColor')?.addEventListener('click', (e) => {
-
-      const fontColorPicker = document.getElementById("fontColorPicker") as HTMLInputElement;
-      const fontColorButton = document.querySelector(`[data-feature="fontColor"]`);
+    document.getElementById('fontColor')?.addEventListener('click', e => {
+      const fontColorPicker = document.getElementById(
+        'fontColorPicker'
+      ) as HTMLInputElement;
 
       fontColorPicker.style.display = 'inline';
-      const colorWrapper = document.getElementById('colorWrapper') as HTMLElement;
+      const colorWrapper = document.getElementById(
+        'colorWrapper'
+      ) as HTMLElement;
       // Get the button's position (x, y)
       const rect = (e.target as HTMLElement).getBoundingClientRect();
       const x = rect.left + window.scrollX; // Adjust for scrolling
       const y = rect.bottom + window.scrollY; // Position below the button
 
-      const resetButton = document.getElementById('colorResetFont') as HTMLElement;
-      resetButton.style.display = "inline-block";
-      resetButton.addEventListener("click", () => {
-        fontColorPicker.value = "#000000";
-        resetButton.style.display = "none";
+      const resetButton = document.getElementById(
+        'colorResetFont'
+      ) as HTMLElement;
+      resetButton.style.display = 'inline-block';
+      resetButton.addEventListener('click', () => {
+        fontColorPicker.value = '#000000';
+        resetButton.style.display = 'none';
       });
       // Position the color picker
-      colorWrapper.style.position = "absolute";
+      colorWrapper.style.position = 'absolute';
       colorWrapper.style.left = `${x - 2}px`;
       colorWrapper.style.top = `${y - 15}px`;
-      colorWrapper.style.display = "block"; // Show the color picker
+      colorWrapper.style.display = 'block'; // Show the color picker
 
       fontColorPicker.click();
       if (fontColorPicker) {
-
-
-        fontColorPicker.addEventListener("input", (event) => {
+        fontColorPicker.addEventListener('input', event => {
           const selectedColor = (event.target as HTMLInputElement).value;
           const [start, end] = this.getSelectionRange();
-
 
           if (this.document.dataIds.length > 1) {
             this.document.blocks.forEach((block: any) => {
@@ -109,65 +138,59 @@ export class TextIgniter {
                 let countE = 0;
                 block.pieces.forEach((obj: any) => {
                   countE += obj.text.length;
-                })
+                });
                 let countS = start - countE;
                 this.document.applyFontColor(countS, countE, selectedColor);
-
               }
-            })
+            });
           } else {
             if (this.debounceTimer) {
               clearTimeout(this.debounceTimer); // Clear previous timer
             }
             this.debounceTimer = setTimeout(() => {
               this.document.applyFontColor(start, end, selectedColor);
-
             }, 300);
           }
-
         });
       }
-    })
+    });
 
-
-
-    document.getElementById('bgColor')?.addEventListener('click', (e) => {
-
-
-      const bgColorPicker = document.getElementById("bgColorPicker") as HTMLInputElement;
+    document.getElementById('bgColor')?.addEventListener('click', e => {
+      const bgColorPicker = document.getElementById(
+        'bgColorPicker'
+      ) as HTMLInputElement;
 
       bgColorPicker.style.display = 'inline';
-      const colorBgWrapper = document.getElementById('colorBgWrapper') as HTMLElement;
-
-
-
+      const colorBgWrapper = document.getElementById(
+        'colorBgWrapper'
+      ) as HTMLElement;
 
       // Get the button's position (x, y)
       const rect = (e.target as HTMLElement).getBoundingClientRect();
       const x = rect.left + window.scrollX; // Adjust for scrolling
       const y = rect.bottom + window.scrollY; // Position below the button
 
-      const resetButton = document.getElementById('colorResetBG') as HTMLElement;
-      resetButton.style.display = "inline-block";
-      resetButton.addEventListener("click", () => {
-        bgColorPicker.value = "#ffffff";
-        resetButton.style.display = "none";
-        console.log(y, "resetb")
+      const resetButton = document.getElementById(
+        'colorResetBG'
+      ) as HTMLElement;
+      resetButton.style.display = 'inline-block';
+      resetButton.addEventListener('click', () => {
+        bgColorPicker.value = '#ffffff';
+        resetButton.style.display = 'none';
+        console.log(y, 'resetb');
       });
 
       // Position the color picker
-      colorBgWrapper.style.position = "absolute";
+      colorBgWrapper.style.position = 'absolute';
       colorBgWrapper.style.left = `${x - 2}px`;
       colorBgWrapper.style.top = `${y - 15}px`;
-      colorBgWrapper.style.display = "block"; // Show the color picker
+      colorBgWrapper.style.display = 'block'; // Show the color picker
 
       bgColorPicker.click();
       if (bgColorPicker) {
-        bgColorPicker.addEventListener("input", (event) => {
+        bgColorPicker.addEventListener('input', event => {
           const selectedColor = (event.target as HTMLInputElement).value;
           const [start, end] = this.getSelectionRange();
-
-
 
           if (this.document.dataIds.length > 1) {
             this.document.blocks.forEach((block: any) => {
@@ -176,51 +199,51 @@ export class TextIgniter {
                 let countE = 0;
                 block.pieces.forEach((obj: any) => {
                   countE += obj.text.length;
-                })
+                });
                 let countS = start - countE;
                 this.document.applyBgColor(countS, countE, selectedColor);
-
               }
-            })
+            });
           } else {
             if (this.debounceTimer) {
               clearTimeout(this.debounceTimer); // Clear previous timer
             }
             this.debounceTimer = setTimeout(() => {
               this.document.applyBgColor(start, end, selectedColor);
-
             }, 300);
           }
 
-
           // this.document.applyFontColor(start, end, selectedColor);
-
         });
       }
-    })
+    });
 
-    document.getElementById("getHtmlButton")?.addEventListener('click', (e) => {
+    document.getElementById('getHtmlButton')?.addEventListener('click', e => {
       const htmlString = this.document.getHtmlContent();
-      console.log("Editor HTML Content:", htmlString)
+      console.log('Editor HTML Content:', htmlString);
       this.htmlToJsonParser = new HtmlToJsonParser(htmlString as string);
       const jsonOutput = this.htmlToJsonParser.parse();
 
-      console.log("htmltoJson", JSON.stringify(jsonOutput, null, 2), jsonOutput);
-    })
+      console.log(
+        'htmltoJson',
+        JSON.stringify(jsonOutput, null, 2),
+        jsonOutput
+      );
+    });
 
-    document.getElementById("loadHtmlButton")?.addEventListener('click', (e) => {
-
+    document.getElementById('loadHtmlButton')?.addEventListener('click', e => {
       // const htmlString = this.document.getHtmlContent();
       this.undoRedoManager.saveUndoSnapshot();
       const str = strings.TEST_HTML_CODE;
       this.htmlToJsonParser = new HtmlToJsonParser(str as string);
-      console.log(this.htmlToJsonParser, "this.htmlToJsonParser")
+      console.log(this.htmlToJsonParser, 'this.htmlToJsonParser');
       const jsonOutput = this.htmlToJsonParser.parse();
 
       this.document.blocks = jsonOutput;
       this.document.dataIds[0] = jsonOutput[0].dataId;
       this.document.selectedBlockId = 'data-id-1734604240404';
       this.document.emit('documentChanged', this);
+      // eslint-disable-next-line no-unused-vars
       const [start, end] = this.getSelectionRange();
       this.document.blocks.forEach((block: any) => {
         if (this.document.dataIds.includes(block.dataId)) {
@@ -228,45 +251,47 @@ export class TextIgniter {
           let countE = 0;
           block.pieces.forEach((obj: any) => {
             countE += obj.text.length;
-          })
+          });
           let countS = start - countE;
 
           this.document.setFontSize(countS, countE, block.fontSize);
         }
-      })
-      console.log("blocks", this.document.blocks, this.document.dataIds, this.document.currentOffset)
-      console.log("htmltoJson", JSON.stringify(jsonOutput, null, 2), jsonOutput);
-    })
+      });
+      console.log(
+        'blocks',
+        this.document.blocks,
+        this.document.dataIds,
+        this.document.currentOffset
+      );
+      console.log(
+        'htmltoJson',
+        JSON.stringify(jsonOutput, null, 2),
+        jsonOutput
+      );
+    });
 
-
-
-    document.getElementById('fontFamily')?.addEventListener('change', (e) => {
+    document.getElementById('fontFamily')?.addEventListener('change', e => {
       this.undoRedoManager.saveUndoSnapshot();
       const fontFamily = (e.target as HTMLSelectElement).value;
       const [start, end] = this.getSelectionRange();
       if (this.document.dataIds.length > 1) {
         this.document.blocks.forEach((block: any) => {
           if (this.document.dataIds.includes(block.dataId)) {
-
             this.document.selectedBlockId = block.dataId;
             let countE = 0;
             block.pieces.forEach((obj: any) => {
               countE += obj.text.length;
-            })
-            let countS = start - countE
+            });
+            let countS = start - countE;
             this.document.setFontFamily(countS, countE, fontFamily);
-
           }
-        })
+        });
       } else {
         this.document.setFontFamily(start, end, fontFamily);
       }
     });
 
-
-
-
-    document.getElementById('fontSize')?.addEventListener('change', (e) => {
+    document.getElementById('fontSize')?.addEventListener('change', e => {
       this.undoRedoManager.saveUndoSnapshot();
       const fontSize = (e.target as HTMLSelectElement).value;
       const [start, end] = this.getSelectionRange();
@@ -277,11 +302,11 @@ export class TextIgniter {
             let countE = 0;
             block.pieces.forEach((obj: any) => {
               countE += obj.text.length;
-            })
+            });
             let countS = start - countE;
             this.document.setFontSize(countS, countE, fontSize);
           }
-        })
+        });
       } else {
         this.document.setFontSize(start, end, fontSize);
       }
@@ -289,22 +314,28 @@ export class TextIgniter {
     });
 
     document.getElementById('alignLeft')?.addEventListener('click', () => {
-      this.document.dataIds.forEach(obj => this.document.setAlignment('left', obj))
+      this.document.dataIds.forEach(obj =>
+        this.document.setAlignment('left', obj)
+      );
       // this.document.setAlignment('left', this.document.selectedBlockId);
     });
 
     document.getElementById('alignCenter')?.addEventListener('click', () => {
-      this.document.dataIds.forEach(obj => this.document.setAlignment('center', obj))
+      this.document.dataIds.forEach(obj =>
+        this.document.setAlignment('center', obj)
+      );
 
       // this.document.setAlignment('center', this.document.selectedBlockId);
     });
 
     document.getElementById('alignRight')?.addEventListener('click', () => {
-      this.document.dataIds.forEach(obj => this.document.setAlignment('right', obj))
+      this.document.dataIds.forEach(obj =>
+        this.document.setAlignment('right', obj)
+      );
       // this.document.setAlignment('right', this.document.selectedBlockId);
     });
 
-    this.editorContainer.addEventListener('keydown', (e) => {
+    this.editorContainer.addEventListener('keydown', e => {
       if ((e.ctrlKey || e.metaKey) && !e.altKey) {
         const key = e.key.toLowerCase();
         if (['b', 'i', 'u', 'h'].includes(key)) {
@@ -339,7 +370,6 @@ export class TextIgniter {
           // this.setCursorPosition(start - 1);
           // console.log("undoStack", this.document.undoStack)
           // console.log("redoStack", this.document.redoStack)
-
         } else if (key === 'y') {
           e.preventDefault();
           // const [start, end] = this.getSelectionRange();
@@ -371,7 +401,10 @@ export class TextIgniter {
       }
     });
 
-    document.addEventListener('selectionchange', this.handleSelectionChange.bind(this));
+    document.addEventListener(
+      'selectionchange',
+      this.handleSelectionChange.bind(this)
+    );
 
     this.document.emit('documentChanged', this.document);
 
@@ -394,13 +427,18 @@ export class TextIgniter {
 
       let offset = start;
       for (const p of piecesToInsert) {
-        this.document.insertAt(p.text, { ...p.attributes }, offset, this.document.selectedBlockId);
+        this.document.insertAt(
+          p.text,
+          { ...p.attributes },
+          offset,
+          this.document.selectedBlockId
+        );
         offset += p.text.length;
       }
       this.setCursorPosition(offset);
     });
 
-    this.editorContainer.addEventListener('dragover', (e) => {
+    this.editorContainer.addEventListener('dragover', e => {
       e.preventDefault();
     });
 
@@ -422,13 +460,16 @@ export class TextIgniter {
 
       let offset = start;
       for (const p of piecesToInsert) {
-        this.document.insertAt(p.text, { ...p.attributes }, offset, this.document.selectedBlockId);
+        this.document.insertAt(
+          p.text,
+          { ...p.attributes },
+          offset,
+          this.document.selectedBlockId
+        );
         offset += p.text.length;
       }
       this.setCursorPosition(offset);
     });
-
-
   }
 
   getSelectionRange(): [number, number] {
@@ -452,7 +493,6 @@ export class TextIgniter {
 
   // Toolbar action handler
   handleToolbarAction(action: string, dataId: string[] = []): void {
-
     const [start, end] = this.getSelectionRange();
 
     switch (action) {
@@ -546,9 +586,10 @@ export class TextIgniter {
         } else {
           this.currentAttributes[
             action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'
-          ] = !this.currentAttributes[
-          action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'
-          ];
+          ] =
+            !this.currentAttributes[
+              action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'
+            ];
           this.manualOverride = true;
         }
 
@@ -557,11 +598,7 @@ export class TextIgniter {
     this.toolbarView.updateActiveStates(this.currentAttributes);
   }
 
-
-
-
   handleSelectionChange(): void {
-
     const [start] = this.getSelectionRange();
     this.imageHandler.currentCursorLocation = start;
 
@@ -572,8 +609,7 @@ export class TextIgniter {
 
       return;
     }
-    if (selection && (selection.isCollapsed === true)) {
-
+    if (selection && selection.isCollapsed === true) {
       this.document.dataIds = [];
       // this.document.selectedBlockId = 'data-id-1734604240404';
       // return;
@@ -581,7 +617,8 @@ export class TextIgniter {
 
     const range = selection.getRangeAt(0);
     const parentBlock =
-      range.startContainer.parentElement?.closest('[data-id]') || range.startContainer;
+      range.startContainer.parentElement?.closest('[data-id]') ||
+      range.startContainer;
     if (parentBlock instanceof HTMLElement) {
       this.document.selectedBlockId =
         parentBlock.getAttribute('data-id') ||
@@ -671,7 +708,6 @@ export class TextIgniter {
   //                                 console.log("blocks--->>if 33_pieces..", _pieces, piece)
   //                             }
   //                         }
-
 
   //                     } else {
 
@@ -807,15 +843,15 @@ export class TextIgniter {
       const currentBlock = this.document.blocks[currentBlockIndex];
 
       // If current block is an image, simply add a new text block after it
-      if (currentBlock && currentBlock.type === "image") {
+      if (currentBlock && currentBlock.type === 'image') {
         this.document.blocks.splice(currentBlockIndex + 1, 0, {
           dataId: uniqueId,
-          class: "paragraph-block",
-          pieces: [new Piece(" ")],
-          type: "text"
+          class: 'paragraph-block',
+          pieces: [new Piece(' ')],
+          type: 'text',
         });
         this.document.emit('documentChanged', this);
-        console.log("image - vicky", uniqueId)
+        console.log('image - vicky', uniqueId);
         this.imageHandler.setCursorPostion(1, uniqueId);
       }
       // If current block is a list block, continue the list sequence even if an image block exists later
@@ -827,11 +863,11 @@ export class TextIgniter {
       ) {
         let newBlock: any = {
           dataId: uniqueId,
-          class: "paragraph-block",
-          pieces: [new Piece(" ")],
-          type: "text"
+          class: 'paragraph-block',
+          pieces: [new Piece(' ')],
+          type: 'text',
         };
-        let listParentId = "";
+        let listParentId = '';
         if (currentBlock.listType === 'ol') {
           newBlock.listType = 'li';
           newBlock.listStart = currentBlock.listStart + 1;
@@ -851,7 +887,11 @@ export class TextIgniter {
 
         // For ordered lists, update subsequent list items to increment their listStart
         if (currentBlock.listType === 'ol' || currentBlock.listType === 'li') {
-          for (let i = currentBlockIndex + 2; i < this.document.blocks.length; i++) {
+          for (
+            let i = currentBlockIndex + 2;
+            i < this.document.blocks.length;
+            i++
+          ) {
             const block = this.document.blocks[i];
             if (block.listType === 'li' && block.parentId === listParentId) {
               block.listStart += 1;
@@ -866,16 +906,24 @@ export class TextIgniter {
           const { remainingText, piece } = this.extractTextFromDataId(
             this.getCurrentCursorBlock()!.toString()
           );
-          const extractedContent = " " + remainingText;
+          const extractedContent = ' ' + remainingText;
           let updatedBlock = this.document.blocks;
           if (extractedContent.length > 0) {
             const _extractedContent = remainingText.split(' ');
             let _pieces: Piece[] = [];
-            if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
+            if (
+              _extractedContent[0] !== '' ||
+              _extractedContent[1] !== undefined
+            ) {
               if (piece.length === 1) {
                 _pieces = [new Piece(extractedContent, piece[0].attributes)];
               } else {
-                _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes));
+                _pieces.push(
+                  new Piece(
+                    ' ' + _extractedContent[0] + ' ',
+                    piece[0].attributes
+                  )
+                );
                 if (piece.length >= 2) {
                   piece.forEach((obj: any, i: number) => {
                     if (i !== 0) {
@@ -885,16 +933,16 @@ export class TextIgniter {
                 }
               }
             } else {
-              _pieces = [new Piece(" ")];
+              _pieces = [new Piece(' ')];
             }
             updatedBlock = this.addBlockAfter(
               this.document.blocks,
               this.getCurrentCursorBlock()!.toString(),
               {
                 dataId: uniqueId,
-                class: "paragraph-block",
+                class: 'paragraph-block',
                 pieces: _pieces,
-                type: "text"
+                type: 'text',
               }
             );
             ending = start + extractedContent.length - 1;
@@ -904,9 +952,9 @@ export class TextIgniter {
               this.getCurrentCursorBlock()!.toString(),
               {
                 dataId: uniqueId,
-                class: "paragraph-block",
-                pieces: [new Piece(" ")],
-                type: "text"
+                class: 'paragraph-block',
+                pieces: [new Piece(' ')],
+                type: 'text',
               }
             );
           }
@@ -914,9 +962,9 @@ export class TextIgniter {
         } else {
           this.document.blocks.push({
             dataId: uniqueId,
-            class: "paragraph-block",
-            pieces: [new Piece(" ")],
-            type: "text"
+            class: 'paragraph-block',
+            pieces: [new Piece(' ')],
+            type: 'text',
           });
         }
       }
@@ -924,7 +972,12 @@ export class TextIgniter {
       this.editorView.render();
       this.setCursorPosition(ending + 1, uniqueId);
       if (ending > start) {
-        this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
+        this.document.deleteRange(
+          start,
+          ending,
+          this.document.selectedBlockId,
+          this.document.currentOffset
+        );
       }
 
       // Insert entry in undo stack
@@ -944,15 +997,18 @@ export class TextIgniter {
       //         this.document.redoStack = [];
       //     }
       // }
-
     } else if (e.key === 'Backspace') {
       e.preventDefault();
       if (this.imageHandler.isImageHighlighted) {
         const currentBlockIndex = this.document.blocks.findIndex(
-          (block: any) => block.dataId === this.imageHandler.highLightedImageDataId
+          (block: any) =>
+            block.dataId === this.imageHandler.highLightedImageDataId
         );
         this.imageHandler.deleteImage();
-        this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
+        this.imageHandler.setCursorPostion(
+          1,
+          this.document.blocks[currentBlockIndex - 1].dataId
+        );
         return;
       }
       const selection = window.getSelection();
@@ -961,44 +1017,86 @@ export class TextIgniter {
         this.setCursorPosition(start + 1);
       }
       if (start === end && start > 0) {
-        this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
+        this.document.deleteRange(
+          start - 1,
+          start,
+          this.document.selectedBlockId,
+          this.document.currentOffset
+        );
         this.setCursorPosition(start - 1);
         const index = this.document.blocks.findIndex(
           (block: any) => block.dataId === this.document.selectedBlockId
         );
-        const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement;
+        const chkBlock = document.querySelector(
+          `[data-id="${this.document.selectedBlockId}"]`
+        ) as HTMLElement;
         if (chkBlock === null) {
           let listStart = 0;
-          const _blocks = this.document.blocks.map((block: any, index: number) => {
-            if (block?.listType !== undefined || block?.listType !== null) {
-              if (block?.listType === 'ol') {
-                listStart = 1;
-                block.listStart = 1;
-              } else if (block?.listType === 'li') {
-                listStart = listStart + 1;
-                block.listStart = listStart;
+          const _blocks = this.document.blocks.map(
+            (block: any, index: number) => {
+              if (block?.listType !== undefined || block?.listType !== null) {
+                if (block?.listType === 'ol') {
+                  listStart = 1;
+                  block.listStart = 1;
+                } else if (block?.listType === 'li') {
+                  listStart = listStart + 1;
+                  block.listStart = listStart;
+                }
               }
+              return block;
             }
-            return block;
-          });
+          );
           this.document.emit('documentChanged', this);
         }
       } else if (end > start) {
-        this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          this.document.currentOffset
+        );
         this.setCursorPosition(start + 1);
       }
     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
       if (end > start) {
-        this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          this.document.currentOffset
+        );
       }
-      console.log("insertat", e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset, "", "", !e.isTrusted || false)
-      this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset, "", "", !e.isTrusted || false);
+      console.log(
+        'insertat',
+        e.key,
+        this.currentAttributes,
+        start,
+        this.document.selectedBlockId,
+        this.document.currentOffset,
+        '',
+        '',
+        !e.isTrusted || false
+      );
+      this.document.insertAt(
+        e.key,
+        this.currentAttributes,
+        start,
+        this.document.selectedBlockId,
+        this.document.currentOffset,
+        '',
+        '',
+        !e.isTrusted || false
+      );
       this.setCursorPosition(start + 1);
-    } else if (e.key === "Delete") {
+    } else if (e.key === 'Delete') {
       e.preventDefault();
       if (start === end) {
-        this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
+        this.document.deleteRange(
+          start,
+          start + 1,
+          this.document.selectedBlockId
+        );
         this.setCursorPosition(start);
       } else if (end > start) {
         this.document.deleteRange(start, end, this.document.selectedBlockId);
@@ -1008,12 +1106,9 @@ export class TextIgniter {
     this.hyperlinkHandler.hideHyperlinkViewButton();
   }
 
-
-
-
-  extractTextFromDataId(dataId: string): { remainingText: string, piece: any } {
+  extractTextFromDataId(dataId: string): { remainingText: string; piece: any } {
     const selection = window.getSelection();
-    console.log("selection::", selection)
+    console.log('selection::', selection);
     if (!selection || selection.rangeCount === 0) {
       return { remainingText: '', piece: null }; // No valid selection
     }
@@ -1029,26 +1124,29 @@ export class TextIgniter {
       if (block.dataId === dataId) {
         return block;
       }
-    })
-    const element = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
-    const textPosition = this.document.getCursorOffsetInParent(`[data-id="${dataId}"]`)
+    });
+    const element = document.querySelector(
+      `[data-id="${dataId}"]`
+    ) as HTMLElement;
+    const textPosition = this.document.getCursorOffsetInParent(
+      `[data-id="${dataId}"]`
+    );
     let _piece: any = [];
     let index = 0;
     _block[0].pieces.forEach((obj: any, i: number) => {
-      fText += obj.text
+      fText += obj.text;
       if (textPosition?.innerText === obj.text) {
         index = i;
         _piece.push(obj);
       }
-    })
+    });
     if (_block[0].pieces.length > 1) {
       _block[0].pieces.forEach((obj: any, i: number) => {
         if (index < i) {
-          _piece.push(obj)
+          _piece.push(obj);
         }
-      })
+      });
     }
-
 
     if (!element) {
       console.error(`Element with data-id "${dataId}" not found.`);
@@ -1057,7 +1155,9 @@ export class TextIgniter {
 
     // Ensure the cursor is inside the specified element
     if (!element.contains(cursorNode)) {
-      console.error(`Cursor is not inside the element with data-id "${dataId}".`);
+      console.error(
+        `Cursor is not inside the element with data-id "${dataId}".`
+      );
       return { remainingText: '', piece: null }; // Cursor is outside the target element
     }
 
@@ -1068,7 +1168,6 @@ export class TextIgniter {
     // const cursorOffset = range.startOffset;
     const cursorOffset = textPosition?.offset;
 
-
     // Extract text from the cursor position to the end
     const remainingText = fullText.slice(cursorOffset);
 
@@ -1076,11 +1175,8 @@ export class TextIgniter {
     const newContent = fullText.slice(0, cursorOffset);
     element.textContent = newContent; // Update the element content with remaining text
 
-
-
     return { remainingText: remainingText, piece: _piece }; // Return the extracted text
   }
-
 
   getCurrentCursorBlock(): string | null {
     const selection = window.getSelection();
@@ -1092,9 +1188,11 @@ export class TextIgniter {
     const container = range.startContainer; // The container node of the cursor
 
     // Traverse to the parent element with a `data-id` attribute
-    const elementWithId = (container.nodeType === Node.TEXT_NODE
-      ? container.parentElement
-      : container) as HTMLElement;
+    const elementWithId = (
+      container.nodeType === Node.TEXT_NODE
+        ? container.parentElement
+        : container
+    ) as HTMLElement;
 
     const dataIdElement = elementWithId?.closest('[data-id]'); // Find closest ancestor with `data-id`
     return dataIdElement?.getAttribute('data-id') || null; // Return the `data-id` or null if not found
@@ -1120,17 +1218,22 @@ export class TextIgniter {
   }
   syncCurrentAttributesWithCursor(): void {
     const [start, end] = this.getSelectionRange();
-    console.log('log1', { start: start, end: end })
-    const blockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId);
+    console.log('log1', { start: start, end: end });
+    const blockIndex = this.document.blocks.findIndex(
+      (block: any) => block.dataId === this.document.selectedBlockId
+    );
     if (this.document.blocks[blockIndex]?.type === 'image') {
-      this.imageHandler.addStyleToImage(this.document.selectedBlockId || "");
+      this.imageHandler.addStyleToImage(this.document.selectedBlockId || '');
     } else {
       if (this.imageHandler.isImageHighlighted) {
         this.imageHandler.clearImageStyling();
       }
     }
     if (start === end) {
-      const piece = this.document.findPieceAtOffset(start, this.document.selectedBlockId);
+      const piece = this.document.findPieceAtOffset(
+        start,
+        this.document.selectedBlockId
+      );
       if (piece) {
         if (piece !== this.lastPiece) {
           this.manualOverride = false;
@@ -1153,15 +1256,17 @@ export class TextIgniter {
         const hyperlink = piece?.attributes.hyperlink;
         if (hyperlink && typeof hyperlink === 'string') {
           this.hyperlinkHandler.showHyperlinkViewButton(hyperlink);
-        }
-        else {
+        } else {
           this.hyperlinkHandler.hideHyperlinkViewButton();
         }
-
-
       } else {
         if (!this.manualOverride) {
-          this.currentAttributes = { bold: false, italic: false, underline: false, hyperlink: false };
+          this.currentAttributes = {
+            bold: false,
+            italic: false,
+            underline: false,
+            hyperlink: false,
+          };
           this.toolbarView.updateActiveStates(this.currentAttributes);
         }
         this.lastPiece = null;
@@ -1170,12 +1275,12 @@ export class TextIgniter {
   }
 
   setCursorPosition(position: number, dataId: string | null = ''): void {
-    if (dataId === '')
-      this.editorView.container.focus();
+    if (dataId === '') this.editorView.container.focus();
     else {
-      const divDataid = document.querySelector('[data-id="' + dataId + '"]') as HTMLElement
+      const divDataid = document.querySelector(
+        '[data-id="' + dataId + '"]'
+      ) as HTMLElement;
       divDataid.focus();
-
     }
     const sel = window.getSelection();
     if (!sel) return;
@@ -1213,7 +1318,5 @@ export class TextIgniter {
     sel.removeAllRanges();
     sel.addRange(range);
   }
-
-
 }
 (window as any).TextIgniter = TextIgniter;
