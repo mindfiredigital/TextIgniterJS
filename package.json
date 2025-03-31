@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": ""@mindfiredigital/textigniterjs",
+  "name": "@mindfiredigital/textigniterjs",
   "workspaces": [
     "packages/core",
     "packages/web-component"
