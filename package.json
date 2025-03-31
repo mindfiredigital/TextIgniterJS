@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "textigniter-monorepo",
+  "name": ""@mindfiredigital/textigniterjs",
   "workspaces": [
     "packages/core",
     "packages/web-component"
