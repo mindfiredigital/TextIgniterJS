@@ -21,7 +21,7 @@
   ],
   "scripts": {
     "start": "vite",
-    "build": "tsup",
+    "build": "tsup --no-dts",
     "dev": "tsup --watch",
     "lint": "eslint \"src/**/*.ts*\"",
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
