@@ -1,0 +1,41 @@
+{
+  "name": "@mindfiredigital/textigniterjs-web-component",
+  "description": "TextIgniterJS Web-Component",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mindfiredigital/textigniterjs.git"
+  },
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
+  "type": "module",
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "start": "vite",
+    "build": "tsup --no-dts",
+    "dev": "tsup --watch",
+    "lint": "eslint \"src/**/*.ts*\"",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
+  },
+  "dependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.3"
+  },
+  "peerDependencies": {
+    "@mindfiredigital/textigniterjs": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0"
+  }
+}
