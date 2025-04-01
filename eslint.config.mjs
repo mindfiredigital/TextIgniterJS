@@ -31,7 +31,7 @@ export default [
           ignoreRestSiblings: false,
         },
       ],
-      // Add more rules as needed
+      
     },
   },
 ];
