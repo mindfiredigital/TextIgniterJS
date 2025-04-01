@@ -1,5 +1,11 @@
 # @mindfiredigital/textigniterjs-web-component
 
+## 1.0.4
+
+### Patch Changes
+
+- Merge pull request #161 from mindfiredigital/dev
+
 ## 1.0.3
 
 ### Patch Changes
