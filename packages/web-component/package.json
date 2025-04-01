@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/mindfiredigital/textigniterjs.git"
   },
-  "private": true,
+  "private": false,
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
