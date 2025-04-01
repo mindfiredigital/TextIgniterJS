@@ -2,8 +2,8 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 
 // Get the most recent commit message
-const commitMessage = execSync('git log -2 --format=%s').toString().trim();
-
+const commitMessage = execSync('git log -1 --format=%s').toString().trim();
+console.log("Committed message: ", commitMessage);
 // Define valid scopes
 const validScopes = ['core', 'react', 'web-component','angular','release','docs'];
 
