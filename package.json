@@ -1,9 +1,8 @@
 {
   "private": true,
-  "name": "@mindfiredigital/textigniterjs",
+  "name": "textigniterjs",
   "workspaces": [
-    "packages/core",
-    "packages/web-component"
+    "packages/*"
   ],
   "devDependencies": {
     "typescript": "^5.6.2",

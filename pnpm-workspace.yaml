@@ -1,2 +1,6 @@
 packages:
   - "packages/*"
+# To prevent hoisting, ensure no shared node_modules at the root
+hoist-pattern: []
+# This will ensure isolated node_modules for each package
+store: ~/.pnpm-store
