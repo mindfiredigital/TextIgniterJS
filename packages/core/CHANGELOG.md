@@ -1,5 +1,11 @@
 # @mindfiredigital/textigniterjs
 
+## 1.2.10
+
+### Patch Changes
+
+- Merge branch 'dev' of https://github.com/mindfiredigital/TextIgniterJS
+
 ## 1.2.9
 
 ### Patch Changes
