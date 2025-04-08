@@ -1,5 +1,11 @@
 # @mindfiredigital/textigniterjs
 
+## 1.2.9
+
+### Patch Changes
+
+- Merge pull request #164 from mindfiredigital/dev
+
 ## 1.2.8
 
 ### Patch Changes
