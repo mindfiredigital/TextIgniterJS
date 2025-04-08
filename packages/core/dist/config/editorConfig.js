@@ -121,7 +121,6 @@ export function createEditor(editorId, config) {
       span.appendChild(button);
       const span1 = document.createElement('div');
       span1.id = strings.BG_COLOR_PICKER_WRAPPER_ID;
-      // span1.style.display = "hidden";
       span1.style.display = 'block';
       span1.style.margin = '0';
       const bgColorPicker = document.createElement('input');
@@ -223,4 +222,3 @@ export function createEditor(editorId, config) {
   toolbar.appendChild(viewHyperlinkContainer);
   return { mainEditorId, toolbarId };
 }
-//# sourceMappingURL=editorConfig.js.map

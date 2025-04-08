@@ -13,4 +13,3 @@ class EventEmitter {
   }
 }
 export default EventEmitter;
-//# sourceMappingURL=events.js.map

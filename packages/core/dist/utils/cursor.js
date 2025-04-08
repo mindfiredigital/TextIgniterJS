@@ -38,4 +38,3 @@ export function setCursorPosition(editorView, position, dataId = '') {
   sel.removeAllRanges();
   sel.addRange(range);
 }
-//# sourceMappingURL=cursor.js.map
