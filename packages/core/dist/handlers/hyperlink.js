@@ -211,4 +211,3 @@ class HyperlinkHandler {
   }
 }
 export default HyperlinkHandler;
-//# sourceMappingURL=hyperlink.js.map

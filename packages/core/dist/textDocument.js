@@ -1,6 +1,5 @@
 import EventEmitter from './utils/events';
 import Piece from './piece';
-// text document extend
 class TextDocument extends EventEmitter {
   get selectedBlockId() {
     return this._selectedBlockId;
@@ -21,7 +20,6 @@ class TextDocument extends EventEmitter {
     super();
     this.dataIds = [];
     this.selectAll = false;
-    // selectedBlockId: string | null;
     this._selectedBlockId = null;
     this.pieces = [new Piece('')];
     this.blocks = [
@@ -31,14 +29,10 @@ class TextDocument extends EventEmitter {
         class: 'paragraph-block',
         alignment: 'left',
         pieces: [new Piece(' ')],
-        // listType: null, // null | 'ol' | 'ul'
       },
-      // { "dataId": 'data-id-1734604240401', "pieces": [new Piece("")] }
     ];
     this.selectedBlockId = 'data-id-1734604240404';
-    // this.selectedBlockId = '';
     this.currentOffset = 0;
-    // this.editorView="";
   }
   setEditorView(editorView) {
     this.editorView = editorView;
@@ -70,11 +64,8 @@ class TextDocument extends EventEmitter {
     let index = 0;
     if (dataId) {
       index = this.blocks.findIndex(block => block.dataId === dataId);
-      // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
       offset = this.currentOffset;
     }
-    // const previousValue = this.getRangeText(position, position);
-    // for (let piece of this.pieces) {
     for (let piece of this.blocks[index].pieces) {
       const pieceEnd = offset + piece.text.length;
       if (!inserted && position <= pieceEnd) {
@@ -150,7 +141,6 @@ class TextDocument extends EventEmitter {
       index = this.blocks.findIndex(block => block.dataId === dataId);
       offset = currentOffset;
     }
-    // const previousValue = this.getRangeText(start, end);
     let previousTextBlockIndex = 0;
     if (start === offset) {
       if (index - 1 >= 0 && this.blocks[index - 1].type === 'image') {
@@ -217,7 +207,6 @@ class TextDocument extends EventEmitter {
         dataId: 'data-id-1734604240404',
         class: 'paragraph-block',
         pieces: [new Piece(' ')],
-        // listType: null, // null | 'ol' | 'ul'
       });
     }
     this.emit('documentChanged', this);
@@ -225,34 +214,32 @@ class TextDocument extends EventEmitter {
   getSelectedTextDataId() {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
-      return null; // No text is selected
+      return null;
     }
-    const range = selection.getRangeAt(0); // Get the current range of selection
-    const container = range.startContainer; // The container node of the selection
-    // Traverse to the parent element with `data-id` attribute
+    const range = selection.getRangeAt(0);
+    const container = range.startContainer;
     const elementWithId =
       container.nodeType === Node.TEXT_NODE
         ? container.parentElement
         : container;
-    const dataIdElement = elementWithId.closest('[data-id]'); // Find the closest ancestor with `data-id`
+    const dataIdElement = elementWithId.closest('[data-id]');
     return (
       (dataIdElement === null || dataIdElement === void 0
         ? void 0
         : dataIdElement.getAttribute('data-id')) || null
-    ); // Return the `data-id` or null if not found
+    );
   }
   getAllSelectedDataIds() {
     var _a;
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
-      return []; // No text is selected
+      return [];
     }
-    const range = selection.getRangeAt(0); // Get the current range of selection
+    const range = selection.getRangeAt(0);
     const selectedIds = [];
-    // Traverse all nodes in the selection
     const iterator = document.createNodeIterator(
-      range.commonAncestorContainer, // Start traversal from the common ancestor
-      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT // Include element and text nodes
+      range.commonAncestorContainer,
+      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT
     );
     let currentNode;
     while ((currentNode = iterator.nextNode())) {
@@ -269,7 +256,7 @@ class TextDocument extends EventEmitter {
             ? void 0
             : _a.getAttribute('data-id');
         if (dataId && !selectedIds.includes(dataId)) {
-          selectedIds.push(dataId); // Add unique data-id to the array
+          selectedIds.push(dataId);
         }
       }
     }
@@ -278,7 +265,7 @@ class TextDocument extends EventEmitter {
   }
   handleCtrlASelection() {
     const selectedDataIds = [];
-    const editor = document.getElementById('editor'); // Assuming your contenteditable div has id 'editor'
+    const editor = document.getElementById('editor');
     if (editor) {
       const childNodes = editor.querySelectorAll('[data-id]');
       childNodes.forEach(node => {
@@ -290,22 +277,18 @@ class TextDocument extends EventEmitter {
     }
     this.dataIds = selectedDataIds;
     return selectedDataIds;
-    // Now you can use `selectedDataIds` as needed
   }
   getSelectedDataIds() {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
-      return []; // No text is selected
+      return [];
     }
-    const range = selection.getRangeAt(0); // Get the current range of selection
+    const range = selection.getRangeAt(0);
     const selectedIds = [];
-    // Get the start and end nodes of the selection
     const startContainer = range.startContainer;
     const endContainer = range.endContainer;
-    // Check if the startContainer or endContainer has a `data-id`
     const startDataId = this.getDataIdFromNode(startContainer);
     const endDataId = this.getDataIdFromNode(endContainer);
-    // Add unique data-ids
     if (startDataId && !selectedIds.includes(startDataId)) {
       selectedIds.push(startDataId);
     }
@@ -331,14 +314,14 @@ class TextDocument extends EventEmitter {
   getCursorOffset(container) {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
-      return -1; // No selection or cursor in the container
+      return -1;
     }
     const range = selection.getRangeAt(0);
     let offset = 0;
     const traverseNodes = node => {
       if (node === range.startContainer) {
         offset += range.startOffset;
-        return true; // Found the cursor
+        return true;
       }
       if (node.nodeType === Node.TEXT_NODE) {
         offset += (node.textContent || '').length;
@@ -353,13 +336,7 @@ class TextDocument extends EventEmitter {
     traverseNodes(container);
     return offset;
   }
-  formatAttribute(
-    start,
-    end,
-    attribute,
-    // 'bold' | 'italic' | 'underline' | 'undo' | 'redo' | 'fontFamily' | 'fontSize'
-    value
-  ) {
+  formatAttribute(start, end, attribute, value) {
     console.log('formatAttribute', start, end, attribute, value);
     let newPieces = [];
     let offset = 0;
@@ -391,7 +368,6 @@ class TextDocument extends EventEmitter {
           pieceText.slice(startInPiece, endInPiece),
           Object.assign({}, piece.attributes)
         );
-        // selectedPiece.attributes[attribute] = value;
         if (
           (attribute === 'bold' ||
             attribute === 'italic' ||
@@ -401,7 +377,7 @@ class TextDocument extends EventEmitter {
             attribute === 'hyperlink') &&
           typeof value === 'boolean'
         ) {
-          selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
+          selectedPiece.attributes[attribute] = value;
         } else if (
           (attribute === 'fontFamily' ||
             attribute === 'fontSize' ||
@@ -410,7 +386,7 @@ class TextDocument extends EventEmitter {
             attribute === 'bgColor') &&
           typeof value === 'string'
         ) {
-          selectedPiece.attributes[attribute] = value; // TypeScript knows this is safe
+          selectedPiece.attributes[attribute] = value;
         }
         newPieces.push(selectedPiece);
         if (endInPiece < pieceText.length) {
@@ -432,7 +408,6 @@ class TextDocument extends EventEmitter {
     const index = this.blocks.findIndex(block => block.dataId === dataId);
     if (index === -1) return;
     const block = this.blocks[index];
-    // Toggle: if already ordered, turn it off; otherwise, turn it on
     if (block.listType === 'ol' || block.listType === 'li') {
       block.listType = null;
       block.listStart = undefined;
@@ -440,7 +415,6 @@ class TextDocument extends EventEmitter {
     } else {
       block.listType = 'ol';
       block.listStart = 1;
-      // Mark the block as the start (parent) of its list group
       block.parentId = block.dataId;
     }
     this.emit('documentChanged', this);
@@ -458,7 +432,6 @@ class TextDocument extends EventEmitter {
     for (let i = 0; i < this.blocks.length; i++) {
       const block = this.blocks[i];
       if (block.listType === 'ol' || block.listType === 'li') {
-        // If this block is the start of a new list group, reset the counter.
         if (block.listType === 'ol' || block.parentId !== currentParentId) {
           currentNumber = 1;
           currentParentId =
@@ -473,37 +446,6 @@ class TextDocument extends EventEmitter {
     }
     this.emit('documentChanged', this);
   }
-  /*
-    getRangeText(start: number, end: number): string {
-        let rangeText = '';
-        let currentOffset = 0;
-
-        for (const block of this.blocks) {
-            for (const piece of block.pieces) {
-                const pieceLength = piece.text.length;
-                if (currentOffset + pieceLength >= start && currentOffset < end) {
-                    console.log(piece, "piece getRangeText")
-                    const rangeStart = Math.max(0, start - currentOffset);
-                    const rangeEnd = Math.min(pieceLength, end - currentOffset);
-                    rangeText += piece.text.substring(rangeStart, rangeEnd);
-                }
-
-                currentOffset += pieceLength;
-
-                if (currentOffset >= end) {
-                    break;
-                }
-            }
-
-            if (currentOffset >= end) {
-                break;
-            }
-        }
-
-        return rangeText;
-       // return { rangeText: rangeText, piece: _piece };
-    }
-        */
   undo() {
     console.log('undo');
     this.undoRedoManager.undo();
@@ -538,7 +480,6 @@ class TextDocument extends EventEmitter {
     if (position < 0 || position > totalLength) return;
     while ((node = nodeStack.pop())) {
       if (node.nodeType === 3) {
-        // Text node
         const textNode = node;
         const nextCharIndex = charIndex + textNode.length;
         if (position >= charIndex && position <= nextCharIndex) {
@@ -666,17 +607,16 @@ class TextDocument extends EventEmitter {
   setAlignment(alignment, dataId) {
     const block = this.blocks.find(block => block.dataId === dataId);
     if (!block) return;
-    block.alignment = alignment; // Update alignment
-    this.emit('documentChanged', this); // Trigger re-render
+    block.alignment = alignment;
+    this.emit('documentChanged', this);
   }
   getHtmlContent() {
-    const editorContainer = document.getElementById('editor'); // Adjust to your editor's ID
+    const editorContainer = document.getElementById('editor');
     if (!editorContainer) {
       console.error('Editor container not found.');
       return;
     }
     const htmlContent = editorContainer.innerHTML;
-    // You can also copy it to the clipboard
     navigator.clipboard
       .writeText(htmlContent)
       .then(() => {
@@ -693,7 +633,6 @@ class TextDocument extends EventEmitter {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return null;
     const range = selection.getRangeAt(0);
-    // Ensure the cursor is within the parent element
     if (!parentElement.contains(range.startContainer)) return null;
     let offset = 0;
     let targetNode = null;
@@ -703,13 +642,12 @@ class TextDocument extends EventEmitter {
       null
     );
     let matchedChild = null;
-    // Traverse text nodes to calculate the total offset
     while (walker.nextNode()) {
       const currentNode = walker.currentNode;
       console.log(currentNode, 'textPosition - currentNode: vicky');
       if (currentNode === range.startContainer) {
-        offset += range.startOffset; // Add the offset in the current node
-        targetNode = currentNode; // This is the child containing the cursor
+        offset += range.startOffset;
+        targetNode = currentNode;
         matchedChild = currentNode.parentElement;
         break;
       } else {
@@ -737,4 +675,3 @@ class TextDocument extends EventEmitter {
   }
 }
 export default TextDocument;
-//# sourceMappingURL=textDocument.js.map

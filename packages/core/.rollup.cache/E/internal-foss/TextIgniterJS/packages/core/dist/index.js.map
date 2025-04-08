@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../src/index.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,WAAW,EAAE,MAAM,eAAe,CAAC;AAG5C,OAAO,EAAE,WAAW,EAAE,CAAC","sourcesContent":["import { TextIgniter } from './TextIgniter';\r\n\r\n// Export the class\r\nexport { TextIgniter };\r\n\r\n\r\n"]}

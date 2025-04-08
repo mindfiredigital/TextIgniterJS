@@ -10,11 +10,9 @@ class EditorView {
   render() {
     const savedSel = saveSelection(this.container);
     this.container.innerHTML = '';
-    // Create a wrapper div with a unique data-id
     this.document.blocks.forEach(block => {
       if (block.dataId !== '') {
         let wrapperDiv;
-        // If block is an image, ignore list handling.
         if (block.type === 'image') {
           wrapperDiv = document.createElement('div');
           wrapperDiv.setAttribute('data-id', block.dataId);
@@ -27,7 +25,6 @@ class EditorView {
             );
           }
         } else {
-          // For text blocks, use list wrappers if needed.
           if (block.listType === 'ol' || block.listType === 'li') {
             wrapperDiv = document.createElement('ol');
             wrapperDiv.setAttribute(
@@ -89,21 +86,20 @@ class EditorView {
         strong.appendChild(textNode);
         textNode = strong;
       }
-      // Wrap with a span to apply font family and size
       const fontFamilySelect = document.getElementById('fontFamily');
       const fontSizeSelect = document.getElementById('fontSize');
       let selectedFontFamilyValue = 'Arial';
       let selectedFontSizeValue = '16px';
       if (fontFamilySelect) {
-        selectedFontFamilyValue = fontFamilySelect.value; // Get the selected value
+        selectedFontFamilyValue = fontFamilySelect.value;
       }
       if (fontSizeSelect) {
-        selectedFontSizeValue = fontSizeSelect.value; // Get the selected value
+        selectedFontSizeValue = fontSizeSelect.value;
       }
       if (attrs.hyperlink && typeof attrs.hyperlink === 'string') {
         const a = document.createElement('a');
         a.href = attrs.hyperlink;
-        a.target = '_blank'; //For new tab
+        a.target = '_blank';
         a.appendChild(textNode);
         textNode = a;
       }
@@ -123,7 +119,6 @@ class EditorView {
       const span = document.createElement('span');
       span.style.fontFamily = attrs.fontFamily || selectedFontFamilyValue;
       span.style.fontSize = attrs.fontSize || selectedFontSizeValue;
-      // span.style.color = attrs.fontColor || selectedFontColor;
       span.appendChild(textNode);
       fragment.appendChild(span);
       if (index < lines.length - 1) {
@@ -134,4 +129,3 @@ class EditorView {
   }
 }
 export default EditorView;
-//# sourceMappingURL=editorView.js.map

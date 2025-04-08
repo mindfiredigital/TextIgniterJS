@@ -2,7 +2,6 @@ export class InsertTableHandler {
   constructor(editor) {
     this.editor = editor;
   }
-  // Open a modal to let the user specify the table size
   openTableModal() {
     const modal = document.createElement('div');
     modal.classList.add('modal');
@@ -21,7 +20,7 @@ export class InsertTableHandler {
       const rows = parseInt(rowInput.value) || 1;
       const cols = parseInt(colInput.value) || 1;
       this.insertTable(rows, cols);
-      document.body.removeChild(modal); // Close modal after inserting the table
+      document.body.removeChild(modal);
     };
     const closeButton = document.createElement('button');
     closeButton.innerText = 'Close';
@@ -32,7 +31,6 @@ export class InsertTableHandler {
     modal.appendChild(closeButton);
     document.body.appendChild(modal);
   }
-  // Insert table into the editor
   insertTable(rows, cols) {
     const table = document.createElement('table');
     table.style.width = '100%';
@@ -43,11 +41,10 @@ export class InsertTableHandler {
         const cell = row.insertCell();
         cell.style.border = '1px solid #ccc';
         cell.style.padding = '20px';
-        cell.contentEditable = 'true'; // Make cells editable
+        cell.contentEditable = 'true';
         cell.innerText = ' ';
       }
     }
     this.editor.appendChild(table);
   }
 }
-//# sourceMappingURL=insertTable.js.map
