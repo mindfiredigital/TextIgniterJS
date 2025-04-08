@@ -8,10 +8,10 @@ class Piece {
     let selectedFontColor = document.getElementById('fontColorPicker');
     let selectedBgColor = document.getElementById('bgColorPicker');
     if (fontFamilySelect) {
-      selectedFontFamilyValue = fontFamilySelect.value; // Get the selected value
+      selectedFontFamilyValue = fontFamilySelect.value;
     }
     if (fontSizeSelect) {
-      selectedFontSizeValue = fontSizeSelect.value; // Get the selected value
+      selectedFontSizeValue = fontSizeSelect.value;
     }
     this.attributes = {
       bold: attributes.bold || false,
@@ -19,8 +19,8 @@ class Piece {
       underline: attributes.underline || false,
       undo: attributes.undo || false,
       redo: attributes.redo || false,
-      fontFamily: attributes.fontFamily || selectedFontFamilyValue, // Default font family
-      fontSize: attributes.fontSize || selectedFontSizeValue, // Default font size
+      fontFamily: attributes.fontFamily || selectedFontFamilyValue,
+      fontSize: attributes.fontSize || selectedFontSizeValue,
       hyperlink: attributes.hyperlink || false,
       fontColor: attributes.fontColor || selectedFontColor.value,
       bgColor: attributes.bgColor || selectedBgColor.value,
@@ -83,4 +83,3 @@ class Piece {
   }
 }
 export default Piece;
-//# sourceMappingURL=piece.js.map

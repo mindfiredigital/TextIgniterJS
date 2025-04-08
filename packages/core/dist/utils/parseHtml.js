@@ -12,7 +12,6 @@ export function extractPiecesFromNode(node, inheritedAttrs) {
   let currentAttrs = Object.assign({}, inheritedAttrs);
   const pieces = [];
   if (node instanceof HTMLElement) {
-    // Check if this element changes formatting
     if (node.tagName === 'STRONG' || node.tagName === 'B')
       currentAttrs.bold = true;
     if (node.tagName === 'EM' || node.tagName === 'I')
@@ -29,4 +28,3 @@ export function extractPiecesFromNode(node, inheritedAttrs) {
   }
   return pieces;
 }
-//# sourceMappingURL=parseHtml.js.map

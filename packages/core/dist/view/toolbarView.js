@@ -58,4 +58,3 @@ class ToolbarView extends EventEmitter {
   }
 }
 export default ToolbarView;
-//# sourceMappingURL=toolbarView.js.map

@@ -38,6 +38,7 @@ export class ImageHandler {
   }
   insertImageAtCursor(dataUrl) {
     const [start, end] = getSelectionRange(this.editorView);
+    console.log(start, end, 'vicky insertImage', dataUrl);
     if (end > start) {
       this.document.deleteRange(start, end, this.document.selectedBlockId);
     }
@@ -62,6 +63,13 @@ export class ImageHandler {
     }, 0);
   }
   insertImageAtPosition(dataUrl, position, dataId) {
+    console.log(
+      dataUrl,
+      position,
+      dataId,
+      'vicky insertImageAtPosition',
+      this.document.blocks
+    );
     const uniqueId1 = `data-id-${Date.now()}-${Math.random() * 1000}`;
     const uniqueId2 = `data-id-${Date.now()}-${Math.random() * 1000}`;
     const uniqueId3 = `data-id-${Date.now()}-${Math.random() * 1000}`;
@@ -263,4 +271,3 @@ export class ImageHandler {
     this.document.emit('documentChanged', this);
   }
 }
-//# sourceMappingURL=image.js.map

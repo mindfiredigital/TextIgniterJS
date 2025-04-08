@@ -19,5 +19,6 @@
     "declarationMap": true // Generate declaration maps
   },
   "include": ["src/**/*"], // Include all files in the src directory and subdirectories
-  "exclude": ["node_modules", "dist"] // Exclude node_modules and dist folders
+  "exclude": ["node_modules", "dist"], // Exclude node_modules and dist folders
+  "types": ["./types/textigniterjs.d.ts"]
 }

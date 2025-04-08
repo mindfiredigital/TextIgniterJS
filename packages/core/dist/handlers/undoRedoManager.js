@@ -9,7 +9,6 @@ export default class UndoRedoManager {
     this.editorView = editorView;
   }
   createSnapshot() {
-    // eslint-disable-next-line no-unused-vars
     const [start, end] = getSelectionRange(this.editorView);
     return {
       blocks: JSON.parse(JSON.stringify(this.document.blocks)),
@@ -21,7 +20,6 @@ export default class UndoRedoManager {
     };
   }
   getCurrentSelection() {
-    // Assumes that document.editorView is set
     const sel = saveSelection(this.document.editorView.container);
     return sel ? { start: sel.start, end: sel.end } : { start: 0, end: 0 };
   }
@@ -36,11 +34,8 @@ export default class UndoRedoManager {
   restoreSnapshot(snapshot) {
     this.document.blocks = snapshot.blocks;
     this.document.dataIds = snapshot.dataIds;
-    // Use the internal setter (or assign directly) for selectedBlockId.
     this.document._selectedBlockId = snapshot.selectedBlockId;
     this.document.currentOffset = snapshot.currentOffset;
-    // Let TextDocument’s event listeners know that things have changed.
-    // IMPORTANT: Recreate the Piece instances.
     for (let block of this.document.blocks) {
       if (block.pieces && Array.isArray(block.pieces)) {
         block.pieces = block.pieces.map(
@@ -50,14 +45,6 @@ export default class UndoRedoManager {
     }
     this.document.emit('documentChanged', this.document);
     this.document.setCursorPosition(snapshot.cursorPosition || 0);
-    // Restore selection using your helper.
-    // if (snapshot.selection) {
-    //   restoreSelection(
-    //     this.document.editorView.container,
-    //     snapshot.selection.start,
-    //     snapshot.selection.end
-    //   );
-    // }
   }
   undo() {
     console.log('   ', this.snapshotUndoStack);
@@ -68,7 +55,6 @@ export default class UndoRedoManager {
     if (this.snapshotRedoStack.length > this.maxSnapshots) {
       this.snapshotRedoStack.shift();
     }
-    // Pop the last snapshot and restore it.
     const snapshot = this.snapshotUndoStack.pop();
     if (snapshot) {
       this.restoreSnapshot(snapshot);
@@ -87,4 +73,3 @@ export default class UndoRedoManager {
     }
   }
 }
-//# sourceMappingURL=undoRedoManager.js.map

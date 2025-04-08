@@ -72,11 +72,10 @@ export function getSelectionRange(editorView) {
 export function extractTextFromDataId(dataId, textDocument) {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) {
-    return { remainingText: '', piece: null }; // No valid selection
+    return { remainingText: '', piece: null };
   }
-  const range = selection.getRangeAt(0); // Get the current range of the cursor
-  const cursorNode = range.startContainer; // The node where the cursor is placed
-  // Find the element with the given data-id
+  const range = selection.getRangeAt(0);
+  const cursorNode = range.startContainer;
   let fText = '';
   const _block = textDocument.blocks.filter(block => {
     if (block.dataId === dataId) {
@@ -110,37 +109,28 @@ export function extractTextFromDataId(dataId, textDocument) {
   }
   if (!element) {
     console.error(`Element with data-id "${dataId}" not found.`);
-    return { remainingText: '', piece: null }; // No element with the provided data-id
+    return { remainingText: '', piece: null };
   }
-  // Ensure the cursor is inside the specified element
   if (!element.contains(cursorNode)) {
     console.error(`Cursor is not inside the element with data-id "${dataId}".`);
-    return { remainingText: '', piece: null }; // Cursor is outside the target element
+    return { remainingText: '', piece: null };
   }
-  // Get the full text content of the element
-  // const fullText = element.textContent || '';
   const fullText = fText;
-  // Calculate the offset position of the cursor within the text node
-  // const cursorOffset = range.startOffset;
   const cursorOffset =
     textPosition === null || textPosition === void 0
       ? void 0
       : textPosition.offset;
-  // Extract text from the cursor position to the end
   const remainingText = fullText.slice(cursorOffset);
-  // Update the DOM: Keep only the text before the cursor
   const newContent = fullText.slice(0, cursorOffset);
-  element.textContent = newContent; // Update the element content with remaining text
-  return { remainingText: remainingText, piece: _piece }; // Return the extracted text
+  element.textContent = newContent;
+  return { remainingText: remainingText, piece: _piece };
 }
 export function addBlockAfter(data, targetDataId, newBlock) {
-  // Find the index of the block with the specified dataId
   const targetIndex = data.findIndex(block => block.dataId === targetDataId);
   if (targetIndex === -1) {
     console.error(`Block with dataId "${targetDataId}" not found.`);
     return data;
   }
-  // Insert the new block after the target index
   const updatedData = [
     ...data.slice(0, targetIndex + 1),
     newBlock,
@@ -148,4 +138,3 @@ export function addBlockAfter(data, targetDataId, newBlock) {
   ];
   return updatedData;
 }
-//# sourceMappingURL=selectionManager.js.map

@@ -27,7 +27,7 @@ export interface CurrentAttributeDTO {
   bgColor?: string;
 }
 
-export class TextIgniter {
+class TextIgniter {
   document: TextDocument;
   htmlToJsonParser: HtmlToJsonParser | undefined;
   editorView: EditorView;
@@ -1320,3 +1320,4 @@ export class TextIgniter {
   }
 }
 (window as any).TextIgniter = TextIgniter;
+export { TextIgniter };
