@@ -5,6 +5,13 @@
 ### Patch Changes
 
 - Updated dependencies []:
+  - @mindfiredigital/textigniterjs@1.2.10
+
+## 1.0.5
+
+### Patch Changes
+
+- Updated dependencies []:
   - @mindfiredigital/textigniterjs@1.2.9
 
 ## 1.0.4
