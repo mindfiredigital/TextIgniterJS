@@ -261,6 +261,7 @@ class TextDocument extends EventEmitter {
       }
     }
     this.dataIds = selectedIds;
+    console.log('selected id 3', this.dataIds, selectedIds);
     return selectedIds;
   }
   handleCtrlASelection() {
@@ -276,6 +277,7 @@ class TextDocument extends EventEmitter {
       });
     }
     this.dataIds = selectedDataIds;
+    console.log('selected id 2', this.dataIds, selectedDataIds);
     return selectedDataIds;
   }
   getSelectedDataIds() {
@@ -296,6 +298,7 @@ class TextDocument extends EventEmitter {
       selectedIds.push(endDataId);
     }
     this.dataIds = selectedIds;
+    console.log('selected id 1', this.dataIds, selectedIds);
     return selectedIds;
   }
   getDataIdFromNode(node) {

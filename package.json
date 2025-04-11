@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "textigniterjs",
+  "name": "textigniter-pkg",
   "workspaces": [
     "packages/*"
   ],

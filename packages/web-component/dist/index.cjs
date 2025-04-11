@@ -25,7 +25,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // src/component/TextIgniterComponent.ts
-var import_TextIgniter = require("@mindfiredigital/textigniterjs/dist/TextIgniter.js");
+var import_TextIgniter = require("@mindfiredigital/textigniter/dist/TextIgniter.js");
 var TextIgniterComponent = class extends HTMLElement {
   constructor() {
     super();

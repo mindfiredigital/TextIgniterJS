@@ -1,6 +1,6 @@
-# TextIgniterJS
+# TextIgniter JS
 
-🚀 **TextIgniterJS** is a powerful, lightweight, and customizable rich-text editor for modern web applications.
+🚀 **TextIgniter JS** is a powerful, lightweight, and customizable rich-text editor for modern web applications.
 
 ## 📌 Features
 
@@ -20,13 +20,13 @@
 ### For Core Module
 
 ```sh
-pnpm add @mindfiredigital/textigniterjs
+pnpm add @mindfiredigital/textigniter
 ```
 
 ### For Web Component
 
 ```sh
-pnpm add @mindfiredigital/textigniterjs-web-component
+pnpm add @mindfiredigital/textigniter-web-component
 ```
 
 ---
@@ -36,7 +36,7 @@ pnpm add @mindfiredigital/textigniterjs-web-component
 ### Using Core Module in JavaScript
 
 ```js
-import { TextIgniter } from '@mindfiredigital/textigniterjs';
+import { TextIgniter } from '@mindfiredigital/textigniter';
 
 const editor = new TextIgniter('#editor', {
   showToolbar: true,
@@ -64,7 +64,7 @@ const editor = new TextIgniter('#editor', {
 
 ```html
 <script type="module">
-  import '@mindfiredigital/textigniterjs-web-component';
+  import '@mindfiredigital/textigniter-web-component';
 </script>
 
 <text-igniter
