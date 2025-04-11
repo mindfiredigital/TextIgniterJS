@@ -1,15 +1,15 @@
-# @mindfiredigital/textigniterjs-web-component
+# @mindfiredigital/textigniter-web-component
 
-## 1.0.2
+## 1.0.0
 
 ### Patch Changes
 
 - Updated dependencies []:
-  - @mindfiredigital/textigniterjs@1.2.7
+  - @mindfiredigital/textigniter@1.0.0
 
 ## 1.0.1
 
 ### Patch Changes
 
 - Updated dependencies []:
-  - @mindfiredigital/textigniterjs@1.0.1
+  - @mindfiredigital/textigniter@1.0.0

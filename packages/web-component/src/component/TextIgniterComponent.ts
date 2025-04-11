@@ -1,4 +1,4 @@
-import { TextIgniter } from "@mindfiredigital/textigniterjs/dist/TextIgniter.js";
+import { TextIgniter } from '@mindfiredigital/textigniter/dist/TextIgniter.js';
 
 export class TextIgniterComponent extends HTMLElement {
   private textIgniter!: TextIgniter;
@@ -14,18 +14,18 @@ export class TextIgniterComponent extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ["config"];
+    return ['config'];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
-    if (name === "config" && newValue !== oldValue) {
+    if (name === 'config' && newValue !== oldValue) {
       try {
-          console.log(newValue)
+        console.log(newValue);
         const parsedConfig = JSON.parse(newValue);
         this.config = parsedConfig;
         this.initializeEditor(); // Reinitialize Core when config changes
       } catch (e) {
-        console.error("Failed to parse config: ", e);
+        console.error('Failed to parse config: ', e);
       }
     }
   }
@@ -42,22 +42,25 @@ export class TextIgniterComponent extends HTMLElement {
       return;
     }
 
-    const editorContainer = this.querySelector("#editor-container")?.id;
+    const editorContainer = this.querySelector('#editor-container')?.id;
     if (!editorContainer) {
-      console.error("Editor element not found inside the DOM.");
+      console.error('Editor element not found inside the DOM.');
       return;
     }
 
     try {
       this.initialized = true;
-      this.textIgniter = new TextIgniter(editorContainer as any, this.config as any);
+      this.textIgniter = new TextIgniter(
+        editorContainer as any,
+        this.config as any
+      );
     } catch (error) {
-      console.error("Failed to initialize TextIgniter:", error);
+      console.error('Failed to initialize TextIgniter:', error);
       this.initialized = false;
     }
   }
 }
 
-if (!customElements.get("text-igniter")) {
-  customElements.define("text-igniter", TextIgniterComponent);
+if (!customElements.get('text-igniter')) {
+  customElements.define('text-igniter', TextIgniterComponent);
 }

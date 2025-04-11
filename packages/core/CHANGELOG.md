@@ -1,6 +1,6 @@
-# @mindfiredigital/textigniterjs
+# @mindfiredigital/textigniter
 
-## 1.2.7
+## 1.0.0
 
 ### Patch Changes
 
