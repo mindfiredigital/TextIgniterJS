@@ -1,14 +1,14 @@
-<h1 align="center">TextIgniterJS</h1><br><br>
+<h1 align="center">TextIgniter JS</h1><br><br>
 <p align="center">
-<a href="https://www.npmjs.com/package/@mindfiredigital/textigniterjs"><img src="https://img.shields.io/npm/v/@mindfiredigital/textigniterjs.svg?sanitize=true" alt="Version"></a>
-<a href="https://www.npmjs.com/package/@mindfiredigital/textigniterjs"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs"></a>
+<a href="https://www.npmjs.com/package/@mindfiredigital/textigniter"><img src="https://img.shields.io/npm/v/@mindfiredigital/textigniter.svg?sanitize=true" alt="Version"></a>
+<a href="https://www.npmjs.com/package/@mindfiredigital/textigniter"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs"></a>
 </p>
 
 <br>
 
 <p align="center"> Experience a Lightweight , powerful and intuitive HTML Editor built with Core Typescript. </p>
 
-The `@mindfiredigital/textigniterjs` is a tool that allows developers to integrate TextIgniter.
+The `@mindfiredigital/textigniter` is a tool that allows developers to integrate TextIgniter.
 <br>
 
 <p align="center">
@@ -58,10 +58,10 @@ Click the button below to open the project on StackBlitz.
 
 ## Installation
 
-To install the `@mindfiredigital/textigniterjs` npm package in your project, use the following command:
+To install the `@mindfiredigital/textigniter` npm package in your project, use the following command:
 
 ```bash
-npm install @mindfiredigital/textigniterjs
+npm install @mindfiredigital/textigniter
 ```
 
 <br>
@@ -76,12 +76,12 @@ npm install @mindfiredigital/textigniterjs
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TextIgniterJS</title>
+    <title>TextIgniter JS</title>
   </head>
   <body>
     <div id="editor"></div>
 
-    <script src="node_modules/@mindfiredigital/textigniterjs/dist/index.js"></script>
+    <script src="node_modules/@mindfiredigital/textigniter/dist/index.js"></script>
 
     <script>
       // Initialize the RichTextEditor with specific features
@@ -128,7 +128,7 @@ npm install @mindfiredigital/textigniterjs
 
 ## Contributing
 
-We welcome contributions from the community. If you'd like to contribute to the `textigniterjs` npm package, please follow our [Contributing Guidelines](CONTRIBUTING.md).
+We welcome contributions from the community. If you'd like to contribute to the `textigniter` npm package, please follow our [Contributing Guidelines](CONTRIBUTING.md).
 <br>
 
 ## License

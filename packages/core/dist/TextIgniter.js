@@ -63,6 +63,7 @@ class TextIgniter {
     });
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
+      const dataId = this.document.getAllSelectedDataIds();
     });
     (_a = document.getElementById('fontColor')) === null || _a === void 0
       ? void 0
@@ -255,6 +256,7 @@ class TextIgniter {
     (_g = document.getElementById('alignLeft')) === null || _g === void 0
       ? void 0
       : _g.addEventListener('click', () => {
+          console.log('alignment alignLeft', this.document.dataIds);
           this.document.dataIds.forEach(obj =>
             this.document.setAlignment('left', obj)
           );
@@ -262,6 +264,7 @@ class TextIgniter {
     (_h = document.getElementById('alignCenter')) === null || _h === void 0
       ? void 0
       : _h.addEventListener('click', () => {
+          console.log('alignment alignCenter', this.document.dataIds);
           this.document.dataIds.forEach(obj =>
             this.document.setAlignment('center', obj)
           );
@@ -269,6 +272,7 @@ class TextIgniter {
     (_j = document.getElementById('alignRight')) === null || _j === void 0
       ? void 0
       : _j.addEventListener('click', () => {
+          console.log('alignment alignRight', this.document.dataIds);
           this.document.dataIds.forEach(obj =>
             this.document.setAlignment('right', obj)
           );

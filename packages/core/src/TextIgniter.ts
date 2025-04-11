@@ -96,6 +96,7 @@ class TextIgniter {
 
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
+      const dataId = this.document.getAllSelectedDataIds();
     });
     document.getElementById('fontColor')?.addEventListener('click', e => {
       const fontColorPicker = document.getElementById(
@@ -292,6 +293,7 @@ class TextIgniter {
     });
 
     document.getElementById('fontSize')?.addEventListener('change', e => {
+      // console.log("font fontsize", this.document.dataIds)
       this.undoRedoManager.saveUndoSnapshot();
       const fontSize = (e.target as HTMLSelectElement).value;
       const [start, end] = this.getSelectionRange();
@@ -314,6 +316,7 @@ class TextIgniter {
     });
 
     document.getElementById('alignLeft')?.addEventListener('click', () => {
+      console.log('alignment alignLeft', this.document.dataIds);
       this.document.dataIds.forEach(obj =>
         this.document.setAlignment('left', obj)
       );
@@ -321,6 +324,7 @@ class TextIgniter {
     });
 
     document.getElementById('alignCenter')?.addEventListener('click', () => {
+      console.log('alignment alignCenter', this.document.dataIds);
       this.document.dataIds.forEach(obj =>
         this.document.setAlignment('center', obj)
       );
@@ -329,6 +333,7 @@ class TextIgniter {
     });
 
     document.getElementById('alignRight')?.addEventListener('click', () => {
+      console.log('alignment alignRight', this.document.dataIds);
       this.document.dataIds.forEach(obj =>
         this.document.setAlignment('right', obj)
       );

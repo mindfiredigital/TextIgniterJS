@@ -107,7 +107,7 @@ importers:
 
   packages/web-component:
     dependencies:
-      '@mindfiredigital/textigniterjs':
+      '@mindfiredigital/textigniter':
         specifier: workspace:*
         version: link:../core
       tsup:

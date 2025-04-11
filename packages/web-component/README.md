@@ -1,14 +1,14 @@
-<h1 align="center">TextIgniterJS</h1><br><br>
+<h1 align="center">TextIgniter Web Component</h1><br><br>
 <p align="center">
-<a href="https://www.npmjs.com/package/@mindfiredigital/textigniterjs"><img src="https://img.shields.io/npm/v/@mindfiredigital/textigniterjs.svg?sanitize=true" alt="Version"></a>
-<a href="https://www.npmjs.com/package/@mindfiredigital/textigniterjs"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs"></a>
+<a href="https://www.npmjs.com/package/@mindfiredigital/textigniter-web-component"><img src="https://img.shields.io/npm/v/@mindfiredigital/textigniter-web-component.svg?sanitize=true" alt="Version"></a>
+<a href="https://www.npmjs.com/package/@mindfiredigital/textigniter-web-component"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs"></a>
 </p>
 
 <br>
 
 <p align="center"> Experience a Lightweight , powerful and intuitive HTML Editor built with Core Typescript. </p>
 
-The `@mindfiredigital/textigniterjs` is a tool that allows developers to integrate TextIgniter.
+The `@mindfiredigital/textigniter-web-component` is a tool that allows developers to integrate TextIgniter.
 <br>
 
 <p align="center">
@@ -17,11 +17,11 @@ The `@mindfiredigital/textigniterjs` is a tool that allows developers to integra
 
 ## Live Demo
 
-Click the button below to open the project on StackBlitz.
+<!-- Click the button below to open the project on StackBlitz.
 
 <a href="https://stackblitz.com/edit/stackblitz-starters-kezevu?file=index.html" target="_blank">
   <img src="https://developer.stackblitz.com/img/open_in_stackblitz.svg" alt="Open in StackBlitz">
-</a>
+</a> -->
 
 ## Table of Contents
 
@@ -58,10 +58,10 @@ Click the button below to open the project on StackBlitz.
 
 ## Installation
 
-To install the `@mindfiredigital/textigniterjs` npm package in your project, use the following command:
+To install the `@mindfiredigital/textigniter-web-component` npm package in your project, use the following command:
 
 ```bash
-npm install @mindfiredigital/textigniterjs
+npm install @mindfiredigital/textigniter-web-component
 ```
 
 <br>
@@ -73,52 +73,45 @@ npm install @mindfiredigital/textigniterjs
 ```javascript
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TextIgniterJS</title>
-  </head>
-  <body>
-    <div id="editor"></div>
 
-    <script src="node_modules/@mindfiredigital/textigniterjs/dist/index.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rich Text Editor</title>
+  <meta name="description" content="New features implemented.">
+  <style>
+  </style>
+</head>
 
-    <script>
-      // Initialize the RichTextEditor with specific features
-      const config = {
-        features: [
-          'bold',
-          'italic',
-          'underline',
-          'subscript',
-          'superscript',
-          'left_align',
-          'center_align',
-          'right_align',
-          'justify',
-          'bullet_list',
-          'numbered_list',
-          'insert_table',
-          'insert_layout',
-          'heading',
-          'hyperlink',
-          'image',
-        ],
-      };
-      const editor = new TextIgniter('editor', config);
+<body>
+  <div id="editor-container"></div>
+  <!-- <link rel="stylesheet" href="dist/index.css"> -->
+  <!-- <script src="dist/index.js"></script> -->
+  <script type="module" src="node_modules/@mindfiredigital/textigniter-web-component/dist/index.js"></script>
+  <text-igniter config='{
+    "showToolbar": true,
+    "features": [
+      "bold",
+      "italic",
+      "underline",
+      "hyperlink",
+      "fontFamily",
+      "fontSize",
+      "alignLeft",
+      "alignCenter",
+      "alignRight",
+      "unorderedList",
+      "orderedList",
+      "image",
+      "fontColor",
+      "bgColor",
+      "getHtmlContent",
+      "loadHtmlContent"
+    ]
+}
+'></text-igniter>
+</body>
 
-      // Example usage of getHtml and getJson methods
-      function getEditorContent() {
-        console.log('HTML content:', editor.getHtml());
-        console.log('JSON content:', editor.getJson());
-      }
-
-      const contentButton = document.createElement('button');
-      contentButton.innerText = 'Get Content';
-      contentButton.onclick = getEditorContent;
-      document.body.appendChild(contentButton);
-    </script>
-  </body>
 </html>
 
 
@@ -128,7 +121,7 @@ npm install @mindfiredigital/textigniterjs
 
 ## Contributing
 
-We welcome contributions from the community. If you'd like to contribute to the `textigniterjs` npm package, please follow our [Contributing Guidelines](CONTRIBUTING.md).
+We welcome contributions from the community. If you'd like to contribute to the `textigniter-web-component` npm package, please follow our [Contributing Guidelines](CONTRIBUTING.md).
 <br>
 
 ## License

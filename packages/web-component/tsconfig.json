@@ -20,5 +20,5 @@
   },
   "include": ["src/**/*"], // Include all files in the src directory and subdirectories
   "exclude": ["node_modules", "dist"], // Exclude node_modules and dist folders
-  "types": ["./types/textigniterjs.d.ts"]
+  "types": ["./types/textigniter.d.ts"]
 }

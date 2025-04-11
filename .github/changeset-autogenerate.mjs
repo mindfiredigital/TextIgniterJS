@@ -44,8 +44,8 @@ if (packageName) {
 
   const formattedPackageName =
     packageName === 'core'
-      ? '@mindfiredigital/textigniterjs'
-      : `@mindfiredigital/textigniterjs-${packageName}`;
+      ? '@mindfiredigital/textigniter'
+      : `@mindfiredigital/textigniter-${packageName}`;
 
   // Generate changeset content
   const changesetContent = `---
@@ -57,7 +57,7 @@ ${description}
   // Write to a changeset file
   fs.writeFileSync(`.changeset/auto-${Date.now()}.md`, changesetContent);
   console.log(
-    `✅ Changeset file created for package: textigniterjs-${packageName}`
+    `✅ Changeset file created for package: textigniter-${packageName}`
   );
 } else {
   console.log(

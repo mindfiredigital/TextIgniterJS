@@ -1,7 +1,7 @@
 {
-  "name": "@mindfiredigital/textigniterjs-web-component",
-  "description": "TextIgniterJS Web-Component",
-  "version": "1.0.5",
+  "name": "@mindfiredigital/textigniter-web-component",
+  "description": "TextIgniter Web-Component",
+  "version": "1.0.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/mindfiredigital/textigniterjs.git"
@@ -32,7 +32,7 @@
     "vite": "^6.2.3"
   },
   "peerDependencies": {
-    "@mindfiredigital/textigniterjs": "workspace:*"
+    "@mindfiredigital/textigniter": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
