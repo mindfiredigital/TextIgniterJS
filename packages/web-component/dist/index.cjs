@@ -69,7 +69,10 @@ var TextIgniterComponent = class extends HTMLElement {
     }
     try {
       this.initialized = true;
-      this.textIgniter = new import_TextIgniter.TextIgniter(editorContainer, this.config);
+      this.textIgniter = new import_TextIgniter.TextIgniter(
+        editorContainer,
+        this.config
+      );
     } catch (error) {
       console.error("Failed to initialize TextIgniter:", error);
       this.initialized = false;
