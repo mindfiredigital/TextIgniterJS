@@ -2,6 +2,7 @@
 import { TextIgniter } from "@mindfiredigital/textigniter/dist/TextIgniter.js";
 var TextIgniterComponent = class extends HTMLElement {
   constructor() {
+    console.log("TextIgniterComponent constructor called");
     super();
     this.initialized = false;
     this.config = {};
