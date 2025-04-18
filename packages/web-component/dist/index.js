@@ -1,7 +1,8 @@
 // src/component/TextIgniterComponent.ts
-import { TextIgniter } from '@mindfiredigital/textigniter/dist/TextIgniter.js';
+import { TextIgniter } from "@mindfiredigital/textigniter/dist/TextIgniter.js";
 var TextIgniterComponent = class extends HTMLElement {
   constructor() {
+    console.log("TextIgniterComponent constructor called");
     super();
     this.initialized = false;
     this.config = {};
@@ -11,17 +12,17 @@ var TextIgniterComponent = class extends HTMLElement {
     }
   }
   static get observedAttributes() {
-    return ['config'];
+    return ["config"];
   }
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'config' && newValue !== oldValue) {
+    if (name === "config" && newValue !== oldValue) {
       try {
         console.log(newValue);
         const parsedConfig = JSON.parse(newValue);
         this.config = parsedConfig;
         this.initializeEditor();
       } catch (e) {
-        console.error('Failed to parse config: ', e);
+        console.error("Failed to parse config: ", e);
       }
     }
   }
@@ -36,23 +37,27 @@ var TextIgniterComponent = class extends HTMLElement {
     if (this.initialized) {
       return;
     }
-    const editorContainer =
-      (_a = this.querySelector('#editor-container')) == null ? void 0 : _a.id;
+    const editorContainer = (_a = this.querySelector("#editor-container")) == null ? void 0 : _a.id;
     if (!editorContainer) {
-      console.error('Editor element not found inside the DOM.');
+      console.error("Editor element not found inside the DOM.");
       return;
     }
     try {
       this.initialized = true;
-      this.textIgniter = new TextIgniter(editorContainer, this.config);
+      this.textIgniter = new TextIgniter(
+        editorContainer,
+        this.config
+      );
     } catch (error) {
-      console.error('Failed to initialize TextIgniter:', error);
+      console.error("Failed to initialize TextIgniter:", error);
       this.initialized = false;
     }
   }
 };
-if (!customElements.get('text-igniter')) {
-  customElements.define('text-igniter', TextIgniterComponent);
+if (!customElements.get("text-igniter")) {
+  customElements.define("text-igniter", TextIgniterComponent);
 }
-export { TextIgniterComponent };
+export {
+  TextIgniterComponent
+};
 //# sourceMappingURL=index.js.map

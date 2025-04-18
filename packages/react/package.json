@@ -1,0 +1,94 @@
+{
+  "name": "@mindfiredigital/textigniter-react",
+  "version": "1.0.0",
+  "private": false,
+  "description": "React textigniter",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mindfiredigital/textigniterjs.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
+  "sideEffects": false,
+  "license": "MIT",
+  "scripts": {
+    "start": "serve dist",
+    "start-r": "react-scripts start",
+    "build": "tsup --no-dts",
+    "dev": "tsup --watch",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
+    "release": "turbo run build && pnpm publish --access public"
+  },
+  "keywords": [
+    "textigniter",
+    "textigniter-react",
+    "textigniter-web-component",
+    "rich-text-editor",
+    "html-editor",
+    "typescript",
+    "react",
+    "framework",
+    "cli",
+    "javascript",
+    "npm-package",
+    "text-editor",
+    "no-code",
+    "low-code",
+    "component-based",
+    "responsive-design",
+    "components",
+    "component",
+    "react-component",
+    "angular",
+    "ui",
+    "vue",
+    "modern",
+    "plugin",
+    "eslint",
+    "web",
+    "webpack",
+    "css"
+  ],
+  "dependencies": {
+    "@mindfiredigital/textigniter": "workspace:*",
+    "@mindfiredigital/textigniter-web-component": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.0.0",
+    "serve": "^14.2.4",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
