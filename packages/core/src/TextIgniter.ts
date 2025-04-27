@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import TextDocument from './textDocument';
 import EditorView from './view/editorView';
 import ToolbarView from './view/toolbarView';
@@ -96,7 +95,7 @@ class TextIgniter {
 
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
-      const dataId = this.document.getAllSelectedDataIds();
+      // const dataId = this.document.getAllSelectedDataIds();  // commented as it was showing linting error
     });
     document.getElementById('fontColor')?.addEventListener('click', e => {
       const fontColorPicker = document.getElementById(
@@ -1016,7 +1015,7 @@ class TextIgniter {
         );
         return;
       }
-      const selection = window.getSelection();
+      // const selection = window.getSelection();  // commented as it was showing linting error
       if (this.document.dataIds.length >= 1 && this.document.selectAll) {
         this.document.deleteBlocks();
         this.setCursorPosition(start + 1);
@@ -1029,28 +1028,28 @@ class TextIgniter {
           this.document.currentOffset
         );
         this.setCursorPosition(start - 1);
-        const index = this.document.blocks.findIndex(
-          (block: any) => block.dataId === this.document.selectedBlockId
-        );
+        // const index = this.document.blocks.findIndex(
+        //   (block: any) => block.dataId === this.document.selectedBlockId
+        // );  // commented as it was showing linting error
         const chkBlock = document.querySelector(
           `[data-id="${this.document.selectedBlockId}"]`
         ) as HTMLElement;
         if (chkBlock === null) {
-          let listStart = 0;
-          const _blocks = this.document.blocks.map(
-            (block: any, index: number) => {
-              if (block?.listType !== undefined || block?.listType !== null) {
-                if (block?.listType === 'ol') {
-                  listStart = 1;
-                  block.listStart = 1;
-                } else if (block?.listType === 'li') {
-                  listStart = listStart + 1;
-                  block.listStart = listStart;
-                }
-              }
-              return block;
-            }
-          );
+          // let listStart = 0; // commented as it was showing linting error
+          // const _blocks = this.document.blocks.map(
+          //   (block: any, index: number) => {
+          //     if (block?.listType !== undefined || block?.listType !== null) {
+          //       if (block?.listType === 'ol') {
+          //         listStart = 1;
+          //         block.listStart = 1;
+          //       } else if (block?.listType === 'li') {
+          //         listStart = listStart + 1;
+          //         block.listStart = listStart;
+          //       }
+          //     }
+          //     return block;
+          //   }
+          // ); // commented as it was showing linting error
           this.document.emit('documentChanged', this);
         }
       } else if (end > start) {
@@ -1124,7 +1123,7 @@ class TextIgniter {
     // Find the element with the given data-id
     let fText = '';
 
-    let count = 0;
+    // let count = 0;  // commented as it was showing linting error
     const _block = this.document.blocks.filter((block: any) => {
       if (block.dataId === dataId) {
         return block;
