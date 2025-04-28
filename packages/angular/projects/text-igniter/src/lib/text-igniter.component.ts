@@ -10,7 +10,7 @@ import { TextIgniter } from '@mindfiredigital/textigniter/dist/TextIgniter';
 
 @Component({
   selector: 'ngx-text-igniter',
-  template: '<div id="editor"></div>',
+  template: '<div [id]="editorId"></div>',
   standalone: false,
 })
 export class TextIgniterComponent implements OnChanges, AfterViewInit {
@@ -20,6 +20,7 @@ export class TextIgniterComponent implements OnChanges, AfterViewInit {
         features: string[];
       }
     | undefined;
+  @Input() editorId: string | 'editor1' = 'editor1';
   ngAfterViewInit(): void {
     this.renderTable();
   }
@@ -31,8 +32,11 @@ export class TextIgniterComponent implements OnChanges, AfterViewInit {
   }
 
   private renderTable(): void {
+    if (this.editorId === 'editor') {
+      return console.log("editorId can't be 'editor'");
+    }
     if (this.config) {
-      new TextIgniter('editor', this.config);
+      new TextIgniter(this.editorId, this.config);
     }
   }
 }
