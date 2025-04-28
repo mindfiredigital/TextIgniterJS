@@ -56,6 +56,7 @@ class TextIgniter {
         document.addEventListener('mouseup', () => {
             this.syncCurrentAttributesWithCursor();
             const dataId = this.document.getAllSelectedDataIds();
+            console.log(dataId, "dataId lntgerr");
         });
         (_a = document.getElementById('fontColor')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', e => {
             const fontColorPicker = document.getElementById('fontColorPicker');
@@ -597,6 +598,7 @@ class TextIgniter {
                 return;
             }
             const selection = window.getSelection();
+            console.log(selection, "selection lntgerr");
             if (this.document.dataIds.length >= 1 && this.document.selectAll) {
                 this.document.deleteBlocks();
                 this.setCursorPosition(start + 1);
@@ -605,9 +607,11 @@ class TextIgniter {
                 this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
                 this.setCursorPosition(start - 1);
                 const index = this.document.blocks.findIndex((block) => block.dataId === this.document.selectedBlockId);
+                console.log(index, 'index lntgerr');
                 const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`);
                 if (chkBlock === null) {
                     let listStart = 0;
+                    console.log(listStart, " listStart lntgerr");
                     const _blocks = this.document.blocks.map((block, index) => {
                         if ((block === null || block === void 0 ? void 0 : block.listType) !== undefined || (block === null || block === void 0 ? void 0 : block.listType) !== null) {
                             if ((block === null || block === void 0 ? void 0 : block.listType) === 'ol') {
@@ -621,6 +625,7 @@ class TextIgniter {
                         }
                         return block;
                     });
+                    console.log(_blocks, "blocks lntgerr");
                     this.document.emit('documentChanged', this);
                 }
             }
@@ -661,6 +666,7 @@ class TextIgniter {
         const cursorNode = range.startContainer;
         let fText = '';
         let count = 0;
+        console.log(count, "count lntgerr");
         const _block = this.document.blocks.filter((block) => {
             if (block.dataId === dataId) {
                 return block;
