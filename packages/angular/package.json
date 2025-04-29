@@ -2,6 +2,10 @@
   "name": "@mindfiredigital/textigniter-angular",
   "version": "1.1.0",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "access": "public",
   "description": "Angular textigniter",
   "scripts": {
     "ng": "ng",
