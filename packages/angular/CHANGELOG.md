@@ -1,5 +1,11 @@
 # @mindfiredigital/textigniter-angular
 
+## 1.1.2
+
+### Patch Changes
+
+- Merge pull request #186 from mindfiredigital/dev
+
 ## 1.1.1
 
 ### Patch Changes
