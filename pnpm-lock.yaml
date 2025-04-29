@@ -80,6 +80,9 @@ importers:
       '@angular/router':
         specifier: ^19.2.0
         version: 19.2.6(@angular/common@19.2.6(@angular/core@19.2.6(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.6(rxjs@7.8.2)(zone.js@0.15.0))(@angular/platform-browser@19.2.6(@angular/common@19.2.6(@angular/core@19.2.6(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.6(rxjs@7.8.2)(zone.js@0.15.0)))(rxjs@7.8.2)
+      '@mindfiredigital/textigniter':
+        specifier: workspace:^1.0.0
+        version: link:../core
       '@mindfiredigital/textigniter-web-component':
         specifier: workspace:^1.0.0
         version: link:../web-component
