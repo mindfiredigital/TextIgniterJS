@@ -97,7 +97,7 @@ class TextIgniter {
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
       const dataId = this.document.getAllSelectedDataIds();
-      console.log(dataId, "dataId lntgerr")
+      console.log(dataId, 'dataId lntgerr');
     });
     document.getElementById('fontColor')?.addEventListener('click', e => {
       const fontColorPicker = document.getElementById(
@@ -154,6 +154,17 @@ class TextIgniter {
             }, 300);
           }
         });
+      }
+    });
+
+    document.addEventListener('click', e => {
+      // Check if the click is outside the editor and hyperlink popup
+      const target = e.target as HTMLElement;
+      if (
+        !this.editorContainer?.contains(target) &&
+        !target.closest('.hyperlink-popup')
+      ) {
+        this.hyperlinkHandler.hideHyperlinkViewButton();
       }
     });
 
@@ -605,10 +616,26 @@ class TextIgniter {
   }
 
   handleSelectionChange(): void {
+    const selection = window.getSelection();
+
+    if (
+      !selection ||
+      selection.rangeCount === 0 ||
+      !this.editorContainer?.contains(selection.anchorNode)
+    ) {
+      // Hide hyperlink popup when no selection
+      this.hyperlinkHandler.hideHyperlinkViewButton();
+      return;
+    }
+
     const [start] = this.getSelectionRange();
     this.imageHandler.currentCursorLocation = start;
 
-    const selection = window.getSelection();
+    if (selection.isCollapsed) {
+      this.document.dataIds = [];
+    } else {
+      this.document.getAllSelectedDataIds();
+    }
 
     if (!selection || selection.rangeCount === 0) {
       // this.document.selectedBlockId = null;
@@ -1018,7 +1045,7 @@ class TextIgniter {
         return;
       }
       const selection = window.getSelection();
-      console.log(selection,"selection lntgerr")
+      console.log(selection, 'selection lntgerr');
       if (this.document.dataIds.length >= 1 && this.document.selectAll) {
         this.document.deleteBlocks();
         this.setCursorPosition(start + 1);
@@ -1034,13 +1061,13 @@ class TextIgniter {
         const index = this.document.blocks.findIndex(
           (block: any) => block.dataId === this.document.selectedBlockId
         );
-        console.log(index,'index lntgerr')
+        console.log(index, 'index lntgerr');
         const chkBlock = document.querySelector(
           `[data-id="${this.document.selectedBlockId}"]`
         ) as HTMLElement;
         if (chkBlock === null) {
           let listStart = 0;
-          console.log(listStart," listStart lntgerr")
+          console.log(listStart, ' listStart lntgerr');
           const _blocks = this.document.blocks.map(
             (block: any, index: number) => {
               if (block?.listType !== undefined || block?.listType !== null) {
@@ -1055,7 +1082,7 @@ class TextIgniter {
               return block;
             }
           );
-          console.log(_blocks,"blocks lntgerr")
+          console.log(_blocks, 'blocks lntgerr');
           this.document.emit('documentChanged', this);
         }
       } else if (end > start) {
@@ -1130,7 +1157,7 @@ class TextIgniter {
     let fText = '';
 
     let count = 0;
-    console.log(count,"count lntgerr")
+    console.log(count, 'count lntgerr');
     const _block = this.document.blocks.filter((block: any) => {
       if (block.dataId === dataId) {
         return block;
@@ -1271,6 +1298,7 @@ class TextIgniter {
           this.hyperlinkHandler.hideHyperlinkViewButton();
         }
       } else {
+        this.hyperlinkHandler.hideHyperlinkViewButton();
         if (!this.manualOverride) {
           this.currentAttributes = {
             bold: false,
@@ -1282,6 +1310,8 @@ class TextIgniter {
         }
         this.lastPiece = null;
       }
+    } else {
+      this.hyperlinkHandler.hideHyperlinkViewButton();
     }
   }
 
