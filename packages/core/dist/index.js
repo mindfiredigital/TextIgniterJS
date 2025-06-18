@@ -183,8 +183,8 @@ class n extends t {
             })
           );
     }
-    const g = this.mergePieces(c);
-    (this.blocks[u].pieces = g),
+    const p = this.mergePieces(c);
+    (this.blocks[u].pieces = p),
       console.log({ position: i }),
       this.emit('documentChanged', this);
   }
@@ -823,6 +823,8 @@ const r = {
   IMAGE_CROSS_CLASS: 'image-cross',
   TEST_HTML_CODE:
     '<div data-id="data-id-1734604240404" class="paragraph-block" type="undefined" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> ajsh diujaksdajsh diujaksdajsh </span></span></span></div><div data-id="data-id-1739430551701" class="paragraph-block" type="undefined" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> diujaksdasd </span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong>asdh </strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(163, 67, 67);"><strong>98hasiudasdh 98</strong></span></span></span></div><div data-id="data-id-1739430553412" class="paragraph-block" type="undefined" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong> </strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);">This is a </span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><em>t</em></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(85, 153, 170);"><span style="color: rgb(0, 0, 0);"><em>est work.</em></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(85, 153, 170);"><span style="color: rgb(0, 0, 0);"> this is a </span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(85, 153, 170);"><span style="color: rgb(0, 0, 0);"><em>test work</em></span></span></span></div><div data-id="data-id-1739430554776" class="paragraph-block" type="undefined" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> </span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);">This is a </span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><em>test work.</em></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> this is a </span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong>test work</strong></span></span></span></div><div data-id="data-id-1739430558023" class="paragraph-block" type="undefined" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><strong><em> uj09asujdi</em></strong></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><a href="a;lsjd 98aiosd" target="_blank"><strong><em>odiodiooias </em></strong></a></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><a href="a;lsjd 98aiosd" target="_blank"><strong>diodiodio</strong></a></span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"><a href="a;lsjd 98aiosd" target="_blank">oias</a></span></span></span></div><div data-id="data-id-1739430556280" class="paragraph-block" type="undefined" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> da90 uasd y98asiodoiasda90 uasd y9</span></span></span><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);">8asiodoiasda90 uasd y98asioda</span></span></span></div><div data-id="data-id-1739430559464" class="paragraph-block" type="undefined" style="text-align: left;"><span style="font-family: Arial; font-size: 12px;"><span style="background-color: rgb(247, 247, 247);"><span style="color: rgb(0, 0, 0);"> sdjasdjasdja9sudoija9sudoija9sudoija90sdoa90sdoa90sdo</span></span></span></div>',
+  POPUP_TOOLBAR_CLASSNAME: 'popup-toolbar',
+  POPUP_TOOLBAR_ID: 'popup-toolbar',
 };
 class d {
   constructor(t, e, n) {
@@ -1037,7 +1039,7 @@ const u = {
   image:
     '<svg \n            xmlns="http://www.w3.org/2000/svg" \n            width="18" \n            height="18" \n            viewBox="0 0 16 16">\n            <title>Insert Image</title>\n            <path fill="currentColor" d="M6 5a2 2 0 1 1-4 0a2 2 0 0 1 4 0m9-4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm-3.448 6.134l-3.76 2.769a.5.5 0 0 1-.436.077l-.087-.034l-1.713-.87L1 11.8V14h14V9.751zM15 2H1v8.635l4.28-2.558a.5.5 0 0 1 .389-.054l.094.037l1.684.855l3.813-2.807a.5.5 0 0 1 .52-.045l.079.05L15 8.495z"/>\n        </svg>',
 };
-class g {
+class p {
   constructor(t) {
     (this.htmlString = t),
       (this.doc = new DOMParser().parseFromString(t, 'text/html'));
@@ -1159,7 +1161,7 @@ class g {
     return e || '000000' !== i ? `#${i}` : null;
   }
 }
-class p {
+class g {
   constructor(t, e) {
     (this.editor = t),
       (this.document = e),
@@ -1235,7 +1237,7 @@ class p {
       t => t.dataId === this.document.selectedBlockId
     );
     let u = [];
-    const { remainingText: g, piece: p } = (function (t, e) {
+    const { remainingText: p, piece: g } = (function (t, e) {
       const n = window.getSelection();
       if (!n || 0 === n.rangeCount) return { remainingText: '', piece: null };
       const i = n.getRangeAt(0).startContainer;
@@ -1274,21 +1276,21 @@ class p {
       const c = o,
         h = null == a ? void 0 : a.offset,
         u = c.slice(h),
-        g = c.slice(0, h);
-      return (l.textContent = g), { remainingText: u, piece: r };
+        p = c.slice(0, h);
+      return (l.textContent = p), { remainingText: u, piece: r };
     })(c || '', this.document);
-    console.log(c || '', this.document, 'extractTextFromDataId-vicky', g, p);
-    const m = ' ' + g;
+    console.log(c || '', this.document, 'extractTextFromDataId-vicky', p, g);
+    const m = ' ' + p;
     let f = this.document.blocks;
     if (m.length > 0) {
-      const t = g.split(' ');
+      const t = p.split(' ');
       let n = [];
       '' !== t[0] || void 0 !== t[1]
-        ? 1 === p.length
-          ? (n = [new e(m, p[0].attributes)])
-          : (n.push(new e(' ' + t[0] + ' ', p[0].attributes)),
-            p.length >= 2 &&
-              p.forEach((t, e) => {
+        ? 1 === g.length
+          ? (n = [new e(m, g[0].attributes)])
+          : (n.push(new e(' ' + t[0] + ' ', g[0].attributes)),
+            g.length >= 2 &&
+              g.forEach((t, e) => {
                 0 !== e && n.push(t);
               }))
         : (n = [new e(' ')]),
@@ -1312,7 +1314,7 @@ class p {
     (this.document.blocks = f),
       this.document.deleteRange(
         this.currentCursorLocation,
-        this.currentCursorLocation + g.length,
+        this.currentCursorLocation + p.length,
         this.document.selectedBlockId,
         this.document.currentOffset
       ),
@@ -1490,28 +1492,77 @@ class m {
     e && this.restoreSnapshot(e);
   }
 }
-class f {
+class f extends t {
+  constructor(t) {
+    super(), (this.container = t), this.setupButtons();
+  }
+  setupButtons() {
+    this.container.addEventListener('mousedown', t => {
+      t.preventDefault();
+    }),
+      this.container.addEventListener('click', t => {
+        const e = t.target.closest('button');
+        if (e) {
+          const t = e.getAttribute('data-action');
+          t && this.emit('popupAction', t);
+        }
+      });
+  }
+  show(t) {
+    const e = t.getRangeAt(0).getBoundingClientRect();
+    if (0 === e.width && 0 === e.height) return void this.hide();
+    this.container.style.display = 'flex';
+    const n = this.container.offsetWidth,
+      i = this.container.offsetHeight;
+    let o = e.top + window.scrollY - i - 8,
+      s = e.left + window.scrollX + e.width / 2 - n / 2;
+    o < window.scrollY && (o = e.bottom + window.scrollY + 8),
+      s < 0 && (s = 5),
+      (this.container.style.top = `${o}px`),
+      (this.container.style.left = `${s}px`);
+  }
+  hide() {
+    this.container.style.display = 'none';
+  }
+  updateActiveStates(t) {
+    this.container.querySelectorAll('button').forEach(e => {
+      const n = e.getAttribute('data-action');
+      let i = !1;
+      'bold' === n && t.bold && (i = !0),
+        'italic' === n && t.italic && (i = !0),
+        'underline' === n && t.underline && (i = !0),
+        'hyperlink' === n && t.hyperlink && (i = !0),
+        e.classList.toggle('active', i);
+    });
+  }
+}
+class b {
   constructor(t, i) {
-    var o, s, h, f, b, y, I, k, C;
+    var o, s, h, b, y, I, k, C, v;
     (this.savedSelection = null), (this.debounceTimer = null);
-    const { mainEditorId: v, toolbarId: E } = (function (t, e) {
+    const {
+      mainEditorId: E,
+      toolbarId: w,
+      popupToolbarId: A,
+    } = (function (t, e) {
       const n = r.EDITOR_ID,
         i = r.TOOLBAR_ID,
-        o = ['Arial', 'Times New Roman', 'Courier New', 'Verdana'],
-        s = ['12px', '14px', '16px', '18px', '20px'],
-        l = document.getElementById(t);
-      if (!l) throw new Error(r.EDITOR_ELEMENT_NT_FOUND);
-      const a = document.createElement('div');
-      (a.className = r.TOOLBAR_CLASSNAME),
-        (a.id = i),
-        l.appendChild(a),
-        (null == e ? void 0 : e.showToolbar) || (a.style.display = 'none');
+        o = r.POPUP_TOOLBAR_ID,
+        s = ['Arial', 'Times New Roman', 'Courier New', 'Verdana'],
+        l = ['12px', '14px', '16px', '18px', '20px'],
+        a = document.getElementById(t);
+      if (!a) throw new Error(r.EDITOR_ELEMENT_NT_FOUND);
       const d = document.createElement('div');
-      (d.id = n),
-        (d.className = r.EDITOR_CLASSNAME),
-        (d.contentEditable = 'true'),
-        l.appendChild(d);
-      const c = {
+      (d.className = r.TOOLBAR_CLASSNAME),
+        (d.id = i),
+        a.appendChild(d),
+        (null == e ? void 0 : e.showToolbar) || (d.style.display = 'none');
+      const c = document.createElement('div');
+      (c.id = n),
+        (c.className = r.EDITOR_CLASSNAME),
+        (c.contentEditable = 'true'),
+        a.appendChild(c);
+      const h = {
           bold: '<strong>B</strong>',
           italic: '<em>I</em>',
           underline: '<u>U</u>',
@@ -1533,7 +1584,7 @@ class f {
           image: '&#128247;',
           colors: '&#127912;',
         },
-        h = [
+        p = [
           { feature: 'alignLeft', id: 'alignLeft', icon: u.left_align },
           { feature: 'alignCenter', id: 'alignCenter', icon: u.center_align },
           { feature: 'alignRight', id: 'alignRight', icon: u.right_align },
@@ -1556,163 +1607,181 @@ class f {
             }),
             n
           );
-        };
-      e.features.forEach(t => {
-        if ('fontFamily' === t) {
-          const t = g(r.FONT_FAMILY_SELECT_ID, o);
-          a.appendChild(t);
-        } else if ('fontSize' === t) {
-          const t = g(r.FONT_SIZE_SELECT_ID, s);
-          a.appendChild(t);
-        } else if ('fontColor' === t) {
-          if (document.getElementById(r.FONT_COLOR_WRAPPER_ID)) return;
-          const t = document.createElement('span');
-          (t.id = r.FONT_COLOR_WRAPPER_ID),
-            (t.style.display = 'inline-block'),
-            (t.style.marginRight = '8px');
-          const e = document.createElement('button');
-          (e.id = r.FONT_COLOR_ID),
-            (e.type = 'button'),
-            (e.textContent = 'A'),
-            t.appendChild(e);
-          const n = document.createElement('span');
-          (n.id = r.FONT_COLOR_PICKER_WRAPPER_ID), (n.style.display = 'hidden');
-          const i = document.createElement('input');
-          (i.type = 'color'),
-            (i.id = r.FONT_COLOR_PICKER_ID),
-            i.setAttribute('data-action', 'fontColor'),
-            (i.style.display = 'none'),
-            n.appendChild(i);
-          const o = document.createElement('button');
-          (o.id = r.FONT_COLOR_RESET_ID),
-            (o.type = 'button'),
-            (o.textContent = '⟳'),
-            (o.style.margin = '-10px'),
-            (o.style.display = 'none'),
-            (o.style.fontSize = 'x-small'),
-            n.appendChild(o),
-            t.appendChild(n),
-            a.appendChild(t);
-        } else if ('bgColor' === t) {
-          if (document.getElementById(r.BG_COLOR_WRAPPER_ID)) return;
-          const t = document.createElement('span');
-          (t.id = r.BG_COLOR_WRAPPER_ID),
-            (t.style.display = 'inline-block'),
-            (t.style.marginRight = '8px');
-          const e = document.createElement('button');
-          (e.id = r.BG_COLOR_ID),
-            (e.type = 'button'),
-            (e.textContent = 'B'),
-            t.appendChild(e);
-          const n = document.createElement('div');
-          (n.id = r.BG_COLOR_PICKER_WRAPPER_ID),
-            (n.style.display = 'block'),
-            (n.style.margin = '0');
-          const i = document.createElement('input');
-          i.setAttribute('data-action', 'bgColor'),
-            (i.value = '#ffffff'),
-            (i.type = 'color'),
-            (i.id = r.BG_COLOR_PICKER_ID),
-            (i.style.display = 'none'),
-            n.appendChild(i);
-          const o = document.createElement('button');
-          (o.id = r.BG_COLOR_RESET_ID),
-            (o.type = 'button'),
-            (o.textContent = '⟳'),
-            (o.style.margin = '-10px'),
-            (o.style.display = 'none'),
-            (o.style.fontSize = 'x-small'),
-            n.appendChild(o),
-            t.appendChild(n),
-            a.appendChild(t);
-        } else if ('getHtmlContent' === t) {
-          const t = document.createElement('button');
-          (t.id = r.GET_HTML_BUTTON_ID),
-            (t.type = 'button'),
-            (t.textContent = 'Get HTML'),
-            (t.style.padding = '8px 12px'),
-            (t.style.marginRight = '8px'),
-            (t.style.border = '1px solid #ccc'),
-            (t.style.borderRadius = '4px'),
-            (t.style.cursor = 'pointer'),
-            (t.style.background = '#f4f4f4'),
-            a.appendChild(t);
-        } else if ('loadHtmlContent' === t) {
-          const t = document.createElement('button');
-          (t.id = r.LOAD_HTML_BUTTON_ID),
-            (t.type = 'button'),
-            (t.textContent = 'Load HTML'),
-            (t.style.padding = '8px 12px'),
-            (t.style.marginRight = '8px'),
-            (t.style.border = '1px solid #ccc'),
-            (t.style.borderRadius = '4px'),
-            (t.style.cursor = 'pointer'),
-            (t.style.background = '#f4f4f4'),
-            a.appendChild(t);
-        } else if (h.map(t => t.feature).includes(t)) {
-          const e = h.find(e => e.feature === t),
-            n = document.createElement('button');
-          (n.id = t),
+        },
+        m = document.createElement('div');
+      (m.id = o),
+        (m.className = r.POPUP_TOOLBAR_CLASSNAME),
+        (m.style.display = 'none'),
+        a.appendChild(m),
+        e.popupFeatures &&
+          e.popupFeatures.forEach(t => {
+            const e = p.find(e => e.feature === t) || { icon: h[t] || t },
+              n = document.createElement('button');
             (n.dataset.action = t),
-            (n.innerHTML = (null == e ? void 0 : e.icon) || ''),
-            a.appendChild(n);
-        } else {
-          const e = document.createElement('button');
-          (e.dataset.action = t),
-            (e.innerHTML = c[t] || t),
-            (e.id = t),
-            (e.title = t
-              .split('_')
-              .map(t => t.charAt(0).toUpperCase() + t.slice(1))
-              .join(' ')),
-            a.appendChild(e);
-        }
-      });
-      const p = document.createElement('div');
-      (p.id = r.HYPERLINK_CONTAINER_ID), (p.style.display = 'none');
-      const m = document.createElement('input');
-      (m.type = 'text'),
-        (m.id = r.HYPERLINK_INPUT_ID),
-        (m.placeholder = r.HYPERLINK_PLACEHOLDER);
-      const f = document.createElement('button');
-      (f.id = r.HYPERLINK_APPLY_BTN_ID), (f.textContent = 'Link');
-      const b = document.createElement('button');
-      (b.id = r.HYPERLINK_CANCEL_BTN_ID),
-        (b.textContent = 'Unlink'),
-        p.appendChild(m),
-        p.appendChild(f),
-        p.appendChild(b),
-        a.appendChild(p);
-      const y = document.createElement('div');
-      (y.id = r.VIEW_HYPERLINK_CONTAINER_ID), (y.style.display = 'none');
-      const I = document.createElement('span');
-      (I.id = r.VIEW_HYPERLINK_LABEL_ID), (I.innerHTML = 'Visit URL : ');
-      const k = document.createElement('a');
+              (n.innerHTML = e.icon),
+              (n.title = t
+                .split('_')
+                .map(t => t.charAt(0).toUpperCase() + t.slice(1))
+                .join(' ')),
+              m.appendChild(n);
+          }),
+        e.features.forEach(t => {
+          if ('fontFamily' === t) {
+            const t = g(r.FONT_FAMILY_SELECT_ID, s);
+            d.appendChild(t);
+          } else if ('fontSize' === t) {
+            const t = g(r.FONT_SIZE_SELECT_ID, l);
+            d.appendChild(t);
+          } else if ('fontColor' === t) {
+            if (document.getElementById(r.FONT_COLOR_WRAPPER_ID)) return;
+            const t = document.createElement('span');
+            (t.id = r.FONT_COLOR_WRAPPER_ID),
+              (t.style.display = 'inline-block'),
+              (t.style.marginRight = '8px');
+            const e = document.createElement('button');
+            (e.id = r.FONT_COLOR_ID),
+              (e.type = 'button'),
+              (e.textContent = 'A'),
+              t.appendChild(e);
+            const n = document.createElement('span');
+            (n.id = r.FONT_COLOR_PICKER_WRAPPER_ID),
+              (n.style.display = 'hidden');
+            const i = document.createElement('input');
+            (i.type = 'color'),
+              (i.id = r.FONT_COLOR_PICKER_ID),
+              i.setAttribute('data-action', 'fontColor'),
+              (i.style.display = 'none'),
+              n.appendChild(i);
+            const o = document.createElement('button');
+            (o.id = r.FONT_COLOR_RESET_ID),
+              (o.type = 'button'),
+              (o.textContent = '⟳'),
+              (o.style.margin = '-10px'),
+              (o.style.display = 'none'),
+              (o.style.fontSize = 'x-small'),
+              n.appendChild(o),
+              t.appendChild(n),
+              d.appendChild(t);
+          } else if ('bgColor' === t) {
+            if (document.getElementById(r.BG_COLOR_WRAPPER_ID)) return;
+            const t = document.createElement('span');
+            (t.id = r.BG_COLOR_WRAPPER_ID),
+              (t.style.display = 'inline-block'),
+              (t.style.marginRight = '8px');
+            const e = document.createElement('button');
+            (e.id = r.BG_COLOR_ID),
+              (e.type = 'button'),
+              (e.textContent = 'B'),
+              t.appendChild(e);
+            const n = document.createElement('div');
+            (n.id = r.BG_COLOR_PICKER_WRAPPER_ID),
+              (n.style.display = 'block'),
+              (n.style.margin = '0');
+            const i = document.createElement('input');
+            i.setAttribute('data-action', 'bgColor'),
+              (i.value = '#ffffff'),
+              (i.type = 'color'),
+              (i.id = r.BG_COLOR_PICKER_ID),
+              (i.style.display = 'none'),
+              n.appendChild(i);
+            const o = document.createElement('button');
+            (o.id = r.BG_COLOR_RESET_ID),
+              (o.type = 'button'),
+              (o.textContent = '⟳'),
+              (o.style.margin = '-10px'),
+              (o.style.display = 'none'),
+              (o.style.fontSize = 'x-small'),
+              n.appendChild(o),
+              t.appendChild(n),
+              d.appendChild(t);
+          } else if ('getHtmlContent' === t) {
+            const t = document.createElement('button');
+            (t.id = r.GET_HTML_BUTTON_ID),
+              (t.type = 'button'),
+              (t.textContent = 'Get HTML'),
+              (t.style.padding = '8px 12px'),
+              (t.style.marginRight = '8px'),
+              (t.style.border = '1px solid #ccc'),
+              (t.style.borderRadius = '4px'),
+              (t.style.cursor = 'pointer'),
+              (t.style.background = '#f4f4f4'),
+              d.appendChild(t);
+          } else if ('loadHtmlContent' === t) {
+            const t = document.createElement('button');
+            (t.id = r.LOAD_HTML_BUTTON_ID),
+              (t.type = 'button'),
+              (t.textContent = 'Load HTML'),
+              (t.style.padding = '8px 12px'),
+              (t.style.marginRight = '8px'),
+              (t.style.border = '1px solid #ccc'),
+              (t.style.borderRadius = '4px'),
+              (t.style.cursor = 'pointer'),
+              (t.style.background = '#f4f4f4'),
+              d.appendChild(t);
+          } else if (p.map(t => t.feature).includes(t)) {
+            const e = p.find(e => e.feature === t),
+              n = document.createElement('button');
+            (n.id = t),
+              (n.dataset.action = t),
+              (n.innerHTML = (null == e ? void 0 : e.icon) || ''),
+              d.appendChild(n);
+          } else {
+            const e = document.createElement('button');
+            (e.dataset.action = t),
+              (e.innerHTML = h[t] || t),
+              (e.id = t),
+              (e.title = t
+                .split('_')
+                .map(t => t.charAt(0).toUpperCase() + t.slice(1))
+                .join(' ')),
+              d.appendChild(e);
+          }
+        });
+      const f = document.createElement('div');
+      (f.id = r.HYPERLINK_CONTAINER_ID), (f.style.display = 'none');
+      const b = document.createElement('input');
+      (b.type = 'text'),
+        (b.id = r.HYPERLINK_INPUT_ID),
+        (b.placeholder = r.HYPERLINK_PLACEHOLDER);
+      const y = document.createElement('button');
+      (y.id = r.HYPERLINK_APPLY_BTN_ID), (y.textContent = 'Link');
+      const I = document.createElement('button');
+      (I.id = r.HYPERLINK_CANCEL_BTN_ID),
+        (I.textContent = 'Unlink'),
+        f.appendChild(b),
+        f.appendChild(y),
+        f.appendChild(I),
+        d.appendChild(f);
+      const k = document.createElement('div');
+      (k.id = r.VIEW_HYPERLINK_CONTAINER_ID), (k.style.display = 'none');
+      const C = document.createElement('span');
+      (C.id = r.VIEW_HYPERLINK_LABEL_ID), (C.innerHTML = 'Visit URL : ');
+      const v = document.createElement('a');
       return (
-        (k.id = r.VIEW_HYPERLINK_ANCHOR_ID),
-        (k.href = ''),
-        (k.target = '_blank'),
-        y.appendChild(I),
-        y.appendChild(k),
-        a.appendChild(y),
-        { mainEditorId: n, toolbarId: i }
+        (v.id = r.VIEW_HYPERLINK_ANCHOR_ID),
+        (v.href = ''),
+        (v.target = '_blank'),
+        k.appendChild(C),
+        k.appendChild(v),
+        d.appendChild(k),
+        { mainEditorId: n, toolbarId: i, popupToolbarId: o }
       );
     })(t, i);
-    if (
-      ((this.editorContainer = document.getElementById(v) || null),
-      (this.toolbarContainer = document.getElementById(E) || null),
-      !this.editorContainer || !this.toolbarContainer)
-    )
+    (this.editorContainer = document.getElementById(E) || null),
+      (this.toolbarContainer = document.getElementById(w) || null);
+    const S = document.getElementById(A) || null;
+    if (!this.editorContainer || !this.toolbarContainer || !S)
       throw new Error('Editor element not found or incorrect element type.');
     (this.document = new n()),
       (this.editorView = new l(this.editorContainer, this.document)),
       (this.toolbarView = new a(this.toolbarContainer)),
+      (this.popupToolbarView = new f(S)),
       (this.hyperlinkHandler = new d(
         this.editorContainer,
         this.editorView,
         this.document
       )),
-      (this.imageHandler = new p(this.editorContainer, this.document)),
+      (this.imageHandler = new g(this.editorContainer, this.document)),
       (this.undoRedoManager = new m(this.document, this.editorView)),
       this.editorView.setImageHandler(this.imageHandler),
       this.imageHandler.setEditorView(this.editorView),
@@ -1732,6 +1801,7 @@ class f {
       this.toolbarView.on('toolbarAction', (t, e = []) =>
         this.handleToolbarAction(t, e)
       ),
+      this.popupToolbarView.on('popupAction', t => this.handleToolbarAction(t)),
       this.document.on('documentChanged', () => this.editorView.render()),
       this.editorContainer.addEventListener('keydown', t => {
         this.syncCurrentAttributesWithCursor(), this.handleKeydown(t);
@@ -1746,6 +1816,13 @@ class f {
         this.syncCurrentAttributesWithCursor();
         const t = this.document.getAllSelectedDataIds();
         console.log(t, 'dataId lntgerr');
+      }),
+      document.addEventListener('click', t => {
+        var e;
+        const n = t.target;
+        (null === (e = this.editorContainer) || void 0 === e
+          ? void 0
+          : e.contains(n)) || this.popupToolbarView.hide();
       }),
       null === (o = document.getElementById('fontColor')) ||
         void 0 === o ||
@@ -1845,16 +1922,16 @@ class f {
         h.addEventListener('click', t => {
           const e = this.document.getHtmlContent();
           console.log('Editor HTML Content:', e),
-            (this.htmlToJsonParser = new g(e));
+            (this.htmlToJsonParser = new p(e));
           const n = this.htmlToJsonParser.parse();
           console.log('htmltoJson', JSON.stringify(n, null, 2), n);
         }),
-      null === (f = document.getElementById('loadHtmlButton')) ||
-        void 0 === f ||
-        f.addEventListener('click', t => {
+      null === (b = document.getElementById('loadHtmlButton')) ||
+        void 0 === b ||
+        b.addEventListener('click', t => {
           this.undoRedoManager.saveUndoSnapshot();
           const e = r.TEST_HTML_CODE;
-          (this.htmlToJsonParser = new g(e)),
+          (this.htmlToJsonParser = new p(e)),
             console.log(this.htmlToJsonParser, 'this.htmlToJsonParser');
           const n = this.htmlToJsonParser.parse();
           (this.document.blocks = n),
@@ -1881,9 +1958,9 @@ class f {
             ),
             console.log('htmltoJson', JSON.stringify(n, null, 2), n);
         }),
-      null === (b = document.getElementById('fontFamily')) ||
-        void 0 === b ||
-        b.addEventListener('change', t => {
+      null === (y = document.getElementById('fontFamily')) ||
+        void 0 === y ||
+        y.addEventListener('change', t => {
           this.undoRedoManager.saveUndoSnapshot();
           const e = t.target.value,
             [n, i] = this.getSelectionRange();
@@ -1901,9 +1978,9 @@ class f {
               })
             : this.document.setFontFamily(n, i, e);
         }),
-      null === (y = document.getElementById('fontSize')) ||
-        void 0 === y ||
-        y.addEventListener('change', t => {
+      null === (I = document.getElementById('fontSize')) ||
+        void 0 === I ||
+        I.addEventListener('change', t => {
           this.undoRedoManager.saveUndoSnapshot();
           const e = t.target.value,
             [n, i] = this.getSelectionRange();
@@ -1921,25 +1998,25 @@ class f {
               })
             : this.document.setFontSize(n, i, e);
         }),
-      null === (I = document.getElementById('alignLeft')) ||
-        void 0 === I ||
-        I.addEventListener('click', () => {
+      null === (k = document.getElementById('alignLeft')) ||
+        void 0 === k ||
+        k.addEventListener('click', () => {
           console.log('alignment alignLeft', this.document.dataIds),
             this.document.dataIds.forEach(t =>
               this.document.setAlignment('left', t)
             );
         }),
-      null === (k = document.getElementById('alignCenter')) ||
-        void 0 === k ||
-        k.addEventListener('click', () => {
+      null === (C = document.getElementById('alignCenter')) ||
+        void 0 === C ||
+        C.addEventListener('click', () => {
           console.log('alignment alignCenter', this.document.dataIds),
             this.document.dataIds.forEach(t =>
               this.document.setAlignment('center', t)
             );
         }),
-      null === (C = document.getElementById('alignRight')) ||
-        void 0 === C ||
-        C.addEventListener('click', () => {
+      null === (v = document.getElementById('alignRight')) ||
+        void 0 === v ||
+        v.addEventListener('click', () => {
           console.log('alignment alignRight', this.document.dataIds),
             this.document.dataIds.forEach(t =>
               this.document.setAlignment('right', t)
@@ -2159,13 +2236,17 @@ class f {
         ? void 0
         : t.contains(n.anchorNode))
     )
-      return void this.hyperlinkHandler.hideHyperlinkViewButton();
+      return (
+        this.hyperlinkHandler.hideHyperlinkViewButton(),
+        void this.popupToolbarView.hide()
+      );
     const [i] = this.getSelectionRange();
     if (
       ((this.imageHandler.currentCursorLocation = i),
       n.isCollapsed
-        ? (this.document.dataIds = [])
-        : this.document.getAllSelectedDataIds(),
+        ? ((this.document.dataIds = []), this.popupToolbarView.hide())
+        : (this.document.getAllSelectedDataIds(),
+          this.popupToolbarView.show(n)),
       !n || 0 === n.rangeCount)
     )
       return;
@@ -2485,7 +2566,8 @@ class f {
               fontColor: t.attributes.fontColor,
               bgColor: t.attributes.bgColor,
             }),
-            this.toolbarView.updateActiveStates(this.currentAttributes));
+            this.toolbarView.updateActiveStates(this.currentAttributes),
+            this.popupToolbarView.updateActiveStates(this.currentAttributes));
         const e = null == t ? void 0 : t.attributes.hyperlink;
         e && 'string' == typeof e
           ? this.hyperlinkHandler.showHyperlinkViewButton(e)
@@ -2499,7 +2581,8 @@ class f {
               underline: !1,
               hyperlink: !1,
             }),
-            this.toolbarView.updateActiveStates(this.currentAttributes)),
+            this.toolbarView.updateActiveStates(this.currentAttributes),
+            this.popupToolbarView.updateActiveStates(this.currentAttributes)),
           (this.lastPiece = null);
     } else this.hyperlinkHandler.hideHyperlinkViewButton();
   }
@@ -2537,4 +2620,4 @@ class f {
     n.removeAllRanges(), n.addRange(i);
   }
 }
-(window.TextIgniter = f), (exports.TextIgniter = f);
+(window.TextIgniter = b), (exports.TextIgniter = b);
