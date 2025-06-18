@@ -11,20 +11,31 @@ import HtmlToJsonParser from './HtmlToJsonParser';
 import { ImageHandler } from './handlers/image';
 import { strings } from './constants/strings';
 import UndoRedoManager from './handlers/undoRedoManager';
+import PopupToolbarView from './view/popupToolbarView';
 class TextIgniter {
   constructor(editorId, config) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     this.savedSelection = null;
     this.debounceTimer = null;
-    const { mainEditorId, toolbarId } = createEditor(editorId, config);
+    const { mainEditorId, toolbarId, popupToolbarId } = createEditor(
+      editorId,
+      config
+    );
     this.editorContainer = document.getElementById(mainEditorId) || null;
     this.toolbarContainer = document.getElementById(toolbarId) || null;
-    if (!this.editorContainer || !this.toolbarContainer) {
+    const popupToolbarContainer =
+      document.getElementById(popupToolbarId) || null;
+    if (
+      !this.editorContainer ||
+      !this.toolbarContainer ||
+      !popupToolbarContainer
+    ) {
       throw new Error('Editor element not found or incorrect element type.');
     }
     this.document = new TextDocument();
     this.editorView = new EditorView(this.editorContainer, this.document);
     this.toolbarView = new ToolbarView(this.toolbarContainer);
+    this.popupToolbarView = new PopupToolbarView(popupToolbarContainer);
     this.hyperlinkHandler = new HyperlinkHandler(
       this.editorContainer,
       this.editorView,
@@ -50,6 +61,9 @@ class TextIgniter {
     this.toolbarView.on('toolbarAction', (action, dataId = []) =>
       this.handleToolbarAction(action, dataId)
     );
+    this.popupToolbarView.on('popupAction', action =>
+      this.handleToolbarAction(action)
+    );
     this.document.on('documentChanged', () => this.editorView.render());
     this.editorContainer.addEventListener('keydown', e => {
       this.syncCurrentAttributesWithCursor();
@@ -65,6 +79,17 @@ class TextIgniter {
       this.syncCurrentAttributesWithCursor();
       const dataId = this.document.getAllSelectedDataIds();
       console.log(dataId, 'dataId lntgerr');
+    });
+    document.addEventListener('click', e => {
+      var _a;
+      const target = e.target;
+      if (
+        !((_a = this.editorContainer) === null || _a === void 0
+          ? void 0
+          : _a.contains(target))
+      ) {
+        this.popupToolbarView.hide();
+      }
     });
     (_a = document.getElementById('fontColor')) === null || _a === void 0
       ? void 0
@@ -531,14 +556,17 @@ class TextIgniter {
         : _a.contains(selection.anchorNode))
     ) {
       this.hyperlinkHandler.hideHyperlinkViewButton();
+      this.popupToolbarView.hide();
       return;
     }
     const [start] = this.getSelectionRange();
     this.imageHandler.currentCursorLocation = start;
     if (selection.isCollapsed) {
       this.document.dataIds = [];
+      this.popupToolbarView.hide();
     } else {
       this.document.getAllSelectedDataIds();
+      this.popupToolbarView.show(selection);
     }
     if (!selection || selection.rangeCount === 0) {
       return;
@@ -957,6 +985,7 @@ class TextIgniter {
             bgColor: piece.attributes.bgColor,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
+          this.popupToolbarView.updateActiveStates(this.currentAttributes);
         }
         const hyperlink =
           piece === null || piece === void 0
@@ -977,6 +1006,7 @@ class TextIgniter {
             hyperlink: false,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
+          this.popupToolbarView.updateActiveStates(this.currentAttributes);
         }
         this.lastPiece = null;
       }
