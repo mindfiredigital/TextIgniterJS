@@ -259,15 +259,7 @@ class HyperlinkHandler {
       if (link) {
         hyperLinkAnchor.innerText = link;
         hyperLinkAnchor.href = link;
-        // hyperLinkAnchor.textContent = link;
       }
-      viewHyperlinkContainer.onclick = e => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (link) {
-          window.open(link, '_blank');
-        }
-      };
     }
     this.addClickOutsideListener(viewHyperlinkContainer);
   }
