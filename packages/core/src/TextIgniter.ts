@@ -13,6 +13,7 @@ import { EditorConfig } from './types/editorConfig';
 import { ImageHandler } from './handlers/image';
 import { strings } from './constants/strings';
 import UndoRedoManager from './handlers/undoRedoManager';
+import PopupToolbarView from './view/popupToolbarView';
 
 export interface CurrentAttributeDTO {
   bold: boolean;
@@ -39,22 +40,33 @@ class TextIgniter {
   lastPiece: Piece | null;
   editorContainer: HTMLElement | null;
   toolbarContainer: HTMLElement | null;
+  popupToolbarView: PopupToolbarView;
   savedSelection: { start: number; end: number } | null = null;
   debounceTimer: NodeJS.Timeout | null = null;
   undoRedoManager: UndoRedoManager;
   constructor(editorId: string, config: EditorConfig) {
-    const { mainEditorId, toolbarId } = createEditor(editorId, config);
+    const { mainEditorId, toolbarId, popupToolbarId } = createEditor(
+      editorId,
+      config
+    );
 
     this.editorContainer = document.getElementById(mainEditorId) || null;
     this.toolbarContainer = document.getElementById(toolbarId) || null;
+    const popupToolbarContainer =
+      document.getElementById(popupToolbarId) || null;
 
-    if (!this.editorContainer || !this.toolbarContainer) {
+    if (
+      !this.editorContainer ||
+      !this.toolbarContainer ||
+      !popupToolbarContainer
+    ) {
       throw new Error('Editor element not found or incorrect element type.');
     }
 
     this.document = new TextDocument();
     this.editorView = new EditorView(this.editorContainer, this.document);
     this.toolbarView = new ToolbarView(this.toolbarContainer);
+    this.popupToolbarView = new PopupToolbarView(popupToolbarContainer);
     this.hyperlinkHandler = new HyperlinkHandler(
       this.editorContainer,
       this.editorView,
@@ -82,6 +94,9 @@ class TextIgniter {
       (action: string, dataId: string[] = []) =>
         this.handleToolbarAction(action, dataId)
     );
+    this.popupToolbarView.on('popupAction', (action: string) =>
+      this.handleToolbarAction(action)
+    );
     this.document.on('documentChanged', () => this.editorView.render());
     this.editorContainer.addEventListener('keydown', e => {
       this.syncCurrentAttributesWithCursor();
@@ -97,7 +112,13 @@ class TextIgniter {
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
       const dataId = this.document.getAllSelectedDataIds();
-      console.log(dataId, "dataId lntgerr")
+      console.log(dataId, 'dataId lntgerr');
+    });
+    document.addEventListener('click', e => {
+      const target = e.target as HTMLElement;
+      if (!this.editorContainer?.contains(target)) {
+        this.popupToolbarView.hide();
+      }
     });
     document.getElementById('fontColor')?.addEventListener('click', e => {
       const fontColorPicker = document.getElementById(
@@ -154,6 +175,17 @@ class TextIgniter {
             }, 300);
           }
         });
+      }
+    });
+
+    document.addEventListener('click', e => {
+      // Check if the click is outside the editor and hyperlink popup
+      const target = e.target as HTMLElement;
+      if (
+        !this.editorContainer?.contains(target) &&
+        !target.closest('.hyperlink-popup')
+      ) {
+        this.hyperlinkHandler.hideHyperlinkViewButton();
       }
     });
 
@@ -605,10 +637,29 @@ class TextIgniter {
   }
 
   handleSelectionChange(): void {
+    const selection = window.getSelection();
+
+    if (
+      !selection ||
+      selection.rangeCount === 0 ||
+      !this.editorContainer?.contains(selection.anchorNode)
+    ) {
+      // Hide hyperlink popup when no selection
+      this.hyperlinkHandler.hideHyperlinkViewButton();
+      this.popupToolbarView.hide();
+      return;
+    }
+
     const [start] = this.getSelectionRange();
     this.imageHandler.currentCursorLocation = start;
 
-    const selection = window.getSelection();
+    if (selection.isCollapsed) {
+      this.document.dataIds = [];
+      this.popupToolbarView.hide();
+    } else {
+      this.document.getAllSelectedDataIds();
+      this.popupToolbarView.show(selection);
+    }
 
     if (!selection || selection.rangeCount === 0) {
       // this.document.selectedBlockId = null;
@@ -1018,7 +1069,7 @@ class TextIgniter {
         return;
       }
       const selection = window.getSelection();
-      console.log(selection,"selection lntgerr")
+      console.log(selection, 'selection lntgerr');
       if (this.document.dataIds.length >= 1 && this.document.selectAll) {
         this.document.deleteBlocks();
         this.setCursorPosition(start + 1);
@@ -1034,13 +1085,13 @@ class TextIgniter {
         const index = this.document.blocks.findIndex(
           (block: any) => block.dataId === this.document.selectedBlockId
         );
-        console.log(index,'index lntgerr')
+        console.log(index, 'index lntgerr');
         const chkBlock = document.querySelector(
           `[data-id="${this.document.selectedBlockId}"]`
         ) as HTMLElement;
         if (chkBlock === null) {
           let listStart = 0;
-          console.log(listStart," listStart lntgerr")
+          console.log(listStart, ' listStart lntgerr');
           const _blocks = this.document.blocks.map(
             (block: any, index: number) => {
               if (block?.listType !== undefined || block?.listType !== null) {
@@ -1055,7 +1106,7 @@ class TextIgniter {
               return block;
             }
           );
-          console.log(_blocks,"blocks lntgerr")
+          console.log(_blocks, 'blocks lntgerr');
           this.document.emit('documentChanged', this);
         }
       } else if (end > start) {
@@ -1130,7 +1181,7 @@ class TextIgniter {
     let fText = '';
 
     let count = 0;
-    console.log(count,"count lntgerr")
+    console.log(count, 'count lntgerr');
     const _block = this.document.blocks.filter((block: any) => {
       if (block.dataId === dataId) {
         return block;
@@ -1262,6 +1313,7 @@ class TextIgniter {
             bgColor: piece.attributes.bgColor,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
+          this.popupToolbarView.updateActiveStates(this.currentAttributes);
         }
         // Show below link..
         const hyperlink = piece?.attributes.hyperlink;
@@ -1271,6 +1323,7 @@ class TextIgniter {
           this.hyperlinkHandler.hideHyperlinkViewButton();
         }
       } else {
+        this.hyperlinkHandler.hideHyperlinkViewButton();
         if (!this.manualOverride) {
           this.currentAttributes = {
             bold: false,
@@ -1279,9 +1332,12 @@ class TextIgniter {
             hyperlink: false,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
+          this.popupToolbarView.updateActiveStates(this.currentAttributes);
         }
         this.lastPiece = null;
       }
+    } else {
+      this.hyperlinkHandler.hideHyperlinkViewButton();
     }
   }
 

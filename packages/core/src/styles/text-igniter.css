@@ -74,8 +74,8 @@
 }
 
 .temporary-selection-highlight {
-  background-color: rgb(67, 111, 201)
-    /* Light blue highlight */
+  background-color: rgb(67, 111, 201);
+  /* Light blue highlight */
 }
 
 #fontColor {
@@ -105,10 +105,30 @@
   background-color: #ddd;
 }
 
-#fontFamily, #fontSize{
+#fontFamily,
+#fontSize {
   padding: 6px;
 }
-#fontSize{
+#fontSize {
   margin-left: 1px;
 }
 
+.popup-toolbar {
+  position: absolute;
+  z-index: 1001;
+  background-color: #fcfafa;
+  border-radius: 6px;
+  padding: 4px 8px;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.popup-toolbar button {
+  background: none;
+  border: none;
+  color: rgb(14, 13, 13);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+}

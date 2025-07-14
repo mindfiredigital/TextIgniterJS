@@ -237,6 +237,7 @@ class HyperlinkHandler {
     }
   }
 
+
   showHyperlinkViewButton(link: string | ''): void {
     const viewHyperlinkContainer = document.getElementById(
       strings.VIEW_HYPERLINK_CONTAINER_ID
@@ -249,11 +250,13 @@ class HyperlinkHandler {
       viewHyperlinkContainer.style.display = 'block';
 
       const selection = window.getSelection();
-      if (selection) {
+      if (selection && selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
-        viewHyperlinkContainer.style.top = `${rect.bottom + window.scrollY + 5}px`;
-        viewHyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
+        if (rect.width > 0 || rect.height > 0) {
+          viewHyperlinkContainer.style.top = `${rect.bottom + window.scrollY + 5}px`;
+          viewHyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
+        }
       }
 
       if (link) {
