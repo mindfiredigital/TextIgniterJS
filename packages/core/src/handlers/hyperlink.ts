@@ -1,13 +1,13 @@
-import { blockType } from "../types/pieces";
+import { blockType } from '../types/pieces';
 import {
   saveSelection,
   restoreSelection,
   getSelectionRange,
-} from "../utils/selectionManager";
-import EditorView from "../view/editorView";
-import TextDocument from "../textDocument";
-import UndoRedoManager from "./undoRedoManager";
-import { strings } from "../constants/strings";
+} from '../utils/selectionManager';
+import EditorView from '../view/editorView';
+import TextDocument from '../textDocument';
+import UndoRedoManager from './undoRedoManager';
+import { strings } from '../constants/strings';
 
 class HyperlinkHandler {
   savedSelection: { start: number; end: number } | null = null;
@@ -80,13 +80,19 @@ class HyperlinkHandler {
   }
 
   showHyperlinkInput(existingLink: string | null): void {
-    const hyperlinkContainer = document.getElementById(strings.HYPERLINK_CONTAINER_ID);
-    const hyperlinkInput = document.getElementById(strings.HYPERLINK_INPUT_ID) as HTMLInputElement;
+    const hyperlinkContainer = document.getElementById(
+      strings.HYPERLINK_CONTAINER_ID
+    );
+    const hyperlinkInput = document.getElementById(
+      strings.HYPERLINK_INPUT_ID
+    ) as HTMLInputElement;
     const applyButton = document.getElementById(strings.HYPERLINK_APPLY_BTN_ID);
-    const cancelButton = document.getElementById(strings.HYPERLINK_CANCEL_BTN_ID);
+    const cancelButton = document.getElementById(
+      strings.HYPERLINK_CANCEL_BTN_ID
+    );
 
     if (hyperlinkContainer && hyperlinkInput && applyButton && cancelButton) {
-      hyperlinkContainer.style.display = "block";
+      hyperlinkContainer.style.display = 'block';
 
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
@@ -96,7 +102,7 @@ class HyperlinkHandler {
         hyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
       }
 
-      hyperlinkInput.value = existingLink || "";
+      hyperlinkInput.value = existingLink || '';
       this.savedSelection = saveSelection(this.editorView.container);
       this.highlightSelection();
       hyperlinkInput.focus();
@@ -111,12 +117,12 @@ class HyperlinkHandler {
         if (url) {
           this.applyHyperlink(url, dataIdsSnapshot);
         }
-        hyperlinkContainer.style.display = "none";
+        hyperlinkContainer.style.display = 'none';
       };
 
       cancelButton.onclick = () => {
         this.removeHyperlink(dataIdsSnapshot);
-        hyperlinkContainer.style.display = "none";
+        hyperlinkContainer.style.display = 'none';
       };
     }
   }
@@ -127,7 +133,7 @@ class HyperlinkHandler {
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
-      const span = document.createElement("span");
+      const span = document.createElement('span');
       span.className = strings.TEMPORARY_SELECTION_HIGHLIGHT_CLASS;
       span.appendChild(range.extractContents());
       range.insertNode(span);
@@ -142,7 +148,7 @@ class HyperlinkHandler {
     const highlights = this.editorContainer?.querySelectorAll(
       `span.${strings.TEMPORARY_SELECTION_HIGHLIGHT_CLASS}`
     );
-    highlights?.forEach((span) => {
+    highlights?.forEach(span => {
       const parent = span.parentNode;
       if (parent) {
         while (span.firstChild) {
@@ -168,11 +174,11 @@ class HyperlinkHandler {
               countE += obj.text.length;
             });
             let countS = start - countE;
-            this.document.formatAttribute(countS, countE, "hyperlink", url);
+            this.document.formatAttribute(countS, countE, 'hyperlink', url);
           }
         });
       } else {
-        this.document.formatAttribute(start, end, "hyperlink", url);
+        this.document.formatAttribute(start, end, 'hyperlink', url);
       }
       this.editorView.render();
       restoreSelection(this.editorView.container, this.savedSelection);
@@ -196,11 +202,11 @@ class HyperlinkHandler {
               countE += obj.text.length;
             });
             let countS = start - countE;
-            this.document.formatAttribute(countS, countE, "hyperlink", false);
+            this.document.formatAttribute(countS, countE, 'hyperlink', false);
           }
         });
       } else {
-        this.document.formatAttribute(start, end, "hyperlink", false);
+        this.document.formatAttribute(start, end, 'hyperlink', false);
       }
       this.editorView.render();
       restoreSelection(this.editorView.container, this.savedSelection);
@@ -209,12 +215,38 @@ class HyperlinkHandler {
     this.savedSelection = null;
   }
 
-  showHyperlinkViewButton(link: string | ""): void {
-    const viewHyperlinkContainer = document.getElementById(strings.VIEW_HYPERLINK_CONTAINER_ID) as HTMLDivElement;
-    const hyperLinkAnchor = document.getElementById(strings.VIEW_HYPERLINK_ANCHOR_ID) as HTMLAnchorElement;
+  clickOutsideHandler: ((event: MouseEvent) => void) | null = null;
+
+  addClickOutsideListener(container: HTMLElement): void {
+    this.removeClickOutsideListener(); // Clean up any old listener
+    this.clickOutsideHandler = (event: MouseEvent) => {
+      if (container && !container.contains(event.target as Node)) {
+        this.hideHyperlinkViewButton();
+      }
+    };
+    // Delay to avoid immediate closure when opening
+    setTimeout(() => {
+      document.addEventListener('click', this.clickOutsideHandler!);
+    }, 100);
+  }
+
+  removeClickOutsideListener(): void {
+    if (this.clickOutsideHandler) {
+      document.removeEventListener('click', this.clickOutsideHandler);
+      this.clickOutsideHandler = null;
+    }
+  }
+
+  showHyperlinkViewButton(link: string | ''): void {
+    const viewHyperlinkContainer = document.getElementById(
+      strings.VIEW_HYPERLINK_CONTAINER_ID
+    ) as HTMLDivElement;
+    const hyperLinkAnchor = document.getElementById(
+      strings.VIEW_HYPERLINK_ANCHOR_ID
+    ) as HTMLAnchorElement;
 
     if (viewHyperlinkContainer && hyperLinkAnchor) {
-      viewHyperlinkContainer.style.display = "block";
+      viewHyperlinkContainer.style.display = 'block';
 
       const selection = window.getSelection();
       if (selection) {
@@ -227,15 +259,27 @@ class HyperlinkHandler {
       if (link) {
         hyperLinkAnchor.innerText = link;
         hyperLinkAnchor.href = link;
+        // hyperLinkAnchor.textContent = link;
       }
+      viewHyperlinkContainer.onclick = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (link) {
+          window.open(link, '_blank');
+        }
+      };
     }
+    this.addClickOutsideListener(viewHyperlinkContainer);
   }
 
   hideHyperlinkViewButton() {
-    const hyperlinkContainer = document.getElementById(strings.VIEW_HYPERLINK_CONTAINER_ID);
+    const hyperlinkContainer = document.getElementById(
+      strings.VIEW_HYPERLINK_CONTAINER_ID
+    );
     if (hyperlinkContainer) {
-      hyperlinkContainer.style.display = "none";
+      hyperlinkContainer.style.display = 'none';
     }
+    this.removeClickOutsideListener();
   }
 }
 
