@@ -215,6 +215,29 @@ class HyperlinkHandler {
     this.savedSelection = null;
   }
 
+  clickOutsideHandler: ((event: MouseEvent) => void) | null = null;
+
+  addClickOutsideListener(container: HTMLElement): void {
+    this.removeClickOutsideListener(); // Clean up any old listener
+    this.clickOutsideHandler = (event: MouseEvent) => {
+      if (container && !container.contains(event.target as Node)) {
+        this.hideHyperlinkViewButton();
+      }
+    };
+    // Delay to avoid immediate closure when opening
+    setTimeout(() => {
+      document.addEventListener('click', this.clickOutsideHandler!);
+    }, 100);
+  }
+
+  removeClickOutsideListener(): void {
+    if (this.clickOutsideHandler) {
+      document.removeEventListener('click', this.clickOutsideHandler);
+      this.clickOutsideHandler = null;
+    }
+  }
+
+
   showHyperlinkViewButton(link: string | ''): void {
     const viewHyperlinkContainer = document.getElementById(
       strings.VIEW_HYPERLINK_CONTAINER_ID
@@ -241,6 +264,7 @@ class HyperlinkHandler {
         hyperLinkAnchor.href = link;
       }
     }
+    this.addClickOutsideListener(viewHyperlinkContainer);
   }
 
   hideHyperlinkViewButton() {
@@ -250,6 +274,7 @@ class HyperlinkHandler {
     if (hyperlinkContainer) {
       hyperlinkContainer.style.display = 'none';
     }
+    this.removeClickOutsideListener();
   }
 }
 
