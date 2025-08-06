@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import ReactDOM from "react-dom/client";
 import '../types/textigniter.d.ts';
 
 // Updated interfaces to support new configuration
