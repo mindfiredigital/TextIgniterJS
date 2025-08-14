@@ -409,11 +409,23 @@ class TextDocument extends EventEmitter {
     let newPieces: Piece[] = [];
     let offset = 0;
     let index = -1;
-    if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
+
+    // Fix the condition - it should be AND, not OR
+    if (this.selectedBlockId !== '' && this.selectedBlockId !== null) {
       index = this.blocks.findIndex(
         (block: any) => block.dataId === this.selectedBlockId
       );
       offset = this.currentOffset;
+    }
+
+    // Add error checking
+    if (index === -1 || !this.blocks[index]) {
+      console.error(
+        'No valid block found for selectedBlockId:',
+        this.selectedBlockId
+      );
+      console.log('Available blocks:', this.blocks);
+      return;
     }
 
     for (let piece of this.blocks[index].pieces) {
