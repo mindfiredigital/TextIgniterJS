@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import TextDocument from './textDocument';
 import EditorView from './view/editorView';
 import ToolbarView from './view/toolbarView';
@@ -97,7 +96,7 @@ class TextIgniter {
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
       const dataId = this.document.getAllSelectedDataIds();
-      console.log(dataId, "dataId lntgerr")
+      console.log(dataId, 'dataId lntgerr');
     });
     document.getElementById('fontColor')?.addEventListener('click', e => {
       const fontColorPicker = document.getElementById(
@@ -245,8 +244,7 @@ class TextIgniter {
       this.document.dataIds[0] = jsonOutput[0].dataId;
       this.document.selectedBlockId = 'data-id-1734604240404';
       this.document.emit('documentChanged', this);
-      // eslint-disable-next-line no-unused-vars
-      const [start, end] = this.getSelectionRange();
+      const [start] = this.getSelectionRange();
       this.document.blocks.forEach((block: any) => {
         if (this.document.dataIds.includes(block.dataId)) {
           this.document.selectedBlockId = block.dataId;
@@ -1018,29 +1016,35 @@ class TextIgniter {
         return;
       }
       const selection = window.getSelection();
-      console.log(selection,"selection lntgerr")
+      console.log(selection, 'selection lntgerr');
       if (this.document.dataIds.length >= 1 && this.document.selectAll) {
         this.document.deleteBlocks();
         this.setCursorPosition(start + 1);
       }
       if (start === end && start > 0) {
+        const blockIndex = this.document.blocks.findIndex(
+          (block: any) => block.dataId === this.document.selectedBlockId
+        );
+        const relPos = start - this.document.currentOffset;
+        const shouldMergeWithPrevious = relPos === 0 && blockIndex > 0;
         this.document.deleteRange(
           start - 1,
           start,
           this.document.selectedBlockId,
-          this.document.currentOffset
+          this.document.currentOffset,
+          shouldMergeWithPrevious
         );
         this.setCursorPosition(start - 1);
         const index = this.document.blocks.findIndex(
           (block: any) => block.dataId === this.document.selectedBlockId
         );
-        console.log(index,'index lntgerr')
+        console.log(index, 'index lntgerr');
         const chkBlock = document.querySelector(
           `[data-id="${this.document.selectedBlockId}"]`
         ) as HTMLElement;
         if (chkBlock === null) {
           let listStart = 0;
-          console.log(listStart," listStart lntgerr")
+          console.log(listStart, ' listStart lntgerr');
           const _blocks = this.document.blocks.map(
             (block: any, index: number) => {
               if (block?.listType !== undefined || block?.listType !== null) {
@@ -1055,7 +1059,7 @@ class TextIgniter {
               return block;
             }
           );
-          console.log(_blocks,"blocks lntgerr")
+          console.log(_blocks, 'blocks lntgerr');
           this.document.emit('documentChanged', this);
         }
       } else if (end > start) {
@@ -1063,7 +1067,8 @@ class TextIgniter {
           start,
           end,
           this.document.selectedBlockId,
-          this.document.currentOffset
+          this.document.currentOffset,
+          false
         );
         this.setCursorPosition(start + 1);
       }
@@ -1074,7 +1079,8 @@ class TextIgniter {
           start,
           end,
           this.document.selectedBlockId,
-          this.document.currentOffset
+          this.document.currentOffset,
+          false
         );
       }
       console.log(
@@ -1099,20 +1105,150 @@ class TextIgniter {
         !e.isTrusted || false
       );
       this.setCursorPosition(start + 1);
-    } else if (e.key === 'Delete') {
+    }
+    // else if (e.key === 'Delete') {
+    //   e.preventDefault();
+    //   if (start === end) {
+    //     this.document.deleteRange(
+    //       start,
+    //       start + 1,
+    //       this.document.selectedBlockId
+    //     );
+    //     this.setCursorPosition(start);
+    //   } else if (end > start) {
+    //     this.document.deleteRange(start, end, this.document.selectedBlockId);
+    //     this.setCursorPosition(start);
+    //   }
+    // }
+    // else if (e.key === 'Delete') {
+    //   e.preventDefault();
+    //   if (start === end) {
+    //     this.document.deleteRange(
+    //       start,
+    //       start + 1,
+    //       this.document.selectedBlockId
+    //     );
+    //     this.setCursorPosition(start);
+    //   } else if (
+    //     (this.document.dataIds.length >= 1 && this.document.selectAll) ||
+    //     this.document.dataIds.length > 1
+    //   ) {
+    //     // Handle select all or multi-block selection
+    //     this.document.deleteBlocks();
+    //     this.setCursorPosition(start);
+    //   } else {
+    //     // Single block selection
+    //     this.document.deleteRange(start, end, this.document.selectedBlockId);
+    //     this.setCursorPosition(start);
+    //   }
+    // }
+    else if (e.key === 'Delete') {
       e.preventDefault();
-      if (start === end) {
+      // If multi-block (or selectAll) selection exists, delete selected blocks
+      if (
+        this.document.dataIds.length >= 1 &&
+        !window.getSelection()?.isCollapsed
+      ) {
+        const firstDeletedId = this.document.dataIds[0];
+        const deletedIndex = this.document.blocks.findIndex(
+          (block: any) => block.dataId === firstDeletedId
+        );
+        this.document.deleteBlocks();
+        let targetBlockId: string | null = null;
+        let cursorPos = 0;
+        if (this.document.blocks.length === 0) {
+          // No blocks left, create a new one
+          const newId = `data-id-${Date.now()}`;
+          this.document.blocks.push({
+            dataId: newId,
+            class: 'paragraph-block',
+            pieces: [new Piece(' ')],
+            type: 'text',
+          });
+          targetBlockId = newId;
+          cursorPos = 0;
+          this.editorView.render();
+        } else if (deletedIndex < this.document.blocks.length) {
+          targetBlockId = this.document.blocks[deletedIndex].dataId;
+          cursorPos = 0;
+        } else {
+          const prevBlock =
+            this.document.blocks[this.document.blocks.length - 1];
+          targetBlockId = prevBlock.dataId;
+          cursorPos = prevBlock.pieces.reduce(
+            (acc: number, p: any) => acc + p.text.length,
+            0
+          );
+        }
+        this.setCursorPosition(cursorPos, targetBlockId);
+        return;
+      }
+
+      // If a range is selected within a single block, delete that range
+      if (end > start) {
+        const adjustedOffset = Math.min(this.document.currentOffset, start);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          adjustedOffset
+        );
+        this.setCursorPosition(start);
+        return;
+      }
+
+      // No selection: forward-delete behavior
+      const blockIndex = this.document.blocks.findIndex(
+        (block: any) => block.dataId === this.document.selectedBlockId
+      );
+      if (blockIndex === -1) return;
+
+      const block = this.document.blocks[blockIndex];
+      const blockTextLength = block.pieces.reduce(
+        (acc: number, p: any) => acc + p.text.length,
+        0
+      );
+      const relPos = start - this.document.currentOffset;
+
+      // If cursor is inside the block, delete next character
+      if (relPos < blockTextLength) {
+        const adjustedOffset = Math.min(this.document.currentOffset, start);
         this.document.deleteRange(
           start,
           start + 1,
-          this.document.selectedBlockId
+          this.document.selectedBlockId,
+          adjustedOffset,
+          false
         );
         this.setCursorPosition(start);
-      } else if (end > start) {
-        this.document.deleteRange(start, end, this.document.selectedBlockId);
-        this.setCursorPosition(start);
+        return;
+      }
+
+      // If at end of block, merge with next block or delete next image
+      const nextBlock = this.document.blocks[blockIndex + 1];
+      if (!nextBlock) return; // Nothing to delete/merge
+
+      // If next block is an image, delete it
+      if (nextBlock.type === 'image') {
+        this.undoRedoManager.saveUndoSnapshot();
+        this.document.blocks.splice(blockIndex + 1, 1);
+        this.document.emit('documentChanged', this.document);
+        this.setCursorPosition(start, block.dataId);
+        return;
+      }
+
+      // Merge next text block into current
+      if (nextBlock.type === 'text') {
+        this.undoRedoManager.saveUndoSnapshot();
+        const mergedPieces = [...block.pieces, ...nextBlock.pieces];
+        block.pieces = this.document.mergePieces(mergedPieces);
+        this.document.blocks.splice(blockIndex + 1, 1);
+        this.document.emit('documentChanged', this.document);
+        this.setCursorPosition(start, block.dataId);
+        return;
       }
     }
+
     this.hyperlinkHandler.hideHyperlinkViewButton();
   }
 
@@ -1130,7 +1266,7 @@ class TextIgniter {
     let fText = '';
 
     let count = 0;
-    console.log(count,"count lntgerr")
+    console.log(count, 'count lntgerr');
     const _block = this.document.blocks.filter((block: any) => {
       if (block.dataId === dataId) {
         return block;

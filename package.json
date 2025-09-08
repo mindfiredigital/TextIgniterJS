@@ -5,22 +5,23 @@
     "packages/*"
   ],
   "devDependencies": {
-    "typescript": "^5.6.2",
-    "rollup": "^4.21.2",
-    "pnpm": "^8.0.0",
-    "husky": "^9.1.5",
-    "turbo": "^1.10.0",
-    "tsc-alias": "^1.8.10",
-    "tslib": "^2.8.1",
-    "eslint": "^9.10.0",
-    "prettier": "^3.3.3",
     "@changesets/changelog-github": "^0.5.0",
     "@changesets/cli": "^2.27.12",
     "@commitlint/cli": "^19.4.0",
     "@commitlint/config-conventional": "^19.2.2",
     "@typescript-eslint/parser": "^8.12.1",
+    "eslint": "^9.10.0",
     "globals": "^15.9.0",
-    "ncp": "^2.0.0"
+    "husky": "^9.1.5",
+    "lite-server": "^2.6.1",
+    "ncp": "^2.0.0",
+    "pnpm": "^8.0.0",
+    "prettier": "^3.3.3",
+    "rollup": "^4.21.2",
+    "tsc-alias": "^1.8.10",
+    "tslib": "^2.8.1",
+    "turbo": "^1.10.0",
+    "typescript": "^5.6.2"
   },
   "lint-staged": {
     "**/*.{js,ts}": [
