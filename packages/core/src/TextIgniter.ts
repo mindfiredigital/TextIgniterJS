@@ -1150,44 +1150,7 @@ class TextIgniter {
         !e.isTrusted || false
       );
       this.setCursorPosition(start + 1);
-    }
-    // else if (e.key === 'Delete') {
-    //   e.preventDefault();
-    //   if (start === end) {
-    //     this.document.deleteRange(
-    //       start,
-    //       start + 1,
-    //       this.document.selectedBlockId
-    //     );
-    //     this.setCursorPosition(start);
-    //   } else if (end > start) {
-    //     this.document.deleteRange(start, end, this.document.selectedBlockId);
-    //     this.setCursorPosition(start);
-    //   }
-    // }
-    // else if (e.key === 'Delete') {
-    //   e.preventDefault();
-    //   if (start === end) {
-    //     this.document.deleteRange(
-    //       start,
-    //       start + 1,
-    //       this.document.selectedBlockId
-    //     );
-    //     this.setCursorPosition(start);
-    //   } else if (
-    //     (this.document.dataIds.length >= 1 && this.document.selectAll) ||
-    //     this.document.dataIds.length > 1
-    //   ) {
-    //     // Handle select all or multi-block selection
-    //     this.document.deleteBlocks();
-    //     this.setCursorPosition(start);
-    //   } else {
-    //     // Single block selection
-    //     this.document.deleteRange(start, end, this.document.selectedBlockId);
-    //     this.setCursorPosition(start);
-    //   }
-    // }
-    else if (e.key === 'Delete') {
+    } else if (e.key === 'Delete') {
       e.preventDefault();
       // If multi-block (or selectAll) selection exists, delete selected blocks
       if (
