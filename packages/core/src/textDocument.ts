@@ -180,7 +180,7 @@ class TextDocument extends EventEmitter {
     // const previousValue = this.getRangeText(start, end);
     let previousTextBlockIndex = 0;
 
-    if (start === offset) {
+    if (isBackspace && start === offset) {
       if (index - 1 >= 0 && this.blocks[index - 1].type === 'image') {
         previousTextBlockIndex = index - 2;
       } else {
@@ -216,7 +216,7 @@ class TextDocument extends EventEmitter {
       offset = pieceEnd;
     }
 
-    const _data = this.mergePieces(newPieces);
+    let _data = this.mergePieces(newPieces);
 
     if (runBackspace) {
       this.blocks[previousTextBlockIndex].pieces = _data;
@@ -225,7 +225,12 @@ class TextDocument extends EventEmitter {
       this.blocks = this.blocks.filter((block: any, i: number) => {
         if (i !== index) return block;
       });
-    } else this.blocks[index].pieces = _data;
+    } else {
+      if (_data.length === 0) {
+        _data = [new Piece(' ')];
+      }
+      this.blocks[index].pieces = _data;
+    }
 
     if (_data.length === 0 && this.blocks.length > 1) {
       this.blocks = this.blocks.filter((blocks: any) => {
