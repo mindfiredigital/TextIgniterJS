@@ -162,7 +162,8 @@ class TextDocument extends EventEmitter {
     start: number,
     end: number,
     dataId: string | null = '',
-    currentOffset: number = 0
+    currentOffset: number = 0,
+    isBackspace: boolean = false
   ): void {
     console.log('deleted2,', { start, end });
     if (start === end) return;
