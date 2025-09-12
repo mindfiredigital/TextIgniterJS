@@ -452,7 +452,12 @@ class TextIgniter {
       const html = e.clipboardData?.getData('text/html');
       const [start, end] = this.getSelectionRange();
       if (end > start) {
-        this.document.deleteRange(start, end);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          this.document.currentOffset
+        );
       }
 
       let piecesToInsert: Piece[] = [];
@@ -485,7 +490,12 @@ class TextIgniter {
       const html = e.dataTransfer?.getData('text/html');
       const [start, end] = this.getSelectionRange();
       if (end > start) {
-        this.document.deleteRange(start, end);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          this.document.currentOffset
+        );
       }
 
       let piecesToInsert: Piece[] = [];
@@ -1102,17 +1112,12 @@ class TextIgniter {
       }
 
       if (start === end && start > 0) {
-        const blockIndex = this.document.blocks.findIndex(
-          (block: any) => block.dataId === this.document.selectedBlockId
-        );
-        const relPos = start - this.document.currentOffset;
-        const shouldMergeWithPrevious = relPos === 0 && blockIndex > 0;
         this.document.deleteRange(
           start - 1,
           start,
           this.document.selectedBlockId,
           this.document.currentOffset,
-          shouldMergeWithPrevious
+          true
         );
         this.setCursorPosition(start - 1);
         const index = this.document.blocks.findIndex(
