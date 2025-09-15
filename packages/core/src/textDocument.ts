@@ -150,7 +150,7 @@ class TextDocument extends EventEmitter {
       }
     }
 
-    const _data = this.mergePieces(newPieces);
+    let _data: Piece[] = this.mergePieces(newPieces);
 
     this.blocks[index].pieces = _data;
     console.log({ position });
