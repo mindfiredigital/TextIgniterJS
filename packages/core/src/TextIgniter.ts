@@ -113,6 +113,13 @@ class TextIgniter {
       const dataId = this.document.getAllSelectedDataIds();
       console.log(dataId, 'dataId lntgerr');
     });
+    // Clear dataIds when selection is cleared
+    document.addEventListener('selectionchange', () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) {
+        this.document.dataIds = [];
+      }
+    });
     document.getElementById('fontColor')?.addEventListener('click', e => {
       const fontColorPicker = document.getElementById(
         'fontColorPicker'
@@ -444,7 +451,12 @@ class TextIgniter {
       const html = e.clipboardData?.getData('text/html');
       const [start, end] = this.getSelectionRange();
       if (end > start) {
-        this.document.deleteRange(start, end);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          this.document.currentOffset
+        );
       }
 
       let piecesToInsert: Piece[] = [];
@@ -477,7 +489,12 @@ class TextIgniter {
       const html = e.dataTransfer?.getData('text/html');
       const [start, end] = this.getSelectionRange();
       if (end > start) {
-        this.document.deleteRange(start, end);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          this.document.currentOffset
+        );
       }
 
       let piecesToInsert: Piece[] = [];
@@ -1062,10 +1079,37 @@ class TextIgniter {
       }
       const selection = window.getSelection();
       console.log(selection, 'selection lntgerr');
-      if (this.document.dataIds.length >= 1 && this.document.selectAll) {
+      // If multi-block selection exists, delete selected blocks
+      if (
+        this.document.dataIds.length > 1 &&
+        !window.getSelection()?.isCollapsed
+      ) {
+        // Delete selected blocks
         this.document.deleteBlocks();
-        this.setCursorPosition(start + 1);
+
+        // Place caret back at the global selection start after DOM updates
+        Promise.resolve().then(() => {
+          this.setCursorPosition(start);
+        });
+        return;
       }
+
+      // If a range is selected, delete that range (same as delete key)
+      if (end > start) {
+        const adjustedOffset = Math.min(this.document.currentOffset, start);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          adjustedOffset
+        );
+        // Use setTimeout to ensure cursor is set after other event handlers
+        setTimeout(() => {
+          this.setCursorPosition(start);
+        }, 0);
+        return;
+      }
+
       if (start === end && start > 0) {
         const blockIndex = this.document.blocks.findIndex(
           (block: any) => block.dataId === this.document.selectedBlockId
@@ -1077,7 +1121,11 @@ class TextIgniter {
           start,
           this.document.selectedBlockId,
           this.document.currentOffset,
+
           shouldMergeWithPrevious
+
+          true
+
         );
         this.setCursorPosition(start - 1);
         const index = this.document.blocks.findIndex(
@@ -1189,11 +1237,41 @@ class TextIgniter {
           );
         }
         this.setCursorPosition(cursorPos, targetBlockId);
+      // If multi-block selection exists, delete selected blocks
+      if (
+        this.document.dataIds.length > 1 &&
+        !window.getSelection()?.isCollapsed
+      ) {
+        // Delete selected blocks
+        this.document.deleteBlocks();
+
+        // Place caret back at the global selection start after DOM updates
+        Promise.resolve().then(() => {
+          this.setCursorPosition(start);
+        });
+
         return;
       }
 
       // If a range is selected within a single block, delete that range
       if (end > start) {
+
+        const adjustedOffset = Math.min(this.document.currentOffset, start);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          adjustedOffset
+
+        console.log(
+          'Single block range deletion. start:',
+          start,
+          'end:',
+          end,
+          'selectedBlockId:',
+          this.document.selectedBlockId
+
+        );
         const adjustedOffset = Math.min(this.document.currentOffset, start);
         this.document.deleteRange(
           start,
