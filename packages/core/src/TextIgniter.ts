@@ -97,7 +97,7 @@ class TextIgniter {
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
       const dataId = this.document.getAllSelectedDataIds();
-      console.log(dataId, "dataId lntgerr")
+      console.log(dataId, 'dataId lntgerr');
     });
     document.getElementById('fontColor')?.addEventListener('click', e => {
       const fontColorPicker = document.getElementById(
@@ -245,7 +245,7 @@ class TextIgniter {
       this.document.dataIds[0] = jsonOutput[0].dataId;
       this.document.selectedBlockId = 'data-id-1734604240404';
       this.document.emit('documentChanged', this);
-      // eslint-disable-next-line no-unused-vars
+
       const [start, end] = this.getSelectionRange();
       this.document.blocks.forEach((block: any) => {
         if (this.document.dataIds.includes(block.dataId)) {
@@ -437,7 +437,10 @@ class TextIgniter {
           p.text,
           { ...p.attributes },
           offset,
-          this.document.selectedBlockId
+          this.document.selectedBlockId,
+          0,
+          '',
+          'batch' // ✅ Added 'batch' actionType
         );
         offset += p.text.length;
       }
@@ -450,6 +453,7 @@ class TextIgniter {
 
     this.editorContainer.addEventListener('drop', (e: DragEvent) => {
       e.preventDefault();
+      this.undoRedoManager.saveUndoSnapshot(); // ✅ Added snapshot BEFORE
       const html = e.dataTransfer?.getData('text/html');
       const [start, end] = this.getSelectionRange();
       if (end > start) {
@@ -470,7 +474,10 @@ class TextIgniter {
           p.text,
           { ...p.attributes },
           offset,
-          this.document.selectedBlockId
+          this.document.selectedBlockId,
+          0,
+          '',
+          'batch' // ✅ Added 'batch' actionType
         );
         offset += p.text.length;
       }
@@ -840,6 +847,7 @@ class TextIgniter {
     let ending = end;
     if (e.key === 'Enter') {
       e.preventDefault();
+      this.undoRedoManager.saveUndoSnapshot(); // ✅ Added snapshot BEFORE
       const uniqueId = `data-id-${Date.now()}`;
 
       // Get the current selected block
@@ -1018,12 +1026,13 @@ class TextIgniter {
         return;
       }
       const selection = window.getSelection();
-      console.log(selection,"selection lntgerr")
+      console.log(selection, 'selection lntgerr');
       if (this.document.dataIds.length >= 1 && this.document.selectAll) {
         this.document.deleteBlocks();
         this.setCursorPosition(start + 1);
       }
       if (start === end && start > 0) {
+        this.undoRedoManager.saveUndoSnapshot(); //  Added snapshot brfore operation
         this.document.deleteRange(
           start - 1,
           start,
@@ -1034,13 +1043,13 @@ class TextIgniter {
         const index = this.document.blocks.findIndex(
           (block: any) => block.dataId === this.document.selectedBlockId
         );
-        console.log(index,'index lntgerr')
+        console.log(index, 'index lntgerr');
         const chkBlock = document.querySelector(
           `[data-id="${this.document.selectedBlockId}"]`
         ) as HTMLElement;
         if (chkBlock === null) {
           let listStart = 0;
-          console.log(listStart," listStart lntgerr")
+          console.log(listStart, ' listStart lntgerr');
           const _blocks = this.document.blocks.map(
             (block: any, index: number) => {
               if (block?.listType !== undefined || block?.listType !== null) {
@@ -1055,7 +1064,7 @@ class TextIgniter {
               return block;
             }
           );
-          console.log(_blocks,"blocks lntgerr")
+          console.log(_blocks, 'blocks lntgerr');
           this.document.emit('documentChanged', this);
         }
       } else if (end > start) {
@@ -1070,6 +1079,7 @@ class TextIgniter {
     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
       if (end > start) {
+        this.undoRedoManager.saveUndoSnapshot(); // ✅ Added snapshot BEFORE
         this.document.deleteRange(
           start,
           end,
@@ -1102,6 +1112,7 @@ class TextIgniter {
     } else if (e.key === 'Delete') {
       e.preventDefault();
       if (start === end) {
+        this.undoRedoManager.saveUndoSnapshot(); // ✅ Added snapshot BEFORE
         this.document.deleteRange(
           start,
           start + 1,
@@ -1109,6 +1120,7 @@ class TextIgniter {
         );
         this.setCursorPosition(start);
       } else if (end > start) {
+        this.undoRedoManager.saveUndoSnapshot(); // ✅ Added snapshot BEFORE
         this.document.deleteRange(start, end, this.document.selectedBlockId);
         this.setCursorPosition(start);
       }
@@ -1130,7 +1142,7 @@ class TextIgniter {
     let fText = '';
 
     let count = 0;
-    console.log(count,"count lntgerr")
+    console.log(count, 'count lntgerr');
     const _block = this.document.blocks.filter((block: any) => {
       if (block.dataId === dataId) {
         return block;
