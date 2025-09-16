@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import TextDocument from './textDocument';
 import EditorView from './view/editorView';
 import ToolbarView from './view/toolbarView';
@@ -13,6 +12,7 @@ import { EditorConfig } from './types/editorConfig';
 import { ImageHandler } from './handlers/image';
 import { strings } from './constants/strings';
 import UndoRedoManager from './handlers/undoRedoManager';
+import PopupToolbarView from './view/popupToolbarView';
 
 export interface CurrentAttributeDTO {
   bold: boolean;
@@ -39,22 +39,33 @@ class TextIgniter {
   lastPiece: Piece | null;
   editorContainer: HTMLElement | null;
   toolbarContainer: HTMLElement | null;
+  popupToolbarView: PopupToolbarView;
   savedSelection: { start: number; end: number } | null = null;
   debounceTimer: NodeJS.Timeout | null = null;
   undoRedoManager: UndoRedoManager;
   constructor(editorId: string, config: EditorConfig) {
-    const { mainEditorId, toolbarId } = createEditor(editorId, config);
+    const { mainEditorId, toolbarId, popupToolbarId } = createEditor(
+      editorId,
+      config
+    );
 
     this.editorContainer = document.getElementById(mainEditorId) || null;
     this.toolbarContainer = document.getElementById(toolbarId) || null;
+    const popupToolbarContainer =
+      document.getElementById(popupToolbarId) || null;
 
-    if (!this.editorContainer || !this.toolbarContainer) {
+    if (
+      !this.editorContainer ||
+      !this.toolbarContainer ||
+      !popupToolbarContainer
+    ) {
       throw new Error('Editor element not found or incorrect element type.');
     }
 
     this.document = new TextDocument();
     this.editorView = new EditorView(this.editorContainer, this.document);
     this.toolbarView = new ToolbarView(this.toolbarContainer);
+    this.popupToolbarView = new PopupToolbarView(popupToolbarContainer);
     this.hyperlinkHandler = new HyperlinkHandler(
       this.editorContainer,
       this.editorView,
@@ -82,6 +93,9 @@ class TextIgniter {
       (action: string, dataId: string[] = []) =>
         this.handleToolbarAction(action, dataId)
     );
+    this.popupToolbarView.on('popupAction', (action: string) =>
+      this.handleToolbarAction(action)
+    );
     this.document.on('documentChanged', () => this.editorView.render());
     this.editorContainer.addEventListener('keydown', e => {
       this.syncCurrentAttributesWithCursor();
@@ -97,7 +111,14 @@ class TextIgniter {
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
       const dataId = this.document.getAllSelectedDataIds();
-      console.log(dataId, 'dataId lntgerr');
+      console.log(dataId, 'dataId lntgerr
+    });
+    // Clear dataIds when selection is cleared
+    document.addEventListener('selectionchange', () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) {
+        this.document.dataIds = [];
+      }
     });
     document.getElementById('fontColor')?.addEventListener('click', e => {
       const fontColorPicker = document.getElementById(
@@ -154,6 +175,17 @@ class TextIgniter {
             }, 300);
           }
         });
+      }
+    });
+
+    document.addEventListener('click', e => {
+      // Check if the click is outside the editor and hyperlink popup
+      const target = e.target as HTMLElement;
+      if (
+        !this.editorContainer?.contains(target) &&
+        !target.closest('.hyperlink-popup')
+      ) {
+        this.hyperlinkHandler.hideHyperlinkViewButton();
       }
     });
 
@@ -245,7 +277,7 @@ class TextIgniter {
       this.document.dataIds[0] = jsonOutput[0].dataId;
       this.document.selectedBlockId = 'data-id-1734604240404';
       this.document.emit('documentChanged', this);
-
+      
       const [start, end] = this.getSelectionRange();
       this.document.blocks.forEach((block: any) => {
         if (this.document.dataIds.includes(block.dataId)) {
@@ -420,7 +452,12 @@ class TextIgniter {
       const html = e.clipboardData?.getData('text/html');
       const [start, end] = this.getSelectionRange();
       if (end > start) {
-        this.document.deleteRange(start, end);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          this.document.currentOffset
+        );
       }
 
       let piecesToInsert: Piece[] = [];
@@ -457,7 +494,12 @@ class TextIgniter {
       const html = e.dataTransfer?.getData('text/html');
       const [start, end] = this.getSelectionRange();
       if (end > start) {
-        this.document.deleteRange(start, end);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          this.document.currentOffset
+        );
       }
 
       let piecesToInsert: Piece[] = [];
@@ -612,10 +654,29 @@ class TextIgniter {
   }
 
   handleSelectionChange(): void {
+    const selection = window.getSelection();
+
+    if (
+      !selection ||
+      selection.rangeCount === 0 ||
+      !this.editorContainer?.contains(selection.anchorNode)
+    ) {
+      // Hide hyperlink popup when no selection
+      this.hyperlinkHandler.hideHyperlinkViewButton();
+      this.popupToolbarView.hide();
+      return;
+    }
+
     const [start] = this.getSelectionRange();
     this.imageHandler.currentCursorLocation = start;
 
-    const selection = window.getSelection();
+    if (selection.isCollapsed) {
+      this.document.dataIds = [];
+      this.popupToolbarView.hide();
+    } else {
+      this.document.getAllSelectedDataIds();
+      this.popupToolbarView.show(selection);
+    }
 
     if (!selection || selection.rangeCount === 0) {
       // this.document.selectedBlockId = null;
@@ -1027,17 +1088,51 @@ class TextIgniter {
       }
       const selection = window.getSelection();
       console.log(selection, 'selection lntgerr');
+
       if (this.document.dataIds.length >= 1 && this.document.selectAll) {
+      // Delete selected blocks
         this.document.deleteBlocks();
-        this.setCursorPosition(start + 1);
+
+        // Place caret back at the global selection start after DOM updates
+        Promise.resolve().then(() => {
+          this.setCursorPosition(start);
+        });
+        return;
       }
+
+      // If a range is selected, delete that range (same as delete key)
+      if (end > start) {
+        const adjustedOffset = Math.min(this.document.currentOffset, start);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          adjustedOffset
+        );
+        // Use setTimeout to ensure cursor is set after other event handlers
+        setTimeout(() => {
+          this.setCursorPosition(start);
+        }, 0);
+        return;
+      }
+
       if (start === end && start > 0) {
         this.undoRedoManager.saveUndoSnapshot(); //  Added snapshot brfore operation
+        const blockIndex = this.document.blocks.findIndex(
+          (block: any) => block.dataId === this.document.selectedBlockId
+        );
+        const relPos = start - this.document.currentOffset;
+        const shouldMergeWithPrevious = relPos === 0 && blockIndex > 0;
         this.document.deleteRange(
           start - 1,
           start,
           this.document.selectedBlockId,
-          this.document.currentOffset
+          this.document.currentOffset,
+
+          shouldMergeWithPrevious
+
+          true
+
         );
         this.setCursorPosition(start - 1);
         const index = this.document.blocks.findIndex(
@@ -1072,7 +1167,8 @@ class TextIgniter {
           start,
           end,
           this.document.selectedBlockId,
-          this.document.currentOffset
+          this.document.currentOffset,
+          false
         );
         this.setCursorPosition(start + 1);
       }
@@ -1084,7 +1180,8 @@ class TextIgniter {
           start,
           end,
           this.document.selectedBlockId,
-          this.document.currentOffset
+          this.document.currentOffset,
+          false
         );
       }
       console.log(
@@ -1113,18 +1210,145 @@ class TextIgniter {
       e.preventDefault();
       if (start === end) {
         this.undoRedoManager.saveUndoSnapshot();
+      // If multi-block (or selectAll) selection exists, delete selected blocks
+      if (
+        this.document.dataIds.length >= 1 &&
+        !window.getSelection()?.isCollapsed
+      ) {
+        const firstDeletedId = this.document.dataIds[0];
+        const deletedIndex = this.document.blocks.findIndex(
+          (block: any) => block.dataId === firstDeletedId
+        );
+        this.document.deleteBlocks();
+        let targetBlockId: string | null = null;
+        let cursorPos = 0;
+        if (this.document.blocks.length === 0) {
+          // No blocks left, create a new one
+          const newId = `data-id-${Date.now()}`;
+          this.document.blocks.push({
+            dataId: newId,
+            class: 'paragraph-block',
+            pieces: [new Piece(' ')],
+            type: 'text',
+          });
+          targetBlockId = newId;
+          cursorPos = 0;
+          this.editorView.render();
+        } else if (deletedIndex < this.document.blocks.length) {
+          targetBlockId = this.document.blocks[deletedIndex].dataId;
+          cursorPos = 0;
+        } else {
+          const prevBlock =
+            this.document.blocks[this.document.blocks.length - 1];
+          targetBlockId = prevBlock.dataId;
+          cursorPos = prevBlock.pieces.reduce(
+            (acc: number, p: any) => acc + p.text.length,
+            0
+          );
+        }
+        this.setCursorPosition(cursorPos, targetBlockId);
+      // If multi-block selection exists, delete selected blocks
+      if (
+        this.document.dataIds.length > 1 &&
+        !window.getSelection()?.isCollapsed
+      ) {
+        // Delete selected blocks
+        this.document.deleteBlocks();
+
+        // Place caret back at the global selection start after DOM updates
+        Promise.resolve().then(() => {
+          this.setCursorPosition(start);
+        });
+
+        return;
+      }
+
+      // If a range is selected within a single block, delete that range
+      if (end > start) {
+
+        const adjustedOffset = Math.min(this.document.currentOffset, start);
         this.document.deleteRange(
           start,
-          start + 1,
+          end,
+          this.document.selectedBlockId,
+          adjustedOffset
+
+        console.log(
+          'Single block range deletion. start:',
+          start,
+          'end:',
+          end,
+          'selectedBlockId:',
           this.document.selectedBlockId
+
+        );
+        const adjustedOffset = Math.min(this.document.currentOffset, start);
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          adjustedOffset
         );
         this.setCursorPosition(start);
+
       } else if (end > start) {
         this.undoRedoManager.saveUndoSnapshot();
         this.document.deleteRange(start, end, this.document.selectedBlockId);
+        return;
+      }
+
+      // No selection: forward-delete behavior
+      const blockIndex = this.document.blocks.findIndex(
+        (block: any) => block.dataId === this.document.selectedBlockId
+      );
+      if (blockIndex === -1) return;
+
+      const block = this.document.blocks[blockIndex];
+      const blockTextLength = block.pieces.reduce(
+        (acc: number, p: any) => acc + p.text.length,
+        0
+      );
+      const relPos = start - this.document.currentOffset;
+
+      // If cursor is inside the block, delete next character
+      if (relPos < blockTextLength) {
+        const adjustedOffset = Math.min(this.document.currentOffset, start);
+        this.document.deleteRange(
+          start,
+          start + 1,
+          this.document.selectedBlockId,
+          adjustedOffset,
+          false
+        );
         this.setCursorPosition(start);
+        return;
+      }
+
+      // If at end of block, merge with next block or delete next image
+      const nextBlock = this.document.blocks[blockIndex + 1];
+      if (!nextBlock) return; // Nothing to delete/merge
+
+      // If next block is an image, delete it
+      if (nextBlock.type === 'image') {
+        this.undoRedoManager.saveUndoSnapshot();
+        this.document.blocks.splice(blockIndex + 1, 1);
+        this.document.emit('documentChanged', this.document);
+        this.setCursorPosition(start, block.dataId);
+        return;
+      }
+
+      // Merge next text block into current
+      if (nextBlock.type === 'text') {
+        this.undoRedoManager.saveUndoSnapshot();
+        const mergedPieces = [...block.pieces, ...nextBlock.pieces];
+        block.pieces = this.document.mergePieces(mergedPieces);
+        this.document.blocks.splice(blockIndex + 1, 1);
+        this.document.emit('documentChanged', this.document);
+        this.setCursorPosition(start, block.dataId);
+        return;
       }
     }
+
     this.hyperlinkHandler.hideHyperlinkViewButton();
   }
 
@@ -1274,6 +1498,7 @@ class TextIgniter {
             bgColor: piece.attributes.bgColor,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
+          this.popupToolbarView.updateActiveStates(this.currentAttributes);
         }
         // Show below link..
         const hyperlink = piece?.attributes.hyperlink;
@@ -1283,6 +1508,7 @@ class TextIgniter {
           this.hyperlinkHandler.hideHyperlinkViewButton();
         }
       } else {
+        this.hyperlinkHandler.hideHyperlinkViewButton();
         if (!this.manualOverride) {
           this.currentAttributes = {
             bold: false,
@@ -1291,9 +1517,12 @@ class TextIgniter {
             hyperlink: false,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
+          this.popupToolbarView.updateActiveStates(this.currentAttributes);
         }
         this.lastPiece = null;
       }
+    } else {
+      this.hyperlinkHandler.hideHyperlinkViewButton();
     }
   }
 

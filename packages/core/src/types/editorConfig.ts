@@ -1,9 +1,11 @@
 export type EditorConfig = {
-    features: string[],
-    showToolbar?: boolean
-}
+  features: string[];
+  showToolbar?: boolean;
+  popupFeatures?: string[];
+};
 
 export type EditorConfigReturnType = {
-     mainEditorId: string;
-      toolbarId: string 
-}
+  mainEditorId: string;
+  toolbarId: string;
+  popupToolbarId: string;
+};
