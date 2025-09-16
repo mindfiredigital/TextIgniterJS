@@ -440,7 +440,7 @@ class TextIgniter {
           this.document.selectedBlockId,
           0,
           '',
-          'batch' // ✅ Added 'batch' actionType
+          'batch'
         );
         offset += p.text.length;
       }
@@ -453,7 +453,7 @@ class TextIgniter {
 
     this.editorContainer.addEventListener('drop', (e: DragEvent) => {
       e.preventDefault();
-      this.undoRedoManager.saveUndoSnapshot(); // ✅ Added snapshot BEFORE
+      this.undoRedoManager.saveUndoSnapshot();
       const html = e.dataTransfer?.getData('text/html');
       const [start, end] = this.getSelectionRange();
       if (end > start) {
@@ -477,7 +477,7 @@ class TextIgniter {
           this.document.selectedBlockId,
           0,
           '',
-          'batch' // ✅ Added 'batch' actionType
+          'batch'
         );
         offset += p.text.length;
       }
@@ -847,7 +847,7 @@ class TextIgniter {
     let ending = end;
     if (e.key === 'Enter') {
       e.preventDefault();
-      this.undoRedoManager.saveUndoSnapshot(); // ✅ Added snapshot BEFORE
+      this.undoRedoManager.saveUndoSnapshot();
       const uniqueId = `data-id-${Date.now()}`;
 
       // Get the current selected block
@@ -1079,7 +1079,7 @@ class TextIgniter {
     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
       if (end > start) {
-        this.undoRedoManager.saveUndoSnapshot(); // ✅ Added snapshot BEFORE
+        this.undoRedoManager.saveUndoSnapshot();
         this.document.deleteRange(
           start,
           end,
@@ -1112,7 +1112,7 @@ class TextIgniter {
     } else if (e.key === 'Delete') {
       e.preventDefault();
       if (start === end) {
-        this.undoRedoManager.saveUndoSnapshot(); // ✅ Added snapshot BEFORE
+        this.undoRedoManager.saveUndoSnapshot();
         this.document.deleteRange(
           start,
           start + 1,
@@ -1120,7 +1120,7 @@ class TextIgniter {
         );
         this.setCursorPosition(start);
       } else if (end > start) {
-        this.undoRedoManager.saveUndoSnapshot(); // ✅ Added snapshot BEFORE
+        this.undoRedoManager.saveUndoSnapshot();
         this.document.deleteRange(start, end, this.document.selectedBlockId);
         this.setCursorPosition(start);
       }
