@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import TextDocument from './textDocument';
 import EditorView from './view/editorView';
 import ToolbarView from './view/toolbarView';
@@ -13,6 +12,7 @@ import { EditorConfig } from './types/editorConfig';
 import { ImageHandler } from './handlers/image';
 import { strings } from './constants/strings';
 import UndoRedoManager from './handlers/undoRedoManager';
+import PopupToolbarView from './view/popupToolbarView';
 
 export interface CurrentAttributeDTO {
   bold: boolean;
@@ -39,22 +39,33 @@ class TextIgniter {
   lastPiece: Piece | null;
   editorContainer: HTMLElement | null;
   toolbarContainer: HTMLElement | null;
+  popupToolbarView: PopupToolbarView;
   savedSelection: { start: number; end: number } | null = null;
   debounceTimer: NodeJS.Timeout | null = null;
   undoRedoManager: UndoRedoManager;
   constructor(editorId: string, config: EditorConfig) {
-    const { mainEditorId, toolbarId } = createEditor(editorId, config);
+    const { mainEditorId, toolbarId, popupToolbarId } = createEditor(
+      editorId,
+      config
+    );
 
     this.editorContainer = document.getElementById(mainEditorId) || null;
     this.toolbarContainer = document.getElementById(toolbarId) || null;
+    const popupToolbarContainer =
+      document.getElementById(popupToolbarId) || null;
 
-    if (!this.editorContainer || !this.toolbarContainer) {
+    if (
+      !this.editorContainer ||
+      !this.toolbarContainer ||
+      !popupToolbarContainer
+    ) {
       throw new Error('Editor element not found or incorrect element type.');
     }
 
     this.document = new TextDocument();
     this.editorView = new EditorView(this.editorContainer, this.document);
     this.toolbarView = new ToolbarView(this.toolbarContainer);
+    this.popupToolbarView = new PopupToolbarView(popupToolbarContainer);
     this.hyperlinkHandler = new HyperlinkHandler(
       this.editorContainer,
       this.editorView,
@@ -81,6 +92,9 @@ class TextIgniter {
       'toolbarAction',
       (action: string, dataId: string[] = []) =>
         this.handleToolbarAction(action, dataId)
+    );
+    this.popupToolbarView.on('popupAction', (action: string) =>
+      this.handleToolbarAction(action)
     );
     this.document.on('documentChanged', () => this.editorView.render());
     this.editorContainer.addEventListener('keydown', e => {
@@ -154,6 +168,17 @@ class TextIgniter {
             }, 300);
           }
         });
+      }
+    });
+
+    document.addEventListener('click', e => {
+      // Check if the click is outside the editor and hyperlink popup
+      const target = e.target as HTMLElement;
+      if (
+        !this.editorContainer?.contains(target) &&
+        !target.closest('.hyperlink-popup')
+      ) {
+        this.hyperlinkHandler.hideHyperlinkViewButton();
       }
     });
 
@@ -246,7 +271,7 @@ class TextIgniter {
       this.document.selectedBlockId = 'data-id-1734604240404';
       this.document.emit('documentChanged', this);
 
-      const [start, end] = this.getSelectionRange();
+      const [start] = this.getSelectionRange();
       this.document.blocks.forEach((block: any) => {
         if (this.document.dataIds.includes(block.dataId)) {
           this.document.selectedBlockId = block.dataId;
@@ -612,10 +637,29 @@ class TextIgniter {
   }
 
   handleSelectionChange(): void {
+    const selection = window.getSelection();
+
+    if (
+      !selection ||
+      selection.rangeCount === 0 ||
+      !this.editorContainer?.contains(selection.anchorNode)
+    ) {
+      // Hide hyperlink popup when no selection
+      this.hyperlinkHandler.hideHyperlinkViewButton();
+      this.popupToolbarView.hide();
+      return;
+    }
+
     const [start] = this.getSelectionRange();
     this.imageHandler.currentCursorLocation = start;
 
-    const selection = window.getSelection();
+    if (selection.isCollapsed) {
+      this.document.dataIds = [];
+      this.popupToolbarView.hide();
+    } else {
+      this.document.getAllSelectedDataIds();
+      this.popupToolbarView.show(selection);
+    }
 
     if (!selection || selection.rangeCount === 0) {
       // this.document.selectedBlockId = null;
@@ -1037,7 +1081,8 @@ class TextIgniter {
           start - 1,
           start,
           this.document.selectedBlockId,
-          this.document.currentOffset
+          this.document.currentOffset,
+          true
         );
         this.setCursorPosition(start - 1);
         const index = this.document.blocks.findIndex(
@@ -1072,7 +1117,8 @@ class TextIgniter {
           start,
           end,
           this.document.selectedBlockId,
-          this.document.currentOffset
+          this.document.currentOffset,
+          false
         );
         this.setCursorPosition(start + 1);
       }
@@ -1084,7 +1130,8 @@ class TextIgniter {
           start,
           end,
           this.document.selectedBlockId,
-          this.document.currentOffset
+          this.document.currentOffset,
+          false
         );
       }
       console.log(
@@ -1116,7 +1163,9 @@ class TextIgniter {
         this.document.deleteRange(
           start,
           start + 1,
-          this.document.selectedBlockId
+          this.document.selectedBlockId,
+          this.document.currentOffset,
+          false
         );
         this.setCursorPosition(start);
       } else if (end > start) {
@@ -1125,6 +1174,7 @@ class TextIgniter {
         this.setCursorPosition(start);
       }
     }
+
     this.hyperlinkHandler.hideHyperlinkViewButton();
   }
 
@@ -1274,6 +1324,7 @@ class TextIgniter {
             bgColor: piece.attributes.bgColor,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
+          this.popupToolbarView.updateActiveStates(this.currentAttributes);
         }
         // Show below link..
         const hyperlink = piece?.attributes.hyperlink;
@@ -1283,6 +1334,7 @@ class TextIgniter {
           this.hyperlinkHandler.hideHyperlinkViewButton();
         }
       } else {
+        this.hyperlinkHandler.hideHyperlinkViewButton();
         if (!this.manualOverride) {
           this.currentAttributes = {
             bold: false,
@@ -1291,9 +1343,12 @@ class TextIgniter {
             hyperlink: false,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
+          this.popupToolbarView.updateActiveStates(this.currentAttributes);
         }
         this.lastPiece = null;
       }
+    } else {
+      this.hyperlinkHandler.hideHyperlinkViewButton();
     }
   }
 
