@@ -13,6 +13,8 @@ import { ImageHandler } from './handlers/image';
 import { strings } from './constants/strings';
 import UndoRedoManager from './handlers/undoRedoManager';
 import PopupToolbarView from './view/popupToolbarView';
+import LinkPopupView from './view/linkPopupView';
+import { detectUrlsInText } from './utils/urlDetector';
 
 export interface CurrentAttributeDTO {
   bold: boolean;
@@ -40,6 +42,7 @@ class TextIgniter {
   editorContainer: HTMLElement | null;
   toolbarContainer: HTMLElement | null;
   popupToolbarView: PopupToolbarView;
+  linkPopupView: LinkPopupView;
   savedSelection: { start: number; end: number } | null = null;
   debounceTimer: NodeJS.Timeout | null = null;
   undoRedoManager: UndoRedoManager;
@@ -66,6 +69,7 @@ class TextIgniter {
     this.editorView = new EditorView(this.editorContainer, this.document);
     this.toolbarView = new ToolbarView(this.toolbarContainer);
     this.popupToolbarView = new PopupToolbarView(popupToolbarContainer);
+    this.linkPopupView = new LinkPopupView();
     this.hyperlinkHandler = new HyperlinkHandler(
       this.editorContainer,
       this.editorView,
@@ -78,6 +82,10 @@ class TextIgniter {
     this.document.setEditorView(this.editorView);
     this.document.setUndoRedoManager(this.undoRedoManager);
     this.hyperlinkHandler.setUndoRedoManager(this.undoRedoManager);
+    this.linkPopupView.setCallbacks(
+      (url: string) => this.openLink(url),
+      () => this.unlinkText()
+    );
     this.currentAttributes = {
       bold: false,
       italic: false,
@@ -437,6 +445,31 @@ class TextIgniter {
       this.handleSelectionChange.bind(this)
     );
 
+    // Add link click detection
+    this.editorContainer.addEventListener('click', (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Check if clicked element is a link
+      if (target.tagName === 'A' || target.closest('a')) {
+        e.preventDefault(); // Prevent default link behavior
+        e.stopPropagation();
+
+        const linkElement = (
+          target.tagName === 'A' ? target : target.closest('a')
+        ) as HTMLAnchorElement;
+        this.showLinkPopup(linkElement, e.clientX, e.clientY);
+      } else {
+        this.hideLinkPopup();
+      }
+    });
+
+    // Add click outside to hide popup
+    document.addEventListener('click', (e: MouseEvent) => {
+      if (!this.linkPopupView.isPopup(e.target as HTMLElement)) {
+        this.hideLinkPopup();
+      }
+    });
+
     this.document.emit('documentChanged', this.document);
 
     this.editorContainer.addEventListener('paste', (e: ClipboardEvent) => {
@@ -449,11 +482,28 @@ class TextIgniter {
       }
 
       let piecesToInsert: Piece[] = [];
+      // if (html) {
+      //   piecesToInsert = parseHtmlToPieces(html);
+      // } else {
+      //   const text = e.clipboardData?.getData('text/plain') || '';
+      //   piecesToInsert = [new Piece(text, { ...this.currentAttributes })];
+      // }
       if (html) {
         piecesToInsert = parseHtmlToPieces(html);
       } else {
         const text = e.clipboardData?.getData('text/plain') || '';
-        piecesToInsert = [new Piece(text, { ...this.currentAttributes })];
+        const segments = detectUrlsInText(text);
+
+        piecesToInsert = segments.map(segment => {
+          if (segment.isUrl && segment.url) {
+            return new Piece(segment.text, {
+              ...this.currentAttributes,
+              hyperlink: segment.url,
+            });
+          } else {
+            return new Piece(segment.text, { ...this.currentAttributes });
+          }
+        });
       }
 
       let offset = start;
@@ -1326,13 +1376,8 @@ class TextIgniter {
           this.toolbarView.updateActiveStates(this.currentAttributes);
           this.popupToolbarView.updateActiveStates(this.currentAttributes);
         }
-        // Show below link..
-        const hyperlink = piece?.attributes.hyperlink;
-        if (hyperlink && typeof hyperlink === 'string') {
-          this.hyperlinkHandler.showHyperlinkViewButton(hyperlink);
-        } else {
-          this.hyperlinkHandler.hideHyperlinkViewButton();
-        }
+        // Hide the old hyperlink view since we have our custom popup
+        this.hyperlinkHandler.hideHyperlinkViewButton();
       } else {
         this.hyperlinkHandler.hideHyperlinkViewButton();
         if (!this.manualOverride) {
@@ -1395,6 +1440,39 @@ class TextIgniter {
 
     sel.removeAllRanges();
     sel.addRange(range);
+  }
+
+  // Link popup methods
+  private showLinkPopup(
+    linkElement: HTMLAnchorElement,
+    x: number,
+    y: number
+  ): void {
+    this.linkPopupView.show(linkElement, x, y);
+  }
+
+  private hideLinkPopup(): void {
+    this.linkPopupView.hide();
+  }
+
+  private openLink(url: string): void {
+    window.open(url, '_blank');
+    this.hideLinkPopup();
+  }
+
+  private unlinkText(): void {
+    this.undoRedoManager.saveUndoSnapshot();
+
+    // Get current selection
+    const [start, end] = this.getSelectionRange();
+
+    if (start < end) {
+      // Remove hyperlink from selected text
+      this.document.formatAttribute(start, end, 'hyperlink', false);
+      this.editorView.render();
+    }
+
+    this.hideLinkPopup();
   }
 }
 (window as any).TextIgniter = TextIgniter;

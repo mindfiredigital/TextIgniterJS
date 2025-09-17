@@ -132,3 +132,64 @@
   padding: 6px;
   border-radius: 4px;
 }
+
+/* Add these styles for hyperlinks */
+.text-igniter a {
+  color: #0066cc;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.text-igniter a:hover {
+  color: #004499;
+  text-decoration: underline;
+}
+
+.text-igniter a:visited {
+  color: #800080;
+}
+
+/* Link popup styling */
+.link-popup {
+  position: absolute;
+  background: #000;
+  border-radius: 4px;
+  padding: 2px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: none;
+  animation: fadeIn 0.1s ease-in-out;
+  flex-direction: row;
+}
+
+.link-popup button {
+  background: transparent;
+  color: white;
+  border: none;
+  padding: 4px;
+  margin: 0 1px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.1s;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.link-popup button:hover {
+  background: #333;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
