@@ -84,7 +84,7 @@ class TextIgniter {
     this.hyperlinkHandler.setUndoRedoManager(this.undoRedoManager);
     this.linkPopupView.setCallbacks(
       (url: string) => this.openLink(url),
-      () => this.unlinkText()
+      (linkElement: HTMLAnchorElement) => this.unlinkText(linkElement)
     );
     this.currentAttributes = {
       bold: false,
@@ -1460,15 +1460,24 @@ class TextIgniter {
     this.hideLinkPopup();
   }
 
-  private unlinkText(): void {
+  private unlinkText(linkElement: HTMLAnchorElement): void {
     this.undoRedoManager.saveUndoSnapshot();
 
-    // Get current selection
-    const [start, end] = this.getSelectionRange();
+    // Get the text content of the link
+    const linkText = linkElement.textContent || '';
 
-    if (start < end) {
-      // Remove hyperlink from selected text
-      this.document.formatAttribute(start, end, 'hyperlink', false);
+    // Find the position of this text in the document
+    const documentText = this.editorView.container.textContent || '';
+    const linkIndex = documentText.indexOf(linkText);
+
+    if (linkIndex !== -1) {
+      // Remove hyperlink from the found position
+      this.document.formatAttribute(
+        linkIndex,
+        linkIndex + linkText.length,
+        'hyperlink',
+        false
+      );
       this.editorView.render();
     }
 

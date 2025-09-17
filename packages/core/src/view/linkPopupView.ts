@@ -2,7 +2,7 @@ class LinkPopupView {
   private popup!: HTMLElement;
   private linkElement: HTMLAnchorElement | null = null;
   private onOpenClick?: (url: string) => void;
-  private onUnlinkClick?: () => void;
+  private onUnlinkClick?: (linkElement: HTMLAnchorElement) => void;
 
   constructor() {
     this.createPopup();
@@ -10,7 +10,7 @@ class LinkPopupView {
 
   setCallbacks(
     onOpenClick: (url: string) => void,
-    onUnlinkClick: () => void
+    onUnlinkClick: (linkElement: HTMLAnchorElement) => void
   ): void {
     this.onOpenClick = onOpenClick;
     this.onUnlinkClick = onUnlinkClick;
@@ -45,7 +45,8 @@ class LinkPopupView {
   private createButton(text: string, icon: string): HTMLElement {
     const button = document.createElement('button');
     button.innerHTML = `${icon}`;
-    button.title = text; // Show text on hover
+    // Show text on hover
+    button.title = text;
     button.style.cssText = `
       background: transparent;
       color: white;
@@ -81,8 +82,8 @@ class LinkPopupView {
   }
 
   private handleUnlinkClick(): void {
-    if (this.onUnlinkClick) {
-      this.onUnlinkClick();
+    if (this.onUnlinkClick && this.linkElement) {
+      this.onUnlinkClick(this.linkElement);
     }
   }
 
