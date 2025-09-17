@@ -15,6 +15,7 @@ import UndoRedoManager from './handlers/undoRedoManager';
 import PopupToolbarView from './view/popupToolbarView';
 import LinkPopupView from './view/linkPopupView';
 import { detectUrlsInText } from './utils/urlDetector';
+// Link functionality imports
 
 export interface CurrentAttributeDTO {
   bold: boolean;

@@ -1,4 +1,5 @@
 // URL regex pattern to detect various URL formats
+// URL detection utility
 const URL_REGEX =
   /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/gi;
 

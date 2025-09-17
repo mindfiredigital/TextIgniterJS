@@ -1,5 +1,5 @@
 import Piece from '../piece';
-
+// HTML parsing for links
 export function parseHtmlToPieces(html: string): Piece[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');

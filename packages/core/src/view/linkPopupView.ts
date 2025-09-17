@@ -1,3 +1,4 @@
+// Link popup view component
 class LinkPopupView {
   private popup!: HTMLElement;
   private linkElement: HTMLAnchorElement | null = null;
