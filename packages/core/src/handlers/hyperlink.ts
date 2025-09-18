@@ -112,12 +112,23 @@ class HyperlinkHandler {
 
       const dataIdsSnapshot = this.document.dataIds;
 
-      applyButton.onclick = () => {
+      // Function to apply hyperlink (used by both button click and Enter key)
+      const applyHyperlinkAction = () => {
         const url = hyperlinkInput.value.trim();
         if (url) {
           this.applyHyperlink(url, dataIdsSnapshot);
         }
         hyperlinkContainer.style.display = 'none';
+      };
+
+      applyButton.onclick = applyHyperlinkAction;
+
+      // Add Enter key support to the input field
+      hyperlinkInput.onkeydown = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          e.preventDefault(); // Prevent default form submission behavior
+          applyHyperlinkAction();
+        }
       };
 
       cancelButton.onclick = () => {
