@@ -202,6 +202,7 @@ class HyperlinkHandler {
       }
       this.editorView.render();
       // restoreSelection(this.editorView.container, this.savedSelection);
+
       const selection = window.getSelection();
       if (selection) {
         selection.removeAllRanges();
