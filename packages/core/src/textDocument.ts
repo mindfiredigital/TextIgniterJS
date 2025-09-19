@@ -78,7 +78,7 @@ class TextDocument extends EventEmitter {
     actionType = '',
     isSynthetic = false
   ): void {
-    if (!isSynthetic) {
+    if (!isSynthetic && actionType !== 'batch') {
       this.undoRedoManager.saveUndoSnapshot();
     }
     console.log('inserted,', { start: position, text });

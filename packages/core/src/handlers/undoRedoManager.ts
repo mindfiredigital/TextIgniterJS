@@ -45,6 +45,12 @@ export default class UndoRedoManager {
 
   public saveUndoSnapshot(): void {
     const snapshot = this.createSnapshot();
+    console.log(
+      'Saving snapshot:',
+      snapshot.cursorPosition,
+      'Stack length:',
+      this.snapshotUndoStack.length
+    );
     this.snapshotUndoStack.push(snapshot);
     if (this.snapshotUndoStack.length > this.maxSnapshots) {
       this.snapshotUndoStack.shift();
@@ -68,7 +74,9 @@ export default class UndoRedoManager {
       }
     }
     this.document.emit('documentChanged', this.document);
-    this.document.setCursorPosition(snapshot.cursorPosition || 0);
+    setTimeout(() => {
+      this.document.setCursorPosition(snapshot.cursorPosition || 0);
+    }, 0);
     // Restore selection using your helper.
     // if (snapshot.selection) {
     //   restoreSelection(
@@ -80,8 +88,8 @@ export default class UndoRedoManager {
   }
 
   public undo(): void {
-    console.log('   ', this.snapshotUndoStack);
-    console.log('uuuno', this.snapshotRedoStack);
+    console.log('UNDO - Undo stack length:', this.snapshotUndoStack.length); // ✅ Better debugging
+    console.log('UNDO - Redo stack length:', this.snapshotRedoStack.length);
     if (this.snapshotUndoStack.length === 0) return;
     const currentSnapshot = this.createSnapshot();
     this.snapshotRedoStack.push(currentSnapshot);
@@ -91,6 +99,7 @@ export default class UndoRedoManager {
     // Pop the last snapshot and restore it.
     const snapshot = this.snapshotUndoStack.pop();
     if (snapshot) {
+      console.log('UNDO - Restoring cursor position:', snapshot.cursorPosition);
       this.restoreSnapshot(snapshot);
     }
   }
