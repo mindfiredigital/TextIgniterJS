@@ -112,12 +112,32 @@ class HyperlinkHandler {
 
       const dataIdsSnapshot = this.document.dataIds;
 
-      applyButton.onclick = () => {
+      // Original button click handler (commented out)
+      // applyButton.onclick = () => {
+      //   const url = hyperlinkInput.value.trim();
+      //   if (url) {
+      //     this.applyHyperlink(url, dataIdsSnapshot);
+      //   }
+      //   hyperlinkContainer.style.display = 'none';
+      // };
+
+      // Function to apply hyperlink (used by both button click and Enter key)
+      const applyHyperlinkAction = () => {
         const url = hyperlinkInput.value.trim();
         if (url) {
           this.applyHyperlink(url, dataIdsSnapshot);
         }
         hyperlinkContainer.style.display = 'none';
+      };
+
+      applyButton.onclick = applyHyperlinkAction;
+
+      // Add Enter key support to the input field
+      hyperlinkInput.onkeydown = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyHyperlinkAction();
+        }
       };
 
       cancelButton.onclick = () => {
@@ -236,7 +256,6 @@ class HyperlinkHandler {
       this.clickOutsideHandler = null;
     }
   }
-
 
   showHyperlinkViewButton(link: string | ''): void {
     const viewHyperlinkContainer = document.getElementById(
