@@ -120,7 +120,7 @@ class TextIgniter {
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
       const dataId = this.document.getAllSelectedDataIds();
-      console.log(dataId, 'dataId lntgerr');
+      console.log(dataId, 'dataId lntgerr
     });
     // Clear dataIds when selection is cleared
     document.addEventListener('selectionchange', () => {
@@ -286,7 +286,6 @@ class TextIgniter {
       this.document.dataIds[0] = jsonOutput[0].dataId;
       this.document.selectedBlockId = 'data-id-1734604240404';
       this.document.emit('documentChanged', this);
-
       const [start] = this.getSelectionRange();
       this.document.blocks.forEach((block: any) => {
         if (this.document.dataIds.includes(block.dataId)) {
@@ -1139,12 +1138,9 @@ class TextIgniter {
       }
       const selection = window.getSelection();
       console.log(selection, 'selection lntgerr');
-      // If multi-block selection exists, delete selected blocks
-      if (
-        this.document.dataIds.length > 1 &&
-        !window.getSelection()?.isCollapsed
-      ) {
-        // Delete selected blocks
+
+      if (this.document.dataIds.length >= 1 && this.document.selectAll) {
+      // Delete selected blocks
         this.document.deleteBlocks();
 
         // Place caret back at the global selection start after DOM updates
@@ -1172,6 +1168,13 @@ class TextIgniter {
 
       if (start === end && start > 0) {
         this.undoRedoManager.saveUndoSnapshot(); //  Added snapshot brfore operation
+
+        const blockIndex = this.document.blocks.findIndex(
+          (block: any) => block.dataId === this.document.selectedBlockId
+        );
+        const relPos = start - this.document.currentOffset;
+        const shouldMergeWithPrevious = relPos === 0 && blockIndex > 0;
+
         this.document.deleteRange(
           start - 1,
           start,
@@ -1337,6 +1340,10 @@ class TextIgniter {
           adjustedOffset
         );
         this.setCursorPosition(start);
+
+      } else if (end > start) {
+        this.undoRedoManager.saveUndoSnapshot();
+        this.document.deleteRange(start, end, this.document.selectedBlockId);
         return;
       }
 
