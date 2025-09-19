@@ -201,7 +201,11 @@ class HyperlinkHandler {
         this.document.formatAttribute(start, end, 'hyperlink', url);
       }
       this.editorView.render();
-      restoreSelection(this.editorView.container, this.savedSelection);
+      // restoreSelection(this.editorView.container, this.savedSelection);
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+      }
       this.editorView.container.focus();
     }
     this.savedSelection = null;
