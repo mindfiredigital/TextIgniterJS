@@ -111,7 +111,7 @@ class TextIgniter {
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
       const dataId = this.document.getAllSelectedDataIds();
-      console.log(dataId, 'dataId lntgerr');
+      console.log(dataId, 'dataId lntgerr
     });
     // Clear dataIds when selection is cleared
     document.addEventListener('selectionchange', () => {
@@ -277,7 +277,8 @@ class TextIgniter {
       this.document.dataIds[0] = jsonOutput[0].dataId;
       this.document.selectedBlockId = 'data-id-1734604240404';
       this.document.emit('documentChanged', this);
-      const [start] = this.getSelectionRange();
+      
+      const [start, end] = this.getSelectionRange();
       this.document.blocks.forEach((block: any) => {
         if (this.document.dataIds.includes(block.dataId)) {
           this.document.selectedBlockId = block.dataId;
@@ -473,7 +474,10 @@ class TextIgniter {
           p.text,
           { ...p.attributes },
           offset,
-          this.document.selectedBlockId
+          this.document.selectedBlockId,
+          0,
+          '',
+          'batch'
         );
         offset += p.text.length;
       }
@@ -486,6 +490,7 @@ class TextIgniter {
 
     this.editorContainer.addEventListener('drop', (e: DragEvent) => {
       e.preventDefault();
+      this.undoRedoManager.saveUndoSnapshot();
       const html = e.dataTransfer?.getData('text/html');
       const [start, end] = this.getSelectionRange();
       if (end > start) {
@@ -511,7 +516,10 @@ class TextIgniter {
           p.text,
           { ...p.attributes },
           offset,
-          this.document.selectedBlockId
+          this.document.selectedBlockId,
+          0,
+          '',
+          'batch'
         );
         offset += p.text.length;
       }
@@ -900,6 +908,7 @@ class TextIgniter {
     let ending = end;
     if (e.key === 'Enter') {
       e.preventDefault();
+      this.undoRedoManager.saveUndoSnapshot();
       const uniqueId = `data-id-${Date.now()}`;
 
       // Get the current selected block
@@ -1079,12 +1088,9 @@ class TextIgniter {
       }
       const selection = window.getSelection();
       console.log(selection, 'selection lntgerr');
-      // If multi-block selection exists, delete selected blocks
-      if (
-        this.document.dataIds.length > 1 &&
-        !window.getSelection()?.isCollapsed
-      ) {
-        // Delete selected blocks
+
+      if (this.document.dataIds.length >= 1 && this.document.selectAll) {
+      // Delete selected blocks
         this.document.deleteBlocks();
 
         // Place caret back at the global selection start after DOM updates
@@ -1111,6 +1117,7 @@ class TextIgniter {
       }
 
       if (start === end && start > 0) {
+        this.undoRedoManager.saveUndoSnapshot(); //  Added snapshot brfore operation
         const blockIndex = this.document.blocks.findIndex(
           (block: any) => block.dataId === this.document.selectedBlockId
         );
@@ -1168,6 +1175,7 @@ class TextIgniter {
     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
       if (end > start) {
+        this.undoRedoManager.saveUndoSnapshot();
         this.document.deleteRange(
           start,
           end,
@@ -1200,6 +1208,8 @@ class TextIgniter {
       this.setCursorPosition(start + 1);
     } else if (e.key === 'Delete') {
       e.preventDefault();
+      if (start === end) {
+        this.undoRedoManager.saveUndoSnapshot();
       // If multi-block (or selectAll) selection exists, delete selected blocks
       if (
         this.document.dataIds.length >= 1 &&
@@ -1280,6 +1290,10 @@ class TextIgniter {
           adjustedOffset
         );
         this.setCursorPosition(start);
+
+      } else if (end > start) {
+        this.undoRedoManager.saveUndoSnapshot();
+        this.document.deleteRange(start, end, this.document.selectedBlockId);
         return;
       }
 
