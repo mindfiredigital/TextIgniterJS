@@ -47,6 +47,7 @@ class TextIgniter {
   savedSelection: { start: number; end: number } | null = null;
   debounceTimer: NodeJS.Timeout | null = null;
   undoRedoManager: UndoRedoManager;
+
   constructor(editorId: string, config: EditorConfig) {
     const { mainEditorId, toolbarId, popupToolbarId } = createEditor(
       editorId,
@@ -120,7 +121,7 @@ class TextIgniter {
     document.addEventListener('mouseup', () => {
       this.syncCurrentAttributesWithCursor();
       const dataId = this.document.getAllSelectedDataIds();
-      console.log(dataId, 'dataId lntgerr
+      console.log(dataId, 'dataId lntgerr');
     });
     // Clear dataIds when selection is cleared
     document.addEventListener('selectionchange', () => {
@@ -409,22 +410,10 @@ class TextIgniter {
 
         if (key === 'z') {
           e.preventDefault();
-          // const [start, end] = this.getSelectionRange();
           this.undoRedoManager.undo();
-          // this.document.undo();
-          // if (this.document.undoStack.length > 0)
-          // this.setCursorPosition(start - 1);
-          // console.log("undoStack", this.document.undoStack)
-          // console.log("redoStack", this.document.redoStack)
         } else if (key === 'y') {
           e.preventDefault();
-          // const [start, end] = this.getSelectionRange();
-          // this.document.redo();
           this.undoRedoManager.redo();
-          // if (this.document.redoStack.length > 0)
-          // this.setCursorPosition(start + 1);
-          // console.log("undoStack", this.document.undoStack)
-          // console.log("redoStack", this.document.redoStack)
         }
         if (key === 'a') {
           // e.preventDefault();
@@ -443,7 +432,6 @@ class TextIgniter {
           e.preventDefault();
           this.document.setAlignment('right', this.document.selectedBlockId);
         }
-        // console.log('undo', this.document.undoStack, 'redo', this.document.redoStack);
       }
     });
 
@@ -492,14 +480,7 @@ class TextIgniter {
           this.document.currentOffset
         );
       }
-
       let piecesToInsert: Piece[] = [];
-      // if (html) {
-      //   piecesToInsert = parseHtmlToPieces(html);
-      // } else {
-      //   const text = e.clipboardData?.getData('text/plain') || '';
-      //   piecesToInsert = [new Piece(text, { ...this.currentAttributes })];
-      // }
       if (html) {
         piecesToInsert = parseHtmlToPieces(html);
       } else {
@@ -672,12 +653,6 @@ class TextIgniter {
                 this.document.toggleUnderlineRange(start, end);
               }
               break;
-            // case 'undo':
-            //   this.document.undo();
-            //   break;
-            // case 'redo':
-            //   this.document.redo();
-            //   break;
             case 'hyperlink':
               this.hyperlinkHandler.hanldeHyperlinkClick(
                 start,
@@ -697,7 +672,6 @@ class TextIgniter {
             ];
           this.manualOverride = true;
         }
-
         break;
     }
     this.toolbarView.updateActiveStates(this.currentAttributes);
@@ -729,14 +703,10 @@ class TextIgniter {
     }
 
     if (!selection || selection.rangeCount === 0) {
-      // this.document.selectedBlockId = null;
-
       return;
     }
     if (selection && selection.isCollapsed === true) {
       this.document.dataIds = [];
-      // this.document.selectedBlockId = 'data-id-1734604240404';
-      // return;
     }
 
     const range = selection.getRangeAt(0);
@@ -752,205 +722,6 @@ class TextIgniter {
     }
     this.syncCurrentAttributesWithCursor();
   }
-
-  // handleKeydown(e: KeyboardEvent): void {
-  //     const [start, end] = this.getSelectionRange();
-  //     this.imageHandler.currentCursorLocation = start;
-  //     let ending = end;
-  //     if (e.key === 'Enter') {
-  //         console.log('blocks--->>', this.document.blocks)
-  //         e.preventDefault();
-  //         const uniqueId = `data-id-${Date.now()}`;
-  //         if (this.document.blocks[this.document.blocks.length - 1]?.listType === 'ol' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'ul' || this.document.blocks[this.document.blocks.length - 1]?.listType === 'li') {
-  //             const ListType2 = this.document.blocks[this.document.blocks.length - 2]?.listType;
-  //             const ListType = this.document.blocks[this.document.blocks.length - 1]?.listType;
-  //             let parentId = '';
-  //             let _start = 1;
-  //             let blockListType = ListType;
-
-  //             if (ListType === 'ol') {
-  //                 _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
-  //                 _start += 1;
-  //                 blockListType = 'li';
-  //                 parentId = this.document.blocks[this.document.blocks.length - 1]?.dataId;
-  //             } else if (ListType === 'li') {
-  //                 _start = this.document.blocks[this.document.blocks.length - 1]?.listStart;
-  //                 _start += 1;
-  //                 parentId = this.document.blocks[this.document.blocks.length - 1]?.parentId;
-  //             }
-  //             //  else if (ListType === 'ol' && ListType2 === null) {
-  //             //     blockListType = 'li';
-  //             // }
-
-  //             this.document.blocks.push({
-  //                 "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-  //                 "type": "text",
-  //                 // listType: ListType, // null | 'ol' | 'ul'
-  //                 listType: blockListType,
-  //                 parentId: parentId,
-  //                 listStart: ListType === 'ol' || ListType === 'li' ? _start : '',
-  //             })
-  //         } else {
-
-  //             const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
-  //             if (this.document.blocks[currentBlockIndex].type === "image") {
-  //                 this.document.blocks.push({
-  //                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-  //                     "type": "text"
-  //                 });
-  //                 this.document.emit('documentChanged', this);
-  //                 this.imageHandler.setCursorPostion(1, uniqueId);
-  //                 return;
-  //             }
-  //             if (this.getCurrentCursorBlock() !== null) {
-  //                 const { remainingText, piece } = this.extractTextFromDataId(this.getCurrentCursorBlock()!.toString());
-  //                 console.log(this.document.blocks, "this.getCurrentCursorBlock()!.toString()", this.getCurrentCursorBlock()!.toString(), remainingText, piece)
-  //                 const extractedContent = " " + remainingText;
-  //                 let updatedBlock = this.document.blocks;
-  //                 console.log('blocks--->> if', this.getCurrentCursorBlock())
-  //                 if (extractedContent.length > 0) {
-  //                     const _extractedContent = remainingText.split(' ');
-  //                     let _pieces = []
-  //                     console.log('blocks--->> if1 piece  ', _extractedContent, piece)
-  //                     if (_extractedContent[0] !== '' || _extractedContent[1] !== undefined) {
-  //                         if (piece.length === 1) {
-  //                             _pieces = [new Piece(extractedContent, piece[0].attributes)]
-
-  //                             console.log('blocks--->> if2 _extractedContent', _extractedContent, extractedContent, piece[0].attributes)
-  //                         } else {
-  //                             console.log('blocks--->> else2', _extractedContent, _extractedContent[0] + " ", piece[0].attributes, piece[0], start, end)
-  //                             _pieces.push(new Piece(" " + _extractedContent[0] + " ", piece[0].attributes))
-  //                             if (piece.length >= 2) {
-  //                                 console.log("blocks--->>if 33_pieces.", _pieces, piece)
-  //                                 piece.forEach((obj: any, i: number) => {
-  //                                     console.log("blocks--->>if foreach", i, obj)
-  //                                     if (i !== 0) {
-  //                                         _pieces.push(obj)
-  //                                     }
-
-  //                                 })
-  //                                 console.log("blocks--->>if 33_pieces..", _pieces, piece)
-  //                             }
-  //                         }
-
-  //                     } else {
-
-  //                         _pieces = [new Piece(" ")]
-  //                     }
-  //                     console.log("blocks--->>_pieces:", _pieces)
-  //                     updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
-  //                         "dataId": uniqueId, "class": "paragraph-block", "pieces": _pieces,
-  //                         "type": "text"
-  //                         // listType: null, // null | 'ol' | 'ul'
-  //                     });
-
-  //                     ending = start + extractedContent.length - 1;
-  //                 } else {
-  //                     updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock()!.toString(), {
-  //                         "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-  //                         "type": "text"
-  //                         // listType: null, // null | 'ol' | 'ul'
-  //                     });
-  //                 }
-
-  //                 this.document.blocks = updatedBlock
-
-  //             } else {
-
-  //                 this.document.blocks.push({
-  //                     "dataId": uniqueId, "class": "paragraph-block", "pieces": [new Piece(" ")],
-  //                     "type": "text"
-  //                     // listType: null, // null | 'ol' | 'ul'
-  //                 })
-  //             }
-  //         }
-
-  //         this.syncCurrentAttributesWithCursor();
-  //         this.editorView.render()
-  //         this.setCursorPosition(ending + 1, uniqueId);
-  //         if (ending > start) {
-  //             this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
-
-  //         }
-
-  //     } else if (e.key === 'Backspace') {
-  //         e.preventDefault();
-  //         if (this.imageHandler.isImageHighlighted) {
-  //             const currentBlockIndex = this.document.blocks.findIndex((block: any) => block.dataId === this.imageHandler.highLightedImageDataId);
-
-  //             this.imageHandler.deleteImage();
-  //             this.imageHandler.setCursorPostion(1, this.document.blocks[currentBlockIndex - 1].dataId);
-  //             return;
-  //         }
-  //         const selection = window.getSelection();
-  //         console.log(selection, "selection backspace", start === end && start > 0)
-
-  //         if (this.document.dataIds.length >= 1 && this.document.selectAll) {
-
-  //             // this.document.dataIds.forEach(obj => {
-  //             //     this.document.deleteBlocks(obj)
-  //             // })
-  //             this.document.deleteBlocks();
-  //             this.setCursorPosition(start + 1);
-  //         }
-
-  //         if (start === end && start > 0) {
-  //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start - 1, start, obj, this.document.currentOffset))
-  //             this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
-  //             this.setCursorPosition(start - 1);
-  //             const index = this.document.blocks.findIndex((block: any) => block.dataId === this.document.selectedBlockId)
-  //             const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`) as HTMLElement
-
-  //             if (chkBlock === null) {
-  //                 // const listType = this.document.blocks[index].listType;
-  //                 // let parentId = this.document.blocks[index]?.parentId;
-  //                 let listStart = 0;
-  //                 const _blocks = this.document.blocks.map((block: any, index: number) => {
-  //                     if (block?.listType !== undefined || block?.listType !== null) {
-  //                         if (block?.listType === 'ol') {
-  //                             listStart = 1;
-  //                             block.listStart = 1;
-  //                         } else if (block?.listType === 'li') {
-  //                             listStart = listStart + 1
-  //                             block.listStart = listStart;
-  //                         }
-  //                     }
-  //                     return block;
-  //                 });
-
-  //                 this.document.emit('documentChanged', this);
-  //             }
-  //         } else if (end > start) {
-
-  //             // this.document.deleteBlocks();
-  //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj, this.document.currentOffset))
-  //             // this.document.deleteBlocks();
-  //             this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
-  //             this.setCursorPosition(start + 1);
-
-  //         }
-  //     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-  //         e.preventDefault();
-  //         if (end > start) {
-  //             this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
-  //         }
-  //         this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset);
-  //         this.setCursorPosition(start + 1);
-  //     } else if (e.key === "Delete") {
-  //         e.preventDefault();
-  //         if (start === end) { // just a char
-  //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start, start + 1, obj))
-  //             this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
-  //             this.setCursorPosition(start);
-  //         } else if (end > start) { //Selection
-  //             // this.document.dataIds.forEach(obj => this.document.deleteRange(start, end, obj))
-  //             this.document.deleteRange(start, end, this.document.selectedBlockId);
-  //             this.setCursorPosition(start);
-  //         }
-  //     }
-
-  //     this.hyperlinkHandler.hideHyperlinkViewButton();
-  // }
 
   handleKeydown(e: KeyboardEvent): void {
     const [start, end] = this.getSelectionRange();
@@ -1104,24 +875,6 @@ class TextIgniter {
           this.document.currentOffset
         );
       }
-
-      // Insert entry in undo stack
-      //   if (e.isTrusted) {
-      //     const _redoStackIds = this.document.redoStack.filter(obj => obj.id === "")
-      //     if (_redoStackIds.length === 0) {
-      //         this.document.undoStack.push({
-      //             id: Date.now().toString(),
-      //             start: 0,
-      //             end: 0 ,
-      //             action: 'enter',
-      //             previousValue:"",
-      //             newValue:'enter'
-      //         });
-
-      //         // Clear redo stack
-      //         this.document.redoStack = [];
-      //     }
-      // }
     } else if (e.key === 'Backspace') {
       e.preventDefault();
       if (this.imageHandler.isImageHighlighted) {
@@ -1140,7 +893,7 @@ class TextIgniter {
       console.log(selection, 'selection lntgerr');
 
       if (this.document.dataIds.length >= 1 && this.document.selectAll) {
-      // Delete selected blocks
+        // Delete selected blocks
         this.document.deleteBlocks();
 
         // Place caret back at the global selection start after DOM updates
@@ -1157,30 +910,7 @@ class TextIgniter {
           start,
           end,
           this.document.selectedBlockId,
-          adjustedOffset
-        );
-        // Use setTimeout to ensure cursor is set after other event handlers
-        setTimeout(() => {
-          this.setCursorPosition(start);
-        }, 0);
-        return;
-      }
-
-      if (start === end && start > 0) {
-        this.undoRedoManager.saveUndoSnapshot(); //  Added snapshot brfore operation
-
-        const blockIndex = this.document.blocks.findIndex(
-          (block: any) => block.dataId === this.document.selectedBlockId
-        );
-        const relPos = start - this.document.currentOffset;
-        const shouldMergeWithPrevious = relPos === 0 && blockIndex > 0;
-
-        this.document.deleteRange(
-          start - 1,
-          start,
-          this.document.selectedBlockId,
-          this.document.currentOffset,
-          shouldMergeWithPrevious
+          adjustedOffset,
           true
         );
         this.setCursorPosition(start - 1);
@@ -1260,125 +990,109 @@ class TextIgniter {
 
       if (start === end) {
         this.undoRedoManager.saveUndoSnapshot();
-      // If multi-block (or selectAll) selection exists, delete selected blocks
-      if (
-        this.document.dataIds.length >= 1 &&
-        !window.getSelection()?.isCollapsed
-      ) {
-        const firstDeletedId = this.document.dataIds[0];
-        const deletedIndex = this.document.blocks.findIndex(
-          (block: any) => block.dataId === firstDeletedId
-        );
-        this.document.deleteBlocks();
-        let targetBlockId: string | null = null;
-        let cursorPos = 0;
-        if (this.document.blocks.length === 0) {
-          // No blocks left, create a new one
-          const newId = `data-id-${Date.now()}`;
-          this.document.blocks.push({
-            dataId: newId,
-            class: 'paragraph-block',
-            pieces: [new Piece(' ')],
-            type: 'text',
-          });
-          targetBlockId = newId;
-          cursorPos = 0;
-          this.editorView.render();
-        } else if (deletedIndex < this.document.blocks.length) {
-          targetBlockId = this.document.blocks[deletedIndex].dataId;
-          cursorPos = 0;
-        } else {
-          const prevBlock =
-            this.document.blocks[this.document.blocks.length - 1];
-          targetBlockId = prevBlock.dataId;
-          cursorPos = prevBlock.pieces.reduce(
-            (acc: number, p: any) => acc + p.text.length,
-            0
+        // If multi-block (or selectAll) selection exists, delete selected blocks
+        if (
+          this.document.dataIds.length >= 1 &&
+          !window.getSelection()?.isCollapsed
+        ) {
+          const firstDeletedId = this.document.dataIds[0];
+          const deletedIndex = this.document.blocks.findIndex(
+            (block: any) => block.dataId === firstDeletedId
           );
+          this.document.deleteBlocks();
+          let targetBlockId: string | null = null;
+          let cursorPos = 0;
+          if (this.document.blocks.length === 0) {
+            // No blocks left, create a new one
+            const newId = `data-id-${Date.now()}`;
+            this.document.blocks.push({
+              dataId: newId,
+              class: 'paragraph-block',
+              pieces: [new Piece(' ')],
+              type: 'text',
+            });
+            targetBlockId = newId;
+            cursorPos = 0;
+            this.editorView.render();
+          } else if (deletedIndex < this.document.blocks.length) {
+            targetBlockId = this.document.blocks[deletedIndex].dataId;
+            cursorPos = 0;
+          } else {
+            const prevBlock =
+              this.document.blocks[this.document.blocks.length - 1];
+            targetBlockId = prevBlock.dataId;
+            cursorPos = prevBlock.pieces.reduce(
+              (acc: number, p: any) => acc + p.text.length,
+              0
+            );
+          }
+          this.setCursorPosition(cursorPos, targetBlockId);
         }
-        this.setCursorPosition(cursorPos, targetBlockId);
-      // If multi-block selection exists, delete selected blocks
-      if (
-        this.document.dataIds.length > 1 &&
-        !window.getSelection()?.isCollapsed
-      ) {
-        // Delete selected blocks
-        this.document.deleteBlocks();
+        // If multi-block selection exists, delete selected blocks
+        if (
+          this.document.dataIds.length > 1 &&
+          !window.getSelection()?.isCollapsed
+        ) {
+          // Delete selected blocks
+          this.document.deleteBlocks();
 
-        // Place caret back at the global selection start after DOM updates
-        Promise.resolve().then(() => {
+          // Place caret back at the global selection start after DOM updates
+          Promise.resolve().then(() => {
+            this.setCursorPosition(start);
+          });
+
+          return;
+        }
+
+        // If a range is selected within a single block, delete that range
+        if (end > start) {
+          const adjustedOffset = Math.min(this.document.currentOffset, start);
+          this.document.deleteRange(
+            start,
+            end,
+            this.document.selectedBlockId,
+            adjustedOffset
+          );
           this.setCursorPosition(start);
-        });
+        } else if (end > start) {
+          this.undoRedoManager.saveUndoSnapshot();
+          this.document.deleteRange(start, end, this.document.selectedBlockId);
+          return;
+        }
 
-        return;
+        // No selection: forward-delete behavior
+        const blockIndex = this.document.blocks.findIndex(
+          (block: any) => block.dataId === this.document.selectedBlockId
+        );
+        if (blockIndex === -1) return;
+
+        const block = this.document.blocks[blockIndex];
+        const blockTextLength = block.pieces.reduce(
+          (acc: number, p: any) => acc + p.text.length,
+          0
+        );
+        const relPos = start - this.document.currentOffset;
+
+        // If cursor is inside the block, delete next character
+        if (relPos < blockTextLength) {
+          //  const adjustedOffset = Math.min(this.document.currentOffset, start);
+          this.document.deleteRange(
+            start,
+            start + 1,
+            this.document.selectedBlockId,
+            this.document.currentOffset,
+            false
+          );
+          this.setCursorPosition(start);
+        } else if (end > start) {
+          this.undoRedoManager.saveUndoSnapshot();
+          this.document.deleteRange(start, end, this.document.selectedBlockId);
+          this.setCursorPosition(start);
+        }
       }
 
-      // If a range is selected within a single block, delete that range
-      if (end > start) {
-
-        const adjustedOffset = Math.min(this.document.currentOffset, start);
-        this.document.deleteRange(
-          start,
-          end,
-          this.document.selectedBlockId,
-          adjustedOffset
-
-        console.log(
-          'Single block range deletion. start:',
-          start,
-          'end:',
-          end,
-          'selectedBlockId:',
-          this.document.selectedBlockId
-
-        );
-        const adjustedOffset = Math.min(this.document.currentOffset, start);
-        this.document.deleteRange(
-          start,
-          end,
-          this.document.selectedBlockId,
-          adjustedOffset
-        );
-        this.setCursorPosition(start);
-
-      } else if (end > start) {
-        this.undoRedoManager.saveUndoSnapshot();
-        this.document.deleteRange(start, end, this.document.selectedBlockId);
-        return;
-      }
-
-      // No selection: forward-delete behavior
-      const blockIndex = this.document.blocks.findIndex(
-        (block: any) => block.dataId === this.document.selectedBlockId
-      );
-      if (blockIndex === -1) return;
-
-      const block = this.document.blocks[blockIndex];
-      const blockTextLength = block.pieces.reduce(
-        (acc: number, p: any) => acc + p.text.length,
-        0
-      );
-      const relPos = start - this.document.currentOffset;
-
-      // If cursor is inside the block, delete next character
-      if (relPos < blockTextLength) {
-        const adjustedOffset = Math.min(this.document.currentOffset, start);
-        this.document.deleteRange(
-          start,
-          start + 1,
-          this.document.selectedBlockId,
-          this.document.currentOffset,
-          false
-        );
-        this.setCursorPosition(start);
-      } else if (end > start) {
-        this.undoRedoManager.saveUndoSnapshot();
-        this.document.deleteRange(start, end, this.document.selectedBlockId);
-        this.setCursorPosition(start);
-      }
+      this.hyperlinkHandler.hideHyperlinkViewButton();
     }
-
-    this.hyperlinkHandler.hideHyperlinkViewButton();
   }
 
   extractTextFromDataId(dataId: string): { remainingText: string; piece: any } {
@@ -1438,10 +1152,8 @@ class TextIgniter {
     }
 
     // Get the full text content of the element
-    // const fullText = element.textContent || '';
     const fullText = fText;
     // Calculate the offset position of the cursor within the text node
-    // const cursorOffset = range.startOffset;
     const cursorOffset = textPosition?.offset;
 
     // Extract text from the cursor position to the end
@@ -1459,18 +1171,19 @@ class TextIgniter {
     if (!selection || selection.rangeCount === 0) {
       return null; // No selection or cursor position
     }
-
     const range = selection.getRangeAt(0); // Get the range of the cursor/selection
     const container = range.startContainer; // The container node of the cursor
 
     // Traverse to the parent element with a `data-id` attribute
-    const elementWithId = (
+    const elementWithId =
       container.nodeType === Node.TEXT_NODE
         ? container.parentElement
-        : container
-    ) as HTMLElement;
+        : container;
 
-    const dataIdElement = elementWithId?.closest('[data-id]'); // Find closest ancestor with `data-id`
+    let dataIdElement: Element | null = null;
+    if (elementWithId && elementWithId instanceof Element) {
+      dataIdElement = elementWithId.closest('[data-id]');
+    }
     return dataIdElement?.getAttribute('data-id') || null; // Return the `data-id` or null if not found
   }
 
@@ -1555,8 +1268,10 @@ class TextIgniter {
     else {
       const divDataid = document.querySelector(
         '[data-id="' + dataId + '"]'
-      ) as HTMLElement;
-      divDataid.focus();
+      ) as HTMLElement | null;
+      if (divDataid) {
+        divDataid.focus();
+      }
     }
     const sel = window.getSelection();
     if (!sel) return;
