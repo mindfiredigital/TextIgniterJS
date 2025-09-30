@@ -4,6 +4,7 @@
 # Ignore test-related files
 /coverage.data
 /coverage/
+/packages/*/dist
 
 /.vscode
 

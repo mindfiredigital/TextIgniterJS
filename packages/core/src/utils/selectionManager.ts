@@ -100,13 +100,15 @@ export function extractTextFromDataId(
       return block;
     }
   });
+  if (!_block[0] || !_block[0].pieces) {
+    return { remainingText: '', piece: null }; // No block or pieces found
+  }
   const element = document.querySelector(
     `[data-id="${dataId}"]`
   ) as HTMLElement;
   const textPosition = textDocument.getCursorOffsetInParent(
     `[data-id="${dataId}"]`
   );
-  console.log(textPosition, 'textPosition:vicky');
   let _piece: any = [];
   let index = 0;
   _block[0].pieces.forEach((obj: any, i: number) => {
