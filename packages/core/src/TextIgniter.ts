@@ -263,6 +263,9 @@ class TextIgniter {
         JSON.stringify(jsonOutput, null, 2),
         jsonOutput
       );
+
+      // Show a brief acknowledgement
+      this.showAcknowledgement('HTML copied to clipboard', 2000);
     });
 
     document.getElementById('loadHtmlButton')?.addEventListener('click', e => {
@@ -1384,6 +1387,26 @@ class TextIgniter {
 
     sel.removeAllRanges();
     sel.addRange(range);
+  }
+
+  private showAcknowledgement(message: string, durationMs = 2000): void {
+    const existing = document.getElementById(strings.TOAST_ID);
+    if (existing) {
+      existing.remove();
+    }
+    const toast = document.createElement('div');
+    toast.id = strings.TOAST_ID;
+    toast.className = 'ti-toast';
+    toast.textContent = message || strings.TOAST_DEFAULT_MESSAGE;
+    document.body.appendChild(toast);
+
+    toast.offsetHeight;
+    toast.classList.add(strings.TOAST_SHOW_CLASS);
+
+    setTimeout(() => {
+      toast.classList.remove(strings.TOAST_SHOW_CLASS);
+      setTimeout(() => toast.remove(), 200);
+    }, durationMs || strings.TOAST_DEFAULT_DURATION_MS);
   }
 }
 (window as any).TextIgniter = TextIgniter;
