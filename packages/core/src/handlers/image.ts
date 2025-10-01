@@ -49,8 +49,8 @@ export class ImageHandler {
   }
 
   public insertImageAtCursor(dataUrl: string): void {
+    if (!dataUrl) return;
     const [start, end] = getSelectionRange(this.editorView);
-    console.log(start, end, 'vicky insertImage', dataUrl);
     if (end > start) {
       this.document.deleteRange(start, end, this.document.selectedBlockId);
     }
@@ -58,8 +58,10 @@ export class ImageHandler {
   }
 
   public setCursorPostion(postion: number, dataId: string): void {
+    if (typeof postion !== 'number' || !dataId) return;
     const div = document.querySelector(`[data-id="${dataId}"]`) as HTMLElement;
-    div.focus();
+    if (!div) return;
+    if (typeof div.focus === 'function') div.focus();
     setTimeout(() => {
       const range = document.createRange();
       const sel = window.getSelection();
@@ -81,6 +83,7 @@ export class ImageHandler {
     position: number,
     dataId: string | null
   ): void {
+    if (!dataUrl || typeof position !== 'number' || !this.editorView) return;
     console.log(
       dataUrl,
       position,
@@ -209,6 +212,7 @@ export class ImageHandler {
   }
 
   public createImageFragment(imageUrl: string, dataId: string) {
+    if (!imageUrl || !dataId) return document.createDocumentFragment();
     const fragment = document.createDocumentFragment();
     const img = document.createElement('img');
     img.src = imageUrl;
@@ -224,6 +228,7 @@ export class ImageHandler {
   }
 
   public addStyleToImage(dataId: string) {
+    if (!dataId) return;
     if (!this.isCrossIconVisible) {
       const div = document.querySelector(
         `[data-id="${dataId}"]`
@@ -273,6 +278,7 @@ export class ImageHandler {
   }
 
   public clearImageStyling() {
+    if (!this.highLightedImageDataId) return;
     const div = document.querySelector(
       `[data-id="${this.highLightedImageDataId}"]`
     ) as HTMLElement;
@@ -291,6 +297,7 @@ export class ImageHandler {
   }
 
   public deleteImage() {
+    if (!this.highLightedImageDataId) return;
     this.document.blocks = this.document.blocks.filter(
       (block: any) => block.dataId !== this.highLightedImageDataId
     );
