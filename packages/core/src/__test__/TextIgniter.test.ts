@@ -264,6 +264,7 @@ describe('TextIgniter public API and key methods', () => {
   it('should call link popup methods without error', () => {
     // @ts-ignore: access private
     expect(() =>
+      // @ts-ignore: access private
       ti.showLinkPopup(document.createElement('a'), 0, 0)
     ).not.toThrow();
     // @ts-ignore: access private
