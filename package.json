@@ -9,8 +9,11 @@
     "@changesets/cli": "^2.27.12",
     "@commitlint/cli": "^19.4.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
     "@types/jsdom": "^21.1.7",
     "@typescript-eslint/parser": "^8.12.1",
+    "cypress": "^15.3.0",
     "eslint": "^9.10.0",
     "globals": "^15.9.0",
     "husky": "^9.1.5",
@@ -49,7 +52,16 @@
     "copy-styles": "ncp ./src/styles ./dist/styles",
     "prepare": "npx husky install",
     "release": "turbo run build && pnpm publish --access public",
-    "changeset:autogenerate": "node .github/changeset-autogenerate.mjs"
+    "changeset:autogenerate": "node .github/changeset-autogenerate.mjs",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:run:web-component": "cypress run --spec 'cypress/e2e/packages/web-component/**/*'",
+    "cypress:run:angular": "cypress run --spec 'cypress/e2e/packages/angular/**/*'",
+    "cypress:run:react": "cypress run --spec 'cypress/e2e/packages/react/**/*'",
+    "cypress:run:core": "cypress run --spec 'cypress/e2e/packages/core/**/*'",
+    "dev:web-component": "pnpm --filter @mindfiredigital/textigniter-web-component start",
+    "dev:react": "pnpm --filter react dev",
+    "serve:packages": "cd packages && python3 -m http.server 5173 || npx serve -l 5173"
   },
   "engines": {
     "node": ">=12.0.0"
