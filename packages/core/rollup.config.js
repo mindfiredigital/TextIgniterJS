@@ -16,7 +16,8 @@ const mainConfig = {
   input: 'src/index.ts',
   output: {
     file: 'dist/index.js',
-    format: 'cjs',
+    format: 'umd',
+    name: 'TextIgniter',
     exports: 'auto',
   },
   plugins: [
