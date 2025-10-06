@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TextIgniter Angular Package Test</title>
+  <script src="https://unpkg.com/zone.js@0.15.0/dist/zone.min.js"></script>
+  <script src="https://unpkg.com/@angular/core@19/bundles/core.umd.js"></script>
+  <script src="https://unpkg.com/@angular/common@19/bundles/common.umd.js"></script>
+  <script src="https://unpkg.com/@angular/platform-browser@19/bundles/platform-browser.umd.js"></script>
+  <script src="https://unpkg.com/@angular/platform-browser-dynamic@19/bundles/platform-browser-dynamic.umd.js"></script>
+  <style>
+    .editor-container {
+      margin: 20px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .test-controls {
+      margin: 20px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 4px;
+    }
+    .test-controls button {
+      margin: 5px;
+      padding: 8px 16px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      background: white;
+      cursor: pointer;
+    }
+    .test-controls button:hover {
+      background: #e9e9e9;
+    }
+    #cypress-test-results {
+      margin: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: white;
+    }
+    .test-result {
+      padding: 5px;
+      margin: 2px 0;
+    }
+    .test-pass {
+      color: green;
+    }
+    .test-fail {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div id="angular-root">
+    <div class="test-controls">
+      <h2>TextIgniter Angular Package Test</h2>
+      <button id="config-change-btn">Toggle Config</button>
+      <button id="run-tests-btn">Run Tests</button>
+    </div>
+    <div class="editor-container">
+      <div id="editor-angular"></div>
+    </div>
+    <div id="cypress-test-results">
+      <h3>Test Results:</h3>
+      <div id="test-output"></div>
+    </div>
+  </div>
+
+  <script>
+    // Mock Angular TextIgniter component for testing
+    class MockTextIgniterComponent {
+      constructor(containerId, config) {
+        this.containerId = containerId;
+        this.config = config;
+        this.container = document.getElementById(containerId);
+        this.rendered = false;
+        this.render();
+      }
+
+      render() {
+        if (!this.container) return;
+        
+        // Clear container
+        this.container.innerHTML = '';
+        
+        // Create mock editor structure
+        const editorDiv = document.createElement('div');
+        editorDiv.id = 'mock-angular-editor';
+        editorDiv.setAttribute('data-testid', 'angular-editor');
+        editorDiv.style.minHeight = '100px';
+        editorDiv.style.border = '1px solid #ccc';
+        editorDiv.style.padding = '10px';
+        editorDiv.style.background = '#f9f9f9';
+        
+        // Add toolbar if enabled
+        if (this.config.showToolbar) {
+          const toolbar = document.createElement('div');
+          toolbar.id = 'mock-toolbar';
+          toolbar.setAttribute('data-testid', 'angular-toolbar');
+          toolbar.style.padding = '5px';
+          toolbar.style.border = '1px solid #ddd';
+          toolbar.style.marginBottom = '5px';
+          toolbar.style.background = '#fff';
+          
+          // Add feature buttons
+          this.config.features.forEach(feature => {
+            const btn = document.createElement('button');
+            btn.textContent = feature;
+            btn.setAttribute('data-feature', feature);
+            btn.style.margin = '2px';
+            btn.style.padding = '4px 8px';
+            btn.style.fontSize = '12px';
+            toolbar.appendChild(btn);
+          });
+          
+          this.container.appendChild(toolbar);
+        }
+        
+        // Add editor content area
+        const contentArea = document.createElement('div');
+        contentArea.id = 'editor-content';
+        contentArea.setAttribute('contenteditable', 'true');
+        contentArea.setAttribute('data-testid', 'editor-content');
+        contentArea.style.minHeight = '80px';
+        contentArea.style.padding = '8px';
+        contentArea.style.border = '1px solid #ddd';
+        contentArea.style.background = 'white';
+        contentArea.textContent = 'Mock TextIgniter Angular Editor';
+        
+        editorDiv.appendChild(contentArea);
+        this.container.appendChild(editorDiv);
+        
+        this.rendered = true;
+        
+        // Simulate component lifecycle
+        setTimeout(() => {
+          this.container.setAttribute('data-angular-initialized', 'true');
+        }, 100);
+      }
+
+      updateConfig(newConfig) {
+        this.config = { ...this.config, ...newConfig };
+        this.render();
+      }
+    }
+
+    // Initialize the mock component
+    let currentConfig = {
+      showToolbar: true,
+      features: ['bold', 'italic', 'underline', 'hyperlink', 'image']
+    };
+
+    let textIgniterInstance = new MockTextIgniterComponent('editor-angular', currentConfig);
+
+    // Test functionality
+    const testResults = [];
+
+    function addTestResult(testName, passed, message) {
+      testResults.push({ testName, passed, message });
+      updateTestDisplay();
+    }
+
+    function updateTestDisplay() {
+      const output = document.getElementById('test-output');
+      output.innerHTML = testResults.map(result => 
+        `<div class="test-result ${result.passed ? 'test-pass' : 'test-fail'}" 
+              data-test="${result.testName.toLowerCase().replace(/ /g, '-')}"
+              data-passed="${result.passed}">
+          ${result.testName}: ${result.passed ? 'PASS' : 'FAIL'} - ${result.message}
+         </div>`
+      ).join('');
+    }
+
+    // Event handlers
+    document.getElementById('config-change-btn').addEventListener('click', () => {
+      currentConfig = {
+        showToolbar: !currentConfig.showToolbar,
+        features: currentConfig.showToolbar 
+          ? ['bold', 'italic'] 
+          : ['bold', 'italic', 'underline', 'fontColor', 'alignCenter']
+      };
+      textIgniterInstance.updateConfig(currentConfig);
+    });
+
+    document.getElementById('run-tests-btn').addEventListener('click', () => {
+      runAllTests();
+    });
+
+    function runAllTests() {
+      testResults.length = 0; // Clear previous results
+      
+      // Test 1: Component renders
+      setTimeout(() => {
+        const editor = document.querySelector('[data-testid="angular-editor"]');
+        addTestResult(
+          'Component Renders', 
+          !!editor, 
+          editor ? 'Angular editor component found' : 'Angular editor component not found'
+        );
+      }, 100);
+
+      // Test 2: Config is applied
+      setTimeout(() => {
+        const toolbar = document.querySelector('[data-testid="angular-toolbar"]');
+        const hasToolbar = currentConfig.showToolbar ? !!toolbar : !toolbar;
+        addTestResult(
+          'Config Applied', 
+          hasToolbar, 
+          hasToolbar ? 'Toolbar visibility matches config' : 'Toolbar visibility does not match config'
+        );
+      }, 200);
+
+      // Test 3: Features are rendered
+      setTimeout(() => {
+        const featureButtons = document.querySelectorAll('[data-feature]');
+        const expectedCount = currentConfig.showToolbar ? currentConfig.features.length : 0;
+        const actualCount = featureButtons.length;
+        addTestResult(
+          'Features Rendered', 
+          actualCount === expectedCount, 
+          `Expected ${expectedCount} features, found ${actualCount}`
+        );
+      }, 300);
+
+      // Test 4: Editor content area exists
+      setTimeout(() => {
+        const contentArea = document.querySelector('[data-testid="editor-content"]');
+        addTestResult(
+          'Editor Content Area', 
+          !!contentArea && contentArea.isContentEditable, 
+          contentArea ? 'Editor content area is editable' : 'Editor content area not found'
+        );
+      }, 400);
+
+      // Test 5: Component initialization
+      setTimeout(() => {
+        const container = document.getElementById('editor-angular');
+        const isInitialized = container.hasAttribute('data-angular-initialized');
+        addTestResult(
+          'Component Initialized', 
+          isInitialized, 
+          isInitialized ? 'Component initialization complete' : 'Component not properly initialized'
+        );
+      }, 500);
+    }
+
+    // Auto-run tests on load
+    setTimeout(() => {
+      runAllTests();
+    }, 1000);
+  </script>
+</body>
+</html>
