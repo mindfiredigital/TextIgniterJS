@@ -103,6 +103,7 @@ class EditorView {
       bold: boolean;
       italic: boolean;
       underline: boolean;
+      strikethrough?: boolean;
       fontFamily?: string;
       fontSize?: string;
       hyperlink?: string | boolean;
@@ -113,6 +114,11 @@ class EditorView {
     const fragment = document.createDocumentFragment();
     lines.forEach((line, index) => {
       let textNode: Node = document.createTextNode(line);
+      if (attrs.strikethrough) {
+        const s = document.createElement('s');
+        s.appendChild(textNode);
+        textNode = s;
+      }
       if (attrs.underline) {
         const u = document.createElement('u');
         u.appendChild(textNode);

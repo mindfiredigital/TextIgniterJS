@@ -4,6 +4,7 @@ class Piece {
     bold: boolean;
     italic: boolean;
     underline: boolean;
+    strikethrough?: boolean;
     undo?: boolean;
     redo?: boolean;
     fontFamily?: string;
@@ -18,6 +19,7 @@ class Piece {
       bold?: boolean;
       italic?: boolean;
       underline?: boolean;
+      strikethrough?: boolean;
       undo?: boolean;
       redo?: boolean;
       fontFamily?: string;
@@ -60,6 +62,7 @@ class Piece {
       bold: attributes.bold || false,
       italic: attributes.italic || false,
       underline: attributes.underline || false,
+      strikethrough: attributes.strikethrough || false,
       undo: attributes.undo || false,
       redo: attributes.redo || false,
       fontFamily: attributes.fontFamily || selectedFontFamilyValue, // Default font family
@@ -94,6 +97,12 @@ class Piece {
   setUnderline(v: boolean): void {
     this.attributes.underline = v;
   }
+  isStrikethrough(): boolean {
+    return this.attributes.strikethrough || false;
+  }
+  setStrikethrough(v: boolean): void {
+    this.attributes.strikethrough = v;
+  }
   setUndo(v: boolean): void {
     this.attributes.undo = v;
   }
@@ -109,6 +118,8 @@ class Piece {
       this.attributes.bold === other.attributes.bold &&
       this.attributes.italic === other.attributes.italic &&
       this.attributes.underline === other.attributes.underline &&
+      (this.attributes.strikethrough || false) ===
+        (other.attributes.strikethrough || false) &&
       this.attributes.undo === other.attributes.undo &&
       this.attributes.redo === other.attributes.redo &&
       this.attributes.fontFamily === other.attributes.fontFamily &&

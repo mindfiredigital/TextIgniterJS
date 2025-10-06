@@ -212,6 +212,7 @@ describe('TextIgniter public API and key methods', () => {
           bold: false,
           italic: false,
           underline: false,
+          strikethrough: false,
           hyperlink: false,
           bgColor: '#fff',
           fontColor: '#000',
@@ -222,6 +223,8 @@ describe('TextIgniter public API and key methods', () => {
         setItalic: () => {},
         isUnderline: () => false,
         setUnderline: () => {},
+        isStrikethrough: () => false,
+        setStrikethrough: () => {},
         isUndo: () => false,
         setUndo: () => {},
         isRedo: () => false,
@@ -232,7 +235,7 @@ describe('TextIgniter public API and key methods', () => {
         hasSameAttributes: () => true,
         getHyperlink: () => false,
         setHyperlink: () => {},
-      }));
+      })) as any;
     }
     // Patch formatAttribute for unlinkText
     if (typeof ti?.document?.formatAttribute !== 'function') {
@@ -240,13 +243,15 @@ describe('TextIgniter public API and key methods', () => {
     }
   });
 
-  it('should handleToolbarAction for bold, italic, underline, image, hyperlink', () => {
+  it('should handleToolbarAction for bold, italic, underline, strikethrough, image, hyperlink', () => {
     // Bold
     expect(() => ti.handleToolbarAction('bold')).not.toThrow();
     // Italic
     expect(() => ti.handleToolbarAction('italic')).not.toThrow();
     // Underline
     expect(() => ti.handleToolbarAction('underline')).not.toThrow();
+    // Strikethrough
+    expect(() => ti.handleToolbarAction('strikethrough')).not.toThrow();
     // Image
     expect(() => ti.handleToolbarAction('image')).not.toThrow();
     // Hyperlink

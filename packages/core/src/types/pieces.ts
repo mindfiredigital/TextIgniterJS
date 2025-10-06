@@ -5,6 +5,7 @@ export interface PieceAttributes {
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  strikethrough?: boolean;
   hyperlink?: string | boolean; // Link attribute
   fontFamily?: string;
   fontSize?: string;

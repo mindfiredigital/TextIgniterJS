@@ -447,6 +447,7 @@ class TextDocument extends EventEmitter {
           (attribute === 'bold' ||
             attribute === 'italic' ||
             attribute === 'underline' ||
+            attribute === 'strikethrough' ||
             attribute === 'undo' ||
             attribute === 'redo' ||
             attribute === 'hyperlink') &&
@@ -650,6 +651,14 @@ class TextDocument extends EventEmitter {
     const allUnderline = this.isRangeEntirelyAttribute(start, end, 'underline');
     this.formatAttribute(start, end, 'underline', !allUnderline);
   }
+  toggleStrikethroughRange(start: number, end: number, id = ''): void {
+    const allStrike = this.isRangeEntirelyAttribute(
+      start,
+      end,
+      'strikethrough' as any
+    );
+    this.formatAttribute(start, end, 'strikethrough' as any, !allStrike);
+  }
   toggleUndoRange(start: number, end: number, id = ''): void {
     const allUndo = this.isRangeEntirelyAttribute(start, end, 'undo');
     this.formatAttribute(start, end, 'undo', !allUndo);
@@ -675,7 +684,7 @@ class TextDocument extends EventEmitter {
   isRangeEntirelyAttribute(
     start: number,
     end: number,
-    attr: 'bold' | 'italic' | 'underline' | 'undo' | 'redo'
+    attr: 'bold' | 'italic' | 'underline' | 'strikethrough' | 'undo' | 'redo'
   ): boolean {
     let offset = this.currentOffset;
     let allHaveAttr = true;
