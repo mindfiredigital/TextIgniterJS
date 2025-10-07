@@ -17,6 +17,16 @@
   border: none;
   background: none;
   font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Normalize icon alignment and size */
+.toolbar button svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .toolbar button.active {
@@ -131,6 +141,15 @@
   cursor: pointer;
   padding: 6px;
   border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-toolbar button svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .ti-toast {

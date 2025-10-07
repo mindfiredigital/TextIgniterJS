@@ -63,6 +63,11 @@ export function createEditor(
     { feature: 'unorderedList', id: 'unorderedList', icon: icons.bullet_list },
     { feature: 'orderedList', id: 'orderedList', icon: icons.numbered_list },
     { feature: 'hyperlink', id: 'hyperlink', icon: icons.hyperlink },
+    {
+      feature: 'strikethrough',
+      id: 'strikethrough',
+      icon: icons.strikethrough,
+    },
   ];
 
   const createSelect = (id: string, options: string[]) => {
