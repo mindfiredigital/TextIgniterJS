@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TextIgniter } from '../TextIgniter';
+import { strings } from '../constants/strings';
 
 // Mock all dependencies
 vi.mock('../textDocument', () => ({
@@ -504,5 +505,46 @@ describe('TextIgniter integration-style DOM/event tests', () => {
     });
     editorDiv.dispatchEvent(event);
     expect(spy).toHaveBeenCalled();
+  });
+});
+
+describe('TextIgniter - showAcknowledgement (toast feedback)', () => {
+  let ti: TextIgniter;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div id="mainEditor"></div>
+      <div id="toolbar"></div>
+      <div id="popupToolbar"></div>
+    `;
+    ti = new TextIgniter('mainEditor', {} as any);
+  });
+
+  it('should create and remove a toast message in the DOM', async () => {
+    // @ts-ignore: access private method
+    ti.showAcknowledgement('HTML copied!', 500);
+
+    // Check that toast is added
+    const toast = document.getElementById(strings.TOAST_ID);
+    expect(toast).not.toBeNull();
+    expect(toast?.textContent).toContain('HTML copied!');
+
+    // Wait for auto removal
+    await new Promise(res => setTimeout(res, 800));
+
+    // Check that toast is removed
+    expect(document.getElementById('ti-toast')).toBeNull();
+  });
+
+  it('should replace an existing toast if already present', () => {
+    const existingToast = document.createElement('div');
+    existingToast.id = 'ti-toast';
+    document.body.appendChild(existingToast);
+
+    // @ts-ignore
+    expect(() => ti.showAcknowledgement('Replaced toast')).not.toThrow();
+
+    const allToasts = document.querySelectorAll('#ti-toast');
+    expect(allToasts.length).toBe(1); // ensures replacement, not duplication
   });
 });

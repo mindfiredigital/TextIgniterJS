@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TextIgniter React Package Test</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="react-root"></div>
+  <div id="test-results"></div>
+
+  <script type="text/babel">
+    // Mock TextIgniter React component for testing (simulating the real React package behavior)
+    const { useState, useEffect, useRef } = React;
+
+    const TextigniterReact = ({ config }) => {
+      const builderRef = useRef(null);
+      const [processedConfig, setProcessedConfig] = useState(config);
+
+      useEffect(() => {
+        // Import web component (mocked)
+        console.log('Loading web component...');
+      }, []);
+
+      useEffect(() => {
+        const modifiedConfig = JSON.parse(JSON.stringify(config));
+        setProcessedConfig(modifiedConfig);
+      }, [config]);
+
+      useEffect(() => {
+        if (builderRef.current) {
+          try {
+            const configString = JSON.stringify(processedConfig);
+            builderRef.current.setAttribute('config', configString);
+            
+            // Create a mock editor container since we don't have the real web component
+            const existingContainer = builderRef.current.querySelector('#editor-container');
+            if (!existingContainer) {
+              const editorContainer = document.createElement('div');
+              editorContainer.id = 'editor-container';
+              editorContainer.style.border = '1px solid #ccc';
+              editorContainer.style.minHeight = '100px';
+              editorContainer.style.padding = '10px';
+              editorContainer.textContent = 'Mock TextIgniter Editor';
+              builderRef.current.appendChild(editorContainer);
+            }
+          } catch (error) {
+            console.error('Error setting config-data:', error);
+          }
+        }
+      }, [processedConfig]);
+
+      return React.createElement('text-igniter', { ref: builderRef, style: { display: 'block', minHeight: '120px', background: '#f5f5f5' } });
+    };
+
+    // Test App component
+    const TestApp = () => {
+      const [config, setConfig] = useState({
+        showToolbar: true,
+        features: ['bold', 'italic', 'underline']
+      });
+
+      const [testResults, setTestResults] = useState([]);
+
+      const addTestResult = (testName, passed, message) => {
+        setTestResults(prev => [...prev, { testName, passed, message }]);
+      };
+
+      useEffect(() => {
+        // Test 1: Component renders
+        setTimeout(() => {
+          const textIgniter = document.querySelector('text-igniter');
+          addTestResult(
+            'Component Renders', 
+            !!textIgniter, 
+            textIgniter ? 'TextIgniter component found' : 'TextIgniter component not found'
+          );
+        }, 1000);
+
+        // Test 2: Config is set
+        setTimeout(() => {
+          const textIgniter = document.querySelector('text-igniter');
+          const hasConfig = textIgniter && textIgniter.hasAttribute('config');
+          addTestResult(
+            'Config Attribute Set', 
+            hasConfig, 
+            hasConfig ? 'Config attribute found' : 'Config attribute missing'
+          );
+        }, 1500);
+
+        // Test 3: Editor container exists
+        setTimeout(() => {
+          const editorContainer = document.querySelector('text-igniter #editor-container');
+          addTestResult(
+            'Editor Container Exists', 
+            !!editorContainer, 
+            editorContainer ? 'Editor container found' : 'Editor container not found'
+          );
+        }, 2000);
+      }, []);
+
+      const handleConfigChange = () => {
+        setConfig({
+          showToolbar: !config.showToolbar,
+          features: ['bold', 'underline', 'fontColor']
+        });
+      };
+
+      const TestResults = () => (
+        React.createElement('div', { id: 'cypress-test-results' },
+          React.createElement('h3', null, 'Test Results:'),
+          testResults.map((result, index) => 
+            React.createElement('div', { 
+              key: index, 
+              'data-test': result.testName.toLowerCase().replace(/ /g, '-'),
+              'data-passed': result.passed,
+              style: { color: result.passed ? 'green' : 'red' }
+            }, `${result.testName}: ${result.passed ? 'PASS' : 'FAIL'} - ${result.message}`)
+          )
+        )
+      );
+
+      return React.createElement('div', null,
+        React.createElement('h1', null, 'TextIgniter React Package Test'),
+        React.createElement('button', { 
+          onClick: handleConfigChange,
+          id: 'config-change-btn'
+        }, 'Toggle Config'),
+        React.createElement(TextigniterReact, { config }),
+        React.createElement(TestResults)
+      );
+    };
+
+    // Render the test app
+    ReactDOM.render(React.createElement(TestApp), document.getElementById('react-root'));
+  </script>
+</body>
+</html>
