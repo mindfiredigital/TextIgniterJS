@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TextIgniter } from '../TextIgniter';
+import { strings } from '../constants/strings';
 
 // Mock all dependencies
 vi.mock('../textDocument', () => ({
@@ -264,6 +265,7 @@ describe('TextIgniter public API and key methods', () => {
   it('should call link popup methods without error', () => {
     // @ts-ignore: access private
     expect(() =>
+      // @ts-ignore: access private
       ti.showLinkPopup(document.createElement('a'), 0, 0)
     ).not.toThrow();
     // @ts-ignore: access private
@@ -498,5 +500,46 @@ describe('TextIgniter integration-style DOM/event tests', () => {
     });
     editorDiv.dispatchEvent(event);
     expect(spy).toHaveBeenCalled();
+  });
+});
+
+describe('TextIgniter - showAcknowledgement (toast feedback)', () => {
+  let ti: TextIgniter;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div id="mainEditor"></div>
+      <div id="toolbar"></div>
+      <div id="popupToolbar"></div>
+    `;
+    ti = new TextIgniter('mainEditor', {} as any);
+  });
+
+  it('should create and remove a toast message in the DOM', async () => {
+    // @ts-ignore: access private method
+    ti.showAcknowledgement('HTML copied!', 500);
+
+    // Check that toast is added
+    const toast = document.getElementById(strings.TOAST_ID);
+    expect(toast).not.toBeNull();
+    expect(toast?.textContent).toContain('HTML copied!');
+
+    // Wait for auto removal
+    await new Promise(res => setTimeout(res, 800));
+
+    // Check that toast is removed
+    expect(document.getElementById('ti-toast')).toBeNull();
+  });
+
+  it('should replace an existing toast if already present', () => {
+    const existingToast = document.createElement('div');
+    existingToast.id = 'ti-toast';
+    document.body.appendChild(existingToast);
+
+    // @ts-ignore
+    expect(() => ti.showAcknowledgement('Replaced toast')).not.toThrow();
+
+    const allToasts = document.querySelectorAll('#ti-toast');
+    expect(allToasts.length).toBe(1); // ensures replacement, not duplication
   });
 });

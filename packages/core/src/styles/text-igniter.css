@@ -133,6 +133,25 @@
   border-radius: 4px;
 }
 
+.ti-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: rgba(33, 33, 33, 0.95);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease-in-out;
+}
+.ti-toast.ti-toast--show {
+  opacity: 1;
+}
+
 /* Add these styles for hyperlinks */
 /* Link styling */
 .text-igniter a {
