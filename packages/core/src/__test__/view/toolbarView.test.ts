@@ -29,6 +29,26 @@ describe('ToolbarView', () => {
     document.body.appendChild(container);
   });
 
+  it('updateActiveStates activates strikethrough button when strikethrough is true', () => {
+    const strike = makeButton('strikethrough');
+    container.appendChild(strike);
+    view = new ToolbarView(container);
+    view.updateActiveStates({
+      bold: false,
+      italic: false,
+      underline: false,
+      strikethrough: true,
+    });
+    expect(strike.classList.contains('active')).toBe(true);
+    view.updateActiveStates({
+      bold: false,
+      italic: false,
+      underline: false,
+      strikethrough: false,
+    });
+    expect(strike.classList.contains('active')).toBe(false);
+  });
+
   it('adds mouse down listeners to all buttons', () => {
     const b1 = makeButton('bold');
     container.appendChild(b1);

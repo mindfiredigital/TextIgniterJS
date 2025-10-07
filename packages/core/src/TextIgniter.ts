@@ -21,6 +21,7 @@ export interface CurrentAttributeDTO {
   bold: boolean;
   italic: boolean;
   underline: boolean;
+  strikethrough?: boolean;
   undo?: boolean;
   redo?: boolean;
   hyperlink?: string | boolean;
@@ -656,6 +657,23 @@ class TextIgniter {
                 this.document.toggleUnderlineRange(start, end);
               }
               break;
+            case 'strikethrough':
+              if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                  if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                      countE += obj.text.length;
+                    });
+                    let countS = start - countE;
+                    this.document.toggleStrikethroughRange(countS, countE);
+                  }
+                });
+              } else {
+                this.document.toggleStrikethroughRange(start, end);
+              }
+              break;
             case 'hyperlink':
               this.hyperlinkHandler.hanldeHyperlinkClick(
                 start,
@@ -668,10 +686,22 @@ class TextIgniter {
           }
         } else {
           this.currentAttributes[
-            action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'
+            action as
+              | 'bold'
+              | 'italic'
+              | 'underline'
+              | 'strikethrough'
+              | 'undo'
+              | 'redo'
           ] =
             !this.currentAttributes[
-              action as 'bold' | 'italic' | 'underline' | 'undo' | 'redo'
+              action as
+                | 'bold'
+                | 'italic'
+                | 'underline'
+                | 'strikethrough'
+                | 'undo'
+                | 'redo'
             ];
           this.manualOverride = true;
         }
