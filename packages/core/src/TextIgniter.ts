@@ -129,6 +129,7 @@ class TextIgniter {
       const selection = window.getSelection();
       if (!selection || selection.isCollapsed) {
         this.document.dataIds = [];
+        this.document.selectAll = false;
       }
     });
     document.getElementById('fontColor')?.addEventListener('click', e => {
@@ -587,11 +588,18 @@ class TextIgniter {
 
     switch (action) {
       case 'orderedList':
-        // Toggle ordered list for each selected block
-        this.document.dataIds.forEach((id: string) => {
-          this.document.toggleOrderedList(id);
-        });
-        // Recalculate numbering for contiguous ordered list blocks
+        if (this.document.dataIds.length > 1) {
+          // Handle multiple selected blocks
+          this.document.toggleOrderedListForMultipleBlocks(
+            this.document.dataIds
+          );
+        } else {
+          // Handle single block or current block
+          const currentBlockId =
+            this.document.selectedBlockId || this.document.dataIds[0];
+          this.document.toggleOrderedList(currentBlockId);
+        }
+        // Recalculate numbering for all ordered list blocks
         this.document.updateOrderedListNumbers();
         break;
       case 'unorderedList':
@@ -729,9 +737,19 @@ class TextIgniter {
 
     if (selection.isCollapsed) {
       this.document.dataIds = [];
+      this.document.selectAll = false;
       this.popupToolbarView.hide();
     } else {
       this.document.getAllSelectedDataIds();
+
+      // Check if all text is selected manually (not via Ctrl+A)
+      if (
+        this.document.dataIds.length === this.document.blocks.length &&
+        this.document.blocks.length > 0
+      ) {
+        this.document.selectAll = true;
+      }
+
       this.popupToolbarView.show(selection);
     }
 
@@ -740,6 +758,7 @@ class TextIgniter {
     }
     if (selection && selection.isCollapsed === true) {
       this.document.dataIds = [];
+      this.document.selectAll = false;
     }
 
     const range = selection.getRangeAt(0);
@@ -925,19 +944,62 @@ class TextIgniter {
       const selection = window.getSelection();
       console.log(selection, 'selection lntgerr');
 
-      if (this.document.dataIds.length >= 1 && this.document.selectAll) {
+      // Check if all text is selected (either via Ctrl+A or manual selection)
+      const isAllTextSelected =
+        this.document.selectAll ||
+        (this.document.dataIds.length === this.document.blocks.length &&
+          this.document.dataIds.length > 0);
+
+      // If all text or multiple blocks are selected, delete selected blocks
+      if (
+        (isAllTextSelected || this.document.dataIds.length > 1) &&
+        !window.getSelection()?.isCollapsed
+      ) {
+        this.undoRedoManager.saveUndoSnapshot();
+
+        const firstDeletedId = this.document.dataIds[0];
+        const deletedIndex = this.document.blocks.findIndex(
+          (block: any) => block.dataId === firstDeletedId
+        );
+
         // Delete selected blocks
         this.document.deleteBlocks();
 
-        // Place caret back at the global selection start after DOM updates
-        Promise.resolve().then(() => {
-          this.setCursorPosition(start);
-        });
+        let targetBlockId: string | null = null;
+        let cursorPos = 0;
+
+        if (this.document.blocks.length === 0) {
+          // No blocks left, create a new one
+          const newId = `data-id-${Date.now()}`;
+          this.document.blocks.push({
+            dataId: newId,
+            class: 'paragraph-block',
+            pieces: [new Piece(' ')],
+            type: 'text',
+          });
+          targetBlockId = newId;
+          cursorPos = 0;
+          this.editorView.render();
+        } else if (deletedIndex < this.document.blocks.length) {
+          targetBlockId = this.document.blocks[deletedIndex].dataId;
+          cursorPos = 0;
+        } else {
+          const prevBlock =
+            this.document.blocks[this.document.blocks.length - 1];
+          targetBlockId = prevBlock.dataId;
+          cursorPos = prevBlock.pieces.reduce(
+            (acc: number, p: any) => acc + p.text.length,
+            0
+          );
+        }
+
+        this.setCursorPosition(cursorPos, targetBlockId);
         return;
       }
 
-      // If a range is selected, delete that range (same as delete key)
+      // If a range is selected within a single block, delete that range
       if (end > start) {
+        this.undoRedoManager.saveUndoSnapshot();
         const adjustedOffset = Math.min(this.document.currentOffset, start);
         this.document.deleteRange(
           start,
@@ -947,6 +1009,7 @@ class TextIgniter {
           true
         );
         this.setCursorPosition(start - 1);
+
         const index = this.document.blocks.findIndex(
           (block: any) => block.dataId === this.document.selectedBlockId
         );
@@ -974,15 +1037,16 @@ class TextIgniter {
           console.log(_blocks, 'blocks lntgerr');
           this.document.emit('documentChanged', this);
         }
-      } else if (end > start) {
+      } else if (start === end && start > 0) {
+        // Normal backspace - delete one character before cursor
         this.document.deleteRange(
+          start - 1,
           start,
-          end,
           this.document.selectedBlockId,
           this.document.currentOffset,
-          false
+          true
         );
-        this.setCursorPosition(start + 1);
+        this.setCursorPosition(start - 1);
       }
     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
@@ -1023,59 +1087,6 @@ class TextIgniter {
 
       if (start === end) {
         this.undoRedoManager.saveUndoSnapshot();
-        // If multi-block (or selectAll) selection exists, delete selected blocks
-        if (
-          this.document.dataIds.length >= 1 &&
-          !window.getSelection()?.isCollapsed
-        ) {
-          const firstDeletedId = this.document.dataIds[0];
-          const deletedIndex = this.document.blocks.findIndex(
-            (block: any) => block.dataId === firstDeletedId
-          );
-          this.document.deleteBlocks();
-          let targetBlockId: string | null = null;
-          let cursorPos = 0;
-          if (this.document.blocks.length === 0) {
-            // No blocks left, create a new one
-            const newId = `data-id-${Date.now()}`;
-            this.document.blocks.push({
-              dataId: newId,
-              class: 'paragraph-block',
-              pieces: [new Piece(' ')],
-              type: 'text',
-            });
-            targetBlockId = newId;
-            cursorPos = 0;
-            this.editorView.render();
-          } else if (deletedIndex < this.document.blocks.length) {
-            targetBlockId = this.document.blocks[deletedIndex].dataId;
-            cursorPos = 0;
-          } else {
-            const prevBlock =
-              this.document.blocks[this.document.blocks.length - 1];
-            targetBlockId = prevBlock.dataId;
-            cursorPos = prevBlock.pieces.reduce(
-              (acc: number, p: any) => acc + p.text.length,
-              0
-            );
-          }
-          this.setCursorPosition(cursorPos, targetBlockId);
-        }
-        // If multi-block selection exists, delete selected blocks
-        if (
-          this.document.dataIds.length > 1 &&
-          !window.getSelection()?.isCollapsed
-        ) {
-          // Delete selected blocks
-          this.document.deleteBlocks();
-
-          // Place caret back at the global selection start after DOM updates
-          Promise.resolve().then(() => {
-            this.setCursorPosition(start);
-          });
-
-          return;
-        }
 
         // If a range is selected within a single block, delete that range
         if (end > start) {
