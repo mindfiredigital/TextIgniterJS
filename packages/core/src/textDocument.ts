@@ -316,6 +316,7 @@ class TextDocument extends EventEmitter {
       this.blocks.push({
         dataId: `data-id-${Date.now()}`,
         class: 'paragraph-block',
+        type: 'text',
         pieces: [new Piece('\u200B')],
         // listType: null, // null | 'ol' | 'ul'
       });
