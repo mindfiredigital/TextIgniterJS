@@ -41,7 +41,7 @@ class TextDocument extends EventEmitter {
         dataId: 'data-id-1734604240404',
         class: 'paragraph-block',
         alignment: 'left',
-        pieces: [new Piece(' ')],
+        pieces: [new Piece('\u200B')],
         // listType: null, // null | 'ol' | 'ul'
       },
       // { "dataId": 'data-id-1734604240401', "pieces": [new Piece("")] }
@@ -253,7 +253,7 @@ class TextDocument extends EventEmitter {
       this.blocks.push({
         dataId: 'data-id-1734604240404',
         class: 'paragraph-block',
-        pieces: [new Piece(' ')],
+        pieces: [new Piece('\u200B')],
         // listType: null, // null | 'ol' | 'ul'
       });
     }

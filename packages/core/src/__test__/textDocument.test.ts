@@ -51,7 +51,7 @@ describe('TextDocument', () => {
     doc.dataIds = [doc.selectedBlockId!];
     doc.deleteBlocks();
     expect(doc.blocks).toHaveLength(1);
-    expect(doc.blocks[0].pieces[0].text).toBe(' ');
+    expect(doc.blocks[0].pieces[0].text).toBe('\u200B');
   });
 
   it('getSelectedTextDataId returns null if no selection', () => {
