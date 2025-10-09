@@ -759,7 +759,7 @@ class TextIgniter {
   handleKeydown(e: KeyboardEvent): void {
     const [start, end] = this.getSelectionRange();
     this.imageHandler.currentCursorLocation = start;
-    let ending = end;
+
     if (e.key === 'Enter') {
       e.preventDefault();
       this.undoRedoManager.saveUndoSnapshot();
@@ -771,19 +771,38 @@ class TextIgniter {
       );
       const currentBlock = this.document.blocks[currentBlockIndex];
 
-      // If current block is an image, simply add a new text block after it
+      //  Safely clone attributes from the last piece (includes fontFamily, fontSize, colors, etc.)
+      const lastPiece =
+        currentBlock?.pieces?.length > 0
+          ? currentBlock.pieces[currentBlock.pieces.length - 1]
+          : null;
+
+      const lastPieceAttributes = lastPiece
+        ? { ...lastPiece.attributes }
+        : {
+            fontFamily: 'Arial',
+            fontSize: '16px',
+            fontColor: '#000000',
+            bgColor: '#ffffff',
+            bold: false,
+            italic: false,
+            underline: false,
+            strikethrough: false,
+          };
+
+      // Handle image blocks (unchanged)
       if (currentBlock && currentBlock.type === 'image') {
         this.document.blocks.splice(currentBlockIndex + 1, 0, {
           dataId: uniqueId,
           class: 'paragraph-block',
-          pieces: [new Piece(' ')],
+          pieces: [new Piece('\u200B', lastPieceAttributes)], //  Inherit styles
           type: 'text',
         });
         this.document.emit('documentChanged', this);
-        console.log('image - vicky', uniqueId);
         this.imageHandler.setCursorPostion(1, uniqueId);
       }
-      // If current block is a list block, continue the list sequence even if an image block exists later
+
+      // Handle list blocks (unchanged, but ensure style inheritance)
       else if (
         currentBlock &&
         (currentBlock.listType === 'ol' ||
@@ -793,7 +812,7 @@ class TextIgniter {
         let newBlock: any = {
           dataId: uniqueId,
           class: 'paragraph-block',
-          pieces: [new Piece(' ')],
+          pieces: [new Piece('\u200B', lastPieceAttributes)], //  Inherit styles
           type: 'text',
         };
         let listParentId = '';
@@ -811,10 +830,8 @@ class TextIgniter {
           newBlock.listType = 'ul';
           newBlock.parentId = currentBlock.parentId || currentBlock.dataId;
         }
-        // Insert newBlock right after the current block
         this.document.blocks.splice(currentBlockIndex + 1, 0, newBlock);
 
-        // For ordered lists, update subsequent list items to increment their listStart
         if (currentBlock.listType === 'ol' || currentBlock.listType === 'li') {
           for (
             let i = currentBlockIndex + 2;
@@ -829,85 +846,58 @@ class TextIgniter {
             }
           }
         }
-      } else {
-        // Normal text block insertion (with text splitting logic if applicable)
-        if (this.getCurrentCursorBlock() !== null) {
-          const { remainingText, piece } = this.extractTextFromDataId(
-            this.getCurrentCursorBlock()!.toString()
-          );
-          const extractedContent = ' ' + remainingText;
-          let updatedBlock = this.document.blocks;
-          if (extractedContent.length > 0) {
-            const _extractedContent = remainingText.split(' ');
-            let _pieces: Piece[] = [];
-            if (
-              _extractedContent[0] !== '' ||
-              _extractedContent[1] !== undefined
-            ) {
-              if (piece.length === 1) {
-                _pieces = [new Piece(extractedContent, piece[0].attributes)];
-              } else {
-                _pieces.push(
-                  new Piece(
-                    ' ' + _extractedContent[0] + ' ',
-                    piece[0].attributes
-                  )
-                );
-                if (piece.length >= 2) {
-                  piece.forEach((obj: any, i: number) => {
-                    if (i !== 0) {
-                      _pieces.push(obj);
-                    }
-                  });
-                }
-              }
-            } else {
-              _pieces = [new Piece(' ')];
+      }
+
+      // Handle normal text block (default case)
+      else {
+        const cursorBlock = this.getCurrentCursorBlock();
+        const cursorBlockId = cursorBlock?.toString();
+
+        if (cursorBlockId && currentBlock && currentBlock.type === 'text') {
+          // Get the full text content
+          const fullText = currentBlock.pieces.map((p: any) => p.text).join('');
+          const cursorOffset = start - this.document.currentOffset;
+
+          // Split text into before and after cursor
+          const beforeText = fullText.slice(0, cursorOffset);
+          const afterText = fullText.slice(cursorOffset);
+
+          // Update current block text to before-cursor
+          currentBlock.pieces = [
+            new Piece(beforeText || '\u200B', lastPieceAttributes),
+          ];
+
+          // Create new block with text after cursor
+          const newPieces =
+            afterText && afterText.trim().length > 0
+              ? [new Piece(afterText, lastPieceAttributes)]
+              : [new Piece('\u200B', lastPieceAttributes)];
+
+          const updatedBlock = this.addBlockAfter(
+            this.document.blocks,
+            cursorBlockId,
+            {
+              dataId: uniqueId,
+              class: 'paragraph-block',
+              pieces: newPieces,
+              type: 'text',
             }
-            updatedBlock = this.addBlockAfter(
-              this.document.blocks,
-              this.getCurrentCursorBlock()!.toString(),
-              {
-                dataId: uniqueId,
-                class: 'paragraph-block',
-                pieces: _pieces,
-                type: 'text',
-              }
-            );
-            ending = start + extractedContent.length - 1;
-          } else {
-            updatedBlock = this.addBlockAfter(
-              this.document.blocks,
-              this.getCurrentCursorBlock()!.toString(),
-              {
-                dataId: uniqueId,
-                class: 'paragraph-block',
-                pieces: [new Piece(' ')],
-                type: 'text',
-              }
-            );
-          }
+          );
           this.document.blocks = updatedBlock;
         } else {
+          // Default new empty line if no text block
           this.document.blocks.push({
             dataId: uniqueId,
             class: 'paragraph-block',
-            pieces: [new Piece(' ')],
+            pieces: [new Piece('\u200B', lastPieceAttributes)],
             type: 'text',
           });
         }
       }
+
       this.syncCurrentAttributesWithCursor();
       this.editorView.render();
-      this.setCursorPosition(ending + 1, uniqueId);
-      if (ending > start) {
-        this.document.deleteRange(
-          start,
-          ending,
-          this.document.selectedBlockId,
-          this.document.currentOffset
-        );
-      }
+      this.setCursorPosition(end + 1, uniqueId);
     } else if (e.key === 'Backspace') {
       e.preventDefault();
       if (this.imageHandler.isImageHighlighted) {
