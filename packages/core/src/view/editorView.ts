@@ -2,6 +2,7 @@ import Piece from '../piece';
 import TextDocument from '../textDocument';
 import { saveSelection, restoreSelection } from '../utils/selectionManager';
 import { ImageHandler } from '../handlers/image';
+import { ensureProtocol } from '../utils/urlDetector';
 class EditorView {
   container: HTMLElement;
   document: TextDocument;
@@ -166,7 +167,7 @@ class EditorView {
       // Apply hyperlink
       if (attrs.hyperlink && typeof attrs.hyperlink === 'string') {
         const a = document.createElement('a');
-        a.href = attrs.hyperlink;
+        a.href = ensureProtocol(attrs.hyperlink);
         a.appendChild(textNode);
         textNode = a;
       }

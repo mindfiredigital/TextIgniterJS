@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectUrlsInText } from '../../utils/urlDetector';
+import { detectUrlsInText, ensureProtocol } from '../../utils/urlDetector';
 
 describe('detectUrlsInText', () => {
   it('detects a single http URL', () => {
@@ -140,5 +140,37 @@ describe('detectUrlsInText', () => {
       { text: longUrl, isUrl: true, url: longUrl },
       { text: '!', isUrl: false },
     ]);
+  });
+});
+
+describe('ensureProtocol', () => {
+  it('keeps absolute https URL unchanged', () => {
+    expect(ensureProtocol('https://example.com')).toBe('https://example.com');
+  });
+
+  it('keeps absolute http URL unchanged', () => {
+    expect(ensureProtocol('http://example.com')).toBe('http://example.com');
+  });
+
+  it('converts protocol-relative URLs to https', () => {
+    expect(ensureProtocol('//example.com')).toBe('https://example.com');
+  });
+
+  it('adds https to bare domains', () => {
+    expect(ensureProtocol('example.com')).toBe('https://example.com');
+    expect(ensureProtocol('www.example.com')).toBe('https://www.example.com');
+  });
+
+  it('strips accidental current-host prefix before absolute URL', () => {
+    expect(ensureProtocol('http://localhost:5000/https://example.com')).toBe(
+      'https://example.com'
+    );
+  });
+
+  it('leaves non-http schemes unchanged (mailto, tel, etc.)', () => {
+    expect(ensureProtocol('mailto:test@example.com')).toBe(
+      'mailto:test@example.com'
+    );
+    expect(ensureProtocol('tel:123')).toBe('tel:123');
   });
 });
