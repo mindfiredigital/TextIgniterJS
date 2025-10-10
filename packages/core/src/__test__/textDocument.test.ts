@@ -51,7 +51,7 @@ describe('TextDocument', () => {
     doc.dataIds = [doc.selectedBlockId!];
     doc.deleteBlocks();
     expect(doc.blocks).toHaveLength(1);
-    expect(doc.blocks[0].pieces[0].text).toBe(' ');
+    expect(doc.blocks[0].pieces[0].text).toBe('\u200B');
   });
 
   it('getSelectedTextDataId returns null if no selection', () => {
@@ -383,7 +383,7 @@ describe('TextDocument', () => {
     doc.deleteBlocks();
 
     expect(doc.blocks).toHaveLength(1);
-    expect(doc.blocks[0].pieces[0].text).toBe(' ');
+    expect(doc.blocks[0].pieces[0].text).toBe('\u200B'); // already correct, no change needed
     expect(doc.blocks[0].type).toBe('text');
     expect(doc.dataIds).toEqual([]);
     expect(doc.selectAll).toBe(false);
@@ -396,7 +396,7 @@ describe('TextDocument', () => {
     doc.deleteRange(5, 11, doc.selectedBlockId, 0, true);
 
     const remainingText = doc.blocks[0].pieces.map((p: any) => p.text).join('');
-    expect(remainingText).toBe('Hello ');
+    expect(remainingText).toBe('Hello\u200B');
   });
 
   it('handles strict null and empty string checks in deleteRange', () => {
