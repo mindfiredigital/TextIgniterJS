@@ -8,6 +8,7 @@ import EditorView from '../view/editorView';
 import TextDocument from '../textDocument';
 import UndoRedoManager from './undoRedoManager';
 import { strings } from '../constants/strings';
+import { ensureProtocol } from '../utils/urlDetector';
 
 class HyperlinkHandler {
   savedSelection: { start: number; end: number } | null = null;
@@ -96,10 +97,23 @@ class HyperlinkHandler {
 
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        hyperlinkContainer.style.top = `${rect.bottom + window.scrollY + 5}px`;
-        hyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
+        const range = selection.getRangeAt(0) as any;
+        // Safely compute a rect in environments like jsdom where Range#getBoundingClientRect may not exist
+        let rect: any = null;
+        if (range && typeof range.getBoundingClientRect === 'function') {
+          rect = range.getBoundingClientRect();
+        } else if (range && typeof range.getClientRects === 'function') {
+          const list = range.getClientRects?.();
+          rect = list && list.length ? list[0] : null;
+        }
+        if (!rect || (Number.isNaN(rect.top) && Number.isNaN(rect.left))) {
+          // Fallback to the editor container's position
+          rect = this.editorView.container.getBoundingClientRect();
+        }
+        const scrollY = (window as any)?.scrollY || 0;
+        const scrollX = (window as any)?.scrollX || 0;
+        hyperlinkContainer.style.top = `${(rect.bottom ?? rect.top) + scrollY + 5}px`;
+        hyperlinkContainer.style.left = `${(rect.left ?? 0) + scrollX}px`;
       }
 
       hyperlinkInput.value = existingLink || '';
@@ -123,7 +137,7 @@ class HyperlinkHandler {
 
       // Function to apply hyperlink (used by both button click and Enter key)
       const applyHyperlinkAction = () => {
-        const url = hyperlinkInput.value.trim();
+        const url = ensureProtocol(hyperlinkInput.value.trim());
         if (url) {
           this.applyHyperlink(url, dataIdsSnapshot);
         }
@@ -185,6 +199,7 @@ class HyperlinkHandler {
     restoreSelection(this.editorView.container, this.savedSelection);
     const [start, end] = getSelectionRange(this.editorView);
     if (start < end) {
+      const normalizedUrl = ensureProtocol(url);
       if (dataIdsSnapshot.length > 1) {
         this.document.blocks.forEach((block: any) => {
           if (dataIdsSnapshot.includes(block.dataId)) {
@@ -194,11 +209,16 @@ class HyperlinkHandler {
               countE += obj.text.length;
             });
             let countS = start - countE;
-            this.document.formatAttribute(countS, countE, 'hyperlink', url);
+            this.document.formatAttribute(
+              countS,
+              countE,
+              'hyperlink',
+              normalizedUrl
+            );
           }
         });
       } else {
-        this.document.formatAttribute(start, end, 'hyperlink', url);
+        this.document.formatAttribute(start, end, 'hyperlink', normalizedUrl);
       }
       this.editorView.render();
       // restoreSelection(this.editorView.container, this.savedSelection);
@@ -275,17 +295,28 @@ class HyperlinkHandler {
 
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        if (rect.width > 0 || rect.height > 0) {
-          viewHyperlinkContainer.style.top = `${rect.bottom + window.scrollY + 5}px`;
-          viewHyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
+        const range = selection.getRangeAt(0) as any;
+        let rect: any = null;
+        if (range && typeof range.getBoundingClientRect === 'function') {
+          rect = range.getBoundingClientRect();
+        } else if (range && typeof range.getClientRects === 'function') {
+          const list = range.getClientRects?.();
+          rect = list && list.length ? list[0] : null;
+        }
+        if (!rect) {
+          rect = this.editorView.container.getBoundingClientRect();
+        }
+        const scrollY = (window as any)?.scrollY || 0;
+        const scrollX = (window as any)?.scrollX || 0;
+        if (rect) {
+          viewHyperlinkContainer.style.top = `${(rect.bottom ?? rect.top) + scrollY + 5}px`;
+          viewHyperlinkContainer.style.left = `${(rect.left ?? 0) + scrollX}px`;
         }
       }
 
       if (link) {
         hyperLinkAnchor.innerText = link;
-        hyperLinkAnchor.href = link;
+        hyperLinkAnchor.href = ensureProtocol(link);
       }
     }
     this.addClickOutsideListener(viewHyperlinkContainer);

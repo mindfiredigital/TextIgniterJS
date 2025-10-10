@@ -2,7 +2,7 @@
 // URL detection utility
 // Improved URL regex: matches full URLs, avoids emails, strips trailing punctuation
 const URL_REGEX =
-  /((https?:\/\/|www\.)[\w\-._~:/?#[\]@!$&'()*+,;=%]+|\b[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[\w\-._~:/?#[\]@!$&'()*+,;=%]*)?)/g;
+  /((https?:\/\/|www\.)[\w\-._~:\/?#[\]@!$&'()*+,;=%]+|\b[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[\w\-._~:\/?#[\]@!$&'()*+,;=%]*)?)/g;
 
 function isPartOfEmail(text: string, matchIndex: number): boolean {
   // Check if the match is immediately preceded by '@'
@@ -59,4 +59,33 @@ export function detectUrlsInText(
     });
   }
   return segments;
+}
+
+// Ensure a URL has an explicit protocol so anchors are not resolved relative to the current origin
+// - Leaves absolute URLs (scheme://) untouched
+// - Converts protocol-relative URLs (//example.com) to https://example.com
+// - Prefixes bare domains (example.com) with https://
+// - Strips accidental patterns like http://host/https://example.com
+export function ensureProtocol(url: string): string {
+  if (!url) return url;
+  let trimmed = url.trim();
+
+  // Fix accidental current-host prefixes such as http://host/https://example.com
+  const accidentalPrefixMatch = trimmed.match(
+    /^https?:\/\/[\w.-]+(?::\d+)?\/(https?:\/\/.*)$/
+  );
+  if (accidentalPrefixMatch) {
+    trimmed = accidentalPrefixMatch[1];
+  }
+
+  // Already absolute (e.g., http://, https://, mailto:, tel:, ftp:, etc.)
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) {
+    return trimmed;
+  }
+  // Protocol-relative
+  if (trimmed.startsWith('//')) {
+    return 'https:' + trimmed;
+  }
+  // Default to https for bare domains/paths
+  return 'https://' + trimmed;
 }

@@ -158,4 +158,38 @@ describe('EditorView', () => {
     expect(container.querySelector('[data-id="block-1"]')).toBeTruthy();
     expect(container.querySelector('[data-id="img-2"]')).toBeTruthy();
   });
+
+  it('normalizes hyperlink href via ensureProtocol', () => {
+    documentModel.blocks = [
+      {
+        type: 'text',
+        dataId: 'block-href',
+        class: 'paragraph-block',
+        alignment: 'left',
+        pieces: [new Piece('Link', { hyperlink: 'example.com' } as any)],
+      },
+    ];
+    editorView.render();
+    const a = container.querySelector(
+      '[data-id="block-href"] a'
+    ) as HTMLAnchorElement;
+    expect(a).toBeTruthy();
+    expect(a.href).toContain('https://example.com');
+  });
+
+  it('renders hyperlink with absolute https href for bare domain', () => {
+    documentModel.blocks = [
+      {
+        type: 'text',
+        dataId: 'block-https',
+        class: 'paragraph-block',
+        alignment: 'left',
+        pieces: [new Piece('Link', { hyperlink: 'example.com' as any })],
+      },
+    ];
+    editorView.render();
+    const a = container.querySelector('a') as HTMLAnchorElement;
+    expect(a).toBeTruthy();
+    expect(a.href).toContain('https://example.com');
+  });
 });

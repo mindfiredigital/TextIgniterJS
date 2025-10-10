@@ -21,6 +21,62 @@ describe('HyperlinkHandler', () => {
     );
     global.document = dom.window.document;
     global.window = dom.window as unknown as Window & typeof globalThis;
+
+    // Polyfill missing Range methods in jsdom for this window
+    // Ensures showHyperlinkInput can call range.getBoundingClientRect safely
+    const g: any = dom.window as any;
+    if (!g.DOMRect) {
+      g.DOMRect = class DOMRect {
+        x = 0;
+        y = 0;
+        width = 0;
+        height = 0;
+        left = 0;
+        right = 0;
+        top = 0;
+        bottom = 0;
+        constructor(x = 0, y = 0, width = 0, height = 0) {
+          this.x = x;
+          this.y = y;
+          this.width = width;
+          this.height = height;
+          this.left = x;
+          this.top = y;
+          this.right = x + width;
+          this.bottom = y + height;
+        }
+        toJSON() {
+          return {
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height,
+            left: this.left,
+            right: this.right,
+            top: this.top,
+            bottom: this.bottom,
+          };
+        }
+      } as any;
+    }
+    if (g.Range && g.Range.prototype) {
+      const proto = g.Range.prototype as any;
+      if (typeof proto.getBoundingClientRect !== 'function') {
+        proto.getBoundingClientRect = function () {
+          return new g.DOMRect(0, 0, 0, 0);
+        };
+      }
+      if (typeof proto.getClientRects !== 'function') {
+        proto.getClientRects = function () {
+          return {
+            length: 0,
+            item: () => null,
+            [Symbol.iterator]: function* () {},
+          } as any;
+        };
+      }
+    }
+
     container = dom.window.document.getElementById('editor')!;
     documentModel = new TextDocument();
     editorView = new EditorView(container, documentModel);
@@ -379,5 +435,52 @@ describe('HyperlinkHandler', () => {
     ).not.toThrow();
     expect(() => handler.removeHyperlink(null as any)).not.toThrow();
     expect(() => handler.showHyperlinkInput(undefined as any)).not.toThrow();
+  });
+
+  it('normalizes URL from input before applying', () => {
+    // Prepare model
+    documentModel.blocks = [
+      {
+        dataId: 'block1',
+        pieces: [new Piece('ClickMe', {})],
+      },
+    ];
+    documentModel.selectedBlockId = 'block1';
+    documentModel.currentOffset = 0;
+
+    // Create an actual DOM selection within the editor container for "ClickMe"
+    const selection = dom.window.getSelection();
+    if (selection) selection.removeAllRanges();
+    const range = dom.window.document.createRange();
+    const textNode = dom.window.document.createTextNode('ClickMe');
+    container.appendChild(textNode);
+    range.setStart(textNode, 0);
+    range.setEnd(textNode, 7);
+    if (selection) selection.addRange(range);
+
+    // Open the input, type bare domain and click apply
+    handler.showHyperlinkInput(null);
+    const input = dom.window.document.getElementById(
+      strings.HYPERLINK_INPUT_ID
+    ) as HTMLInputElement;
+    const applyBtn = dom.window.document.getElementById(
+      strings.HYPERLINK_APPLY_BTN_ID
+    )!;
+    input.value = 'example.com';
+    applyBtn.click();
+
+    // Expect normalized value saved
+    const pieceWithLink = documentModel.blocks[0].pieces.find(
+      (p: Piece) => typeof p.attributes.hyperlink === 'string'
+    ) as Piece;
+    expect(pieceWithLink.attributes.hyperlink).toBe('https://example.com');
+  });
+
+  it('normalizes view link anchor href', () => {
+    handler.showHyperlinkViewButton('example.com');
+    const anchor = dom.window.document.getElementById(
+      strings.VIEW_HYPERLINK_ANCHOR_ID
+    ) as HTMLAnchorElement;
+    expect(anchor.href).toContain('https://example.com');
   });
 });
