@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Headless Bold Toggle Demo</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      #editor {
+        border: 1px solid #ccc;
+        padding: 8px;
+        min-height: 120px;
+        white-space: pre-wrap;
+      }
+      button {
+        padding: 6px 12px;
+        margin-bottom: 10px;
+      }
+      pre {
+        background: #f6f6f6;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Simple Headless Bold Toggle</h2>
+    <p>Type something, select text, and click <b>Toggle Bold</b>.</p>
+
+    <button id="boldBtn">Toggle Bold</button>
+    <div id="editor" contenteditable="true"></div>
+
+    <h3>HTML Output</h3>
+    <pre id="output"></pre>
+
+    <script src="./dist/headless.umd.js"></script>
+    <script>
+      const { initHeadless, toggleBold, getContentHtml, updatePlainText } =
+        window.TextIgniterHeadless;
+
+      const editor = document.getElementById('editor');
+      const output = document.getElementById('output');
+      const boldBtn = document.getElementById('boldBtn');
+
+      initHeadless('');
+
+      // Renders model into DOM and updates HTML output
+      function renderFromModel() {
+        const html = getContentHtml();
+        editor.innerHTML = html;
+        output.innerText = html;
+      }
+
+      // Update model plain text from user typing (safe)
+      editor.addEventListener('input', () => {
+        updatePlainText(editor.innerText);
+        output.innerText = getContentHtml();
+      });
+
+      function getAbsoluteOffsets(editorEl, selection) {
+        const range = selection.getRangeAt(0);
+        const preRange = document.createRange();
+        preRange.selectNodeContents(editorEl);
+
+        preRange.setEnd(range.startContainer, range.startOffset);
+        const start = preRange.toString().length;
+
+        preRange.setEnd(range.endContainer, range.endOffset);
+        const end = preRange.toString().length;
+
+        return { start, end };
+      }
+
+      boldBtn.addEventListener('click', () => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        if (
+          !editor.contains(range.startContainer) ||
+          !editor.contains(range.endContainer)
+        ) {
+          alert('Select text inside editor!');
+          return;
+        }
+
+        const { start, end } = getAbsoluteOffsets(editor, selection);
+        if (start === end) return;
+
+        toggleBold(start, end);
+        renderFromModel();
+        selection.removeAllRanges();
+      });
+
+      renderFromModel();
+    </script>
+  </body>
+</html>

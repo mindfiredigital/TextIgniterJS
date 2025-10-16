@@ -16,14 +16,17 @@ class Piece {
     bold: boolean;
     italic: boolean;
     underline: boolean;
-    bgColor: string;
+    strikethrough: boolean;
+    fontFamily: string;
+    fontSize: string;
     fontColor: string;
+    bgColor: string;
+    hyperlink: string | boolean;
   };
 
   constructor(text: string, attributes: PieceAttributes = {}) {
     this.text = text;
 
-    // Default headless values
     this.attributes = {
       bold: attributes.bold || false,
       italic: attributes.italic || false,

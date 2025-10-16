@@ -3,7 +3,7 @@ import {
   setContent,
   toggleBold,
   getContentHtml,
-} from './headless';
+} from './src/headless';
 
 initHeadless();
 setContent('Hello world');

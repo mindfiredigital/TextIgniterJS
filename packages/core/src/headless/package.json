@@ -1,0 +1,28 @@
+{
+  "name": "textigniter-headless",
+  "version": "1.0.0",
+  "description": "Universal headless text formatting engine",
+  "type": "module",
+  "main": "./dist/headless.cjs",
+  "module": "./dist/headless.js",
+  "browser": "./dist/headless.umd.js",
+  "types": "./dist/headless.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/headless.js",
+      "require": "./dist/headless.cjs",
+      "browser": "./dist/headless.umd.js",
+      "types": "./dist/headless.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc && rollup -c"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "rollup": "^4.0.0",
+    "@rollup/plugin-node-resolve": "^15.2.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-typescript": "^11.1.5"
+  }
+}

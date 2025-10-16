@@ -3,22 +3,32 @@ import Piece from './PieceHeadless';
 
 let _doc: TextDocument | null = null;
 
-// Initialize headless document
-export function initHeadless(content?: string) {
+export function initHeadless(content = '') {
   _doc = new TextDocument();
-  if (content !== undefined) setContent(content);
+  const id = `headless-${Date.now()}`;
+  _doc.blocks = [
+    {
+      type: 'text',
+      dataId: id,
+      class: 'paragraph-block',
+      alignment: 'left',
+      pieces: [new Piece(content)],
+    },
+  ];
+  _doc.selectedBlockId = id;
+  _doc.currentOffset = 0;
   return _doc;
 }
 
 function getDoc(): TextDocument {
-  if (!_doc) _doc = new TextDocument();
+  if (!_doc) _doc = initHeadless('');
   return _doc;
 }
 
-// Set content (plain text)
+// This is only for reloading full plain text (not on every input)
 export function setContent(text: string) {
   const doc = getDoc();
-  const id = `headless-${Date.now()}`;
+  const id = doc.selectedBlockId || `headless-${Date.now()}`;
   doc.blocks = [
     {
       type: 'text',
@@ -32,18 +42,25 @@ export function setContent(text: string) {
   doc.currentOffset = 0;
 }
 
-// Toggle bold for character range (start, end)
+// Optional — update plain text without breaking existing styles
+export function updatePlainText(text: string) {
+  const doc = getDoc();
+  const block = doc.blocks.find(b => b.dataId === doc.selectedBlockId);
+  if (!block) return;
+  // crude replacement if text changed
+  block.pieces = [new Piece(text)];
+}
+
 export function toggleBold(start: number, end: number): string {
   const doc = getDoc();
-  if (!doc.selectedBlockId) {
-    doc.selectedBlockId = doc.blocks[0]?.dataId ?? null;
-  }
+  if (!doc.selectedBlockId) doc.selectedBlockId = doc.blocks[0]?.dataId ?? null;
+
   const allBold = doc.isRangeEntirelyAttribute(start, end, 'bold');
   doc.formatAttribute(start, end, 'bold', !allBold);
+
   return getContentHtml();
 }
 
-// Get current HTML content (simple serializer)
 export function getContentHtml(): string {
   const doc = getDoc();
   let html = '';
@@ -55,7 +72,7 @@ export function getContentHtml(): string {
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
-        if (piece.attributes.bold) txt = `<strong>${txt}</strong>`;
+        if (piece.attributes.bold) txt = `<b>${txt}</b>`;
         inner += txt;
       }
       html += `<div data-id="${block.dataId}">${inner}</div>`;
