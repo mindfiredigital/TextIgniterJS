@@ -1,4 +1,3 @@
-// src/TextDocumentHeadless.ts
 import Piece from './PieceHeadless';
 
 type Block = {
@@ -14,13 +13,16 @@ class TextDocument {
   selectedBlockId: string | null = null;
   currentOffset: number = 0;
 
-  // Proper range detection for toggling
-  isRangeEntirelyAttribute(start: number, end: number, attr: 'bold'): boolean {
+  isRangeEntirelyAttribute(
+    start: number,
+    end: number,
+    attr: 'bold' | 'italic'
+  ): boolean {
     const block = this.blocks.find(b => b.dataId === this.selectedBlockId);
     if (!block) return false;
 
     let offset = 0;
-    let allBold = true;
+    let allTrue = true;
 
     for (const piece of block.pieces) {
       const pieceEnd = offset + piece.text.length;
@@ -34,18 +36,22 @@ class TextDocument {
       const inRangeEnd = Math.min(end, pieceEnd);
 
       if (inRangeEnd > inRangeStart && !piece.attributes[attr]) {
-        allBold = false;
+        allTrue = false;
         break;
       }
 
       offset = pieceEnd;
     }
 
-    return allBold;
+    return allTrue;
   }
 
-  // Splitting + merging pieces while applying attribute
-  formatAttribute(start: number, end: number, attr: 'bold', value: boolean) {
+  formatAttribute(
+    start: number,
+    end: number,
+    attr: 'bold' | 'italic',
+    value: boolean
+  ) {
     const block = this.blocks.find(b => b.dataId === this.selectedBlockId);
     if (!block) return;
 
@@ -56,7 +62,6 @@ class TextDocument {
       const pieceEnd = offset + piece.text.length;
 
       if (pieceEnd <= start || offset >= end) {
-        // completely before or after the range
         newPieces.push(piece);
       } else {
         const before = piece.text.slice(0, Math.max(0, start - offset));
@@ -79,7 +84,6 @@ class TextDocument {
       offset = pieceEnd;
     }
 
-    // Merge adjacent pieces with identical attributes
     const merged: Piece[] = [];
     for (const p of newPieces) {
       const last = merged[merged.length - 1];

@@ -25,42 +25,38 @@ function getDoc(): TextDocument {
   return _doc;
 }
 
-// This is only for reloading full plain text (not on every input)
-export function setContent(text: string) {
-  const doc = getDoc();
-  const id = doc.selectedBlockId || `headless-${Date.now()}`;
-  doc.blocks = [
-    {
-      type: 'text',
-      dataId: id,
-      class: 'paragraph-block',
-      alignment: 'left',
-      pieces: [new Piece(text)],
-    },
-  ];
-  doc.selectedBlockId = id;
-  doc.currentOffset = 0;
-}
-
-// Optional — update plain text without breaking existing styles
+// ✅ Update plain text safely
 export function updatePlainText(text: string) {
   const doc = getDoc();
   const block = doc.blocks.find(b => b.dataId === doc.selectedBlockId);
   if (!block) return;
-  // crude replacement if text changed
   block.pieces = [new Piece(text)];
 }
 
-export function toggleBold(start: number, end: number): string {
+// ✅ Generic toggler
+function toggleStyle(
+  start: number,
+  end: number,
+  attr: 'bold' | 'italic'
+): string {
   const doc = getDoc();
   if (!doc.selectedBlockId) doc.selectedBlockId = doc.blocks[0]?.dataId ?? null;
 
-  const allBold = doc.isRangeEntirelyAttribute(start, end, 'bold');
-  doc.formatAttribute(start, end, 'bold', !allBold);
+  const allActive = doc.isRangeEntirelyAttribute(start, end, attr);
+  doc.formatAttribute(start, end, attr, !allActive);
 
   return getContentHtml();
 }
 
+export function toggleBold(start: number, end: number) {
+  return toggleStyle(start, end, 'bold');
+}
+
+export function toggleItalic(start: number, end: number) {
+  return toggleStyle(start, end, 'italic');
+}
+
+// ✅ Simple HTML serializer
 export function getContentHtml(): string {
   const doc = getDoc();
   let html = '';
@@ -73,6 +69,7 @@ export function getContentHtml(): string {
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
         if (piece.attributes.bold) txt = `<b>${txt}</b>`;
+        if (piece.attributes.italic) txt = `<i>${txt}</i>`;
         inner += txt;
       }
       html += `<div data-id="${block.dataId}">${inner}</div>`;
