@@ -16,7 +16,7 @@ class TextDocument {
   isRangeEntirelyAttribute(
     start: number,
     end: number,
-    attr: 'bold' | 'italic'
+    attr: 'bold' | 'italic' | 'underline' | 'strikethrough'
   ): boolean {
     const block = this.blocks.find(b => b.dataId === this.selectedBlockId);
     if (!block) return false;
@@ -49,7 +49,7 @@ class TextDocument {
   formatAttribute(
     start: number,
     end: number,
-    attr: 'bold' | 'italic',
+    attr: 'bold' | 'italic' | 'underline' | 'strikethrough',
     value: boolean
   ) {
     const block = this.blocks.find(b => b.dataId === this.selectedBlockId);

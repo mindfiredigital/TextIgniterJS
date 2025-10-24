@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Headless Bold & Italic Demo</title>
+    <title>Headless Text Formatting Demo</title>
     <style>
       body {
         font-family: sans-serif;
@@ -48,15 +48,29 @@
         padding: 10px;
         border-radius: 6px;
       }
+
+      /* toolbar icons for clarity */
+      .underline {
+        text-decoration: underline;
+      }
+
+      .strike {
+        text-decoration: line-through;
+      }
     </style>
   </head>
   <body>
     <h2>Headless Text Editor</h2>
-    <!-- <p>Select text and click the buttons below:</p> -->
 
     <div class="toolbar">
       <button id="boldBtn" title="Toggle Bold"><b>B</b></button>
       <button id="italicBtn" title="Toggle Italic"><i>I</i></button>
+      <button id="underlineBtn" title="Toggle Underline">
+        <span class="underline">U</span>
+      </button>
+      <button id="strikeBtn" title="Toggle Strikethrough">
+        <span class="strike">S</span>
+      </button>
     </div>
 
     <div id="editor" contenteditable="true"></div>
@@ -70,6 +84,8 @@
         initHeadless,
         toggleBold,
         toggleItalic,
+        toggleUnderline,
+        toggleStrikethrough,
         getContentHtml,
         updatePlainText,
       } = window.TextIgniterHeadless;
@@ -78,6 +94,8 @@
       const output = document.getElementById('output');
       const boldBtn = document.getElementById('boldBtn');
       const italicBtn = document.getElementById('italicBtn');
+      const underlineBtn = document.getElementById('underlineBtn');
+      const strikeBtn = document.getElementById('strikeBtn');
 
       initHeadless('');
 
@@ -122,8 +140,20 @@
         const { start, end } = getAbsoluteOffsets(editor, selection);
         if (start === end) return;
 
-        if (action === 'bold') toggleBold(start, end);
-        else if (action === 'italic') toggleItalic(start, end);
+        switch (action) {
+          case 'bold':
+            toggleBold(start, end);
+            break;
+          case 'italic':
+            toggleItalic(start, end);
+            break;
+          case 'underline':
+            toggleUnderline(start, end);
+            break;
+          case 'strike':
+            toggleStrikethrough(start, end);
+            break;
+        }
 
         renderFromModel();
         selection.removeAllRanges();
@@ -131,6 +161,8 @@
 
       boldBtn.addEventListener('click', () => handleToggle('bold'));
       italicBtn.addEventListener('click', () => handleToggle('italic'));
+      underlineBtn.addEventListener('click', () => handleToggle('underline'));
+      strikeBtn.addEventListener('click', () => handleToggle('strike'));
 
       renderFromModel();
     </script>

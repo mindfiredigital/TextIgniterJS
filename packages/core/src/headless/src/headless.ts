@@ -37,7 +37,7 @@ export function updatePlainText(text: string) {
 function toggleStyle(
   start: number,
   end: number,
-  attr: 'bold' | 'italic'
+  attr: 'bold' | 'italic' | 'underline' | 'strikethrough'
 ): string {
   const doc = getDoc();
   if (!doc.selectedBlockId) doc.selectedBlockId = doc.blocks[0]?.dataId ?? null;
@@ -56,6 +56,14 @@ export function toggleItalic(start: number, end: number) {
   return toggleStyle(start, end, 'italic');
 }
 
+export function toggleUnderline(start: number, end: number) {
+  return toggleStyle(start, end, 'underline');
+}
+
+export function toggleStrikethrough(start: number, end: number) {
+  return toggleStyle(start, end, 'strikethrough');
+}
+
 // ✅ Simple HTML serializer
 export function getContentHtml(): string {
   const doc = getDoc();
@@ -68,8 +76,13 @@ export function getContentHtml(): string {
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
+
+        // apply text formatting in correct order
         if (piece.attributes.bold) txt = `<b>${txt}</b>`;
         if (piece.attributes.italic) txt = `<i>${txt}</i>`;
+        if (piece.attributes.underline) txt = `<u>${txt}</u>`;
+        if (piece.attributes.strikethrough) txt = `<s>${txt}</s>`;
+
         inner += txt;
       }
       html += `<div data-id="${block.dataId}">${inner}</div>`;
