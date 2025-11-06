@@ -8,7 +8,6 @@
         font-family: sans-serif;
         margin: 20px;
       }
-
       h2 {
         margin-bottom: 10px;
       }
@@ -18,6 +17,7 @@
         align-items: center;
         gap: 10px;
         margin-bottom: 10px;
+        position: relative;
       }
 
       button {
@@ -28,6 +28,7 @@
         cursor: pointer;
         font-size: 18px;
         transition: background 0.2s;
+        position: relative;
       }
 
       button:hover {
@@ -49,28 +50,71 @@
         border-radius: 6px;
       }
 
-      /* toolbar icons for clarity */
       .underline {
         text-decoration: underline;
       }
-
       .strike {
         text-decoration: line-through;
       }
+
+      #colorIndicator {
+        width: 18px;
+        height: 4px;
+        background: black;
+        border-radius: 2px;
+        display: block;
+        margin: 3px auto 0;
+      }
+
+      #resetColor {
+        font-size: 14px;
+        position: absolute;
+        right: -10px;
+        top: -6px;
+        cursor: pointer;
+      }
+
+      /* ✅ Native color input always to right of button (same as main editor) */
+      #fixedColorInput {
+        position: absolute;
+        left: calc(100% + 6px); /* just to the right */
+        top: 0;
+        width: 32px;
+        height: 32px;
+        opacity: 0; /* invisible but clickable when triggered */
+        border: none;
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+        pointer-events: none; /* hidden until we manually trigger it */
+      }
+
+      /* make sure button group is stable */
+      .color-wrapper {
+        position: relative;
+        display: inline-block;
+      }
     </style>
   </head>
+
   <body>
     <h2>Headless Text Editor</h2>
 
     <div class="toolbar">
-      <button id="boldBtn" title="Toggle Bold"><b>B</b></button>
-      <button id="italicBtn" title="Toggle Italic"><i>I</i></button>
-      <button id="underlineBtn" title="Toggle Underline">
-        <span class="underline">U</span>
-      </button>
-      <button id="strikeBtn" title="Toggle Strikethrough">
-        <span class="strike">S</span>
-      </button>
+      <button id="boldBtn"><b>B</b></button>
+      <button id="italicBtn"><i>I</i></button>
+      <button id="underlineBtn"><span class="underline">U</span></button>
+      <button id="strikeBtn"><span class="strike">S</span></button>
+
+      <!-- 🎨 Color button group -->
+      <div class="color-wrapper">
+        <button id="colorBtn" title="Font Color">
+          <span style="font-weight: bold">A</span>
+          <span id="colorIndicator"></span>
+          <span id="resetColor">🔄</span>
+        </button>
+        <input type="color" id="fixedColorInput" />
+      </div>
     </div>
 
     <div id="editor" contenteditable="true"></div>
@@ -86,16 +130,19 @@
         toggleItalic,
         toggleUnderline,
         toggleStrikethrough,
+        toggleFontColor,
+        setActiveFontColor,
+        getActiveFontColor,
         getContentHtml,
         updatePlainText,
       } = window.TextIgniterHeadless;
 
       const editor = document.getElementById('editor');
       const output = document.getElementById('output');
-      const boldBtn = document.getElementById('boldBtn');
-      const italicBtn = document.getElementById('italicBtn');
-      const underlineBtn = document.getElementById('underlineBtn');
-      const strikeBtn = document.getElementById('strikeBtn');
+      const colorBtn = document.getElementById('colorBtn');
+      const colorInput = document.getElementById('fixedColorInput');
+      const colorIndicator = document.getElementById('colorIndicator');
+      const resetColor = document.getElementById('resetColor');
 
       initHeadless('');
 
@@ -104,6 +151,11 @@
         editor.innerHTML = html;
         output.innerText = html;
       }
+
+      function updateIndicator() {
+        colorIndicator.style.background = getActiveFontColor();
+      }
+      updateIndicator();
 
       editor.addEventListener('input', () => {
         updatePlainText(editor.innerText);
@@ -114,32 +166,18 @@
         const range = selection.getRangeAt(0);
         const preRange = document.createRange();
         preRange.selectNodeContents(editorEl);
-
         preRange.setEnd(range.startContainer, range.startOffset);
         const start = preRange.toString().length;
-
         preRange.setEnd(range.endContainer, range.endOffset);
         const end = preRange.toString().length;
-
         return { start, end };
       }
 
       function handleToggle(action) {
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) return;
-
-        const range = selection.getRangeAt(0);
-        if (
-          !editor.contains(range.startContainer) ||
-          !editor.contains(range.endContainer)
-        ) {
-          alert('Select text inside editor!');
-          return;
-        }
-
         const { start, end } = getAbsoluteOffsets(editor, selection);
         if (start === end) return;
-
         switch (action) {
           case 'bold':
             toggleBold(start, end);
@@ -154,15 +192,51 @@
             toggleStrikethrough(start, end);
             break;
         }
-
         renderFromModel();
-        selection.removeAllRanges();
       }
 
-      boldBtn.addEventListener('click', () => handleToggle('bold'));
-      italicBtn.addEventListener('click', () => handleToggle('italic'));
-      underlineBtn.addEventListener('click', () => handleToggle('underline'));
-      strikeBtn.addEventListener('click', () => handleToggle('strike'));
+      document
+        .getElementById('boldBtn')
+        .addEventListener('click', () => handleToggle('bold'));
+      document
+        .getElementById('italicBtn')
+        .addEventListener('click', () => handleToggle('italic'));
+      document
+        .getElementById('underlineBtn')
+        .addEventListener('click', () => handleToggle('underline'));
+      document
+        .getElementById('strikeBtn')
+        .addEventListener('click', () => handleToggle('strike'));
+
+      // 🎨 Fixed-position native color chooser (opens to the right)
+      colorBtn.addEventListener('click', () => {
+        colorInput.value = getActiveFontColor();
+        colorInput.style.pointerEvents = 'auto';
+        colorInput.click();
+        setTimeout(() => {
+          colorInput.style.pointerEvents = 'none';
+        }, 300);
+      });
+
+      // 🎨 Apply color on pick
+      colorInput.addEventListener('input', () => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+        const { start, end } = getAbsoluteOffsets(editor, selection);
+        if (start === end) return;
+
+        const chosenColor = colorInput.value;
+        setActiveFontColor(chosenColor);
+        updateIndicator();
+        toggleFontColor(start, end, chosenColor);
+        renderFromModel();
+      });
+
+      // 🔄 Reset to black
+      resetColor.addEventListener('click', () => {
+        setActiveFontColor('#000000');
+        updateIndicator();
+      });
 
       renderFromModel();
     </script>

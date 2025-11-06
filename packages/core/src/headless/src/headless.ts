@@ -2,6 +2,7 @@ import TextDocument from './TextDocumentHeadless';
 import Piece from './PieceHeadless';
 
 let _doc: TextDocument | null = null;
+let activeFontColor: string = '#000000';
 
 export function initHeadless(content = '') {
   _doc = new TextDocument();
@@ -25,15 +26,39 @@ function getDoc(): TextDocument {
   return _doc;
 }
 
-// ✅ Update plain text safely
+// ✅ Update text typing — preserve existing formatting if possible
 export function updatePlainText(text: string) {
   const doc = getDoc();
   const block = doc.blocks.find(b => b.dataId === doc.selectedBlockId);
   if (!block) return;
-  block.pieces = [new Piece(text)];
+
+  // If plain typing (not formatting), merge into single piece but keep color state
+  if (block.pieces.length === 1) {
+    block.pieces[0].text = text;
+    return;
+  }
+
+  // otherwise, rebuild from scratch (rare case)
+  block.pieces = [new Piece(text, { fontColor: activeFontColor })];
 }
 
-// ✅ Generic toggler
+// ✅ Font color handling
+export function setActiveFontColor(color: string) {
+  activeFontColor = color;
+}
+
+export function getActiveFontColor() {
+  return activeFontColor;
+}
+
+export function toggleFontColor(start: number, end: number, color: string) {
+  const doc = getDoc();
+  if (!doc.selectedBlockId) return getContentHtml();
+  doc.formatColor(start, end, color);
+  return getContentHtml();
+}
+
+// ✅ Style toggles (unchanged)
 function toggleStyle(
   start: number,
   end: number,
@@ -44,30 +69,22 @@ function toggleStyle(
 
   const allActive = doc.isRangeEntirelyAttribute(start, end, attr);
   doc.formatAttribute(start, end, attr, !allActive);
-
   return getContentHtml();
 }
 
-export function toggleBold(start: number, end: number) {
-  return toggleStyle(start, end, 'bold');
-}
+export const toggleBold = (s: number, e: number) => toggleStyle(s, e, 'bold');
+export const toggleItalic = (s: number, e: number) =>
+  toggleStyle(s, e, 'italic');
+export const toggleUnderline = (s: number, e: number) =>
+  toggleStyle(s, e, 'underline');
+export const toggleStrikethrough = (s: number, e: number) =>
+  toggleStyle(s, e, 'strikethrough');
 
-export function toggleItalic(start: number, end: number) {
-  return toggleStyle(start, end, 'italic');
-}
-
-export function toggleUnderline(start: number, end: number) {
-  return toggleStyle(start, end, 'underline');
-}
-
-export function toggleStrikethrough(start: number, end: number) {
-  return toggleStyle(start, end, 'strikethrough');
-}
-
-// ✅ Simple HTML serializer
+// ✅ Updated renderer: split pieces correctly
 export function getContentHtml(): string {
   const doc = getDoc();
   let html = '';
+
   for (const block of doc.blocks) {
     if (block.type === 'text') {
       let inner = '';
@@ -77,11 +94,13 @@ export function getContentHtml(): string {
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
 
-        // apply text formatting in correct order
         if (piece.attributes.bold) txt = `<b>${txt}</b>`;
         if (piece.attributes.italic) txt = `<i>${txt}</i>`;
         if (piece.attributes.underline) txt = `<u>${txt}</u>`;
         if (piece.attributes.strikethrough) txt = `<s>${txt}</s>`;
+
+        const color = piece.attributes.fontColor || '#000000';
+        txt = `<span style="color:${color}">${txt}</span>`;
 
         inner += txt;
       }

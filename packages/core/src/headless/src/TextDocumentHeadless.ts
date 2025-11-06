@@ -39,7 +39,6 @@ class TextDocument {
         allTrue = false;
         break;
       }
-
       offset = pieceEnd;
     }
 
@@ -76,7 +75,63 @@ class TextDocument {
         if (before) newPieces.push(new Piece(before, { ...piece.attributes }));
         if (middle)
           newPieces.push(
-            new Piece(middle, { ...piece.attributes, [attr]: value })
+            new Piece(middle, {
+              ...piece.attributes,
+              [attr]: value,
+            })
+          );
+        if (after) newPieces.push(new Piece(after, { ...piece.attributes }));
+      }
+
+      offset = pieceEnd;
+    }
+
+    const merged: Piece[] = [];
+    for (const p of newPieces) {
+      const last = merged[merged.length - 1];
+      if (
+        last &&
+        JSON.stringify(last.attributes) === JSON.stringify(p.attributes)
+      ) {
+        last.text += p.text;
+      } else {
+        merged.push(p);
+      }
+    }
+
+    block.pieces = merged;
+  }
+
+  // ✅ NEW — Apply font color to a range
+  formatColor(start: number, end: number, color: string) {
+    const block = this.blocks.find(b => b.dataId === this.selectedBlockId);
+    if (!block) return;
+
+    const newPieces: Piece[] = [];
+    let offset = 0;
+
+    for (const piece of block.pieces) {
+      const pieceEnd = offset + piece.text.length;
+
+      if (pieceEnd <= start || offset >= end) {
+        newPieces.push(piece);
+      } else {
+        const before = piece.text.slice(0, Math.max(0, start - offset));
+        const middle = piece.text.slice(
+          Math.max(0, start - offset),
+          Math.min(piece.text.length, end - offset)
+        );
+        const after = piece.text.slice(
+          Math.min(piece.text.length, end - offset)
+        );
+
+        if (before) newPieces.push(new Piece(before, { ...piece.attributes }));
+        if (middle)
+          newPieces.push(
+            new Piece(middle, {
+              ...piece.attributes,
+              fontColor: color,
+            })
           );
         if (after) newPieces.push(new Piece(after, { ...piece.attributes }));
       }
