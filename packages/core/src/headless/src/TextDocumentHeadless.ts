@@ -63,29 +63,36 @@ class TextDocument {
       if (pieceEnd <= start || offset >= end) {
         newPieces.push(piece);
       } else {
-        const before = piece.text.slice(0, Math.max(0, start - offset));
-        const middle = piece.text.slice(
-          Math.max(0, start - offset),
-          Math.min(piece.text.length, end - offset)
-        );
-        const after = piece.text.slice(
-          Math.min(piece.text.length, end - offset)
-        );
+        // Split the piece (matches core formatAttribute behavior)
+        const pieceStart = offset;
+        const pieceText = piece.text;
+        const startInPiece = Math.max(start - pieceStart, 0);
+        const endInPiece = Math.min(end - pieceStart, pieceText.length);
 
-        if (before) newPieces.push(new Piece(before, { ...piece.attributes }));
-        if (middle)
+        if (startInPiece > 0) {
           newPieces.push(
-            new Piece(middle, {
-              ...piece.attributes,
-              [attr]: value,
-            })
+            new Piece(pieceText.slice(0, startInPiece), { ...piece.attributes })
           );
-        if (after) newPieces.push(new Piece(after, { ...piece.attributes }));
+        }
+
+        // Create selected piece with updated attribute
+        const selectedPiece = new Piece(
+          pieceText.slice(startInPiece, endInPiece),
+          { ...piece.attributes, [attr]: value }
+        );
+        newPieces.push(selectedPiece);
+
+        if (endInPiece < pieceText.length) {
+          newPieces.push(
+            new Piece(pieceText.slice(endInPiece), { ...piece.attributes })
+          );
+        }
       }
 
       offset = pieceEnd;
     }
 
+    // Merge adjacent pieces with identical attributes (matches core mergePieces)
     const merged: Piece[] = [];
     for (const p of newPieces) {
       const last = merged[merged.length - 1];
@@ -102,7 +109,7 @@ class TextDocument {
     block.pieces = merged;
   }
 
-  // ✅ NEW — Apply font color to a range
+  // ✅ Apply font color to a range (matches core formatAttribute behavior)
   formatColor(start: number, end: number, color: string) {
     const block = this.blocks.find(b => b.dataId === this.selectedBlockId);
     if (!block) return;
@@ -116,29 +123,98 @@ class TextDocument {
       if (pieceEnd <= start || offset >= end) {
         newPieces.push(piece);
       } else {
-        const before = piece.text.slice(0, Math.max(0, start - offset));
-        const middle = piece.text.slice(
-          Math.max(0, start - offset),
-          Math.min(piece.text.length, end - offset)
-        );
-        const after = piece.text.slice(
-          Math.min(piece.text.length, end - offset)
-        );
+        // Split the piece (matches core formatAttribute behavior exactly)
+        const pieceStart = offset;
+        const pieceText = piece.text;
+        const startInPiece = Math.max(start - pieceStart, 0);
+        const endInPiece = Math.min(end - pieceStart, pieceText.length);
 
-        if (before) newPieces.push(new Piece(before, { ...piece.attributes }));
-        if (middle)
+        if (startInPiece > 0) {
           newPieces.push(
-            new Piece(middle, {
-              ...piece.attributes,
-              fontColor: color,
-            })
+            new Piece(pieceText.slice(0, startInPiece), { ...piece.attributes })
           );
-        if (after) newPieces.push(new Piece(after, { ...piece.attributes }));
+        }
+
+        // Create selected piece with updated fontColor (matches core)
+        const selectedPiece = new Piece(
+          pieceText.slice(startInPiece, endInPiece),
+          { ...piece.attributes, fontColor: color }
+        );
+        newPieces.push(selectedPiece);
+
+        if (endInPiece < pieceText.length) {
+          newPieces.push(
+            new Piece(pieceText.slice(endInPiece), { ...piece.attributes })
+          );
+        }
       }
 
       offset = pieceEnd;
     }
 
+    // Merge adjacent pieces with identical attributes (matches core mergePieces)
+    const merged: Piece[] = [];
+    for (const p of newPieces) {
+      const last = merged[merged.length - 1];
+      if (
+        last &&
+        JSON.stringify(last.attributes) === JSON.stringify(p.attributes)
+      ) {
+        last.text += p.text;
+      } else {
+        merged.push(p);
+      }
+    }
+
+    block.pieces = merged;
+  }
+
+  // ✅ Apply font size to a range (matches core setFontSize -> formatAttribute behavior)
+  formatSize(start: number, end: number, size: string) {
+    // Use the same formatAttribute logic as core, but for fontSize
+    // This ensures consistent behavior
+    const block = this.blocks.find(b => b.dataId === this.selectedBlockId);
+    if (!block) return;
+
+    const newPieces: Piece[] = [];
+    let offset = 0;
+
+    for (const piece of block.pieces) {
+      const pieceEnd = offset + piece.text.length;
+
+      if (pieceEnd <= start || offset >= end) {
+        newPieces.push(piece);
+      } else {
+        // Split the piece (matches core formatAttribute behavior exactly)
+        const pieceStart = offset;
+        const pieceText = piece.text;
+        const startInPiece = Math.max(start - pieceStart, 0);
+        const endInPiece = Math.min(end - pieceStart, pieceText.length);
+
+        if (startInPiece > 0) {
+          newPieces.push(
+            new Piece(pieceText.slice(0, startInPiece), { ...piece.attributes })
+          );
+        }
+
+        // Create selected piece with updated fontSize (matches core)
+        const selectedPiece = new Piece(
+          pieceText.slice(startInPiece, endInPiece),
+          { ...piece.attributes, fontSize: size }
+        );
+        newPieces.push(selectedPiece);
+
+        if (endInPiece < pieceText.length) {
+          newPieces.push(
+            new Piece(pieceText.slice(endInPiece), { ...piece.attributes })
+          );
+        }
+      }
+
+      offset = pieceEnd;
+    }
+
+    // Merge adjacent pieces with identical attributes (matches core mergePieces)
     const merged: Piece[] = [];
     for (const p of newPieces) {
       const last = merged[merged.length - 1];
