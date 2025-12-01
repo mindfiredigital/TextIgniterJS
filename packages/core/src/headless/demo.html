@@ -251,7 +251,8 @@
 
         const html = getContentHtml();
         editor.innerHTML = html;
-        output.innerText = html;
+        // Escape HTML for safe display in <pre> tag
+        output.textContent = html;
 
         // Restore cursor position after DOM update
         restoreCursorPosition(cursorPos);
@@ -309,7 +310,8 @@
         }
 
         previousText = currentText;
-        output.innerText = getContentHtml();
+        // Escape HTML for safe display in <pre> tag
+        output.textContent = getContentHtml();
       });
 
       function getAbsoluteOffsets(editorEl, selection) {

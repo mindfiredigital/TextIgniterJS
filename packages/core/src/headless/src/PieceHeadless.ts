@@ -64,6 +64,23 @@ class Piece {
   setBold(v: boolean) {
     this.attributes.bold = v;
   }
+
+  // ✅ hasSameAttributes - matches core Piece.hasSameAttributes() exactly
+  // This is used by mergePieces to determine if two pieces should be merged
+  hasSameAttributes(other: Piece): boolean {
+    return (
+      this.attributes.bold === other.attributes.bold &&
+      this.attributes.italic === other.attributes.italic &&
+      this.attributes.underline === other.attributes.underline &&
+      (this.attributes.strikethrough || false) ===
+        (other.attributes.strikethrough || false) &&
+      this.attributes.fontFamily === other.attributes.fontFamily &&
+      this.attributes.fontSize === other.attributes.fontSize &&
+      this.attributes.fontColor === other.attributes.fontColor &&
+      this.attributes.bgColor === other.attributes.bgColor &&
+      this.attributes.hyperlink === other.attributes.hyperlink
+    );
+  }
 }
 
 export default Piece;

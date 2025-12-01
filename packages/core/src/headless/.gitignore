@@ -1,1 +1,27 @@
-/node_modules
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+*.js.map
+*.d.ts.map
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+.cache/

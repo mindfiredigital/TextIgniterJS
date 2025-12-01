@@ -39,6 +39,29 @@ export function getDocForSync(): TextDocument {
   return getDoc();
 }
 
+// Helper function to merge adjacent pieces with identical attributes
+// ✅ Merge adjacent pieces with identical attributes (performance optimization)
+// This matches the core editor's mergePieces behavior EXACTLY
+// Uses Piece.hasSameAttributes() method (same as core) instead of JSON.stringify
+// CRITICAL: This prevents creating one span per character, which is inefficient
+function mergePieces(pieces: Piece[]): Piece[] {
+  if (pieces.length === 0) return pieces;
+
+  const merged: Piece[] = [];
+  for (const p of pieces) {
+    const last = merged[merged.length - 1];
+    // Use hasSameAttributes() method (matches core editor exactly)
+    if (last && last.hasSameAttributes(p)) {
+      // Merge with previous piece if attributes are identical
+      // This combines adjacent pieces with same formatting into one span
+      last.text += p.text;
+    } else {
+      merged.push(p);
+    }
+  }
+  return merged;
+}
+
 // ✅ Update text typing — preserve existing formatting if possible
 // NOTE: This should NOT be called on every input event as it resets formatting
 // It's only for initial setup or when you need to sync text from editor
@@ -56,10 +79,124 @@ export function updatePlainText(text: string) {
   // If text length matches and we have multiple pieces, try to preserve structure
   // Otherwise, if we have a single piece or text changed significantly, update it
   if (block.pieces.length === 1) {
-    // Single piece - just update text and attributes to match active state
+    // Single piece - check if text was appended or prepended
+    const existingText = block.pieces[0].text;
+    const existingFontSize = block.pieces[0].attributes.fontSize;
+    const existingFontColor = block.pieces[0].attributes.fontColor;
+
+    // If new text starts with existing text, text was appended
+    if (text.startsWith(existingText)) {
+      const newText = text.slice(existingText.length);
+      if (newText) {
+        // Add new piece with active formatting (preserves existing piece)
+        block.pieces.push(
+          new Piece(newText, {
+            fontColor: activeFontColor,
+            fontSize: activeFontSize,
+          })
+        );
+        // Merge adjacent pieces with identical attributes (performance optimization)
+        block.pieces = mergePieces(block.pieces);
+      }
+      return;
+    }
+
+    // If new text ends with existing text, text was prepended
+    if (text.endsWith(existingText)) {
+      const newText = text.slice(0, text.length - existingText.length);
+      if (newText) {
+        // Add new piece at beginning with active formatting (preserves existing piece)
+        block.pieces.unshift(
+          new Piece(newText, {
+            fontColor: activeFontColor,
+            fontSize: activeFontSize,
+          })
+        );
+        // Merge adjacent pieces with identical attributes (performance optimization)
+        block.pieces = mergePieces(block.pieces);
+      }
+      return;
+    }
+
+    // If text was inserted in the middle or completely replaced
+    // Check if active formatting differs from existing piece
+    if (
+      activeFontSize !== existingFontSize ||
+      activeFontColor !== existingFontColor
+    ) {
+      // Formatting changed - split the text to preserve existing formatting
+      // Find where the text differs to determine insertion point
+      let prefixLength = 0;
+      let suffixLength = 0;
+
+      // Find longest common prefix
+      while (
+        prefixLength < existingText.length &&
+        prefixLength < text.length &&
+        existingText[prefixLength] === text[prefixLength]
+      ) {
+        prefixLength++;
+      }
+
+      // Find longest common suffix
+      while (
+        suffixLength < existingText.length - prefixLength &&
+        suffixLength < text.length - prefixLength &&
+        existingText[existingText.length - 1 - suffixLength] ===
+          text[text.length - 1 - suffixLength]
+      ) {
+        suffixLength++;
+      }
+
+      // If we found significant overlap, split into pieces
+      if (prefixLength > 0 || suffixLength > 0) {
+        const newPieces: Piece[] = [];
+
+        if (prefixLength > 0) {
+          // Keep prefix with existing formatting
+          newPieces.push(
+            new Piece(text.slice(0, prefixLength), {
+              fontColor: existingFontColor,
+              fontSize: existingFontSize,
+            })
+          );
+        }
+
+        // Insert new text with active formatting
+        const insertedText = text.slice(
+          prefixLength,
+          text.length - suffixLength
+        );
+        if (insertedText) {
+          newPieces.push(
+            new Piece(insertedText, {
+              fontColor: activeFontColor,
+              fontSize: activeFontSize,
+            })
+          );
+        }
+
+        if (suffixLength > 0) {
+          // Keep suffix with existing formatting
+          newPieces.push(
+            new Piece(text.slice(text.length - suffixLength), {
+              fontColor: existingFontColor,
+              fontSize: existingFontSize,
+            })
+          );
+        }
+
+        // Merge adjacent pieces with identical attributes (performance optimization)
+        block.pieces = mergePieces(newPieces);
+        return;
+      }
+    }
+
+    // If formatting hasn't changed or we can't determine insertion point,
+    // just update the text (this preserves the piece's formatting)
     block.pieces[0].text = text;
-    block.pieces[0].attributes.fontColor = activeFontColor;
-    block.pieces[0].attributes.fontSize = activeFontSize;
+    // Always merge after any modification to ensure optimization
+    block.pieces = mergePieces(block.pieces);
     return;
   }
 
@@ -76,6 +213,8 @@ export function updatePlainText(text: string) {
       // Don't update attributes - preserve existing formatting
       offset += pieceLength;
     }
+    // Always merge after any modification to ensure optimization
+    block.pieces = mergePieces(block.pieces);
     return;
   }
 
@@ -96,6 +235,8 @@ export function updatePlainText(text: string) {
           fontSize: activeFontSize,
         })
       );
+      // Merge adjacent pieces with identical attributes (performance optimization)
+      block.pieces = mergePieces(block.pieces);
     }
     return;
   }
@@ -111,6 +252,8 @@ export function updatePlainText(text: string) {
           fontSize: activeFontSize,
         })
       );
+      // Merge adjacent pieces with identical attributes (performance optimization)
+      block.pieces = mergePieces(block.pieces);
     }
     return;
   }
