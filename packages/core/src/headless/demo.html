@@ -48,6 +48,11 @@
         background: #f6f6f6;
         padding: 10px;
         border-radius: 6px;
+        white-space: pre-wrap; /* Allow wrapping */
+        word-wrap: break-word; /* Break long words */
+        overflow-wrap: break-word; /* Modern browsers */
+        overflow-x: auto; /* Horizontal scroll if needed */
+        max-width: 100%; /* Don't exceed container */
       }
 
       .underline {

@@ -554,13 +554,21 @@ export function getContentHtml(): string {
         const color = piece.attributes.fontColor || '#000000';
         const fontSize = piece.attributes.fontSize || '16px';
 
-        // Always include color and fontSize in style to ensure proper rendering
-        // This ensures each piece with different attributes gets its own span
-        styles.push(`color:${color}`);
-        styles.push(`font-size:${fontSize}`);
+        // Only include color if it's not the default black (optimization)
+        if (color !== '#000000') {
+          styles.push(`color:${color}`);
+        }
 
-        // Wrap in span with style - each piece gets its own span
-        txt = `<span style="${styles.join(';')}">${txt}</span>`;
+        // Only include fontSize if it's not the default 16px (optimization)
+        if (fontSize !== '16px') {
+          styles.push(`font-size:${fontSize}`);
+        }
+
+        // Wrap in span with style only if there are styles to apply
+        // This optimization reduces HTML size when using defaults
+        if (styles.length > 0) {
+          txt = `<span style="${styles.join(';')}">${txt}</span>`;
+        }
 
         inner += txt;
       }
