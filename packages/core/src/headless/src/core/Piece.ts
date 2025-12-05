@@ -1,14 +1,10 @@
-type PieceAttributes = {
-  bold?: boolean;
-  italic?: boolean;
-  underline?: boolean;
-  strikethrough?: boolean;
-  fontFamily?: string;
-  fontSize?: string;
-  fontColor?: string;
-  bgColor?: string;
-  hyperlink?: string | boolean;
-};
+import type { PieceAttributes } from '../types';
+import {
+  DEFAULT_FONT_COLOR,
+  DEFAULT_FONT_SIZE,
+  DEFAULT_FONT_FAMILY,
+  DEFAULT_BG_COLOR,
+} from '../constants';
 
 // Function to get active font size (similar to reading from dropdown in core)
 let getActiveFontSizeFn: (() => string) | null = null;
@@ -40,33 +36,38 @@ class Piece {
     this.text = text;
 
     // Get active values (similar to reading from dropdown in core Piece constructor)
-    const activeFontSize = getActiveFontSizeFn ? getActiveFontSizeFn() : '16px';
+    const activeFontSize = getActiveFontSizeFn
+      ? getActiveFontSizeFn()
+      : DEFAULT_FONT_SIZE;
     const activeFontColor = getActiveFontColorFn
       ? getActiveFontColorFn()
-      : '#000000';
+      : DEFAULT_FONT_COLOR;
 
     this.attributes = {
       bold: attributes.bold || false,
       italic: attributes.italic || false,
       underline: attributes.underline || false,
       strikethrough: attributes.strikethrough || false,
-      fontFamily: attributes.fontFamily || 'Arial',
+      fontFamily: attributes.fontFamily || DEFAULT_FONT_FAMILY,
       fontSize: attributes.fontSize || activeFontSize, // Use active font size if not provided (like core)
       fontColor: attributes.fontColor || activeFontColor, // Use active font color if not provided (like core)
-      bgColor: attributes.bgColor || '#ffffff',
+      bgColor: attributes.bgColor || DEFAULT_BG_COLOR,
       hyperlink: attributes.hyperlink || false,
     };
   }
 
-  isBold() {
+  isBold(): boolean {
     return this.attributes.bold;
   }
-  setBold(v: boolean) {
+
+  setBold(v: boolean): void {
     this.attributes.bold = v;
   }
 
-  // ✅ hasSameAttributes - matches core Piece.hasSameAttributes() exactly
-  // This is used by mergePieces to determine if two pieces should be merged
+  /**
+   * Checks if this piece has the same attributes as another piece.
+   * Used by mergePieces to determine if two pieces should be merged.
+   */
   hasSameAttributes(other: Piece): boolean {
     return (
       this.attributes.bold === other.attributes.bold &&
