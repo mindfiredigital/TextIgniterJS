@@ -9,6 +9,7 @@ import {
 // Function to get active font size (similar to reading from dropdown in core)
 let getActiveFontSizeFn: (() => string) | null = null;
 let getActiveFontColorFn: (() => string) | null = null;
+let getActiveFontFamilyFn: (() => string) | null = null;
 
 export function setActiveFontSizeGetter(fn: () => string) {
   getActiveFontSizeFn = fn;
@@ -16,6 +17,10 @@ export function setActiveFontSizeGetter(fn: () => string) {
 
 export function setActiveFontColorGetter(fn: () => string) {
   getActiveFontColorFn = fn;
+}
+
+export function setActiveFontFamilyGetter(fn: () => string) {
+  getActiveFontFamilyFn = fn;
 }
 
 class Piece {
@@ -42,13 +47,16 @@ class Piece {
     const activeFontColor = getActiveFontColorFn
       ? getActiveFontColorFn()
       : DEFAULT_FONT_COLOR;
+    const activeFontFamily = getActiveFontFamilyFn
+      ? getActiveFontFamilyFn()
+      : DEFAULT_FONT_FAMILY;
 
     this.attributes = {
       bold: attributes.bold || false,
       italic: attributes.italic || false,
       underline: attributes.underline || false,
       strikethrough: attributes.strikethrough || false,
-      fontFamily: attributes.fontFamily || DEFAULT_FONT_FAMILY,
+      fontFamily: attributes.fontFamily || activeFontFamily, // Use active font family if not provided (like core)
       fontSize: attributes.fontSize || activeFontSize, // Use active font size if not provided (like core)
       fontColor: attributes.fontColor || activeFontColor, // Use active font color if not provided (like core)
       bgColor: attributes.bgColor || DEFAULT_BG_COLOR,

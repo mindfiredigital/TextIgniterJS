@@ -2,9 +2,14 @@ import TextDocument from './TextDocument';
 import Piece, {
   setActiveFontSizeGetter,
   setActiveFontColorGetter,
+  setActiveFontFamilyGetter,
 } from './Piece';
 import type { Block } from '../types';
-import { DEFAULT_FONT_COLOR, DEFAULT_FONT_SIZE } from '../constants';
+import {
+  DEFAULT_FONT_COLOR,
+  DEFAULT_FONT_SIZE,
+  DEFAULT_FONT_FAMILY,
+} from '../constants';
 
 /**
  * Manages the state of the headless editor instance.
@@ -14,12 +19,14 @@ class HeadlessState {
   private document: TextDocument | null = null;
   private activeFontColor: string = DEFAULT_FONT_COLOR;
   private activeFontSize: string = DEFAULT_FONT_SIZE;
+  private activeFontFamily: string = DEFAULT_FONT_FAMILY;
 
   constructor() {
     // Set up getters so Piece constructor can access active values
     // (like core reads from dropdown)
     setActiveFontSizeGetter(() => this.activeFontSize);
     setActiveFontColorGetter(() => this.activeFontColor);
+    setActiveFontFamilyGetter(() => this.activeFontFamily);
   }
 
   /**
@@ -78,6 +85,20 @@ class HeadlessState {
    */
   getActiveFontSize(): string {
     return this.activeFontSize;
+  }
+
+  /**
+   * Sets the active font family for new text.
+   */
+  setActiveFontFamily(family: string): void {
+    this.activeFontFamily = family;
+  }
+
+  /**
+   * Gets the active font family.
+   */
+  getActiveFontFamily(): string {
+    return this.activeFontFamily;
   }
 }
 

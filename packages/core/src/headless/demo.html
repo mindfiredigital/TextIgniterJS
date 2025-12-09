@@ -114,6 +114,21 @@
       #fontSizeSelect:hover {
         background-color: #e6e6e6;
       }
+
+      /* Font family dropdown */
+      #fontFamilySelect {
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background-color: #f8f8f8;
+        cursor: pointer;
+        font-size: 14px;
+        min-width: 150px;
+      }
+
+      #fontFamilySelect:hover {
+        background-color: #e6e6e6;
+      }
     </style>
   </head>
 
@@ -150,6 +165,23 @@
         <option value="36px">36px</option>
         <option value="48px">48px</option>
       </select>
+
+      <!-- 🔤 Font Family dropdown -->
+      <select id="fontFamilySelect" title="Font Family">
+        <option value="Arial" selected>Arial</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Palatino">Palatino</option>
+        <option value="Garamond">Garamond</option>
+        <option value="Comic Sans MS">Comic Sans MS</option>
+        <option value="Trebuchet MS">Trebuchet MS</option>
+        <option value="Impact">Impact</option>
+        <option value="Lucida Console">Lucida Console</option>
+        <option value="Tahoma">Tahoma</option>
+        <option value="Helvetica">Helvetica</option>
+      </select>
     </div>
 
     <div id="editor" contenteditable="true"></div>
@@ -171,6 +203,9 @@
         toggleFontSize,
         setActiveFontSize,
         getActiveFontSize,
+        toggleFontFamily,
+        setActiveFontFamily,
+        getActiveFontFamily,
         getContentHtml,
         updatePlainText,
         getDocForSync,
@@ -183,6 +218,7 @@
       const colorIndicator = document.getElementById('colorIndicator');
       const resetColor = document.getElementById('resetColor');
       const fontSizeSelect = document.getElementById('fontSizeSelect');
+      const fontFamilySelect = document.getElementById('fontFamilySelect');
 
       initHeadless('');
 
@@ -483,6 +519,34 @@
           // If start === end (no selection), just update active size for future typing
         }
         // If no selection, just update active size for future typing
+      });
+
+      // 🔤 Font family handling
+      // Set initial font family
+      fontFamilySelect.value = getActiveFontFamily();
+
+      // Update font family when dropdown changes (matches core behavior)
+      fontFamilySelect.addEventListener('change', () => {
+        const selectedFamily = fontFamilySelect.value;
+
+        // Always update active font family (like dropdown value in core)
+        setActiveFontFamily(selectedFamily);
+
+        // Get selection range (matches core getSelectionRange)
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          // Sync model with current editor content before applying formatting
+          syncModelFromEditor();
+
+          const { start, end } = getAbsoluteOffsets(editor, selection);
+          if (start !== end) {
+            // Apply font family to selected range (matches core setFontFamily)
+            toggleFontFamily(start, end, selectedFamily);
+            renderFromModel();
+          }
+          // If start === end (no selection), just update active family for future typing
+        }
+        // If no selection, just update active family for future typing
       });
 
       renderFromModel();

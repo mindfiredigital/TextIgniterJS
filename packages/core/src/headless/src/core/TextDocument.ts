@@ -112,13 +112,20 @@ class TextDocument {
   }
 
   /**
+   * Applies font family to a range.
+   */
+  formatFamily(start: number, end: number, family: string): void {
+    this.formatAttributeValue(start, end, 'fontFamily', family);
+  }
+
+  /**
    * Generic method to format a range with a specific attribute value.
    * Used by formatColor and formatSize.
    */
   private formatAttributeValue(
     start: number,
     end: number,
-    attr: 'fontColor' | 'fontSize',
+    attr: 'fontColor' | 'fontSize' | 'fontFamily',
     value: string
   ): void {
     const block = this.blocks.find(b => b.dataId === this.selectedBlockId);

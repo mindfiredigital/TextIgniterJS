@@ -53,6 +53,23 @@ class FormattingService {
     // (like dropdown value in core)
     this.state.setActiveFontSize(size);
   }
+
+  /**
+   * Sets font family on a range and updates active font family.
+   */
+  setFontFamily(start: number, end: number, family: string): void {
+    const doc = this.state.getDocument();
+    if (!doc.selectedBlockId) {
+      doc.selectedBlockId = doc.blocks[0]?.dataId ?? null;
+    }
+
+    // Apply font family to range
+    doc.formatFamily(start, end, family);
+
+    // Update active font family so new text uses this family
+    // (like dropdown value in core)
+    this.state.setActiveFontFamily(family);
+  }
 }
 
 export default FormattingService;

@@ -1,7 +1,11 @@
 import type { Block } from '../types';
 import TextDocument from '../core/TextDocument';
 import Piece from '../core/Piece';
-import { DEFAULT_FONT_COLOR, DEFAULT_FONT_SIZE } from '../constants';
+import {
+  DEFAULT_FONT_COLOR,
+  DEFAULT_FONT_SIZE,
+  DEFAULT_FONT_FAMILY,
+} from '../constants';
 
 type BlockWithPieces = Block<Piece>;
 
@@ -43,6 +47,7 @@ class RenderService {
       const styles: string[] = [];
       const color = piece.attributes.fontColor || DEFAULT_FONT_COLOR;
       const fontSize = piece.attributes.fontSize || DEFAULT_FONT_SIZE;
+      const fontFamily = piece.attributes.fontFamily || DEFAULT_FONT_FAMILY;
 
       // Only include color if it's not the default black (optimization)
       if (color !== DEFAULT_FONT_COLOR) {
@@ -52,6 +57,11 @@ class RenderService {
       // Only include fontSize if it's not the default 16px (optimization)
       if (fontSize !== DEFAULT_FONT_SIZE) {
         styles.push(`font-size:${fontSize}`);
+      }
+
+      // Only include fontFamily if it's not the default Arial (optimization)
+      if (fontFamily !== DEFAULT_FONT_FAMILY) {
+        styles.push(`font-family:${fontFamily}`);
       }
 
       // Wrap in span with style only if there are styles to apply

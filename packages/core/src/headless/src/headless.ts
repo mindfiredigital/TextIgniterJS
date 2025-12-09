@@ -87,6 +87,33 @@ export function toggleFontSize(
 }
 
 /**
+ * Sets the active font family for new text.
+ */
+export function setActiveFontFamily(family: string): void {
+  state.setActiveFontFamily(family);
+}
+
+/**
+ * Gets the active font family.
+ */
+export function getActiveFontFamily(): string {
+  return state.getActiveFontFamily();
+}
+
+/**
+ * Toggles font family on a range and updates active font family.
+ */
+export function toggleFontFamily(
+  start: number,
+  end: number,
+  family: string
+): string {
+  const service = new FormattingService(state);
+  service.setFontFamily(start, end, family);
+  return getContentHtml();
+}
+
+/**
  * Inserts text at a specific position with active formatting.
  */
 export function insertTextAt(position: number, text: string): string {
