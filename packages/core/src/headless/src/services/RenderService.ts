@@ -18,13 +18,29 @@ class RenderService {
    */
   static render(doc: TextDocument): string {
     let html = '';
+    console.log(
+      '[RenderService] Rendering document with',
+      doc.blocks.length,
+      'blocks'
+    );
 
     for (const block of doc.blocks) {
       if (block.type === 'text') {
         html += this.renderTextBlock(block);
+      } else if (block.type === 'image') {
+        console.log(
+          '[RenderService] Rendering image block:',
+          block.dataId,
+          'has image:',
+          !!block.image
+        );
+        html += this.renderImageBlock(block);
+      } else {
+        console.warn('[RenderService] Unknown block type:', block.type);
       }
     }
 
+    console.log('[RenderService] Final HTML length:', html.length);
     return html;
   }
 
@@ -77,13 +93,43 @@ class RenderService {
   }
 
   /**
+   * Renders an image block to HTML.
+   * Matches core module behavior: creates a div with an img element wrapped in span.
+   */
+  private static renderImageBlock(
+    block: BlockWithPieces & { image?: string }
+  ): string {
+    if (!block.image) {
+      console.warn(
+        '[RenderService] Image block has no image property:',
+        block.dataId
+      );
+      return `<div data-id="${block.dataId}" class="${block.class}" type="${block.type}"></div>`;
+    }
+
+    const alignmentStyle =
+      block.alignment && block.alignment !== 'left'
+        ? ` style="text-align:${block.alignment}"`
+        : '';
+
+    // Create image with styling matching core module (max-width:30%, contenteditable=false)
+    // Note: We escape the image URL to prevent XSS, but data URLs are generally safe
+    const imgHtml = `<img src="${this.escapeHtml(block.image)}" style="max-width:30%" contenteditable="false" />`;
+
+    // Wrap in span with contenteditable=false, then div matching core module structure
+    return `<div data-id="${block.dataId}" class="${block.class}" type="${block.type}"${alignmentStyle}><span contenteditable="false">${imgHtml}</span></div>`;
+  }
+
+  /**
    * Escapes HTML special characters.
    */
   private static escapeHtml(text: string): string {
     return text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }
 

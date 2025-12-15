@@ -159,6 +159,42 @@ export function toggleStrikethrough(start: number, end: number): string {
 }
 
 /**
+ * Inserts an image at the specified position.
+ * @param dataId - The data-id of the current block
+ * @param position - The cursor position relative to the start of the block
+ * @param imageDataUrl - The data URL of the image to insert
+ * @returns The HTML string after insertion
+ */
+export function insertImageAtPosition(
+  dataId: string | null,
+  position: number,
+  imageDataUrl: string
+): string {
+  console.log('[headless.ts] insertImageAtPosition called', {
+    dataId,
+    position,
+    imageDataUrlLength: imageDataUrl?.length,
+  });
+  const doc = state.getDocument();
+  const newBlockId = doc.insertImageAtPosition(dataId, position, imageDataUrl);
+  console.log('[headless.ts] New block ID returned:', newBlockId);
+  const html = getContentHtml();
+  console.log('[headless.ts] Generated HTML length:', html.length);
+  return html;
+}
+
+/**
+ * Deletes an image block by its dataId.
+ * @param dataId - The data-id of the image block to delete
+ * @returns The HTML string after deletion
+ */
+export function deleteImageBlock(dataId: string): string {
+  const doc = state.getDocument();
+  doc.deleteImageBlock(dataId);
+  return getContentHtml();
+}
+
+/**
  * Renders the document content to HTML.
  */
 export function getContentHtml(): string {

@@ -1,5 +1,5 @@
 export type TextAttribute = 'bold' | 'italic' | 'underline' | 'strikethrough';
-export type BlockType = 'text';
+export type BlockType = 'text' | 'image';
 export type Alignment = 'left' | 'center' | 'right' | 'justify';
 
 export interface PieceAttributes {
@@ -22,4 +22,5 @@ export interface Block<PieceType = any> {
   class: string;
   alignment: Alignment;
   pieces: PieceType[];
+  image?: string; // For image blocks: data URL of the image
 }

@@ -140,6 +140,7 @@
       <button id="italicBtn"><i>I</i></button>
       <button id="underlineBtn"><span class="underline">U</span></button>
       <button id="strikeBtn"><span class="strike">S</span></button>
+      <button id="imageBtn">🖼️ Image</button>
 
       <!-- 🎨 Color button group -->
       <div class="color-wrapper">
@@ -209,6 +210,8 @@
         getContentHtml,
         updatePlainText,
         getDocForSync,
+        insertImageAtPosition,
+        deleteImageBlock,
       } = window.TextIgniterHeadless;
 
       const editor = document.getElementById('editor');
@@ -309,7 +312,6 @@
       let previousCursorPos = 0;
 
       editor.addEventListener('input', e => {
-        const currentText = editor.innerText || editor.textContent || '';
         const selection = window.getSelection();
 
         // Save cursor position before any DOM manipulation
@@ -320,37 +322,68 @@
           previousCursorPos = start;
         }
 
-        // Detect if text was added (length increased)
-        if (currentText.length > previousText.length) {
-          // Text was added - sync model and render
-          syncModelFromEditor();
-          renderFromModel();
-          // Cursor position is restored in renderFromModel, but we need to adjust it
-          // because new text was added, cursor should be after the new text
-          if (cursorPos !== null) {
-            // Cursor should be at the position where user was typing
-            // Since text was added, cursor position should be maintained
-            setTimeout(() => restoreCursorPosition(cursorPos), 0);
-          }
-        } else if (currentText.length < previousText.length) {
-          // Text was deleted - sync model
-          syncModelFromEditor();
-          renderFromModel();
-          // Restore cursor to where it should be after deletion
-          if (cursorPos !== null) {
-            setTimeout(() => restoreCursorPosition(cursorPos), 0);
-          }
-        } else {
-          // Text length same but might have changed - sync
-          syncModelFromEditor();
-          renderFromModel();
-          // Restore cursor position
-          if (cursorPos !== null) {
-            setTimeout(() => restoreCursorPosition(cursorPos), 0);
+        // Get current block element from selection
+        let currentBlockElement = null;
+        let currentBlockId = null;
+
+        if (selection && selection.rangeCount > 0) {
+          let node = selection.anchorNode;
+          while (node && node !== editor) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node;
+              const dataId = element.getAttribute('data-id');
+              if (dataId) {
+                currentBlockElement = element;
+                currentBlockId = dataId;
+                break;
+              }
+            }
+            node = node.parentNode;
           }
         }
 
-        previousText = currentText;
+        // Only sync if we're in a text block (not an image block)
+        if (currentBlockElement && currentBlockId) {
+          const doc = getDocForSync();
+          const block = doc.blocks.find(b => b.dataId === currentBlockId);
+
+          // Only sync text blocks, skip image blocks
+          if (block && block.type === 'text') {
+            // Get text from current block only, not entire editor
+            const blockText =
+              currentBlockElement.innerText ||
+              currentBlockElement.textContent ||
+              '';
+            const currentModelText = block.pieces.map(p => p.text).join('');
+
+            // Only update if text actually changed
+            if (blockText !== currentModelText) {
+              // Update the block's text directly
+              if (block.pieces.length === 1) {
+                // Single piece - just update text
+                block.pieces[0].text = blockText;
+              } else {
+                // Multiple pieces - preserve structure, update text
+                let offset = 0;
+                for (const piece of block.pieces) {
+                  const pieceLength = piece.text.length;
+                  piece.text = blockText.slice(offset, offset + pieceLength);
+                  offset += pieceLength;
+                }
+              }
+
+              // Only render if text changed significantly
+              if (Math.abs(blockText.length - currentModelText.length) > 0) {
+                renderFromModel();
+                if (cursorPos !== null) {
+                  setTimeout(() => restoreCursorPosition(cursorPos), 0);
+                }
+              }
+            }
+          }
+        }
+
+        previousText = editor.innerText || editor.textContent || '';
         // Escape HTML for safe display in <pre> tag
         output.textContent = getContentHtml();
       });
@@ -550,6 +583,448 @@
       });
 
       renderFromModel();
+
+      // Image management: track highlighted image
+      let highlightedImageDataId = null;
+      let isCrossIconVisible = false;
+
+      // Function to add styling and cross button to image
+      function addStyleToImage(dataId) {
+        if (!dataId || isCrossIconVisible) return;
+
+        const div = editor.querySelector(`[data-id="${dataId}"]`);
+        if (!div) return;
+
+        const span = div.querySelector('span');
+        if (span) {
+          span.style.position = 'relative';
+        }
+
+        const img = div.querySelector('img');
+        if (img) {
+          img.style.border = '2px solid blue';
+        }
+
+        // Create cross button
+        const cross = document.createElement('div');
+        cross.className = 'image-cross';
+        cross.innerHTML = 'x';
+        Object.assign(cross.style, {
+          position: 'absolute',
+          top: '0',
+          left: '50%',
+          transform: 'translate(-50%, 0)',
+          background: '#fff',
+          borderRadius: '50%',
+          width: '30px',
+          height: '30px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          border: '3px solid blue',
+          zIndex: '999',
+        });
+
+        cross.addEventListener('mouseover', () => {
+          cross.style.border = '3px solid black';
+        });
+
+        cross.addEventListener('mouseout', () => {
+          cross.style.border = '3px solid blue';
+        });
+
+        cross.addEventListener('click', e => {
+          e.stopPropagation();
+          deleteImage(dataId);
+        });
+
+        span?.appendChild(cross);
+        highlightedImageDataId = dataId;
+        isCrossIconVisible = true;
+      }
+
+      // Function to clear image styling
+      function clearImageStyling() {
+        if (!highlightedImageDataId) return;
+
+        const div = editor.querySelector(
+          `[data-id="${highlightedImageDataId}"]`
+        );
+        if (div) {
+          const span = div.querySelector('span');
+          if (span) {
+            span.removeAttribute('style');
+          }
+
+          const img = span?.querySelector('img');
+          if (img) {
+            img.removeAttribute('style');
+          }
+
+          const cross = span?.querySelector('.image-cross');
+          if (cross) {
+            cross.remove();
+          }
+        }
+
+        highlightedImageDataId = null;
+        isCrossIconVisible = false;
+      }
+
+      // Function to delete image
+      function deleteImage(dataId) {
+        if (!dataId) return;
+
+        // Delete from model
+        const html = deleteImageBlock(dataId);
+
+        // Update DOM
+        editor.innerHTML = html;
+        output.textContent = html;
+
+        // Clear styling
+        clearImageStyling();
+
+        // Set cursor in next available block
+        const doc = getDocForSync();
+        if (doc.selectedBlockId) {
+          const newBlockElement = editor.querySelector(
+            `[data-id="${doc.selectedBlockId}"]`
+          );
+          if (newBlockElement) {
+            const walker = document.createTreeWalker(
+              newBlockElement,
+              NodeFilter.SHOW_TEXT,
+              null,
+              false
+            );
+            const firstTextNode = walker.nextNode();
+            if (firstTextNode) {
+              const range = document.createRange();
+              range.setStart(firstTextNode, 0);
+              range.collapse(true);
+              const sel = window.getSelection();
+              if (sel) {
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            }
+          }
+        }
+      }
+
+      // Add click handler for images (delegated event listener)
+      editor.addEventListener('click', e => {
+        // Check if clicked on an image
+        const img = e.target.closest('img');
+        if (img) {
+          const blockDiv = img.closest('[data-id]');
+          if (blockDiv) {
+            const dataId = blockDiv.getAttribute('data-id');
+            if (dataId) {
+              // Clear previous styling
+              clearImageStyling();
+              // Add styling to clicked image
+              addStyleToImage(dataId);
+            }
+          }
+          return;
+        }
+
+        // Check if clicked on cross button
+        const cross = e.target.closest('.image-cross');
+        if (cross) {
+          // Cross button click is handled in addStyleToImage
+          return;
+        }
+
+        // Clicked elsewhere - clear image styling
+        if (isCrossIconVisible) {
+          clearImageStyling();
+        }
+      });
+
+      // Image insertion handler
+      const imageBtn = document.getElementById('imageBtn');
+      console.log('Image button element:', imageBtn);
+
+      if (imageBtn) {
+        imageBtn.addEventListener('click', () => {
+          console.log('Image button clicked');
+
+          // IMPORTANT: Save cursor position and block info BEFORE opening file dialog
+          let savedCursorInfo = null;
+          const selection = window.getSelection();
+          
+          if (selection && selection.rangeCount > 0) {
+            try {
+              // Method 1: Use absolute position to find the correct block
+              const { start: absoluteCursorPos } = getAbsoluteOffsets(editor, selection);
+              console.log('Absolute cursor position in editor:', absoluteCursorPos);
+              
+              // Sync model to get current state
+              syncModelFromEditor();
+              const doc = getDocForSync();
+              
+              // Find which block contains this cursor position
+              let accumulatedLength = 0;
+              let foundBlock = null;
+              let cursorOffsetInBlock = 0;
+              
+              for (const block of doc.blocks) {
+                if (block.type === 'text') {
+                  const blockText = block.pieces.map(p => p.text).join('');
+                  const blockLength = blockText.length;
+                  
+                  // Check if cursor is within this block
+                  if (absoluteCursorPos >= accumulatedLength && 
+                      absoluteCursorPos <= accumulatedLength + blockLength) {
+                    foundBlock = block;
+                    cursorOffsetInBlock = absoluteCursorPos - accumulatedLength;
+                    console.log('Found block containing cursor:', {
+                      blockId: block.dataId,
+                      blockText: blockText.substring(0, 50) + '...',
+                      cursorOffsetInBlock: cursorOffsetInBlock,
+                      blockLength: blockLength
+                    });
+                    break;
+                  }
+                  
+                  accumulatedLength += blockLength;
+                  // Account for newlines between blocks (if any)
+                  // In contenteditable, blocks are separate divs, so no newline between them
+                }
+              }
+              
+              if (foundBlock) {
+                savedCursorInfo = {
+                  blockId: foundBlock.dataId,
+                  cursorOffset: cursorOffsetInBlock,
+                };
+                console.log('Saved cursor info (absolute position method):', savedCursorInfo);
+              } else {
+                // Fallback: Use DOM-based calculation
+                console.log('Block not found via absolute position, trying DOM method...');
+                let node = selection.anchorNode;
+                while (node && node !== editor) {
+                  if (node.nodeType === Node.ELEMENT_NODE) {
+                    const element = node;
+                    const dataId = element.getAttribute('data-id');
+                    if (dataId) {
+                      // Calculate cursor offset relative to this block
+                      const range = selection.getRangeAt(0);
+                      const blockRange = document.createRange();
+                      blockRange.selectNodeContents(element);
+                      blockRange.setEnd(range.startContainer, range.startOffset);
+                      const cursorOffset = blockRange.toString().length;
+                      
+                      savedCursorInfo = {
+                        blockId: dataId,
+                        cursorOffset: cursorOffset,
+                      };
+                      console.log('Saved cursor info (DOM method):', savedCursorInfo);
+                      break;
+                    }
+                  }
+                  node = node.parentNode;
+                }
+              }
+            } catch (error) {
+              console.error('Error capturing cursor position:', error);
+            }
+          }
+          
+          // Final fallback: use selectedBlockId from model
+          if (!savedCursorInfo) {
+            syncModelFromEditor();
+            const doc = getDocForSync();
+            if (doc.selectedBlockId) {
+              const block = doc.blocks.find(b => b.dataId === doc.selectedBlockId);
+              let cursorOffset = 0;
+              if (block && block.type === 'text') {
+                // Default to end of block if we can't determine position
+                const blockText = block.pieces.map(p => p.text).join('');
+                cursorOffset = blockText.length;
+              }
+              
+              savedCursorInfo = {
+                blockId: doc.selectedBlockId,
+                cursorOffset: cursorOffset,
+              };
+              console.log('Using fallback cursor info:', savedCursorInfo);
+            }
+          }
+
+          // Create file input
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.accept = 'image/*';
+          fileInput.style.display = 'none';
+          document.body.appendChild(fileInput);
+
+          fileInput.click();
+          console.log('File input opened');
+
+          fileInput.onchange = () => {
+            console.log('File input changed');
+            const file = fileInput.files ? fileInput.files[0] : null;
+            console.log(
+              'Selected file:',
+              file
+                ? { name: file.name, type: file.type, size: file.size }
+                : 'null'
+            );
+
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = e => {
+                console.log('FileReader onload triggered');
+                const dataUrl = e.target?.result;
+                console.log('Data URL type:', typeof dataUrl);
+                console.log(
+                  'Data URL length:',
+                  dataUrl
+                    ? typeof dataUrl === 'string'
+                      ? dataUrl.length
+                      : 'not a string'
+                    : 'null'
+                );
+                console.log(
+                  'Data URL preview:',
+                  dataUrl && typeof dataUrl === 'string'
+                    ? dataUrl.substring(0, 50) + '...'
+                    : 'N/A'
+                );
+
+                if (dataUrl && typeof dataUrl === 'string') {
+                  console.log('Step 1: Syncing model from editor...');
+                  // Sync model first to ensure we have latest state
+                  syncModelFromEditor();
+
+                  console.log('Step 2: Getting document for sync...');
+                  const doc = getDocForSync();
+                  console.log('Document blocks:', doc.blocks.length);
+                  console.log('Selected block ID:', doc.selectedBlockId);
+
+                  // Use saved cursor info (from before file dialog)
+                  let currentBlockId = savedCursorInfo?.blockId || doc.selectedBlockId;
+                  let cursorOffset = savedCursorInfo?.cursorOffset || 0;
+                  
+                  // Verify the block still exists after sync
+                  const blockExists = doc.blocks.some(b => b.dataId === currentBlockId);
+                  if (!blockExists && doc.blocks.length > 0) {
+                    console.warn('Saved block ID not found after sync, using first block');
+                    currentBlockId = doc.blocks[0].dataId;
+                    cursorOffset = 0;
+                  }
+                  
+                  // If still no block ID, use first block
+                  if (!currentBlockId && doc.blocks.length > 0) {
+                    currentBlockId = doc.blocks[0].dataId;
+                    cursorOffset = 0;
+                    console.log('Using fallback block ID:', currentBlockId);
+                  }
+
+                  console.log('Final currentBlockId:', currentBlockId);
+                  console.log('Final cursorOffset:', cursorOffset);
+                  
+                  // Log block details for debugging
+                  const targetBlock = doc.blocks.find(b => b.dataId === currentBlockId);
+                  if (targetBlock) {
+                    const blockText = targetBlock.pieces.map(p => p.text).join('');
+                    console.log('Target block text:', blockText.substring(0, 100));
+                    console.log('Target block length:', blockText.length);
+                    console.log('Cursor offset:', cursorOffset);
+                    if (cursorOffset > blockText.length) {
+                      console.warn('Cursor offset exceeds block length, clamping to end');
+                      cursorOffset = blockText.length;
+                    }
+                  }
+
+                  console.log('Step 5: Calling insertImageAtPosition...');
+                  console.log('Parameters:', {
+                    dataId: currentBlockId,
+                    position: cursorOffset,
+                    imageDataUrlLength: dataUrl.length,
+                  });
+
+                  // Insert image
+                  const html = insertImageAtPosition(
+                    currentBlockId,
+                    cursorOffset,
+                    dataUrl
+                  );
+
+                  console.log('Step 6: Image insertion returned HTML');
+                  console.log('HTML length:', html.length);
+                  console.log('HTML preview:', html.substring(0, 200) + '...');
+
+                  // Update DOM
+                  console.log('Step 7: Updating DOM...');
+                  editor.innerHTML = html;
+                  output.textContent = html;
+                  console.log('DOM updated');
+
+                  // Set cursor in the new text block after image
+                  console.log('Step 8: Setting cursor position...');
+                  const docAfter = getDocForSync();
+                  const newBlockId = docAfter.selectedBlockId;
+                  console.log('New block ID after insertion:', newBlockId);
+
+                  if (newBlockId) {
+                    const newBlockElement = editor.querySelector(
+                      `[data-id="${newBlockId}"]`
+                    );
+                    console.log('New block element found:', !!newBlockElement);
+
+                    if (newBlockElement) {
+                      // Find first text node and set cursor
+                      const walker = document.createTreeWalker(
+                        newBlockElement,
+                        NodeFilter.SHOW_TEXT,
+                        null,
+                        false
+                      );
+                      const firstTextNode = walker.nextNode();
+                      console.log('First text node found:', !!firstTextNode);
+
+                      if (firstTextNode) {
+                        const range = document.createRange();
+                        range.setStart(firstTextNode, 0);
+                        range.collapse(true);
+                        const sel = window.getSelection();
+                        if (sel) {
+                          sel.removeAllRanges();
+                          sel.addRange(range);
+                          console.log('Cursor set successfully');
+                        }
+                      }
+                    }
+                  }
+
+                  console.log('Image insertion complete!');
+                } else {
+                  console.error('Invalid data URL:', dataUrl);
+                }
+              };
+
+              reader.onerror = error => {
+                console.error('FileReader error:', error);
+              };
+
+              console.log('Starting to read file as data URL...');
+              reader.readAsDataURL(file);
+            } else {
+              console.log('No file selected');
+            }
+            // Clean up
+            document.body.removeChild(fileInput);
+          };
+        });
+      } else {
+        console.error('Image button not found!');
+      }
     </script>
   </body>
 </html>

@@ -172,6 +172,135 @@ class TextDocument {
     // Merge adjacent pieces with identical attributes
     block.pieces = mergePieces(newPieces);
   }
+
+  /**
+   * Inserts an image at the specified position in the current block.
+   * Creates an image block and optionally a new text block after it.
+   * Matches core module behavior.
+   * @param dataId - The data-id of the current block
+   * @param position - The cursor position relative to the start of the block
+   * @param imageDataUrl - The data URL of the image to insert
+   */
+  insertImageAtPosition(
+    dataId: string | null,
+    position: number,
+    imageDataUrl: string
+  ): string {
+    console.log('[TextDocument] insertImageAtPosition called', {
+      dataId,
+      position,
+      imageDataUrlLength: imageDataUrl?.length,
+      blocksCount: this.blocks.length,
+    });
+
+    if (!imageDataUrl) {
+      console.error('[TextDocument] No imageDataUrl provided');
+      return dataId || '';
+    }
+
+    const currentBlockIndex = this.blocks.findIndex(b => b.dataId === dataId);
+    console.log('[TextDocument] Current block index:', currentBlockIndex);
+
+    // Create image block
+    const imageBlockId = `headless-${Date.now()}`;
+    const textBlockId = `headless-${Date.now() + 1}`;
+    console.log('[TextDocument] Created IDs:', { imageBlockId, textBlockId });
+
+    const imageBlock: Block<Piece> = {
+      type: 'image',
+      dataId: imageBlockId,
+      class: 'paragraph-block',
+      alignment: 'left',
+      pieces: [new Piece(' ')],
+      image: imageDataUrl,
+    };
+    console.log('[TextDocument] Image block created:', {
+      type: imageBlock.type,
+      dataId: imageBlock.dataId,
+      hasImage: !!imageBlock.image,
+    });
+
+    // If we have a current block and it's a text block, split it
+    if (currentBlockIndex >= 0) {
+      const currentBlock = this.blocks[currentBlockIndex];
+
+      if (currentBlock.type === 'text' && position >= 0) {
+        const fullText = currentBlock.pieces.map(p => p.text).join('');
+        const beforeText = fullText.slice(0, position);
+        const afterText = fullText.slice(position);
+
+        // Update current block with text before cursor
+        if (currentBlock.pieces.length > 0) {
+          const lastPiece = currentBlock.pieces[currentBlock.pieces.length - 1];
+          currentBlock.pieces = [
+            new Piece(beforeText || ' ', lastPiece.attributes),
+          ];
+        }
+
+        // Create new text block with remaining text
+        const textBlock: Block<Piece> = {
+          type: 'text',
+          dataId: textBlockId,
+          class: 'paragraph-block',
+          alignment: currentBlock.alignment || 'left',
+          pieces:
+            afterText.trim().length > 0
+              ? [new Piece(afterText, currentBlock.pieces[0]?.attributes || {})]
+              : [new Piece(' ')],
+        } as Block<Piece>;
+
+        // Insert image block and text block after current block
+        this.blocks.splice(currentBlockIndex + 1, 0, imageBlock, textBlock);
+        this.selectedBlockId = textBlockId;
+        return textBlockId;
+      }
+    }
+
+    // No current block or not a text block - just append image and text blocks
+    this.blocks.push(imageBlock);
+    const textBlock: Block<Piece> = {
+      type: 'text',
+      dataId: textBlockId,
+      class: 'paragraph-block',
+      alignment: 'left',
+      pieces: [new Piece(' ')],
+    } as Block<Piece>;
+    this.blocks.push(textBlock);
+    this.selectedBlockId = textBlockId;
+    return textBlockId;
+  }
+
+  /**
+   * Deletes an image block by its dataId.
+   * @param dataId - The data-id of the image block to delete
+   */
+  deleteImageBlock(dataId: string): void {
+    if (!dataId) return;
+
+    // Find and remove the block
+    const blockIndex = this.blocks.findIndex(b => b.dataId === dataId);
+    if (blockIndex >= 0 && this.blocks[blockIndex].type === 'image') {
+      this.blocks.splice(blockIndex, 1);
+
+      // If we deleted the selected block, select the next available block
+      if (this.selectedBlockId === dataId) {
+        if (this.blocks.length > 0) {
+          // Select the block at the same index, or the previous one if we deleted the last
+          const newIndex =
+            blockIndex < this.blocks.length ? blockIndex : blockIndex - 1;
+          if (newIndex >= 0) {
+            this.selectedBlockId = this.blocks[newIndex].dataId;
+          } else if (this.blocks.length > 0) {
+            this.selectedBlockId = this.blocks[0].dataId;
+          } else {
+            this.selectedBlockId = null;
+          }
+        } else {
+          this.selectedBlockId = null;
+        }
+      }
+    }
+  }
 }
 
 export default TextDocument;
