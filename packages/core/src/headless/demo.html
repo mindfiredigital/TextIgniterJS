@@ -753,101 +753,134 @@
         imageBtn.addEventListener('click', () => {
           console.log('Image button clicked');
 
+          // IMPORTANT: Sync model FIRST to ensure it matches DOM
+          syncModelFromEditor();
+
           // IMPORTANT: Save cursor position and block info BEFORE opening file dialog
           let savedCursorInfo = null;
           const selection = window.getSelection();
-          
+
           if (selection && selection.rangeCount > 0) {
             try {
-              // Method 1: Use absolute position to find the correct block
-              const { start: absoluteCursorPos } = getAbsoluteOffsets(editor, selection);
-              console.log('Absolute cursor position in editor:', absoluteCursorPos);
-              
-              // Sync model to get current state
-              syncModelFromEditor();
-              const doc = getDocForSync();
-              
-              // Find which block contains this cursor position
-              let accumulatedLength = 0;
-              let foundBlock = null;
-              let cursorOffsetInBlock = 0;
-              
-              for (const block of doc.blocks) {
-                if (block.type === 'text') {
-                  const blockText = block.pieces.map(p => p.text).join('');
-                  const blockLength = blockText.length;
-                  
-                  // Check if cursor is within this block
-                  if (absoluteCursorPos >= accumulatedLength && 
-                      absoluteCursorPos <= accumulatedLength + blockLength) {
-                    foundBlock = block;
-                    cursorOffsetInBlock = absoluteCursorPos - accumulatedLength;
-                    console.log('Found block containing cursor:', {
-                      blockId: block.dataId,
-                      blockText: blockText.substring(0, 50) + '...',
-                      cursorOffsetInBlock: cursorOffsetInBlock,
-                      blockLength: blockLength
-                    });
+              // PRIMARY METHOD: Use DOM-based calculation (more reliable)
+              // Find the block element containing the cursor
+              let node = selection.anchorNode;
+              let currentBlockElement = null;
+              let currentBlockId = null;
+
+              // Walk up the DOM tree to find the block element
+              while (node && node !== editor) {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                  const element = node;
+                  const dataId = element.getAttribute('data-id');
+                  if (dataId) {
+                    currentBlockElement = element;
+                    currentBlockId = dataId;
                     break;
                   }
-                  
-                  accumulatedLength += blockLength;
-                  // Account for newlines between blocks (if any)
-                  // In contenteditable, blocks are separate divs, so no newline between them
                 }
+                node = node.parentNode;
               }
-              
-              if (foundBlock) {
-                savedCursorInfo = {
-                  blockId: foundBlock.dataId,
-                  cursorOffset: cursorOffsetInBlock,
-                };
-                console.log('Saved cursor info (absolute position method):', savedCursorInfo);
+
+              if (currentBlockElement && currentBlockId) {
+                // Calculate cursor offset relative to this block
+                const range = selection.getRangeAt(0);
+                const blockRange = document.createRange();
+                blockRange.selectNodeContents(currentBlockElement);
+                blockRange.setEnd(range.startContainer, range.startOffset);
+                const cursorOffset = blockRange.toString().length;
+
+                // Get the actual text from the block to verify
+                const blockText = currentBlockElement.innerText || currentBlockElement.textContent || '';
+
+                console.log('DOM method - Block found:', {
+                  blockId: currentBlockId,
+                  blockText: blockText.substring(0, 50),
+                  blockTextLength: blockText.length,
+                  cursorOffset: cursorOffset,
+                  cursorAtEnd: cursorOffset === blockText.length
+                });
+
+                // Verify cursor offset is within block bounds
+                if (cursorOffset >= 0 && cursorOffset <= blockText.length) {
+                  savedCursorInfo = {
+                    blockId: currentBlockId,
+                    cursorOffset: cursorOffset,
+                  };
+                  console.log('Saved cursor info (DOM method - PRIMARY):', savedCursorInfo);
+                } else {
+                  console.warn('Cursor offset out of bounds, using end of block');
+                  savedCursorInfo = {
+                    blockId: currentBlockId,
+                    cursorOffset: blockText.length, // Use end of block
+                  };
+                }
               } else {
-                // Fallback: Use DOM-based calculation
-                console.log('Block not found via absolute position, trying DOM method...');
-                let node = selection.anchorNode;
-                while (node && node !== editor) {
-                  if (node.nodeType === Node.ELEMENT_NODE) {
-                    const element = node;
-                    const dataId = element.getAttribute('data-id');
-                    if (dataId) {
-                      // Calculate cursor offset relative to this block
-                      const range = selection.getRangeAt(0);
-                      const blockRange = document.createRange();
-                      blockRange.selectNodeContents(element);
-                      blockRange.setEnd(range.startContainer, range.startOffset);
-                      const cursorOffset = blockRange.toString().length;
-                      
-                      savedCursorInfo = {
-                        blockId: dataId,
-                        cursorOffset: cursorOffset,
-                      };
-                      console.log('Saved cursor info (DOM method):', savedCursorInfo);
+                // FALLBACK: Use absolute position method
+                console.log('Block element not found, trying absolute position method...');
+                const { start: absoluteCursorPos } = getAbsoluteOffsets(editor, selection);
+                console.log('Absolute cursor position in editor:', absoluteCursorPos);
+
+                // Sync model to get current state
+                syncModelFromEditor();
+                const doc = getDocForSync();
+
+                // Find which block contains this cursor position
+                let accumulatedLength = 0;
+                let foundBlock = null;
+                let cursorOffsetInBlock = 0;
+
+                for (const block of doc.blocks) {
+                  if (block.type === 'text') {
+                    const blockText = block.pieces.map(p => p.text).join('');
+                    const blockLength = blockText.length;
+
+                    // Check if cursor is within this block
+                    if (absoluteCursorPos >= accumulatedLength &&
+                        absoluteCursorPos <= accumulatedLength + blockLength) {
+                      foundBlock = block;
+                      cursorOffsetInBlock = absoluteCursorPos - accumulatedLength;
+                      console.log('Found block containing cursor (absolute method):', {
+                        blockId: block.dataId,
+                        blockText: blockText.substring(0, 50) + '...',
+                        cursorOffsetInBlock: cursorOffsetInBlock,
+                        blockLength: blockLength
+                      });
                       break;
                     }
+
+                    accumulatedLength += blockLength;
                   }
-                  node = node.parentNode;
+                }
+
+                if (foundBlock) {
+                  savedCursorInfo = {
+                    blockId: foundBlock.dataId,
+                    cursorOffset: cursorOffsetInBlock,
+                  };
+                  console.log('Saved cursor info (absolute position method - FALLBACK):', savedCursorInfo);
                 }
               }
             } catch (error) {
               console.error('Error capturing cursor position:', error);
             }
           }
-          
+
           // Final fallback: use selectedBlockId from model
           if (!savedCursorInfo) {
             syncModelFromEditor();
             const doc = getDocForSync();
             if (doc.selectedBlockId) {
-              const block = doc.blocks.find(b => b.dataId === doc.selectedBlockId);
+              const block = doc.blocks.find(
+                b => b.dataId === doc.selectedBlockId
+              );
               let cursorOffset = 0;
               if (block && block.type === 'text') {
                 // Default to end of block if we can't determine position
                 const blockText = block.pieces.map(p => p.text).join('');
                 cursorOffset = blockText.length;
               }
-              
+
               savedCursorInfo = {
                 blockId: doc.selectedBlockId,
                 cursorOffset: cursorOffset,
@@ -908,17 +941,22 @@
                   console.log('Selected block ID:', doc.selectedBlockId);
 
                   // Use saved cursor info (from before file dialog)
-                  let currentBlockId = savedCursorInfo?.blockId || doc.selectedBlockId;
+                  let currentBlockId =
+                    savedCursorInfo?.blockId || doc.selectedBlockId;
                   let cursorOffset = savedCursorInfo?.cursorOffset || 0;
-                  
+
                   // Verify the block still exists after sync
-                  const blockExists = doc.blocks.some(b => b.dataId === currentBlockId);
+                  const blockExists = doc.blocks.some(
+                    b => b.dataId === currentBlockId
+                  );
                   if (!blockExists && doc.blocks.length > 0) {
-                    console.warn('Saved block ID not found after sync, using first block');
+                    console.warn(
+                      'Saved block ID not found after sync, using first block'
+                    );
                     currentBlockId = doc.blocks[0].dataId;
                     cursorOffset = 0;
                   }
-                  
+
                   // If still no block ID, use first block
                   if (!currentBlockId && doc.blocks.length > 0) {
                     currentBlockId = doc.blocks[0].dataId;
@@ -928,16 +966,25 @@
 
                   console.log('Final currentBlockId:', currentBlockId);
                   console.log('Final cursorOffset:', cursorOffset);
-                  
+
                   // Log block details for debugging
-                  const targetBlock = doc.blocks.find(b => b.dataId === currentBlockId);
+                  const targetBlock = doc.blocks.find(
+                    b => b.dataId === currentBlockId
+                  );
                   if (targetBlock) {
-                    const blockText = targetBlock.pieces.map(p => p.text).join('');
-                    console.log('Target block text:', blockText.substring(0, 100));
+                    const blockText = targetBlock.pieces
+                      .map(p => p.text)
+                      .join('');
+                    console.log(
+                      'Target block text:',
+                      blockText.substring(0, 100)
+                    );
                     console.log('Target block length:', blockText.length);
                     console.log('Cursor offset:', cursorOffset);
                     if (cursorOffset > blockText.length) {
-                      console.warn('Cursor offset exceeds block length, clamping to end');
+                      console.warn(
+                        'Cursor offset exceeds block length, clamping to end'
+                      );
                       cursorOffset = blockText.length;
                     }
                   }
