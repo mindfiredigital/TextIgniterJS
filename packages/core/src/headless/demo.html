@@ -536,6 +536,35 @@
           }
 
           // Create new block with text after cursor
+          // Inherit font properties (fontFamily, fontSize, fontColor, bgColor) from last piece
+          // But reset text formatting (bold, italic, underline, strikethrough) to false
+          // This matches core module behavior
+          const lastPiece =
+            block.pieces.length > 0
+              ? block.pieces[block.pieces.length - 1]
+              : null;
+
+          const newBlockAttributes = lastPiece
+            ? {
+                // Inherit font properties
+                fontFamily: lastPiece.attributes?.fontFamily,
+                fontSize: lastPiece.attributes?.fontSize,
+                fontColor: lastPiece.attributes?.fontColor,
+                bgColor: lastPiece.attributes?.bgColor,
+                // Reset text formatting to false
+                bold: false,
+                italic: false,
+                underline: false,
+                strikethrough: false,
+              }
+            : {
+                // Default attributes if no last piece
+                bold: false,
+                italic: false,
+                underline: false,
+                strikethrough: false,
+              };
+
           const newBlockId = `headless-${Date.now()}`;
           const newBlock = {
             type: 'text',
@@ -547,16 +576,18 @@
                 ? [
                     {
                       text: afterText,
-                      attributes: block.pieces[0]?.attributes || {},
+                      attributes: newBlockAttributes,
                     },
                   ]
                 : [
                     {
                       text: ' ',
-                      attributes: block.pieces[0]?.attributes || {},
+                      attributes: newBlockAttributes,
                     },
                   ],
           };
+
+          console.log('Enter: New block attributes:', newBlockAttributes);
 
           // Insert new block after current block
           const currentBlockIndex = doc.blocks.findIndex(
@@ -931,13 +962,48 @@
             if (blockText !== currentModelText) {
               console.log('Input: Text changed, updating model...');
 
+              // Check if this is a newly created block (after Enter)
+              // New blocks should start with bold:false, italic:false, etc.
+              // If the piece has text formatting but the previous text was just whitespace,
+              // this is likely a new block that incorrectly inherited formatting
+              const currentPiece =
+                block.pieces.length > 0 ? block.pieces[0] : null;
+              const previousTextWasWhitespace =
+                currentModelText.trim().length === 0 ||
+                currentModelText === ' ';
+              const hasTextFormatting =
+                currentPiece &&
+                (currentPiece.attributes?.bold === true ||
+                  currentPiece.attributes?.italic === true ||
+                  currentPiece.attributes?.underline === true ||
+                  currentPiece.attributes?.strikethrough === true);
+
               // Update the block's text directly
               if (block.pieces.length === 1) {
-                // Single piece - just update text
+                // Single piece - update text
                 block.pieces[0].text = blockText || ' ';
+
+                // If previous text was whitespace (new block) and piece has text formatting,
+                // reset formatting attributes (new blocks should not inherit text formatting)
+                if (previousTextWasWhitespace && hasTextFormatting) {
+                  // New block - reset text formatting but keep font properties
+                  block.pieces[0].attributes = {
+                    ...block.pieces[0].attributes,
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    strikethrough: false,
+                  };
+                  console.log(
+                    'Input: Reset text formatting for new block (was whitespace)'
+                  );
+                }
+
                 console.log(
                   'Input: Updated single piece, new text:',
-                  block.pieces[0].text
+                  block.pieces[0].text,
+                  'attributes:',
+                  block.pieces[0].attributes
                 );
               } else {
                 // Multiple pieces - preserve structure, update text proportionally
@@ -1025,6 +1091,9 @@
 
         // Find start block
         let node = range.startContainer;
+        const isStartTextDirectChild =
+          node.nodeType === Node.TEXT_NODE && node.parentNode === editorEl;
+
         if (node.nodeType === Node.TEXT_NODE) {
           node = node.parentNode;
         }
@@ -1041,8 +1110,32 @@
           node = node.parentNode;
         }
 
+        // Fallback: if text is direct child of editor, find the block div
+        if (!startBlockId && isStartTextDirectChild) {
+          const editorChildren = Array.from(editorEl.children);
+          const blockDiv = editorChildren.find(
+            child => child.tagName === 'DIV' && child.getAttribute('data-id')
+          );
+          if (blockDiv) {
+            startBlockElement = blockDiv;
+            startBlockId = blockDiv.getAttribute('data-id');
+          } else if (editorChildren.length === 1) {
+            // Only one child - use it and get data-id from model
+            const doc = getDocForSync();
+            if (doc.blocks.length > 0) {
+              const blockId = doc.selectedBlockId || doc.blocks[0].dataId;
+              startBlockElement = editorChildren[0];
+              startBlockId = blockId;
+              editorChildren[0].setAttribute('data-id', blockId);
+            }
+          }
+        }
+
         // Find end block
         node = range.endContainer;
+        const isEndTextDirectChild =
+          node.nodeType === Node.TEXT_NODE && node.parentNode === editorEl;
+
         if (node.nodeType === Node.TEXT_NODE) {
           node = node.parentNode;
         }
@@ -1057,6 +1150,27 @@
             }
           }
           node = node.parentNode;
+        }
+
+        // Fallback: if text is direct child of editor, find the block div
+        if (!endBlockId && isEndTextDirectChild) {
+          const editorChildren = Array.from(editorEl.children);
+          const blockDiv = editorChildren.find(
+            child => child.tagName === 'DIV' && child.getAttribute('data-id')
+          );
+          if (blockDiv) {
+            endBlockElement = blockDiv;
+            endBlockId = blockDiv.getAttribute('data-id');
+          } else if (editorChildren.length === 1) {
+            // Only one child - use it and get data-id from model
+            const doc = getDocForSync();
+            if (doc.blocks.length > 0) {
+              const blockId = doc.selectedBlockId || doc.blocks[0].dataId;
+              endBlockElement = editorChildren[0];
+              endBlockId = blockId;
+              editorChildren[0].setAttribute('data-id', blockId);
+            }
+          }
         }
 
         return {
@@ -1091,7 +1205,25 @@
           if (blockType !== 'text') return; // Skip non-text blocks for now
 
           // Get text from this block element
-          const blockText = element.innerText || element.textContent || '';
+          let blockText = element.innerText || element.textContent || '';
+
+          // Special case: if block text is empty, text might be direct child of editor
+          // Check if editor has text nodes as direct children
+          if (blockText.length === 0) {
+            const editorTextNodes = Array.from(editor.childNodes).filter(
+              node =>
+                node.nodeType === Node.TEXT_NODE &&
+                node.textContent.trim().length > 0
+            );
+            if (editorTextNodes.length > 0) {
+              // Text is direct child - read from editor
+              blockText = editor.textContent || '';
+              console.log(
+                'syncModelFromEditor: Block empty, reading from editor:',
+                blockText
+              );
+            }
+          }
 
           // Find or create block in model
           let block = doc.blocks.find(b => b.dataId === dataId);
@@ -1184,6 +1316,8 @@
           action,
           startBlockId,
           endBlockId,
+          startBlockElement: startBlockElement?.tagName,
+          endBlockElement: endBlockElement?.tagName,
         });
 
         if (start === end) {
@@ -1211,19 +1345,80 @@
           }
         }
 
-        // Calculate block-relative start and end
+        // Get block text length - use model if DOM is empty (text is direct child of editor)
+        const block = doc.blocks.find(b => b.dataId === startBlockId);
+        const modelText = block ? block.pieces.map(p => p.text).join('') : '';
+        const domText = startBlockElement.textContent || '';
+        const blockTextLength = modelText.length || domText.length;
+
+        console.log('handleToggle: Block text info:', {
+          blockId: startBlockId,
+          modelText: modelText,
+          modelTextLength: modelText.length,
+          domText: domText,
+          domTextLength: domText.length,
+          blockStartOffset,
+        });
+
+        // If block text is empty in DOM but we have model text, text is likely direct child
+        if (domText.length === 0 && modelText.length > 0) {
+          // Use model text length
+          const blockRelativeStart = Math.max(0, start - blockStartOffset);
+          const blockRelativeEnd = Math.min(
+            end - blockStartOffset,
+            modelText.length
+          );
+
+          console.log('handleToggle: Block-relative offsets (using model):', {
+            blockId: startBlockId,
+            blockStartOffset,
+            start,
+            end,
+            blockRelativeStart,
+            blockRelativeEnd,
+            modelText: modelText,
+            modelTextLength: modelText.length,
+          });
+
+          // Set selectedBlockId so formatAttribute uses the correct block
+          doc.selectedBlockId = startBlockId;
+
+          // Apply formatting with block-relative offsets
+          switch (action) {
+            case 'bold':
+              toggleBold(blockRelativeStart, blockRelativeEnd);
+              break;
+            case 'italic':
+              toggleItalic(blockRelativeStart, blockRelativeEnd);
+              break;
+            case 'underline':
+              toggleUnderline(blockRelativeStart, blockRelativeEnd);
+              break;
+            case 'strike':
+              toggleStrikethrough(blockRelativeStart, blockRelativeEnd);
+              break;
+          }
+          renderFromModel();
+          return;
+        }
+
+        // Normal case: Calculate block-relative start and end
         const blockRelativeStart = Math.max(0, start - blockStartOffset);
         const blockRelativeEnd = Math.min(
           end - blockStartOffset,
-          startBlockElement.textContent?.length || 0
+          blockTextLength
         );
 
-        console.log('handleToggle: Block-relative offsets:', {
+        console.log('handleToggle: Block-relative offsets (normal case):', {
           blockId: startBlockId,
           blockStartOffset,
+          start,
+          end,
           blockRelativeStart,
           blockRelativeEnd,
-          blockTextLength: startBlockElement.textContent?.length,
+          blockTextLength,
+          modelText: modelText,
+          domText: domText,
         });
 
         // Set selectedBlockId so formatAttribute uses the correct block
