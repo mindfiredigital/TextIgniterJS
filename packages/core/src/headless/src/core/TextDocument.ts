@@ -229,6 +229,15 @@ class TextDocument {
         const beforeText = fullText.slice(0, position);
         const afterText = fullText.slice(position);
 
+        console.log('[TextDocument] Splitting block:', {
+          fullTextLength: fullText.length,
+          position: position,
+          beforeTextLength: beforeText.length,
+          afterTextLength: afterText.length,
+          beforeText: beforeText.substring(0, 50),
+          afterText: afterText.substring(0, 50),
+        });
+
         // Update current block with text before cursor
         if (currentBlock.pieces.length > 0) {
           const lastPiece = currentBlock.pieces[currentBlock.pieces.length - 1];
