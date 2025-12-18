@@ -1318,6 +1318,7 @@
           endBlockId,
           startBlockElement: startBlockElement?.tagName,
           endBlockElement: endBlockElement?.tagName,
+          spansMultipleBlocks: startBlockId !== endBlockId,
         });
 
         if (start === end) {
@@ -1325,16 +1326,132 @@
           return;
         }
 
-        // If selection spans multiple blocks, we can only format within one block for now
-        // Use the start block
         if (!startBlockId || !startBlockElement) {
           console.warn('handleToggle: Could not find start block');
           return;
         }
 
-        // Calculate block-relative offsets
-        // First, calculate the absolute offset of the start of this block
         const doc = getDocForSync();
+
+        // Check if selection spans multiple blocks
+        if (startBlockId !== endBlockId && endBlockId) {
+          console.log(
+            'handleToggle: Selection spans multiple blocks, processing all blocks...'
+          );
+
+          // Find all blocks between start and end (inclusive)
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex === -1 || endBlockIndex === -1) {
+            console.warn('handleToggle: Could not find block indices');
+            return;
+          }
+
+          console.log('handleToggle: Block indices:', {
+            startBlockIndex,
+            endBlockIndex,
+            totalBlocks: doc.blocks.length,
+          });
+
+          // Calculate absolute offsets for each block
+          let accumulatedOffset = 0;
+          const blocksToFormat = [];
+
+          for (let i = 0; i < doc.blocks.length; i++) {
+            const block = doc.blocks[i];
+            if (block.type !== 'text') {
+              // Skip non-text blocks but don't add to offset
+              continue;
+            }
+
+            const blockText = block.pieces.map(p => p.text).join('');
+            const blockLength = blockText.length;
+            const blockStart = accumulatedOffset;
+            const blockEnd = accumulatedOffset + blockLength;
+
+            // Check if this block is within the selection range
+            if (i >= startBlockIndex && i <= endBlockIndex) {
+              let blockRelativeStart = 0;
+              let blockRelativeEnd = blockLength;
+
+              // For the first block, calculate where selection starts
+              if (i === startBlockIndex) {
+                blockRelativeStart = Math.max(0, start - blockStart);
+              }
+
+              // For the last block, calculate where selection ends
+              if (i === endBlockIndex) {
+                blockRelativeEnd = Math.min(end - blockStart, blockLength);
+              }
+
+              // Only format if there's actual text selected in this block
+              if (blockRelativeStart < blockRelativeEnd) {
+                blocksToFormat.push({
+                  blockId: block.dataId,
+                  blockIndex: i,
+                  blockRelativeStart,
+                  blockRelativeEnd,
+                  blockText: blockText.substring(0, 50) + '...',
+                });
+              }
+            }
+
+            accumulatedOffset += blockLength;
+          }
+
+          console.log('handleToggle: Blocks to format:', blocksToFormat);
+
+          // Apply formatting to each block
+          for (const blockInfo of blocksToFormat) {
+            console.log('handleToggle: Formatting block:', {
+              blockId: blockInfo.blockId,
+              start: blockInfo.blockRelativeStart,
+              end: blockInfo.blockRelativeEnd,
+            });
+
+            // Set selectedBlockId so formatAttribute uses the correct block
+            doc.selectedBlockId = blockInfo.blockId;
+
+            // Apply formatting with block-relative offsets
+            switch (action) {
+              case 'bold':
+                toggleBold(
+                  blockInfo.blockRelativeStart,
+                  blockInfo.blockRelativeEnd
+                );
+                break;
+              case 'italic':
+                toggleItalic(
+                  blockInfo.blockRelativeStart,
+                  blockInfo.blockRelativeEnd
+                );
+                break;
+              case 'underline':
+                toggleUnderline(
+                  blockInfo.blockRelativeStart,
+                  blockInfo.blockRelativeEnd
+                );
+                break;
+              case 'strike':
+                toggleStrikethrough(
+                  blockInfo.blockRelativeStart,
+                  blockInfo.blockRelativeEnd
+                );
+                break;
+            }
+          }
+
+          renderFromModel();
+          return;
+        }
+
+        // Single block case: Calculate block-relative offsets
+        // First, calculate the absolute offset of the start of this block
         let blockStartOffset = 0;
         for (const block of doc.blocks) {
           if (block.dataId === startBlockId) {
@@ -1351,7 +1468,7 @@
         const domText = startBlockElement.textContent || '';
         const blockTextLength = modelText.length || domText.length;
 
-        console.log('handleToggle: Block text info:', {
+        console.log('handleToggle: Block text info (single block):', {
           blockId: startBlockId,
           modelText: modelText,
           modelTextLength: modelText.length,
