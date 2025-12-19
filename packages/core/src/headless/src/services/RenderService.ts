@@ -89,6 +89,29 @@ class RenderService {
       inner += txt;
     }
 
+    // Handle list blocks: render as ul/li or ol/li elements
+    if (
+      block.listType === 'ul' ||
+      block.listType === 'ol' ||
+      block.listType === 'li'
+    ) {
+      const listTag = block.listType === 'ul' ? 'ul' : 'ol';
+      const alignmentStyle =
+        block.alignment && block.alignment !== 'left'
+          ? ` style="text-align:${block.alignment}"`
+          : '';
+      // Add start attribute for ordered lists if listStart is defined
+      const startAttr =
+        listTag === 'ol' && block.listStart !== undefined
+          ? ` start="${block.listStart}"`
+          : '';
+      console.log(
+        `[RenderService] Rendering block ${block.dataId}: listType=${block.listType}, listStart=${block.listStart}, startAttr=${startAttr}`
+      );
+      return `<${listTag} data-id="${block.dataId}"${startAttr}${alignmentStyle}><li>${inner}</li></${listTag}>`;
+    }
+
+    // Regular text block
     return `<div data-id="${block.dataId}">${inner}</div>`;
   }
 

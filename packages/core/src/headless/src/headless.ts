@@ -195,6 +195,61 @@ export function deleteImageBlock(dataId: string): string {
 }
 
 /**
+ * Toggles unordered list formatting on the selected block(s).
+ * If multiple blocks are selected, toggles list formatting on all of them.
+ * @param dataIds - Array of data-ids of blocks to toggle, or null to use selected block
+ * @returns The HTML string after toggling
+ */
+export function toggleUnorderedList(dataIds: string[] | null = null): string {
+  const doc = state.getDocument();
+
+  if (dataIds && dataIds.length > 0) {
+    // Toggle multiple blocks
+    for (const dataId of dataIds) {
+      doc.toggleUnorderedList(dataId);
+    }
+  } else {
+    // Toggle selected block
+    doc.toggleUnorderedList(doc.selectedBlockId);
+  }
+
+  return getContentHtml();
+}
+
+/**
+ * Toggles ordered list formatting on the selected block(s).
+ * If multiple blocks are selected, groups them into a single ordered list with sequential numbering.
+ * @param dataIds - Array of data-ids of blocks to toggle, or null to use selected block
+ * @returns The HTML string after toggling
+ */
+export function toggleOrderedList(dataIds: string[] | null = null): string {
+  const doc = state.getDocument();
+
+  console.log('[headless.ts] toggleOrderedList called with:', dataIds);
+
+  if (dataIds && dataIds.length > 1) {
+    // Multiple blocks: use toggleOrderedListForMultipleBlocks to group them
+    console.log(
+      '[headless.ts] Multiple blocks detected, using toggleOrderedListForMultipleBlocks'
+    );
+    doc.toggleOrderedListForMultipleBlocks(dataIds);
+  } else if (dataIds && dataIds.length === 1) {
+    // Single block
+    console.log('[headless.ts] Single block, using toggleOrderedList');
+    doc.toggleOrderedList(dataIds[0]);
+  } else {
+    // Toggle selected block
+    console.log(
+      '[headless.ts] No dataIds provided, using selectedBlockId:',
+      doc.selectedBlockId
+    );
+    doc.toggleOrderedList(doc.selectedBlockId);
+  }
+
+  return getContentHtml();
+}
+
+/**
  * Renders the document content to HTML.
  */
 export function getContentHtml(): string {

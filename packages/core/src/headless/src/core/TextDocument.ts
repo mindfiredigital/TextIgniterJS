@@ -310,6 +310,176 @@ class TextDocument {
       }
     }
   }
+
+  /**
+   * Toggles unordered list formatting on a block.
+   * If the block is already an unordered list, it removes the list formatting.
+   * Otherwise, it converts the block to an unordered list.
+   * @param dataId - The data-id of the block to toggle
+   */
+  toggleUnorderedList(dataId: string | null): void {
+    if (!dataId) return;
+
+    const index = this.blocks.findIndex(
+      (block: any) => block.dataId === dataId
+    );
+    if (index === -1) return;
+
+    const block = this.blocks[index];
+    if (block.type !== 'text') return; // Only text blocks can be lists
+
+    // Toggle: if it's already ul, remove it; otherwise set it to ul
+    block.listType = block.listType === 'ul' ? null : 'ul';
+  }
+
+  /**
+   * Toggles ordered list formatting on a block.
+   * If the block is already an ordered list, it removes the list formatting.
+   * Otherwise, it converts the block to an ordered list.
+   * @param dataId - The data-id of the block to toggle
+   */
+  toggleOrderedList(dataId: string | null): void {
+    if (!dataId) return;
+
+    const index = this.blocks.findIndex(
+      (block: any) => block.dataId === dataId
+    );
+    if (index === -1) return;
+
+    const block = this.blocks[index];
+    if (block.type !== 'text') return; // Only text blocks can be lists
+
+    // Toggle: if already ordered, turn it off; otherwise, turn it on
+    if (block.listType === 'ol' || block.listType === 'li') {
+      block.listType = null;
+      block.listStart = undefined;
+      block.parentId = undefined;
+    } else {
+      block.listType = 'ol';
+      block.listStart = 1;
+      // Mark the block as the start (parent) of its list group
+      block.parentId = block.dataId;
+    }
+  }
+
+  /**
+   * Toggles ordered list formatting on multiple blocks.
+   * Groups them into a single ordered list with sequential numbering.
+   * @param dataIds - Array of data-ids of blocks to toggle
+   */
+  toggleOrderedListForMultipleBlocks(dataIds: string[]): void {
+    if (dataIds.length === 0) return;
+
+    console.log(
+      '[TextDocument] toggleOrderedListForMultipleBlocks called with:',
+      dataIds
+    );
+
+    // Sort dataIds by their order in the blocks array
+    const sortedDataIds = dataIds.sort((a, b) => {
+      const indexA = this.blocks.findIndex((block: any) => block.dataId === a);
+      const indexB = this.blocks.findIndex((block: any) => block.dataId === b);
+      return indexA - indexB;
+    });
+
+    console.log('[TextDocument] Sorted dataIds:', sortedDataIds);
+
+    // Check if all blocks are already ordered lists
+    const allAreOrderedLists = sortedDataIds.every(dataId => {
+      const block = this.blocks.find((block: any) => block.dataId === dataId);
+      return block && (block.listType === 'ol' || block.listType === 'li');
+    });
+
+    console.log('[TextDocument] All are ordered lists:', allAreOrderedLists);
+
+    if (allAreOrderedLists) {
+      // Remove ordered list formatting from all blocks
+      sortedDataIds.forEach(dataId => {
+        const block = this.blocks.find((block: any) => block.dataId === dataId);
+        if (block) {
+          block.listType = null;
+          block.listStart = undefined;
+          block.parentId = undefined;
+        }
+      });
+    } else {
+      // Convert all blocks to ordered list
+      const firstBlockId = sortedDataIds[0];
+
+      sortedDataIds.forEach((dataId, index) => {
+        const block = this.blocks.find((block: any) => block.dataId === dataId);
+        if (block && block.type === 'text') {
+          if (index === 0) {
+            // First block is the parent
+            block.listType = 'ol';
+            block.listStart = 1;
+            block.parentId = firstBlockId;
+            console.log(
+              `[TextDocument] Block ${dataId}: set to ol, listStart=1`
+            );
+          } else {
+            // Subsequent blocks are list items
+            block.listType = 'li';
+            block.listStart = index + 1;
+            block.parentId = firstBlockId;
+            console.log(
+              `[TextDocument] Block ${dataId}: set to li, listStart=${index + 1}, parentId=${firstBlockId}`
+            );
+          }
+        }
+      });
+    }
+
+    // Update list numbering after toggling
+    console.log('[TextDocument] Calling updateOrderedListNumbers');
+    this.updateOrderedListNumbers();
+
+    // Log final state
+    sortedDataIds.forEach(dataId => {
+      const block = this.blocks.find((block: any) => block.dataId === dataId);
+      if (block) {
+        console.log(`[TextDocument] Final state for ${dataId}:`, {
+          listType: block.listType,
+          listStart: block.listStart,
+          parentId: block.parentId,
+        });
+      }
+    });
+  }
+
+  /**
+   * Updates ordered list numbering to ensure sequential numbering.
+   * Resets numbering for new list groups.
+   */
+  updateOrderedListNumbers(): void {
+    let currentNumber = 1;
+    let currentParentId: string | null = null;
+
+    for (let i = 0; i < this.blocks.length; i++) {
+      const block = this.blocks[i];
+
+      if (
+        block.type === 'text' &&
+        (block.listType === 'ol' || block.listType === 'li')
+      ) {
+        const isNewListGroup =
+          block.listType === 'ol' || block.parentId !== currentParentId;
+
+        if (isNewListGroup) {
+          currentNumber = 1;
+          currentParentId =
+            block.listType === 'ol' ? block.dataId : block.parentId || null;
+        }
+
+        block.listStart = currentNumber;
+        currentNumber++;
+      } else {
+        // Non-list block resets numbering
+        currentNumber = 1;
+        currentParentId = null;
+      }
+    }
+  }
 }
 
 export default TextDocument;

@@ -140,6 +140,8 @@
       <button id="italicBtn"><i>I</i></button>
       <button id="underlineBtn"><span class="underline">U</span></button>
       <button id="strikeBtn"><span class="strike">S</span></button>
+      <button id="bulletBtn" title="Bullet Points">• List</button>
+      <button id="numberedBtn" title="Numbered List">1. List</button>
       <button id="imageBtn">🖼️ Image</button>
 
       <!-- 🎨 Color button group -->
@@ -198,6 +200,8 @@
         toggleItalic,
         toggleUnderline,
         toggleStrikethrough,
+        toggleUnorderedList,
+        toggleOrderedList,
         toggleFontColor,
         setActiveFontColor,
         getActiveFontColor,
@@ -1571,6 +1575,130 @@
       document
         .getElementById('strikeBtn')
         .addEventListener('click', () => handleToggle('strike'));
+
+      // Handle bullet points (unordered list)
+      document.getElementById('bulletBtn').addEventListener('click', () => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        // Sync ALL blocks from DOM to model before applying formatting
+        syncModelFromEditor();
+
+        const { startBlockId, endBlockId } = getAbsoluteOffsets(
+          editor,
+          selection
+        );
+
+        const doc = getDocForSync();
+        const dataIds = [];
+
+        // If selection spans multiple blocks, get all blocks between start and end
+        if (startBlockId && endBlockId && startBlockId !== endBlockId) {
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex >= 0 && endBlockIndex >= 0) {
+            const startIdx = Math.min(startBlockIndex, endBlockIndex);
+            const endIdx = Math.max(startBlockIndex, endBlockIndex);
+
+            for (let i = startIdx; i <= endIdx; i++) {
+              const block = doc.blocks[i];
+              if (block.type === 'text') {
+                dataIds.push(block.dataId);
+              }
+            }
+          }
+        } else if (startBlockId) {
+          // Single block selected
+          const block = doc.blocks.find(b => b.dataId === startBlockId);
+          if (block && block.type === 'text') {
+            dataIds.push(startBlockId);
+          }
+        } else {
+          // No block found, use selectedBlockId
+          if (doc.selectedBlockId) {
+            const block = doc.blocks.find(
+              b => b.dataId === doc.selectedBlockId
+            );
+            if (block && block.type === 'text') {
+              dataIds.push(doc.selectedBlockId);
+            }
+          }
+        }
+
+        console.log('Bullet points: Toggling list on blocks:', dataIds);
+
+        if (dataIds.length > 0) {
+          toggleUnorderedList(dataIds);
+          renderFromModel();
+        }
+      });
+
+      // Handle numbered list (ordered list)
+      document.getElementById('numberedBtn').addEventListener('click', () => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        // Sync ALL blocks from DOM to model before applying formatting
+        syncModelFromEditor();
+
+        const { startBlockId, endBlockId } = getAbsoluteOffsets(
+          editor,
+          selection
+        );
+
+        const doc = getDocForSync();
+        const dataIds = [];
+
+        // If selection spans multiple blocks, get all blocks between start and end
+        if (startBlockId && endBlockId && startBlockId !== endBlockId) {
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex >= 0 && endBlockIndex >= 0) {
+            const startIdx = Math.min(startBlockIndex, endBlockIndex);
+            const endIdx = Math.max(startBlockIndex, endBlockIndex);
+
+            for (let i = startIdx; i <= endIdx; i++) {
+              const block = doc.blocks[i];
+              if (block.type === 'text') {
+                dataIds.push(block.dataId);
+              }
+            }
+          }
+        } else if (startBlockId) {
+          // Single block selected
+          const block = doc.blocks.find(b => b.dataId === startBlockId);
+          if (block && block.type === 'text') {
+            dataIds.push(startBlockId);
+          }
+        } else {
+          // No block found, use selectedBlockId
+          if (doc.selectedBlockId) {
+            const block = doc.blocks.find(
+              b => b.dataId === doc.selectedBlockId
+            );
+            if (block && block.type === 'text') {
+              dataIds.push(doc.selectedBlockId);
+            }
+          }
+        }
+
+        console.log('Numbered list: Toggling list on blocks:', dataIds);
+
+        if (dataIds.length > 0) {
+          toggleOrderedList(dataIds);
+          renderFromModel();
+        }
+      });
 
       // 🎨 Fixed-position native color chooser (opens to the right)
       colorBtn.addEventListener('click', () => {

@@ -23,4 +23,7 @@ export interface Block<PieceType = any> {
   alignment: Alignment;
   pieces: PieceType[];
   image?: string; // For image blocks: data URL of the image
+  listType?: 'ul' | 'ol' | 'li' | null; // For list blocks: unordered, ordered, or list item
+  listStart?: number; // For ordered lists: the starting number
+  parentId?: string; // For list items: the parent list block's dataId
 }
