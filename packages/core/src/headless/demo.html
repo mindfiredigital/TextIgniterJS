@@ -2141,16 +2141,219 @@
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) return;
 
-        // Sync model with current editor content before applying formatting
+        // Sync ALL blocks from DOM to model before applying formatting
         syncModelFromEditor();
 
-        const { start, end } = getAbsoluteOffsets(editor, selection);
-        if (start === end) return;
+        const {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement,
+          endBlockElement,
+        } = getAbsoluteOffsets(editor, selection);
+        console.log('Font color: Selection range:', {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement: startBlockElement?.tagName,
+          endBlockElement: endBlockElement?.tagName,
+          spansMultipleBlocks: startBlockId !== endBlockId,
+        });
+
+        if (start === end) {
+          console.log('Font color: No selection, skipping');
+          return;
+        }
+
+        if (!startBlockId || !startBlockElement) {
+          console.warn('Font color: Could not find start block');
+          return;
+        }
 
         const chosenColor = colorInput.value;
         setActiveFontColor(chosenColor);
         updateIndicator();
-        toggleFontColor(start, end, chosenColor);
+
+        const doc = getDocForSync();
+
+        // Check if selection spans multiple blocks
+        if (startBlockId !== endBlockId && endBlockId) {
+          console.log(
+            'Font color: Selection spans multiple blocks, processing all blocks...'
+          );
+
+          // Find all blocks between start and end (inclusive)
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex === -1 || endBlockIndex === -1) {
+            console.warn('Font color: Could not find block indices');
+            return;
+          }
+
+          console.log('Font color: Block indices:', {
+            startBlockIndex,
+            endBlockIndex,
+            totalBlocks: doc.blocks.length,
+          });
+
+          // Calculate absolute offsets for each block
+          let accumulatedOffset = 0;
+          const blocksToFormat = [];
+
+          for (let i = 0; i < doc.blocks.length; i++) {
+            const block = doc.blocks[i];
+            if (block.type !== 'text') {
+              // Skip non-text blocks but don't add to offset
+              continue;
+            }
+
+            const blockText = block.pieces.map(p => p.text).join('');
+            const blockLength = blockText.length;
+            const blockStart = accumulatedOffset;
+            const blockEnd = accumulatedOffset + blockLength;
+
+            // Check if this block is within the selection range
+            if (i >= startBlockIndex && i <= endBlockIndex) {
+              let blockRelativeStart = 0;
+              let blockRelativeEnd = blockLength;
+
+              // For the first block, calculate where selection starts
+              if (i === startBlockIndex) {
+                blockRelativeStart = Math.max(0, start - blockStart);
+              }
+
+              // For the last block, calculate where selection ends
+              if (i === endBlockIndex) {
+                blockRelativeEnd = Math.min(end - blockStart, blockLength);
+              }
+
+              // Only format if there's actual text selected in this block
+              if (blockRelativeStart < blockRelativeEnd) {
+                blocksToFormat.push({
+                  blockId: block.dataId,
+                  blockIndex: i,
+                  blockRelativeStart,
+                  blockRelativeEnd,
+                  blockText: blockText.substring(0, 50) + '...',
+                });
+              }
+            }
+
+            accumulatedOffset += blockLength;
+          }
+
+          console.log('Font color: Blocks to format:', blocksToFormat);
+
+          // Apply formatting to each block
+          for (const blockInfo of blocksToFormat) {
+            console.log('Font color: Formatting block:', {
+              blockId: blockInfo.blockId,
+              start: blockInfo.blockRelativeStart,
+              end: blockInfo.blockRelativeEnd,
+            });
+
+            // Set selectedBlockId so formatAttribute uses the correct block
+            doc.selectedBlockId = blockInfo.blockId;
+
+            // Apply formatting with block-relative offsets
+            toggleFontColor(
+              blockInfo.blockRelativeStart,
+              blockInfo.blockRelativeEnd,
+              chosenColor
+            );
+          }
+
+          renderFromModel();
+          return;
+        }
+
+        // Single block case: Calculate block-relative offsets
+        // First, calculate the absolute offset of the start of this block
+        let blockStartOffset = 0;
+        for (const block of doc.blocks) {
+          if (block.dataId === startBlockId) {
+            break;
+          }
+          if (block.type === 'text') {
+            blockStartOffset += block.pieces.map(p => p.text).join('').length;
+          }
+        }
+
+        // Get block text length - use model if DOM is empty (text is direct child of editor)
+        const block = doc.blocks.find(b => b.dataId === startBlockId);
+        const modelText = block ? block.pieces.map(p => p.text).join('') : '';
+        const domText = startBlockElement.textContent || '';
+        const blockTextLength = modelText.length || domText.length;
+
+        console.log('Font color: Block text info (single block):', {
+          blockId: startBlockId,
+          modelText: modelText,
+          modelTextLength: modelText.length,
+          domText: domText,
+          domTextLength: domText.length,
+          blockStartOffset,
+        });
+
+        // If block text is empty in DOM but we have model text, text is likely direct child
+        if (domText.length === 0 && modelText.length > 0) {
+          // Use model text length
+          const blockRelativeStart = Math.max(0, start - blockStartOffset);
+          const blockRelativeEnd = Math.min(
+            end - blockStartOffset,
+            modelText.length
+          );
+
+          console.log('Font color: Block-relative offsets (using model):', {
+            blockId: startBlockId,
+            blockStartOffset,
+            start,
+            end,
+            blockRelativeStart,
+            blockRelativeEnd,
+            modelText: modelText,
+            modelTextLength: modelText.length,
+          });
+
+          // Set selectedBlockId so formatAttribute uses the correct block
+          doc.selectedBlockId = startBlockId;
+
+          // Apply formatting with block-relative offsets
+          toggleFontColor(blockRelativeStart, blockRelativeEnd, chosenColor);
+          renderFromModel();
+          return;
+        }
+
+        // Normal case: Calculate block-relative start and end
+        const blockRelativeStart = Math.max(0, start - blockStartOffset);
+        const blockRelativeEnd = Math.min(
+          end - blockStartOffset,
+          blockTextLength
+        );
+
+        console.log('Font color: Block-relative offsets (normal case):', {
+          blockId: startBlockId,
+          blockStartOffset,
+          start,
+          end,
+          blockRelativeStart,
+          blockRelativeEnd,
+          blockTextLength,
+          modelText: modelText,
+          domText: domText,
+        });
+
+        // Set selectedBlockId so formatAttribute uses the correct block
+        doc.selectedBlockId = startBlockId;
+
+        // Apply formatting with block-relative offsets
+        toggleFontColor(blockRelativeStart, blockRelativeEnd, chosenColor);
         renderFromModel();
       });
 
@@ -2173,19 +2376,222 @@
 
         // Get selection range (matches core getSelectionRange)
         const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          // Sync model with current editor content before applying formatting
-          syncModelFromEditor();
-
-          const { start, end } = getAbsoluteOffsets(editor, selection);
-          if (start !== end) {
-            // Apply font size to selected range (matches core setFontSize)
-            toggleFontSize(start, end, selectedSize);
-            renderFromModel();
-          }
-          // If start === end (no selection), just update active size for future typing
+        if (!selection || selection.rangeCount === 0) {
+          // If no selection, just update active size for future typing
+          return;
         }
-        // If no selection, just update active size for future typing
+
+        // Sync ALL blocks from DOM to model before applying formatting
+        syncModelFromEditor();
+
+        const {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement,
+          endBlockElement,
+        } = getAbsoluteOffsets(editor, selection);
+        console.log('Font size: Selection range:', {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement: startBlockElement?.tagName,
+          endBlockElement: endBlockElement?.tagName,
+          spansMultipleBlocks: startBlockId !== endBlockId,
+        });
+
+        if (start === end) {
+          console.log('Font size: No selection, skipping');
+          // If start === end (no selection), just update active size for future typing
+          return;
+        }
+
+        if (!startBlockId || !startBlockElement) {
+          console.warn('Font size: Could not find start block');
+          return;
+        }
+
+        const doc = getDocForSync();
+
+        // Check if selection spans multiple blocks
+        if (startBlockId !== endBlockId && endBlockId) {
+          console.log(
+            'Font size: Selection spans multiple blocks, processing all blocks...'
+          );
+
+          // Find all blocks between start and end (inclusive)
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex === -1 || endBlockIndex === -1) {
+            console.warn('Font size: Could not find block indices');
+            return;
+          }
+
+          console.log('Font size: Block indices:', {
+            startBlockIndex,
+            endBlockIndex,
+            totalBlocks: doc.blocks.length,
+          });
+
+          // Calculate absolute offsets for each block
+          let accumulatedOffset = 0;
+          const blocksToFormat = [];
+
+          for (let i = 0; i < doc.blocks.length; i++) {
+            const block = doc.blocks[i];
+            if (block.type !== 'text') {
+              // Skip non-text blocks but don't add to offset
+              continue;
+            }
+
+            const blockText = block.pieces.map(p => p.text).join('');
+            const blockLength = blockText.length;
+            const blockStart = accumulatedOffset;
+            const blockEnd = accumulatedOffset + blockLength;
+
+            // Check if this block is within the selection range
+            if (i >= startBlockIndex && i <= endBlockIndex) {
+              let blockRelativeStart = 0;
+              let blockRelativeEnd = blockLength;
+
+              // For the first block, calculate where selection starts
+              if (i === startBlockIndex) {
+                blockRelativeStart = Math.max(0, start - blockStart);
+              }
+
+              // For the last block, calculate where selection ends
+              if (i === endBlockIndex) {
+                blockRelativeEnd = Math.min(end - blockStart, blockLength);
+              }
+
+              // Only format if there's actual text selected in this block
+              if (blockRelativeStart < blockRelativeEnd) {
+                blocksToFormat.push({
+                  blockId: block.dataId,
+                  blockIndex: i,
+                  blockRelativeStart,
+                  blockRelativeEnd,
+                  blockText: blockText.substring(0, 50) + '...',
+                });
+              }
+            }
+
+            accumulatedOffset += blockLength;
+          }
+
+          console.log('Font size: Blocks to format:', blocksToFormat);
+
+          // Apply formatting to each block
+          for (const blockInfo of blocksToFormat) {
+            console.log('Font size: Formatting block:', {
+              blockId: blockInfo.blockId,
+              start: blockInfo.blockRelativeStart,
+              end: blockInfo.blockRelativeEnd,
+            });
+
+            // Set selectedBlockId so formatAttribute uses the correct block
+            doc.selectedBlockId = blockInfo.blockId;
+
+            // Apply formatting with block-relative offsets
+            toggleFontSize(
+              blockInfo.blockRelativeStart,
+              blockInfo.blockRelativeEnd,
+              selectedSize
+            );
+          }
+
+          renderFromModel();
+          return;
+        }
+
+        // Single block case: Calculate block-relative offsets
+        // First, calculate the absolute offset of the start of this block
+        let blockStartOffset = 0;
+        for (const block of doc.blocks) {
+          if (block.dataId === startBlockId) {
+            break;
+          }
+          if (block.type === 'text') {
+            blockStartOffset += block.pieces.map(p => p.text).join('').length;
+          }
+        }
+
+        // Get block text length - use model if DOM is empty (text is direct child of editor)
+        const block = doc.blocks.find(b => b.dataId === startBlockId);
+        const modelText = block ? block.pieces.map(p => p.text).join('') : '';
+        const domText = startBlockElement.textContent || '';
+        const blockTextLength = modelText.length || domText.length;
+
+        console.log('Font size: Block text info (single block):', {
+          blockId: startBlockId,
+          modelText: modelText,
+          modelTextLength: modelText.length,
+          domText: domText,
+          domTextLength: domText.length,
+          blockStartOffset,
+        });
+
+        // If block text is empty in DOM but we have model text, text is likely direct child
+        if (domText.length === 0 && modelText.length > 0) {
+          // Use model text length
+          const blockRelativeStart = Math.max(0, start - blockStartOffset);
+          const blockRelativeEnd = Math.min(
+            end - blockStartOffset,
+            modelText.length
+          );
+
+          console.log('Font size: Block-relative offsets (using model):', {
+            blockId: startBlockId,
+            blockStartOffset,
+            start,
+            end,
+            blockRelativeStart,
+            blockRelativeEnd,
+            modelText: modelText,
+            modelTextLength: modelText.length,
+          });
+
+          // Set selectedBlockId so formatAttribute uses the correct block
+          doc.selectedBlockId = startBlockId;
+
+          // Apply formatting with block-relative offsets
+          toggleFontSize(blockRelativeStart, blockRelativeEnd, selectedSize);
+          renderFromModel();
+          return;
+        }
+
+        // Normal case: Calculate block-relative start and end
+        const blockRelativeStart = Math.max(0, start - blockStartOffset);
+        const blockRelativeEnd = Math.min(
+          end - blockStartOffset,
+          blockTextLength
+        );
+
+        console.log('Font size: Block-relative offsets (normal case):', {
+          blockId: startBlockId,
+          blockStartOffset,
+          start,
+          end,
+          blockRelativeStart,
+          blockRelativeEnd,
+          blockTextLength,
+          modelText: modelText,
+          domText: domText,
+        });
+
+        // Set selectedBlockId so formatAttribute uses the correct block
+        doc.selectedBlockId = startBlockId;
+
+        // Apply formatting with block-relative offsets
+        toggleFontSize(blockRelativeStart, blockRelativeEnd, selectedSize);
+        renderFromModel();
       });
 
       // 🔤 Font family handling
@@ -2195,25 +2601,129 @@
       // Update font family when dropdown changes (matches core behavior)
       fontFamilySelect.addEventListener('change', () => {
         const selectedFamily = fontFamilySelect.value;
-
-        // Always update active font family (like dropdown value in core)
         setActiveFontFamily(selectedFamily);
 
-        // Get selection range (matches core getSelectionRange)
         const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          // Sync model with current editor content before applying formatting
-          syncModelFromEditor();
-
-          const { start, end } = getAbsoluteOffsets(editor, selection);
-          if (start !== end) {
-            // Apply font family to selected range (matches core setFontFamily)
-            toggleFontFamily(start, end, selectedFamily);
-            renderFromModel();
-          }
-          // If start === end (no selection), just update active family for future typing
+        if (!selection || selection.rangeCount === 0) {
+          // If no selection, just update active family for future typing
+          return;
         }
-        // If no selection, just update active family for future typing
+
+        // Sync model with current editor content before applying formatting
+        syncModelFromEditor();
+
+        const {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement,
+          endBlockElement,
+        } = getAbsoluteOffsets(editor, selection);
+
+        if (start === end) {
+          // If start === end (no selection), just update active family for future typing
+          return;
+        }
+
+        if (!startBlockId || !startBlockElement) {
+          console.warn('Font family: Could not find start block');
+          return;
+        }
+
+        const doc = getDocForSync();
+
+        // Check if selection spans multiple blocks
+        if (startBlockId !== endBlockId && endBlockId) {
+          console.log(
+            'Font family: Selection spans multiple blocks, processing all blocks...'
+          );
+
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex === -1 || endBlockIndex === -1) {
+            console.warn('Font family: Could not find block indices');
+            return;
+          }
+
+          let accumulatedOffset = 0;
+          const blocksToFormat = [];
+
+          for (let i = 0; i < doc.blocks.length; i++) {
+            const block = doc.blocks[i];
+            if (block.type !== 'text') continue;
+
+            const blockText = block.pieces.map(p => p.text).join('');
+            const blockLength = blockText.length;
+            const blockStart = accumulatedOffset;
+
+            if (i >= startBlockIndex && i <= endBlockIndex) {
+              let blockRelativeStart = 0;
+              let blockRelativeEnd = blockLength;
+
+              if (i === startBlockIndex) {
+                blockRelativeStart = Math.max(0, start - blockStart);
+              }
+
+              if (i === endBlockIndex) {
+                blockRelativeEnd = Math.min(end - blockStart, blockLength);
+              }
+
+              if (blockRelativeStart < blockRelativeEnd) {
+                blocksToFormat.push({
+                  blockId: block.dataId,
+                  blockRelativeStart,
+                  blockRelativeEnd,
+                });
+              }
+            }
+
+            accumulatedOffset += blockLength;
+          }
+
+          for (const blockInfo of blocksToFormat) {
+            doc.selectedBlockId = blockInfo.blockId;
+            toggleFontFamily(
+              blockInfo.blockRelativeStart,
+              blockInfo.blockRelativeEnd,
+              selectedFamily
+            );
+          }
+
+          renderFromModel();
+          return;
+        }
+
+        // Single block case
+        let blockStartOffset = 0;
+        for (const block of doc.blocks) {
+          if (block.dataId === startBlockId) {
+            break;
+          }
+          if (block.type === 'text') {
+            blockStartOffset += block.pieces.map(p => p.text).join('').length;
+          }
+        }
+
+        const block = doc.blocks.find(b => b.dataId === startBlockId);
+        const modelText = block ? block.pieces.map(p => p.text).join('') : '';
+        const domText = startBlockElement.textContent || '';
+        const blockTextLength = modelText.length || domText.length;
+
+        const blockRelativeStart = Math.max(0, start - blockStartOffset);
+        const blockRelativeEnd = Math.min(
+          end - blockStartOffset,
+          blockTextLength
+        );
+
+        doc.selectedBlockId = startBlockId;
+        toggleFontFamily(blockRelativeStart, blockRelativeEnd, selectedFamily);
+        renderFromModel();
       });
 
       renderFromModel();
