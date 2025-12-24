@@ -51,7 +51,15 @@ class RenderService {
     let inner = '';
 
     for (const piece of block.pieces) {
-      let txt = this.escapeHtml(piece.text);
+      // Skip zero-width spaces and other invisible characters for rendering
+      // They're used internally but shouldn't appear in HTML output
+      let pieceText = piece.text;
+      if (pieceText === '\u200B') {
+        // Zero-width space - skip it, render as empty
+        continue;
+      }
+
+      let txt = this.escapeHtml(pieceText);
 
       // Apply text formatting tags
       if (piece.attributes.bold) txt = `<b>${txt}</b>`;

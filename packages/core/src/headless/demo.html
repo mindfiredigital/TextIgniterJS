@@ -44,6 +44,53 @@
         margin-bottom: 20px;
       }
 
+      /* List styling - normalize spacing to match core module */
+      /* Remove default browser margins and padding from lists */
+      #editor ul,
+      #editor ol {
+        margin: 0;
+        padding: 0;
+        padding-left: 1.2em;
+        list-style-position: inside;
+        display: block;
+      }
+
+      #editor ul {
+        list-style-type: disc;
+        padding-left: 0.8em;
+      }
+
+      #editor ol {
+        list-style-type: decimal;
+        padding-left: 1.2em;
+      }
+
+      /* Remove spacing from list items */
+      #editor li {
+        margin: 0;
+        padding: 0;
+        display: list-item;
+        list-style-position: inside;
+      }
+
+      /* Remove spacing between consecutive list elements */
+      #editor ul + ul,
+      #editor ol + ol,
+      #editor ul + ol,
+      #editor ol + ul,
+      #editor ul + div,
+      #editor ol + div,
+      #editor div + ul,
+      #editor div + ol {
+        margin-top: 0;
+      }
+
+      /* Ensure list blocks have same spacing as regular blocks */
+      #editor [data-id] {
+        margin: 0;
+        padding: 0;
+      }
+
       pre {
         background: #f6f6f6;
         padding: 10px;
@@ -591,6 +638,39 @@
                   ],
           };
 
+          // Handle list blocks: inherit list formatting
+          // This matches core module behavior
+          if (
+            block.listType === 'ol' ||
+            block.listType === 'ul' ||
+            block.listType === 'li'
+          ) {
+            let listParentId = '';
+            if (block.listType === 'ol') {
+              // Current block is ordered list parent - new block becomes list item
+              newBlock.listType = 'li';
+              newBlock.listStart = (block.listStart || 1) + 1;
+              newBlock.parentId = currentBlockId;
+              listParentId = currentBlockId;
+            } else if (block.listType === 'li') {
+              // Current block is list item - new block becomes list item with same parent
+              newBlock.listType = 'li';
+              newBlock.listStart = (block.listStart || 1) + 1;
+              newBlock.parentId = block.parentId || currentBlockId;
+              listParentId = block.parentId || currentBlockId;
+            } else if (block.listType === 'ul') {
+              // Current block is unordered list - new block becomes unordered list
+              newBlock.listType = 'ul';
+              newBlock.parentId = block.parentId || currentBlockId;
+            }
+
+            console.log('Enter: New block inherits list formatting:', {
+              listType: newBlock.listType,
+              listStart: newBlock.listStart,
+              parentId: newBlock.parentId,
+            });
+          }
+
           console.log('Enter: New block attributes:', newBlockAttributes);
 
           // Insert new block after current block
@@ -604,11 +684,45 @@
           }
           doc.selectedBlockId = newBlockId;
 
+          // For ordered lists, update subsequent list item numbers after insertion
+          if (
+            (block.listType === 'ol' || block.listType === 'li') &&
+            (newBlock.listType === 'li' || newBlock.listType === 'ol')
+          ) {
+            const listParentId =
+              block.listType === 'ol'
+                ? currentBlockId
+                : block.parentId || currentBlockId;
+            const insertedIndex =
+              currentBlockIndex >= 0
+                ? currentBlockIndex + 1
+                : doc.blocks.length - 1;
+
+            // Increment listStart for subsequent list items with same parent
+            for (let i = insertedIndex + 1; i < doc.blocks.length; i++) {
+              const subsequentBlock = doc.blocks[i];
+              if (
+                subsequentBlock.listType === 'li' &&
+                subsequentBlock.parentId === listParentId
+              ) {
+                subsequentBlock.listStart =
+                  (subsequentBlock.listStart || 1) + 1;
+              } else {
+                break;
+              }
+            }
+
+            // Update ordered list numbering to ensure everything is correct
+            doc.updateOrderedListNumbers();
+          }
+
           console.log(
             'Enter: Created new block:',
             newBlockId,
             'Total blocks:',
-            doc.blocks.length
+            doc.blocks.length,
+            'listType:',
+            newBlock.listType
           );
 
           // Render and set cursor
@@ -697,6 +811,97 @@
                 node = node.parentNode;
               }
             }, 0);
+          }
+        } else if (e.key === 'Backspace') {
+          // Handle Backspace key
+          const selection = window.getSelection();
+          if (!selection || selection.rangeCount === 0) return;
+
+          // Check if all text is selected
+          const { start, end, startBlockId, endBlockId } = getAbsoluteOffsets(
+            editor,
+            selection
+          );
+
+          // Sync model first
+          syncModelFromEditor();
+          const doc = getDocForSync();
+
+          // Check if selection spans all blocks (select all)
+          if (
+            !selection.isCollapsed &&
+            startBlockId &&
+            endBlockId &&
+            doc.blocks.length > 1
+          ) {
+            const startIndex = doc.blocks.findIndex(
+              b => b.dataId === startBlockId
+            );
+            const endIndex = doc.blocks.findIndex(b => b.dataId === endBlockId);
+
+            // If selection spans from first to last block, it's "select all"
+            if (
+              startIndex === 0 &&
+              endIndex === doc.blocks.length - 1 &&
+              startIndex >= 0 &&
+              endIndex >= 0
+            ) {
+              e.preventDefault(); // Prevent default deletion
+              console.log(
+                'Backspace: All blocks selected, clearing all blocks'
+              );
+
+              // Clear all blocks and create a single empty block
+              const emptyBlockId = `headless-${Date.now()}`;
+              const emptyBlock = {
+                type: 'text',
+                dataId: emptyBlockId,
+                class: 'paragraph-block',
+                alignment: 'left',
+                pieces: [
+                  {
+                    text: '\u200B', // Zero-width space to maintain block structure
+                    attributes: {
+                      bold: false,
+                      italic: false,
+                      underline: false,
+                      strikethrough: false,
+                    },
+                  },
+                ],
+              };
+
+              doc.blocks = [emptyBlock];
+              doc.selectedBlockId = emptyBlockId;
+              renderFromModel();
+
+              // Set cursor in the new empty block
+              setTimeout(() => {
+                const emptyBlockElement = editor.querySelector(
+                  `[data-id="${emptyBlockId}"]`
+                );
+                if (emptyBlockElement) {
+                  const walker = document.createTreeWalker(
+                    emptyBlockElement,
+                    NodeFilter.SHOW_TEXT,
+                    null,
+                    false
+                  );
+                  const firstTextNode = walker.nextNode();
+                  if (firstTextNode) {
+                    const range = document.createRange();
+                    range.setStart(firstTextNode, 0);
+                    range.collapse(true);
+                    const sel = window.getSelection();
+                    if (sel) {
+                      sel.removeAllRanges();
+                      sel.addRange(range);
+                    }
+                  }
+                }
+              }, 0);
+              return;
+            }
           }
         }
       });
@@ -914,9 +1119,195 @@
           console.warn('Input: No selection available');
         }
 
+        // Check if all text was deleted (for deleteContentBackward)
+        // Sync model first to get latest state
+        syncModelFromEditor();
+        const doc = getDocForSync();
+        let shouldClearAllBlocks = false;
+
+        if (e.inputType === 'deleteContentBackward') {
+          // After deletion, check if editor is empty or nearly empty
+          const editorText = editor.textContent || '';
+          const editorTextTrimmed = editorText.trim();
+
+          // Check if selection spans multiple blocks or all content
+          if (selection && selection.rangeCount > 0) {
+            const { start, end, startBlockId, endBlockId } = getAbsoluteOffsets(
+              editor,
+              selection
+            );
+
+            // If selection was not collapsed before deletion, check if it spanned all blocks
+            const wasNonCollapsed = !selection.isCollapsed || start !== end;
+
+            if (wasNonCollapsed && startBlockId && endBlockId) {
+              const startIndex = doc.blocks.findIndex(
+                b => b.dataId === startBlockId
+              );
+              const endIndex = doc.blocks.findIndex(
+                b => b.dataId === endBlockId
+              );
+
+              // If selection spans from first to last block, it's "select all"
+              if (
+                startIndex >= 0 &&
+                endIndex >= 0 &&
+                startIndex === 0 &&
+                endIndex === doc.blocks.length - 1 &&
+                doc.blocks.length > 1
+              ) {
+                shouldClearAllBlocks = true;
+                console.log(
+                  'Input: All blocks selected, will clear all blocks'
+                );
+              }
+            }
+          }
+
+          // Also check if editor is now empty after deletion but model still has multiple blocks
+          // This handles cases where the selection detection didn't work
+          if (
+            !shouldClearAllBlocks &&
+            editorTextTrimmed.length === 0 &&
+            doc.blocks.length > 1
+          ) {
+            // Check if all blocks are empty or only whitespace
+            const allBlocksEmpty = doc.blocks.every(b => {
+              if (b.type !== 'text') return false;
+              const blockText = b.pieces.map(p => p.text).join('');
+              return !blockText || blockText.trim().length === 0;
+            });
+
+            if (allBlocksEmpty) {
+              shouldClearAllBlocks = true;
+              console.log(
+                'Input: Editor is empty with multiple empty blocks, will clear all blocks'
+              );
+            }
+          }
+
+          // Additional check: Check DOM blocks directly to see if they're actually empty
+          if (!shouldClearAllBlocks && doc.blocks.length > 1) {
+            // Get all block elements from DOM
+            const domBlocks = editor.querySelectorAll('[data-id]');
+            let domTotalText = '';
+
+            domBlocks.forEach(blockEl => {
+              const blockText = (
+                blockEl.innerText ||
+                blockEl.textContent ||
+                ''
+              ).trim();
+              domTotalText += blockText;
+            });
+
+            // If DOM shows empty or very little content but we have multiple blocks in model,
+            // user likely deleted all content
+            if (domTotalText.trim().length === 0 && doc.blocks.length > 1) {
+              shouldClearAllBlocks = true;
+              console.log(
+                'Input: DOM blocks are empty but model has multiple blocks, will clear all blocks'
+              );
+            }
+          }
+
+          // Final check: if editor text is empty and we have multiple blocks, clear them
+          // This is a catch-all for cases where the above checks didn't catch it
+          if (!shouldClearAllBlocks && doc.blocks.length > 1) {
+            const allEditorBlocks = editor.querySelectorAll('[data-id]');
+            const visibleText = Array.from(allEditorBlocks)
+              .map(el => (el.innerText || el.textContent || '').trim())
+              .join('')
+              .trim();
+
+            // Count blocks with actual content
+            let blocksWithContent = 0;
+            allEditorBlocks.forEach(el => {
+              const text = (el.innerText || el.textContent || '').trim();
+              if (text.length > 0) {
+                blocksWithContent++;
+              }
+            });
+
+            // If we have multiple blocks but most are empty, user likely deleted all
+            // Clear if: total visible text is very short compared to number of blocks
+            // OR if we have multiple blocks but editor text is empty
+            if (
+              visibleText.length === 0 ||
+              (blocksWithContent < doc.blocks.length &&
+                visibleText.length < doc.blocks.length)
+            ) {
+              shouldClearAllBlocks = true;
+              console.log(
+                'Input: Final check - editor appears empty with multiple blocks, will clear all blocks',
+                {
+                  visibleTextLength: visibleText.length,
+                  blocksWithContent,
+                  totalBlocks: doc.blocks.length,
+                }
+              );
+            }
+          }
+        }
+
+        // Handle "select all and delete" or "empty editor with multiple blocks" case
+        if (shouldClearAllBlocks && e.inputType === 'deleteContentBackward') {
+          // Clear all blocks and create a single empty block
+          const emptyBlockId = `headless-${Date.now()}`;
+          const emptyBlock = {
+            type: 'text',
+            dataId: emptyBlockId,
+            class: 'paragraph-block',
+            alignment: 'left',
+            pieces: [
+              {
+                text: '\u200B', // Zero-width space to maintain block structure
+                attributes: {
+                  bold: false,
+                  italic: false,
+                  underline: false,
+                  strikethrough: false,
+                },
+              },
+            ],
+          };
+
+          doc.blocks = [emptyBlock];
+          doc.selectedBlockId = emptyBlockId;
+          console.log('Input: Cleared all blocks, created single empty block');
+          renderFromModel();
+
+          // Set cursor in the new empty block
+          setTimeout(() => {
+            const emptyBlockElement = editor.querySelector(
+              `[data-id="${emptyBlockId}"]`
+            );
+            if (emptyBlockElement) {
+              const walker = document.createTreeWalker(
+                emptyBlockElement,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+              );
+              const firstTextNode = walker.nextNode();
+              if (firstTextNode) {
+                const range = document.createRange();
+                range.setStart(firstTextNode, 0);
+                range.collapse(true);
+                const sel = window.getSelection();
+                if (sel) {
+                  sel.removeAllRanges();
+                  sel.addRange(range);
+                }
+              }
+            }
+          }, 0);
+
+          return;
+        }
+
         // Only sync if we're in a text block (not an image block)
         if (currentBlockElement && currentBlockId) {
-          const doc = getDocForSync();
           const block = doc.blocks.find(b => b.dataId === currentBlockId);
 
           // Only sync text blocks, skip image blocks
@@ -987,9 +1378,21 @@
                 // Single piece - update text
                 block.pieces[0].text = blockText || ' ';
 
+                // If block text is empty or only whitespace, clear formatting
+                if (!blockText || blockText.trim().length === 0) {
+                  // Clear text formatting when block becomes empty
+                  block.pieces[0].attributes = {
+                    ...block.pieces[0].attributes,
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    strikethrough: false,
+                  };
+                  console.log('Input: Cleared formatting for empty block');
+                }
                 // If previous text was whitespace (new block) and piece has text formatting,
                 // reset formatting attributes (new blocks should not inherit text formatting)
-                if (previousTextWasWhitespace && hasTextFormatting) {
+                else if (previousTextWasWhitespace && hasTextFormatting) {
                   // New block - reset text formatting but keep font properties
                   block.pieces[0].attributes = {
                     ...block.pieces[0].attributes,
@@ -1046,6 +1449,29 @@
                     offset += pieceLength;
                   }
                   console.log('Input: Updated proportionally');
+                }
+              }
+
+              // Clean up empty blocks (blocks with only whitespace and formatting)
+              const docAfterUpdate = getDocForSync();
+              for (let i = docAfterUpdate.blocks.length - 1; i >= 0; i--) {
+                const b = docAfterUpdate.blocks[i];
+                if (b.type === 'text') {
+                  const blockText = b.pieces.map(p => p.text).join('');
+                  // If block is empty or only whitespace, clear formatting
+                  if (!blockText || blockText.trim().length === 0) {
+                    if (b.pieces.length > 0) {
+                      // Clear formatting but keep the block
+                      b.pieces[0].text = ' ';
+                      b.pieces[0].attributes = {
+                        ...b.pieces[0].attributes,
+                        bold: false,
+                        italic: false,
+                        underline: false,
+                        strikethrough: false,
+                      };
+                    }
+                  }
                 }
               }
 
