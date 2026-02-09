@@ -1,0 +1,3246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Headless Text Formatting Demo</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      h2 {
+        margin-bottom: 10px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        position: relative;
+      }
+
+      button {
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background-color: #f8f8f8;
+        cursor: pointer;
+        font-size: 18px;
+        transition: background 0.2s;
+        position: relative;
+      }
+
+      button:hover {
+        background-color: #e6e6e6;
+      }
+
+      #editor {
+        border: 1px solid #ccc;
+        padding: 10px;
+        min-height: 150px;
+        white-space: pre-wrap;
+        border-radius: 6px;
+        margin-bottom: 20px;
+      }
+
+      /* List styling - normalize spacing to match core module */
+      /* Remove default browser margins and padding from lists */
+      #editor ul,
+      #editor ol {
+        margin: 0;
+        padding: 0;
+        padding-left: 1.2em;
+        list-style-position: inside;
+        display: block;
+      }
+
+      #editor ul {
+        list-style-type: disc;
+        padding-left: 0.8em;
+      }
+
+      #editor ol {
+        list-style-type: decimal;
+        padding-left: 1.2em;
+      }
+
+      /* Remove spacing from list items */
+      #editor li {
+        margin: 0;
+        padding: 0;
+        display: list-item;
+        list-style-position: inside;
+      }
+
+      /* Remove spacing between consecutive list elements */
+      #editor ul + ul,
+      #editor ol + ol,
+      #editor ul + ol,
+      #editor ol + ul,
+      #editor ul + div,
+      #editor ol + div,
+      #editor div + ul,
+      #editor div + ol {
+        margin-top: 0;
+      }
+
+      /* Ensure list blocks have same spacing as regular blocks */
+      #editor [data-id] {
+        margin: 0;
+        padding: 0;
+      }
+
+      pre {
+        background: #f6f6f6;
+        padding: 10px;
+        border-radius: 6px;
+        white-space: pre-wrap; /* Allow wrapping */
+        word-wrap: break-word; /* Break long words */
+        overflow-wrap: break-word; /* Modern browsers */
+        overflow-x: auto; /* Horizontal scroll if needed */
+        max-width: 100%; /* Don't exceed container */
+      }
+
+      .underline {
+        text-decoration: underline;
+      }
+      .strike {
+        text-decoration: line-through;
+      }
+
+      #colorIndicator {
+        width: 18px;
+        height: 4px;
+        background: black;
+        border-radius: 2px;
+        display: block;
+        margin: 3px auto 0;
+      }
+
+      #resetColor {
+        font-size: 14px;
+        position: absolute;
+        right: -10px;
+        top: -6px;
+        cursor: pointer;
+      }
+
+      /* ✅ Native color input always to right of button (same as main editor) */
+      #fixedColorInput {
+        position: absolute;
+        left: calc(100% + 6px); /* just to the right */
+        top: 0;
+        width: 32px;
+        height: 32px;
+        opacity: 0; /* invisible but clickable when triggered */
+        border: none;
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+        pointer-events: none; /* hidden until we manually trigger it */
+      }
+
+      /* make sure button group is stable */
+      .color-wrapper {
+        position: relative;
+        display: inline-block;
+      }
+
+      /* Font size dropdown */
+      #fontSizeSelect {
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background-color: #f8f8f8;
+        cursor: pointer;
+        font-size: 14px;
+        min-width: 80px;
+      }
+
+      #fontSizeSelect:hover {
+        background-color: #e6e6e6;
+      }
+
+      /* Font family dropdown */
+      #fontFamilySelect {
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background-color: #f8f8f8;
+        cursor: pointer;
+        font-size: 14px;
+        min-width: 150px;
+      }
+
+      #fontFamilySelect:hover {
+        background-color: #e6e6e6;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2>Headless Text Editor</h2>
+
+    <div class="toolbar">
+      <button id="boldBtn"><b>B</b></button>
+      <button id="italicBtn"><i>I</i></button>
+      <button id="underlineBtn"><span class="underline">U</span></button>
+      <button id="strikeBtn"><span class="strike">S</span></button>
+      <button id="bulletBtn" title="Bullet Points">• List</button>
+      <button id="numberedBtn" title="Numbered List">1. List</button>
+      <button id="imageBtn">🖼️ Image</button>
+
+      <!-- 🎨 Color button group -->
+      <div class="color-wrapper">
+        <button id="colorBtn" title="Font Color">
+          <span style="font-weight: bold">A</span>
+          <span id="colorIndicator"></span>
+          <span id="resetColor">🔄</span>
+        </button>
+        <input type="color" id="fixedColorInput" />
+      </div>
+
+      <!-- 📏 Font Size dropdown -->
+      <select id="fontSizeSelect" title="Font Size">
+        <option value="10px">10px</option>
+        <option value="12px">12px</option>
+        <option value="14px">14px</option>
+        <option value="16px" selected>16px</option>
+        <option value="18px">18px</option>
+        <option value="20px">20px</option>
+        <option value="24px">24px</option>
+        <option value="28px">28px</option>
+        <option value="32px">32px</option>
+        <option value="36px">36px</option>
+        <option value="48px">48px</option>
+      </select>
+
+      <!-- 🔤 Font Family dropdown -->
+      <select id="fontFamilySelect" title="Font Family">
+        <option value="Arial" selected>Arial</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Palatino">Palatino</option>
+        <option value="Garamond">Garamond</option>
+        <option value="Comic Sans MS">Comic Sans MS</option>
+        <option value="Trebuchet MS">Trebuchet MS</option>
+        <option value="Impact">Impact</option>
+        <option value="Lucida Console">Lucida Console</option>
+        <option value="Tahoma">Tahoma</option>
+        <option value="Helvetica">Helvetica</option>
+      </select>
+    </div>
+
+    <div id="editor" contenteditable="true"></div>
+
+    <h3>HTML Output</h3>
+    <pre id="output"></pre>
+
+    <script src="./dist/headless.umd.js"></script>
+    <script>
+      const {
+        initHeadless,
+        toggleBold,
+        toggleItalic,
+        toggleUnderline,
+        toggleStrikethrough,
+        toggleUnorderedList,
+        toggleOrderedList,
+        toggleFontColor,
+        setActiveFontColor,
+        getActiveFontColor,
+        toggleFontSize,
+        setActiveFontSize,
+        getActiveFontSize,
+        toggleFontFamily,
+        setActiveFontFamily,
+        getActiveFontFamily,
+        getContentHtml,
+        updatePlainText,
+        getDocForSync,
+        insertImageAtPosition,
+        deleteImageBlock,
+      } = window.TextIgniterHeadless;
+
+      const editor = document.getElementById('editor');
+      const output = document.getElementById('output');
+      const colorBtn = document.getElementById('colorBtn');
+      const colorInput = document.getElementById('fixedColorInput');
+      const colorIndicator = document.getElementById('colorIndicator');
+      const resetColor = document.getElementById('resetColor');
+      const fontSizeSelect = document.getElementById('fontSizeSelect');
+      const fontFamilySelect = document.getElementById('fontFamilySelect');
+
+      initHeadless('');
+
+      // Save cursor position before DOM manipulation
+      function saveCursorPosition() {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return null;
+
+        const range = selection.getRangeAt(0);
+        const { start } = getAbsoluteOffsets(editor, selection);
+        return start;
+      }
+
+      // Restore cursor position after DOM manipulation
+      function restoreCursorPosition(position) {
+        if (position === null || position === undefined) return;
+
+        const textNodes = getTextNodes(editor);
+        let offset = 0;
+        let targetNode = null;
+        let targetOffset = 0;
+
+        for (const node of textNodes) {
+          const nodeLength = node.textContent.length;
+          if (offset + nodeLength >= position) {
+            targetNode = node;
+            targetOffset = position - offset;
+            break;
+          }
+          offset += nodeLength;
+        }
+
+        if (targetNode) {
+          const range = document.createRange();
+          const selection = window.getSelection();
+          range.setStart(targetNode, targetOffset);
+          range.setEnd(targetNode, targetOffset);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } else if (textNodes.length > 0) {
+          // Position is at the end
+          const lastNode = textNodes[textNodes.length - 1];
+          const range = document.createRange();
+          const selection = window.getSelection();
+          range.setStart(lastNode, lastNode.textContent.length);
+          range.setEnd(lastNode, lastNode.textContent.length);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+
+      // Helper to get all text nodes in order
+      function getTextNodes(element) {
+        const textNodes = [];
+        const walker = document.createTreeWalker(
+          element,
+          NodeFilter.SHOW_TEXT,
+          null,
+          false
+        );
+        let node;
+        while ((node = walker.nextNode())) {
+          textNodes.push(node);
+        }
+        return textNodes;
+      }
+
+      function renderFromModel() {
+        // Save cursor position before replacing DOM
+        const cursorPos = saveCursorPosition();
+
+        const html = getContentHtml();
+        editor.innerHTML = html;
+        // Escape HTML for safe display in <pre> tag
+        output.textContent = html;
+
+        // Restore cursor position after DOM update
+        restoreCursorPosition(cursorPos);
+      }
+
+      function updateIndicator() {
+        colorIndicator.style.background = getActiveFontColor();
+      }
+      updateIndicator();
+
+      // Track previous text to detect what was added/removed
+      let previousText = '';
+      let previousCursorPos = 0;
+
+      // Handle Enter key to create new blocks properly
+      editor.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault(); // Prevent default Enter behavior
+
+          console.log('Enter key pressed (keydown)');
+
+          const selection = window.getSelection();
+          if (!selection || selection.rangeCount === 0) return;
+
+          // Find current block FIRST
+          let currentBlockElement = null;
+          let currentBlockId = null;
+
+          let node = selection.anchorNode;
+          // If it's a text node, get its parent
+          if (node.nodeType === Node.TEXT_NODE) {
+            node = node.parentNode;
+          }
+
+          // Walk up to find block element with data-id
+          while (node && node !== editor) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node;
+              const dataId = element.getAttribute('data-id');
+              if (dataId) {
+                currentBlockElement = element;
+                currentBlockId = dataId;
+                break;
+              }
+            }
+            node = node.parentNode;
+          }
+
+          if (!currentBlockId || !currentBlockElement) {
+            // Fallback: try to get from model
+            syncModelFromEditor();
+            const doc = getDocForSync();
+            currentBlockId = doc.selectedBlockId;
+            currentBlockElement = editor.querySelector(
+              `[data-id="${currentBlockId}"]`
+            );
+          }
+
+          if (!currentBlockId || !currentBlockElement) {
+            console.warn('Enter: Could not find current block');
+            return;
+          }
+
+          // IMPORTANT: Use innerText instead of textContent to get visible text
+          // Also, read the text BEFORE any potential DOM manipulation
+          const blockText =
+            currentBlockElement.innerText ||
+            currentBlockElement.textContent ||
+            '';
+          console.log(
+            'Enter: Block text from DOM:',
+            JSON.stringify(blockText), // Use JSON.stringify to see whitespace
+            'length:',
+            blockText.length,
+            'innerHTML:',
+            currentBlockElement.innerHTML.substring(0, 100)
+          );
+
+          // Sync this specific block to model BEFORE calculating cursor
+          const doc = getDocForSync();
+          const block = doc.blocks.find(b => b.dataId === currentBlockId);
+          if (block && block.type === 'text') {
+            // Update block text in model to match DOM
+            // Use innerText to get the actual visible text (strips HTML tags)
+            let actualBlockText = currentBlockElement.innerText || '';
+
+            // Special case: if block text is empty, text might be direct child of editor
+            // This happens when browser inserts text directly into editor
+            if (
+              actualBlockText.length === 0 &&
+              selection &&
+              selection.rangeCount > 0
+            ) {
+              const textNode = selection.anchorNode;
+              if (
+                textNode &&
+                textNode.nodeType === Node.TEXT_NODE &&
+                textNode.parentNode === editor
+              ) {
+                // Text is directly in editor - read from editor
+                actualBlockText =
+                  editor.textContent || textNode.textContent || '';
+                console.log(
+                  'Enter: Text is direct child of editor, reading from editor:',
+                  actualBlockText
+                );
+              } else {
+                // Try reading from model instead (it was synced by input handler)
+                actualBlockText = block.pieces.map(p => p.text).join('');
+                console.log(
+                  'Enter: Block text empty, using model text:',
+                  actualBlockText
+                );
+              }
+            }
+
+            if (block.pieces.length === 1) {
+              // Single piece - update text, but preserve if it's just whitespace/zero-width space
+              const modelText = block.pieces[0].text;
+              // If DOM has text but model only has whitespace, use DOM text
+              if (
+                actualBlockText.trim().length > 0 &&
+                modelText.trim().length === 0
+              ) {
+                block.pieces[0].text = actualBlockText;
+              } else if (actualBlockText.length > 0) {
+                block.pieces[0].text = actualBlockText;
+              }
+            } else {
+              // Multiple pieces - update text while preserving structure
+              const currentModelText = block.pieces.map(p => p.text).join('');
+              if (actualBlockText !== currentModelText) {
+                // If DOM text is significantly different, replace with single piece
+                if (
+                  Math.abs(actualBlockText.length - currentModelText.length) >
+                  actualBlockText.length * 0.5
+                ) {
+                  const lastPiece = block.pieces[block.pieces.length - 1];
+                  block.pieces = [
+                    {
+                      text: actualBlockText || ' ',
+                      attributes: lastPiece.attributes || {},
+                    },
+                  ];
+                } else {
+                  // Update proportionally
+                  let offset = 0;
+                  for (const piece of block.pieces) {
+                    const pieceLength = piece.text.length;
+                    if (offset + pieceLength <= actualBlockText.length) {
+                      piece.text = actualBlockText.slice(
+                        offset,
+                        offset + pieceLength
+                      );
+                    } else {
+                      piece.text = actualBlockText.slice(offset);
+                      break;
+                    }
+                    offset += pieceLength;
+                  }
+                }
+              }
+            }
+          }
+
+          // Get updated text from model (after sync) - need this first for cursor calculation
+          const fullText = block.pieces.map(p => p.text).join('');
+
+          // NOW calculate cursor position from DOM
+          const range = selection.getRangeAt(0);
+          let cursorOffset = 0;
+
+          // Check if text is a direct child of editor (not inside block)
+          const textNode = range.startContainer;
+          const isTextDirectChild =
+            textNode.nodeType === Node.TEXT_NODE &&
+            textNode.parentNode === editor;
+
+          if (isTextDirectChild) {
+            // Text is direct child - cursor should be at end of text (after typing)
+            // Use model text length since we've already synced it
+            cursorOffset = fullText.length;
+            console.log(
+              'Enter: Text is direct child, using model text length as offset:',
+              {
+                fullText,
+                fullTextLength: fullText.length,
+                cursorOffset,
+              }
+            );
+          } else {
+            // Normal case: text is inside block
+            const blockRange = document.createRange();
+            blockRange.selectNodeContents(currentBlockElement);
+            blockRange.setEnd(range.startContainer, range.startOffset);
+            cursorOffset = blockRange.toString().length;
+            console.log(
+              'Enter: Text is inside block, cursorOffset:',
+              cursorOffset
+            );
+          }
+
+          console.log(
+            'Enter: currentBlockId:',
+            currentBlockId,
+            'cursorOffset:',
+            cursorOffset,
+            'fullText length:',
+            fullText.length,
+            'fullText:',
+            fullText,
+            'isTextDirectChild:',
+            isTextDirectChild
+          );
+
+          // Ensure cursor offset is within bounds
+          const actualCursorOffset = Math.min(cursorOffset, fullText.length);
+
+          // Split the block at cursor position
+          const beforeText = fullText.slice(0, actualCursorOffset);
+          const afterText = fullText.slice(actualCursorOffset);
+
+          console.log('Enter: Splitting block:', {
+            beforeText: beforeText,
+            afterText: afterText,
+            beforeTextLength: beforeText.length,
+            afterTextLength: afterText.length,
+          });
+
+          // Update current block with text before cursor
+          if (block.pieces.length > 0) {
+            const lastPiece = block.pieces[block.pieces.length - 1];
+            const attributes = lastPiece.attributes || {};
+            block.pieces = [
+              { text: beforeText || ' ', attributes: attributes },
+            ];
+          }
+
+          // Create new block with text after cursor
+          // Inherit font properties (fontFamily, fontSize, fontColor, bgColor) from last piece
+          // But reset text formatting (bold, italic, underline, strikethrough) to false
+          // This matches core module behavior
+          const lastPiece =
+            block.pieces.length > 0
+              ? block.pieces[block.pieces.length - 1]
+              : null;
+
+          const newBlockAttributes = lastPiece
+            ? {
+                // Inherit font properties
+                fontFamily: lastPiece.attributes?.fontFamily,
+                fontSize: lastPiece.attributes?.fontSize,
+                fontColor: lastPiece.attributes?.fontColor,
+                bgColor: lastPiece.attributes?.bgColor,
+                // Reset text formatting to false
+                bold: false,
+                italic: false,
+                underline: false,
+                strikethrough: false,
+              }
+            : {
+                // Default attributes if no last piece
+                bold: false,
+                italic: false,
+                underline: false,
+                strikethrough: false,
+              };
+
+          const newBlockId = `headless-${Date.now()}`;
+          const newBlock = {
+            type: 'text',
+            dataId: newBlockId,
+            class: 'paragraph-block',
+            alignment: block.alignment || 'left',
+            pieces:
+              afterText.trim().length > 0
+                ? [
+                    {
+                      text: afterText,
+                      attributes: newBlockAttributes,
+                    },
+                  ]
+                : [
+                    {
+                      text: ' ',
+                      attributes: newBlockAttributes,
+                    },
+                  ],
+          };
+
+          // Handle list blocks: inherit list formatting
+          // This matches core module behavior
+          if (
+            block.listType === 'ol' ||
+            block.listType === 'ul' ||
+            block.listType === 'li'
+          ) {
+            let listParentId = '';
+            if (block.listType === 'ol') {
+              // Current block is ordered list parent - new block becomes list item
+              newBlock.listType = 'li';
+              newBlock.listStart = (block.listStart || 1) + 1;
+              newBlock.parentId = currentBlockId;
+              listParentId = currentBlockId;
+            } else if (block.listType === 'li') {
+              // Current block is list item - new block becomes list item with same parent
+              newBlock.listType = 'li';
+              newBlock.listStart = (block.listStart || 1) + 1;
+              newBlock.parentId = block.parentId || currentBlockId;
+              listParentId = block.parentId || currentBlockId;
+            } else if (block.listType === 'ul') {
+              // Current block is unordered list - new block becomes unordered list
+              newBlock.listType = 'ul';
+              newBlock.parentId = block.parentId || currentBlockId;
+            }
+
+            console.log('Enter: New block inherits list formatting:', {
+              listType: newBlock.listType,
+              listStart: newBlock.listStart,
+              parentId: newBlock.parentId,
+            });
+          }
+
+          console.log('Enter: New block attributes:', newBlockAttributes);
+
+          // Insert new block after current block
+          const currentBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === currentBlockId
+          );
+          if (currentBlockIndex >= 0) {
+            doc.blocks.splice(currentBlockIndex + 1, 0, newBlock);
+          } else {
+            doc.blocks.push(newBlock);
+          }
+          doc.selectedBlockId = newBlockId;
+
+          // For ordered lists, update subsequent list item numbers after insertion
+          if (
+            (block.listType === 'ol' || block.listType === 'li') &&
+            (newBlock.listType === 'li' || newBlock.listType === 'ol')
+          ) {
+            const listParentId =
+              block.listType === 'ol'
+                ? currentBlockId
+                : block.parentId || currentBlockId;
+            const insertedIndex =
+              currentBlockIndex >= 0
+                ? currentBlockIndex + 1
+                : doc.blocks.length - 1;
+
+            // Increment listStart for subsequent list items with same parent
+            for (let i = insertedIndex + 1; i < doc.blocks.length; i++) {
+              const subsequentBlock = doc.blocks[i];
+              if (
+                subsequentBlock.listType === 'li' &&
+                subsequentBlock.parentId === listParentId
+              ) {
+                subsequentBlock.listStart =
+                  (subsequentBlock.listStart || 1) + 1;
+              } else {
+                break;
+              }
+            }
+
+            // Update ordered list numbering to ensure everything is correct
+            doc.updateOrderedListNumbers();
+          }
+
+          console.log(
+            'Enter: Created new block:',
+            newBlockId,
+            'Total blocks:',
+            doc.blocks.length,
+            'listType:',
+            newBlock.listType
+          );
+
+          // Render and set cursor
+          renderFromModel();
+
+          // Set cursor at START of new block (standard behavior)
+          setTimeout(() => {
+            const newBlockElement = editor.querySelector(
+              `[data-id="${newBlockId}"]`
+            );
+            if (newBlockElement) {
+              // Focus the block first
+              newBlockElement.focus();
+
+              // Find first text node and set cursor at start
+              const walker = document.createTreeWalker(
+                newBlockElement,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+              );
+              const firstTextNode = walker.nextNode();
+              if (firstTextNode) {
+                const range = document.createRange();
+                // Set cursor at start of first text node
+                range.setStart(firstTextNode, 0);
+                range.collapse(true);
+                const sel = window.getSelection();
+                if (sel) {
+                  sel.removeAllRanges();
+                  sel.addRange(range);
+                  console.log('Enter: Cursor set at start of new block');
+                }
+              } else {
+                // No text node yet - create one and set cursor
+                const textNode = document.createTextNode('');
+                newBlockElement.appendChild(textNode);
+                const range = document.createRange();
+                range.setStart(textNode, 0);
+                range.collapse(true);
+                const sel = window.getSelection();
+                if (sel) {
+                  sel.removeAllRanges();
+                  sel.addRange(range);
+                  console.log('Enter: Cursor set in new text node');
+                }
+              }
+            }
+          }, 0);
+        } else if (e.key === 'Enter' && e.shiftKey) {
+          // Shift+Enter: insert line break (newline character)
+          e.preventDefault();
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const textNode = document.createTextNode('\n');
+            range.insertNode(textNode);
+            range.setStartAfter(textNode);
+            range.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            // Sync the block after inserting newline
+            setTimeout(() => {
+              // Find current block and update it
+              let node = selection.anchorNode;
+              if (node.nodeType === Node.TEXT_NODE) {
+                node = node.parentNode;
+              }
+              while (node && node !== editor) {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                  const element = node;
+                  const dataId = element.getAttribute('data-id');
+                  if (dataId) {
+                    const doc = getDocForSync();
+                    const block = doc.blocks.find(b => b.dataId === dataId);
+                    if (block && block.type === 'text') {
+                      const blockText = element.textContent || '';
+                      if (block.pieces.length === 1) {
+                        block.pieces[0].text = blockText;
+                      }
+                    }
+                    break;
+                  }
+                }
+                node = node.parentNode;
+              }
+            }, 0);
+          }
+        } else if (e.key === 'Backspace') {
+          // Handle Backspace key
+          const selection = window.getSelection();
+          if (!selection || selection.rangeCount === 0) return;
+
+          // Check if all text is selected
+          const { start, end, startBlockId, endBlockId } = getAbsoluteOffsets(
+            editor,
+            selection
+          );
+
+          // Sync model first
+          syncModelFromEditor();
+          const doc = getDocForSync();
+
+          // Check if selection spans all blocks (select all)
+          if (
+            !selection.isCollapsed &&
+            startBlockId &&
+            endBlockId &&
+            doc.blocks.length > 1
+          ) {
+            const startIndex = doc.blocks.findIndex(
+              b => b.dataId === startBlockId
+            );
+            const endIndex = doc.blocks.findIndex(b => b.dataId === endBlockId);
+
+            // If selection spans from first to last block, it's "select all"
+            if (
+              startIndex === 0 &&
+              endIndex === doc.blocks.length - 1 &&
+              startIndex >= 0 &&
+              endIndex >= 0
+            ) {
+              e.preventDefault(); // Prevent default deletion
+              console.log(
+                'Backspace: All blocks selected, clearing all blocks'
+              );
+
+              // Clear all blocks and create a single empty block
+              const emptyBlockId = `headless-${Date.now()}`;
+              const emptyBlock = {
+                type: 'text',
+                dataId: emptyBlockId,
+                class: 'paragraph-block',
+                alignment: 'left',
+                pieces: [
+                  {
+                    text: '\u200B', // Zero-width space to maintain block structure
+                    attributes: {
+                      bold: false,
+                      italic: false,
+                      underline: false,
+                      strikethrough: false,
+                    },
+                  },
+                ],
+              };
+
+              doc.blocks = [emptyBlock];
+              doc.selectedBlockId = emptyBlockId;
+              renderFromModel();
+
+              // Set cursor in the new empty block
+              setTimeout(() => {
+                const emptyBlockElement = editor.querySelector(
+                  `[data-id="${emptyBlockId}"]`
+                );
+                if (emptyBlockElement) {
+                  const walker = document.createTreeWalker(
+                    emptyBlockElement,
+                    NodeFilter.SHOW_TEXT,
+                    null,
+                    false
+                  );
+                  const firstTextNode = walker.nextNode();
+                  if (firstTextNode) {
+                    const range = document.createRange();
+                    range.setStart(firstTextNode, 0);
+                    range.collapse(true);
+                    const sel = window.getSelection();
+                    if (sel) {
+                      sel.removeAllRanges();
+                      sel.addRange(range);
+                    }
+                  }
+                }
+              }, 0);
+              return;
+            }
+          }
+        }
+      });
+
+      // Now update the input handler to skip Enter events
+      editor.addEventListener('input', e => {
+        console.log('Input event fired:', e.inputType, e.data);
+
+        // Skip if this was triggered by Enter (we handle it in keydown)
+        if (
+          e.inputType === 'insertLineBreak' ||
+          e.inputType === 'insertParagraph'
+        ) {
+          console.log('Input: Skipping Enter key event (handled in keydown)');
+          return;
+        }
+
+        const selection = window.getSelection();
+        console.log(
+          'Input: Selection exists:',
+          !!selection,
+          'RangeCount:',
+          selection?.rangeCount
+        );
+
+        // Save cursor position before any DOM manipulation
+        let cursorPos = null;
+        if (selection && selection.rangeCount > 0) {
+          const { start } = getAbsoluteOffsets(editor, selection);
+          cursorPos = start;
+          previousCursorPos = start;
+        }
+
+        // Get current block element from selection
+        let currentBlockElement = null;
+        let currentBlockId = null;
+
+        if (selection && selection.rangeCount > 0) {
+          // Start from the anchor node and walk up
+          let node = selection.anchorNode;
+          console.log(
+            'Input: Starting from node:',
+            node.nodeType === Node.TEXT_NODE ? 'TEXT' : 'ELEMENT',
+            node.textContent?.substring(0, 20)
+          );
+
+          // Walk up to find block element with data-id
+          // The block should be a direct child of editor
+          while (node && node !== editor) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node;
+              const dataId = element.getAttribute('data-id');
+              console.log(
+                'Input: Checking element:',
+                element.tagName,
+                'data-id:',
+                dataId,
+                'parent:',
+                element.parentNode === editor
+                  ? 'EDITOR'
+                  : element.parentNode?.tagName
+              );
+
+              // Check if this is a direct child of editor (the block div)
+              if (element.parentNode === editor && dataId) {
+                currentBlockElement = element;
+                currentBlockId = dataId;
+                console.log(
+                  'Input: Found current block (direct child):',
+                  dataId
+                );
+                break;
+              }
+
+              // Also check if it has data-id (might be nested)
+              if (dataId) {
+                currentBlockElement = element;
+                currentBlockId = dataId;
+                console.log('Input: Found current block (nested):', dataId);
+                break;
+              }
+            }
+            node = node.parentNode;
+          }
+
+          // If still not found, try to find any direct child div of editor
+          if (!currentBlockElement) {
+            console.warn('Input: Block not found, trying fallback...');
+            // Get all direct children of editor
+            const editorChildren = Array.from(editor.children);
+            console.log(
+              'Input: Editor direct children:',
+              editorChildren.length,
+              editorChildren.map(c => c.tagName)
+            );
+
+            // Special case: if text node's parent is editor, find the block div
+            node = selection.anchorNode;
+            if (
+              node.nodeType === Node.TEXT_NODE &&
+              node.parentNode === editor
+            ) {
+              console.log(
+                'Input: Text node is direct child of editor - finding block div'
+              );
+              // Find the first (or only) div child of editor
+              const blockDiv = editorChildren.find(
+                child =>
+                  child.tagName === 'DIV' && child.getAttribute('data-id')
+              );
+              if (blockDiv) {
+                currentBlockElement = blockDiv;
+                currentBlockId = blockDiv.getAttribute('data-id');
+                console.log('Input: Found block div:', currentBlockId);
+              } else {
+                // No block div found - use first div or get from model
+                const firstDiv = editorChildren.find(
+                  child => child.tagName === 'DIV'
+                );
+                if (firstDiv) {
+                  const doc = getDocForSync();
+                  if (doc.blocks.length > 0) {
+                    const blockId = doc.selectedBlockId || doc.blocks[0].dataId;
+                    currentBlockElement = firstDiv;
+                    currentBlockId = blockId;
+                    firstDiv.setAttribute('data-id', blockId);
+                    console.log(
+                      'Input: Assigned data-id to first div:',
+                      blockId
+                    );
+                  }
+                } else {
+                  // No div at all - get from model and use editor's first child
+                  const doc = getDocForSync();
+                  if (doc.blocks.length > 0 && editorChildren.length > 0) {
+                    const blockId = doc.selectedBlockId || doc.blocks[0].dataId;
+                    currentBlockElement = editorChildren[0];
+                    currentBlockId = blockId;
+                    editorChildren[0].setAttribute('data-id', blockId);
+                    console.log(
+                      'Input: Assigned data-id to first child:',
+                      blockId
+                    );
+                  }
+                }
+              }
+            } else {
+              // Normal case: walk up to find direct child
+              // Walk up until we find a direct child of editor
+              let foundDirectChild = false;
+              while (node && node !== editor) {
+                console.log(
+                  'Input: Fallback - checking node:',
+                  node.nodeType === Node.ELEMENT_NODE ? node.tagName : 'TEXT',
+                  'parent is editor?',
+                  node.parentNode === editor
+                );
+
+                if (
+                  node.nodeType === Node.ELEMENT_NODE &&
+                  node.parentNode === editor
+                ) {
+                  foundDirectChild = true;
+                  // This is a direct child of editor - use it as the block
+                  const dataId = node.getAttribute('data-id');
+                  console.log(
+                    'Input: Fallback - found direct child, data-id:',
+                    dataId
+                  );
+
+                  if (dataId) {
+                    currentBlockElement = node;
+                    currentBlockId = dataId;
+                    console.log(
+                      'Input: Found block via fallback (has data-id):',
+                      dataId
+                    );
+                    break;
+                  } else {
+                    // No data-id - get from model
+                    const doc = getDocForSync();
+                    console.log(
+                      'Input: Fallback - no data-id, doc has',
+                      doc.blocks.length,
+                      'blocks'
+                    );
+
+                    if (doc.blocks.length > 0) {
+                      // Use the selectedBlockId or first block's id
+                      const blockId =
+                        doc.selectedBlockId || doc.blocks[0].dataId;
+                      currentBlockElement = node;
+                      currentBlockId = blockId;
+                      // Set the data-id on the element so we can find it next time
+                      node.setAttribute('data-id', blockId);
+                      console.log(
+                        'Input: Assigned data-id to element:',
+                        blockId
+                      );
+                      break;
+                    }
+                  }
+                }
+                node = node.parentNode;
+              }
+
+              if (!foundDirectChild) {
+                console.warn(
+                  'Input: Fallback - never found direct child of editor'
+                );
+              }
+            }
+          }
+        } else {
+          console.warn('Input: No selection available');
+        }
+
+        // Check if all text was deleted (for deleteContentBackward)
+        // Sync model first to get latest state
+        syncModelFromEditor();
+        const doc = getDocForSync();
+        let shouldClearAllBlocks = false;
+
+        if (e.inputType === 'deleteContentBackward') {
+          // After deletion, check if editor is empty or nearly empty
+          const editorText = editor.textContent || '';
+          const editorTextTrimmed = editorText.trim();
+
+          // Check if selection spans multiple blocks or all content
+          if (selection && selection.rangeCount > 0) {
+            const { start, end, startBlockId, endBlockId } = getAbsoluteOffsets(
+              editor,
+              selection
+            );
+
+            // If selection was not collapsed before deletion, check if it spanned all blocks
+            const wasNonCollapsed = !selection.isCollapsed || start !== end;
+
+            if (wasNonCollapsed && startBlockId && endBlockId) {
+              const startIndex = doc.blocks.findIndex(
+                b => b.dataId === startBlockId
+              );
+              const endIndex = doc.blocks.findIndex(
+                b => b.dataId === endBlockId
+              );
+
+              // If selection spans from first to last block, it's "select all"
+              if (
+                startIndex >= 0 &&
+                endIndex >= 0 &&
+                startIndex === 0 &&
+                endIndex === doc.blocks.length - 1 &&
+                doc.blocks.length > 1
+              ) {
+                shouldClearAllBlocks = true;
+                console.log(
+                  'Input: All blocks selected, will clear all blocks'
+                );
+              }
+            }
+          }
+
+          // Also check if editor is now empty after deletion but model still has multiple blocks
+          // This handles cases where the selection detection didn't work
+          if (
+            !shouldClearAllBlocks &&
+            editorTextTrimmed.length === 0 &&
+            doc.blocks.length > 1
+          ) {
+            // Check if all blocks are empty or only whitespace
+            const allBlocksEmpty = doc.blocks.every(b => {
+              if (b.type !== 'text') return false;
+              const blockText = b.pieces.map(p => p.text).join('');
+              return !blockText || blockText.trim().length === 0;
+            });
+
+            if (allBlocksEmpty) {
+              shouldClearAllBlocks = true;
+              console.log(
+                'Input: Editor is empty with multiple empty blocks, will clear all blocks'
+              );
+            }
+          }
+
+          // Additional check: Check DOM blocks directly to see if they're actually empty
+          if (!shouldClearAllBlocks && doc.blocks.length > 1) {
+            // Get all block elements from DOM
+            const domBlocks = editor.querySelectorAll('[data-id]');
+            let domTotalText = '';
+
+            domBlocks.forEach(blockEl => {
+              const blockText = (
+                blockEl.innerText ||
+                blockEl.textContent ||
+                ''
+              ).trim();
+              domTotalText += blockText;
+            });
+
+            // If DOM shows empty or very little content but we have multiple blocks in model,
+            // user likely deleted all content
+            if (domTotalText.trim().length === 0 && doc.blocks.length > 1) {
+              shouldClearAllBlocks = true;
+              console.log(
+                'Input: DOM blocks are empty but model has multiple blocks, will clear all blocks'
+              );
+            }
+          }
+
+          // Final check: if editor text is empty and we have multiple blocks, clear them
+          // This is a catch-all for cases where the above checks didn't catch it
+          if (!shouldClearAllBlocks && doc.blocks.length > 1) {
+            const allEditorBlocks = editor.querySelectorAll('[data-id]');
+            const visibleText = Array.from(allEditorBlocks)
+              .map(el => (el.innerText || el.textContent || '').trim())
+              .join('')
+              .trim();
+
+            // Count blocks with actual content
+            let blocksWithContent = 0;
+            allEditorBlocks.forEach(el => {
+              const text = (el.innerText || el.textContent || '').trim();
+              if (text.length > 0) {
+                blocksWithContent++;
+              }
+            });
+
+            // If we have multiple blocks but most are empty, user likely deleted all
+            // Clear if: total visible text is very short compared to number of blocks
+            // OR if we have multiple blocks but editor text is empty
+            if (
+              visibleText.length === 0 ||
+              (blocksWithContent < doc.blocks.length &&
+                visibleText.length < doc.blocks.length)
+            ) {
+              shouldClearAllBlocks = true;
+              console.log(
+                'Input: Final check - editor appears empty with multiple blocks, will clear all blocks',
+                {
+                  visibleTextLength: visibleText.length,
+                  blocksWithContent,
+                  totalBlocks: doc.blocks.length,
+                }
+              );
+            }
+          }
+        }
+
+        // Handle "select all and delete" or "empty editor with multiple blocks" case
+        if (shouldClearAllBlocks && e.inputType === 'deleteContentBackward') {
+          // Clear all blocks and create a single empty block
+          const emptyBlockId = `headless-${Date.now()}`;
+          const emptyBlock = {
+            type: 'text',
+            dataId: emptyBlockId,
+            class: 'paragraph-block',
+            alignment: 'left',
+            pieces: [
+              {
+                text: '\u200B', // Zero-width space to maintain block structure
+                attributes: {
+                  bold: false,
+                  italic: false,
+                  underline: false,
+                  strikethrough: false,
+                },
+              },
+            ],
+          };
+
+          doc.blocks = [emptyBlock];
+          doc.selectedBlockId = emptyBlockId;
+          console.log('Input: Cleared all blocks, created single empty block');
+          renderFromModel();
+
+          // Set cursor in the new empty block
+          setTimeout(() => {
+            const emptyBlockElement = editor.querySelector(
+              `[data-id="${emptyBlockId}"]`
+            );
+            if (emptyBlockElement) {
+              const walker = document.createTreeWalker(
+                emptyBlockElement,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+              );
+              const firstTextNode = walker.nextNode();
+              if (firstTextNode) {
+                const range = document.createRange();
+                range.setStart(firstTextNode, 0);
+                range.collapse(true);
+                const sel = window.getSelection();
+                if (sel) {
+                  sel.removeAllRanges();
+                  sel.addRange(range);
+                }
+              }
+            }
+          }, 0);
+
+          return;
+        }
+
+        // Only sync if we're in a text block (not an image block)
+        if (currentBlockElement && currentBlockId) {
+          const block = doc.blocks.find(b => b.dataId === currentBlockId);
+
+          // Only sync text blocks, skip image blocks
+          if (block && block.type === 'text') {
+            // Get text from current block only, not entire editor
+            // Use innerText to get actual visible text (strips HTML)
+            let blockText =
+              currentBlockElement.innerText ||
+              currentBlockElement.textContent ||
+              '';
+
+            // Special case: if text node is direct child of editor, read from editor
+            // This happens when browser inserts text directly into editor
+            if (
+              blockText.length === 0 &&
+              selection &&
+              selection.rangeCount > 0
+            ) {
+              const textNode = selection.anchorNode;
+              if (
+                textNode.nodeType === Node.TEXT_NODE &&
+                textNode.parentNode === editor
+              ) {
+                // Text is directly in editor - read from editor or text node
+                blockText = editor.textContent || textNode.textContent || '';
+                console.log(
+                  'Input: Text is direct child of editor, reading from editor:',
+                  blockText
+                );
+              }
+            }
+
+            const currentModelText = block.pieces.map(p => p.text).join('');
+
+            console.log('Input: Block sync check', {
+              blockId: currentBlockId,
+              blockText: blockText,
+              blockTextLength: blockText.length,
+              modelText: currentModelText,
+              modelTextLength: currentModelText.length,
+              textMatch: blockText === currentModelText,
+              inputType: e.inputType,
+              inputData: e.data,
+            });
+
+            // ALWAYS update if text changed (even if length is same)
+            if (blockText !== currentModelText) {
+              console.log('Input: Text changed, updating model...');
+
+              // Check if this is a newly created block (after Enter)
+              // New blocks should start with bold:false, italic:false, etc.
+              // If the piece has text formatting but the previous text was just whitespace,
+              // this is likely a new block that incorrectly inherited formatting
+              const currentPiece =
+                block.pieces.length > 0 ? block.pieces[0] : null;
+              const previousTextWasWhitespace =
+                currentModelText.trim().length === 0 ||
+                currentModelText === ' ';
+              const hasTextFormatting =
+                currentPiece &&
+                (currentPiece.attributes?.bold === true ||
+                  currentPiece.attributes?.italic === true ||
+                  currentPiece.attributes?.underline === true ||
+                  currentPiece.attributes?.strikethrough === true);
+
+              // Update the block's text directly
+              if (block.pieces.length === 1) {
+                // Single piece - update text
+                block.pieces[0].text = blockText || ' ';
+
+                // If block text is empty or only whitespace, clear formatting
+                if (!blockText || blockText.trim().length === 0) {
+                  // Clear text formatting when block becomes empty
+                  block.pieces[0].attributes = {
+                    ...block.pieces[0].attributes,
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    strikethrough: false,
+                  };
+                  console.log('Input: Cleared formatting for empty block');
+                }
+                // If previous text was whitespace (new block) and piece has text formatting,
+                // reset formatting attributes (new blocks should not inherit text formatting)
+                else if (previousTextWasWhitespace && hasTextFormatting) {
+                  // New block - reset text formatting but keep font properties
+                  block.pieces[0].attributes = {
+                    ...block.pieces[0].attributes,
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    strikethrough: false,
+                  };
+                  console.log(
+                    'Input: Reset text formatting for new block (was whitespace)'
+                  );
+                }
+
+                console.log(
+                  'Input: Updated single piece, new text:',
+                  block.pieces[0].text,
+                  'attributes:',
+                  block.pieces[0].attributes
+                );
+              } else {
+                // Multiple pieces - preserve structure, update text proportionally
+                // But if text length changed significantly, replace with single piece
+                const lengthDiff = Math.abs(
+                  blockText.length - currentModelText.length
+                );
+                if (lengthDiff > currentModelText.length * 0.3) {
+                  // Significant change - replace with single piece, preserve last attributes
+                  const lastPiece = block.pieces[block.pieces.length - 1];
+                  block.pieces = [
+                    {
+                      text: blockText || ' ',
+                      attributes: lastPiece.attributes || {},
+                    },
+                  ];
+                  console.log(
+                    'Input: Replaced with single piece, new text:',
+                    block.pieces[0].text
+                  );
+                } else {
+                  // Update proportionally
+                  let offset = 0;
+                  for (const piece of block.pieces) {
+                    const pieceLength = piece.text.length;
+                    if (offset + pieceLength <= blockText.length) {
+                      piece.text = blockText.slice(
+                        offset,
+                        offset + pieceLength
+                      );
+                    } else {
+                      // Text is longer - append to last piece
+                      piece.text = blockText.slice(offset);
+                      break;
+                    }
+                    offset += pieceLength;
+                  }
+                  console.log('Input: Updated proportionally');
+                }
+              }
+
+              // Clean up empty blocks (blocks with only whitespace and formatting)
+              const docAfterUpdate = getDocForSync();
+              for (let i = docAfterUpdate.blocks.length - 1; i >= 0; i--) {
+                const b = docAfterUpdate.blocks[i];
+                if (b.type === 'text') {
+                  const blockText = b.pieces.map(p => p.text).join('');
+                  // If block is empty or only whitespace, clear formatting
+                  if (!blockText || blockText.trim().length === 0) {
+                    if (b.pieces.length > 0) {
+                      // Clear formatting but keep the block
+                      b.pieces[0].text = ' ';
+                      b.pieces[0].attributes = {
+                        ...b.pieces[0].attributes,
+                        bold: false,
+                        italic: false,
+                        underline: false,
+                        strikethrough: false,
+                      };
+                    }
+                  }
+                }
+              }
+
+              // IMPORTANT: Don't render immediately - it might clear the DOM
+              // Just update the output display
+              console.log(
+                'Input: Model updated, NOT rendering to avoid text loss'
+              );
+              previousText = editor.innerText || editor.textContent || '';
+              // Update output WITHOUT rendering to DOM
+              output.textContent = getContentHtml();
+
+              // Only render if we really need to (e.g., formatting changed)
+              // For normal typing, the DOM already has the correct text
+            } else {
+              console.log('Input: Text matches, no update needed');
+            }
+          } else if (block && block.type === 'image') {
+            // Image block - don't sync, just update output
+            console.log('Input: Skipping image block sync');
+          } else {
+            console.warn('Input: Block not found in model:', currentBlockId);
+          }
+        } else {
+          console.warn('Input: Could not find current block element');
+        }
+
+        previousText = editor.innerText || editor.textContent || '';
+        // Escape HTML for safe display in <pre> tag
+        output.textContent = getContentHtml();
+      });
+
+      function getAbsoluteOffsets(editorEl, selection) {
+        const range = selection.getRangeAt(0);
+        const preRange = document.createRange();
+        preRange.selectNodeContents(editorEl);
+        preRange.setEnd(range.startContainer, range.startOffset);
+        const start = preRange.toString().length;
+        preRange.setEnd(range.endContainer, range.endOffset);
+        const end = preRange.toString().length;
+
+        // Also find which block(s) contain the selection
+        let startBlockElement = null;
+        let startBlockId = null;
+        let endBlockElement = null;
+        let endBlockId = null;
+
+        // Find start block
+        let node = range.startContainer;
+        const isStartTextDirectChild =
+          node.nodeType === Node.TEXT_NODE && node.parentNode === editorEl;
+
+        if (node.nodeType === Node.TEXT_NODE) {
+          node = node.parentNode;
+        }
+        while (node && node !== editorEl) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node;
+            const dataId = element.getAttribute('data-id');
+            if (dataId) {
+              startBlockElement = element;
+              startBlockId = dataId;
+              break;
+            }
+          }
+          node = node.parentNode;
+        }
+
+        // Fallback: if text is direct child of editor, find the block div
+        if (!startBlockId && isStartTextDirectChild) {
+          const editorChildren = Array.from(editorEl.children);
+          const blockDiv = editorChildren.find(
+            child => child.tagName === 'DIV' && child.getAttribute('data-id')
+          );
+          if (blockDiv) {
+            startBlockElement = blockDiv;
+            startBlockId = blockDiv.getAttribute('data-id');
+          } else if (editorChildren.length === 1) {
+            // Only one child - use it and get data-id from model
+            const doc = getDocForSync();
+            if (doc.blocks.length > 0) {
+              const blockId = doc.selectedBlockId || doc.blocks[0].dataId;
+              startBlockElement = editorChildren[0];
+              startBlockId = blockId;
+              editorChildren[0].setAttribute('data-id', blockId);
+            }
+          }
+        }
+
+        // Find end block
+        node = range.endContainer;
+        const isEndTextDirectChild =
+          node.nodeType === Node.TEXT_NODE && node.parentNode === editorEl;
+
+        if (node.nodeType === Node.TEXT_NODE) {
+          node = node.parentNode;
+        }
+        while (node && node !== editorEl) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node;
+            const dataId = element.getAttribute('data-id');
+            if (dataId) {
+              endBlockElement = element;
+              endBlockId = dataId;
+              break;
+            }
+          }
+          node = node.parentNode;
+        }
+
+        // Fallback: if text is direct child of editor, find the block div
+        if (!endBlockId && isEndTextDirectChild) {
+          const editorChildren = Array.from(editorEl.children);
+          const blockDiv = editorChildren.find(
+            child => child.tagName === 'DIV' && child.getAttribute('data-id')
+          );
+          if (blockDiv) {
+            endBlockElement = blockDiv;
+            endBlockId = blockDiv.getAttribute('data-id');
+          } else if (editorChildren.length === 1) {
+            // Only one child - use it and get data-id from model
+            const doc = getDocForSync();
+            if (doc.blocks.length > 0) {
+              const blockId = doc.selectedBlockId || doc.blocks[0].dataId;
+              endBlockElement = editorChildren[0];
+              endBlockId = blockId;
+              editorChildren[0].setAttribute('data-id', blockId);
+            }
+          }
+        }
+
+        return {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement,
+          endBlockElement,
+        };
+      }
+
+      // Sync editor text to model before applying formatting
+      // Only sync if model is empty or text has actually changed
+      function syncModelFromEditor() {
+        // Parse all blocks from DOM
+        const blockElements = editor.querySelectorAll('[data-id]');
+        const doc = getDocForSync();
+
+        console.log(
+          'syncModelFromEditor: Found',
+          blockElements.length,
+          'blocks in DOM'
+        );
+
+        // Sync each block individually
+        blockElements.forEach(element => {
+          const dataId = element.getAttribute('data-id');
+          if (!dataId) return;
+
+          const blockType = element.getAttribute('type') || 'text';
+          if (blockType !== 'text') return; // Skip non-text blocks for now
+
+          // Get text from this block element
+          let blockText = element.innerText || element.textContent || '';
+
+          // Special case: if block text is empty, text might be direct child of editor
+          // Check if editor has text nodes as direct children
+          if (blockText.length === 0) {
+            const editorTextNodes = Array.from(editor.childNodes).filter(
+              node =>
+                node.nodeType === Node.TEXT_NODE &&
+                node.textContent.trim().length > 0
+            );
+            if (editorTextNodes.length > 0) {
+              // Text is direct child - read from editor
+              blockText = editor.textContent || '';
+              console.log(
+                'syncModelFromEditor: Block empty, reading from editor:',
+                blockText
+              );
+            }
+          }
+
+          // Find or create block in model
+          let block = doc.blocks.find(b => b.dataId === dataId);
+
+          if (block) {
+            // Update existing block
+            if (block.type === 'text') {
+              const currentModelText = block.pieces.map(p => p.text).join('');
+
+              // Only update if text changed
+              if (blockText !== currentModelText) {
+                if (block.pieces.length === 1) {
+                  // Single piece - just update text
+                  block.pieces[0].text = blockText || ' ';
+                } else {
+                  // Multiple pieces - update proportionally
+                  let offset = 0;
+                  for (const piece of block.pieces) {
+                    const pieceLength = piece.text.length;
+                    if (offset + pieceLength <= blockText.length) {
+                      piece.text = blockText.slice(
+                        offset,
+                        offset + pieceLength
+                      );
+                    } else {
+                      piece.text = blockText.slice(offset);
+                      break;
+                    }
+                    offset += pieceLength;
+                  }
+                }
+              }
+            }
+          } else {
+            // Create new block (shouldn't happen often, but handle it)
+            console.warn(
+              'syncModelFromEditor: Block not found in model, creating:',
+              dataId
+            );
+            const newBlock = {
+              type: 'text',
+              dataId: dataId,
+              class: 'paragraph-block',
+              alignment: 'left',
+              pieces: [{ text: blockText || ' ', attributes: {} }],
+            };
+            doc.blocks.push(newBlock);
+          }
+        });
+
+        // Update selectedBlockId if current selection is in a block
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          let node = selection.anchorNode;
+          if (node.nodeType === Node.TEXT_NODE) {
+            node = node.parentNode;
+          }
+          while (node && node !== editor) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node;
+              const dataId = element.getAttribute('data-id');
+              if (dataId) {
+                doc.selectedBlockId = dataId;
+                break;
+              }
+            }
+            node = node.parentNode;
+          }
+        }
+      }
+
+      function handleToggle(action) {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        // Sync ALL blocks from DOM to model before applying formatting
+        syncModelFromEditor();
+
+        const {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement,
+          endBlockElement,
+        } = getAbsoluteOffsets(editor, selection);
+        console.log('handleToggle: Selection range:', {
+          start,
+          end,
+          action,
+          startBlockId,
+          endBlockId,
+          startBlockElement: startBlockElement?.tagName,
+          endBlockElement: endBlockElement?.tagName,
+          spansMultipleBlocks: startBlockId !== endBlockId,
+        });
+
+        if (start === end) {
+          console.log('handleToggle: No selection, skipping');
+          return;
+        }
+
+        if (!startBlockId || !startBlockElement) {
+          console.warn('handleToggle: Could not find start block');
+          return;
+        }
+
+        const doc = getDocForSync();
+
+        // Check if selection spans multiple blocks
+        if (startBlockId !== endBlockId && endBlockId) {
+          console.log(
+            'handleToggle: Selection spans multiple blocks, processing all blocks...'
+          );
+
+          // Find all blocks between start and end (inclusive)
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex === -1 || endBlockIndex === -1) {
+            console.warn('handleToggle: Could not find block indices');
+            return;
+          }
+
+          console.log('handleToggle: Block indices:', {
+            startBlockIndex,
+            endBlockIndex,
+            totalBlocks: doc.blocks.length,
+          });
+
+          // Calculate absolute offsets for each block
+          let accumulatedOffset = 0;
+          const blocksToFormat = [];
+
+          for (let i = 0; i < doc.blocks.length; i++) {
+            const block = doc.blocks[i];
+            if (block.type !== 'text') {
+              // Skip non-text blocks but don't add to offset
+              continue;
+            }
+
+            const blockText = block.pieces.map(p => p.text).join('');
+            const blockLength = blockText.length;
+            const blockStart = accumulatedOffset;
+            const blockEnd = accumulatedOffset + blockLength;
+
+            // Check if this block is within the selection range
+            if (i >= startBlockIndex && i <= endBlockIndex) {
+              let blockRelativeStart = 0;
+              let blockRelativeEnd = blockLength;
+
+              // For the first block, calculate where selection starts
+              if (i === startBlockIndex) {
+                blockRelativeStart = Math.max(0, start - blockStart);
+              }
+
+              // For the last block, calculate where selection ends
+              if (i === endBlockIndex) {
+                blockRelativeEnd = Math.min(end - blockStart, blockLength);
+              }
+
+              // Only format if there's actual text selected in this block
+              if (blockRelativeStart < blockRelativeEnd) {
+                blocksToFormat.push({
+                  blockId: block.dataId,
+                  blockIndex: i,
+                  blockRelativeStart,
+                  blockRelativeEnd,
+                  blockText: blockText.substring(0, 50) + '...',
+                });
+              }
+            }
+
+            accumulatedOffset += blockLength;
+          }
+
+          console.log('handleToggle: Blocks to format:', blocksToFormat);
+
+          // Apply formatting to each block
+          for (const blockInfo of blocksToFormat) {
+            console.log('handleToggle: Formatting block:', {
+              blockId: blockInfo.blockId,
+              start: blockInfo.blockRelativeStart,
+              end: blockInfo.blockRelativeEnd,
+            });
+
+            // Set selectedBlockId so formatAttribute uses the correct block
+            doc.selectedBlockId = blockInfo.blockId;
+
+            // Apply formatting with block-relative offsets
+            switch (action) {
+              case 'bold':
+                toggleBold(
+                  blockInfo.blockRelativeStart,
+                  blockInfo.blockRelativeEnd
+                );
+                break;
+              case 'italic':
+                toggleItalic(
+                  blockInfo.blockRelativeStart,
+                  blockInfo.blockRelativeEnd
+                );
+                break;
+              case 'underline':
+                toggleUnderline(
+                  blockInfo.blockRelativeStart,
+                  blockInfo.blockRelativeEnd
+                );
+                break;
+              case 'strike':
+                toggleStrikethrough(
+                  blockInfo.blockRelativeStart,
+                  blockInfo.blockRelativeEnd
+                );
+                break;
+            }
+          }
+
+          renderFromModel();
+          return;
+        }
+
+        // Single block case: Calculate block-relative offsets
+        // First, calculate the absolute offset of the start of this block
+        let blockStartOffset = 0;
+        for (const block of doc.blocks) {
+          if (block.dataId === startBlockId) {
+            break;
+          }
+          if (block.type === 'text') {
+            blockStartOffset += block.pieces.map(p => p.text).join('').length;
+          }
+        }
+
+        // Get block text length - use model if DOM is empty (text is direct child of editor)
+        const block = doc.blocks.find(b => b.dataId === startBlockId);
+        const modelText = block ? block.pieces.map(p => p.text).join('') : '';
+        const domText = startBlockElement.textContent || '';
+        const blockTextLength = modelText.length || domText.length;
+
+        console.log('handleToggle: Block text info (single block):', {
+          blockId: startBlockId,
+          modelText: modelText,
+          modelTextLength: modelText.length,
+          domText: domText,
+          domTextLength: domText.length,
+          blockStartOffset,
+        });
+
+        // If block text is empty in DOM but we have model text, text is likely direct child
+        if (domText.length === 0 && modelText.length > 0) {
+          // Use model text length
+          const blockRelativeStart = Math.max(0, start - blockStartOffset);
+          const blockRelativeEnd = Math.min(
+            end - blockStartOffset,
+            modelText.length
+          );
+
+          console.log('handleToggle: Block-relative offsets (using model):', {
+            blockId: startBlockId,
+            blockStartOffset,
+            start,
+            end,
+            blockRelativeStart,
+            blockRelativeEnd,
+            modelText: modelText,
+            modelTextLength: modelText.length,
+          });
+
+          // Set selectedBlockId so formatAttribute uses the correct block
+          doc.selectedBlockId = startBlockId;
+
+          // Apply formatting with block-relative offsets
+          switch (action) {
+            case 'bold':
+              toggleBold(blockRelativeStart, blockRelativeEnd);
+              break;
+            case 'italic':
+              toggleItalic(blockRelativeStart, blockRelativeEnd);
+              break;
+            case 'underline':
+              toggleUnderline(blockRelativeStart, blockRelativeEnd);
+              break;
+            case 'strike':
+              toggleStrikethrough(blockRelativeStart, blockRelativeEnd);
+              break;
+          }
+          renderFromModel();
+          return;
+        }
+
+        // Normal case: Calculate block-relative start and end
+        const blockRelativeStart = Math.max(0, start - blockStartOffset);
+        const blockRelativeEnd = Math.min(
+          end - blockStartOffset,
+          blockTextLength
+        );
+
+        console.log('handleToggle: Block-relative offsets (normal case):', {
+          blockId: startBlockId,
+          blockStartOffset,
+          start,
+          end,
+          blockRelativeStart,
+          blockRelativeEnd,
+          blockTextLength,
+          modelText: modelText,
+          domText: domText,
+        });
+
+        // Set selectedBlockId so formatAttribute uses the correct block
+        doc.selectedBlockId = startBlockId;
+
+        // Apply formatting with block-relative offsets
+        switch (action) {
+          case 'bold':
+            toggleBold(blockRelativeStart, blockRelativeEnd);
+            break;
+          case 'italic':
+            toggleItalic(blockRelativeStart, blockRelativeEnd);
+            break;
+          case 'underline':
+            toggleUnderline(blockRelativeStart, blockRelativeEnd);
+            break;
+          case 'strike':
+            toggleStrikethrough(blockRelativeStart, blockRelativeEnd);
+            break;
+        }
+        renderFromModel();
+      }
+
+      document
+        .getElementById('boldBtn')
+        .addEventListener('click', () => handleToggle('bold'));
+      document
+        .getElementById('italicBtn')
+        .addEventListener('click', () => handleToggle('italic'));
+      document
+        .getElementById('underlineBtn')
+        .addEventListener('click', () => handleToggle('underline'));
+      document
+        .getElementById('strikeBtn')
+        .addEventListener('click', () => handleToggle('strike'));
+
+      // Handle bullet points (unordered list)
+      document.getElementById('bulletBtn').addEventListener('click', () => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        // Sync ALL blocks from DOM to model before applying formatting
+        syncModelFromEditor();
+
+        const { startBlockId, endBlockId } = getAbsoluteOffsets(
+          editor,
+          selection
+        );
+
+        const doc = getDocForSync();
+        const dataIds = [];
+
+        // If selection spans multiple blocks, get all blocks between start and end
+        if (startBlockId && endBlockId && startBlockId !== endBlockId) {
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex >= 0 && endBlockIndex >= 0) {
+            const startIdx = Math.min(startBlockIndex, endBlockIndex);
+            const endIdx = Math.max(startBlockIndex, endBlockIndex);
+
+            for (let i = startIdx; i <= endIdx; i++) {
+              const block = doc.blocks[i];
+              if (block.type === 'text') {
+                dataIds.push(block.dataId);
+              }
+            }
+          }
+        } else if (startBlockId) {
+          // Single block selected
+          const block = doc.blocks.find(b => b.dataId === startBlockId);
+          if (block && block.type === 'text') {
+            dataIds.push(startBlockId);
+          }
+        } else {
+          // No block found, use selectedBlockId
+          if (doc.selectedBlockId) {
+            const block = doc.blocks.find(
+              b => b.dataId === doc.selectedBlockId
+            );
+            if (block && block.type === 'text') {
+              dataIds.push(doc.selectedBlockId);
+            }
+          }
+        }
+
+        console.log('Bullet points: Toggling list on blocks:', dataIds);
+
+        if (dataIds.length > 0) {
+          toggleUnorderedList(dataIds);
+          renderFromModel();
+        }
+      });
+
+      // Handle numbered list (ordered list)
+      document.getElementById('numberedBtn').addEventListener('click', () => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        // Sync ALL blocks from DOM to model before applying formatting
+        syncModelFromEditor();
+
+        const { startBlockId, endBlockId } = getAbsoluteOffsets(
+          editor,
+          selection
+        );
+
+        const doc = getDocForSync();
+        const dataIds = [];
+
+        // If selection spans multiple blocks, get all blocks between start and end
+        if (startBlockId && endBlockId && startBlockId !== endBlockId) {
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex >= 0 && endBlockIndex >= 0) {
+            const startIdx = Math.min(startBlockIndex, endBlockIndex);
+            const endIdx = Math.max(startBlockIndex, endBlockIndex);
+
+            for (let i = startIdx; i <= endIdx; i++) {
+              const block = doc.blocks[i];
+              if (block.type === 'text') {
+                dataIds.push(block.dataId);
+              }
+            }
+          }
+        } else if (startBlockId) {
+          // Single block selected
+          const block = doc.blocks.find(b => b.dataId === startBlockId);
+          if (block && block.type === 'text') {
+            dataIds.push(startBlockId);
+          }
+        } else {
+          // No block found, use selectedBlockId
+          if (doc.selectedBlockId) {
+            const block = doc.blocks.find(
+              b => b.dataId === doc.selectedBlockId
+            );
+            if (block && block.type === 'text') {
+              dataIds.push(doc.selectedBlockId);
+            }
+          }
+        }
+
+        console.log('Numbered list: Toggling list on blocks:', dataIds);
+
+        if (dataIds.length > 0) {
+          toggleOrderedList(dataIds);
+          renderFromModel();
+        }
+      });
+
+      // 🎨 Fixed-position native color chooser (opens to the right)
+      colorBtn.addEventListener('click', () => {
+        colorInput.value = getActiveFontColor();
+        colorInput.style.pointerEvents = 'auto';
+        colorInput.click();
+        setTimeout(() => {
+          colorInput.style.pointerEvents = 'none';
+        }, 300);
+      });
+
+      // 🎨 Apply color on pick
+      colorInput.addEventListener('input', () => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        // Sync ALL blocks from DOM to model before applying formatting
+        syncModelFromEditor();
+
+        const {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement,
+          endBlockElement,
+        } = getAbsoluteOffsets(editor, selection);
+        console.log('Font color: Selection range:', {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement: startBlockElement?.tagName,
+          endBlockElement: endBlockElement?.tagName,
+          spansMultipleBlocks: startBlockId !== endBlockId,
+        });
+
+        if (start === end) {
+          console.log('Font color: No selection, skipping');
+          return;
+        }
+
+        if (!startBlockId || !startBlockElement) {
+          console.warn('Font color: Could not find start block');
+          return;
+        }
+
+        const chosenColor = colorInput.value;
+        setActiveFontColor(chosenColor);
+        updateIndicator();
+
+        const doc = getDocForSync();
+
+        // Check if selection spans multiple blocks
+        if (startBlockId !== endBlockId && endBlockId) {
+          console.log(
+            'Font color: Selection spans multiple blocks, processing all blocks...'
+          );
+
+          // Find all blocks between start and end (inclusive)
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex === -1 || endBlockIndex === -1) {
+            console.warn('Font color: Could not find block indices');
+            return;
+          }
+
+          console.log('Font color: Block indices:', {
+            startBlockIndex,
+            endBlockIndex,
+            totalBlocks: doc.blocks.length,
+          });
+
+          // Calculate absolute offsets for each block
+          let accumulatedOffset = 0;
+          const blocksToFormat = [];
+
+          for (let i = 0; i < doc.blocks.length; i++) {
+            const block = doc.blocks[i];
+            if (block.type !== 'text') {
+              // Skip non-text blocks but don't add to offset
+              continue;
+            }
+
+            const blockText = block.pieces.map(p => p.text).join('');
+            const blockLength = blockText.length;
+            const blockStart = accumulatedOffset;
+            const blockEnd = accumulatedOffset + blockLength;
+
+            // Check if this block is within the selection range
+            if (i >= startBlockIndex && i <= endBlockIndex) {
+              let blockRelativeStart = 0;
+              let blockRelativeEnd = blockLength;
+
+              // For the first block, calculate where selection starts
+              if (i === startBlockIndex) {
+                blockRelativeStart = Math.max(0, start - blockStart);
+              }
+
+              // For the last block, calculate where selection ends
+              if (i === endBlockIndex) {
+                blockRelativeEnd = Math.min(end - blockStart, blockLength);
+              }
+
+              // Only format if there's actual text selected in this block
+              if (blockRelativeStart < blockRelativeEnd) {
+                blocksToFormat.push({
+                  blockId: block.dataId,
+                  blockIndex: i,
+                  blockRelativeStart,
+                  blockRelativeEnd,
+                  blockText: blockText.substring(0, 50) + '...',
+                });
+              }
+            }
+
+            accumulatedOffset += blockLength;
+          }
+
+          console.log('Font color: Blocks to format:', blocksToFormat);
+
+          // Apply formatting to each block
+          for (const blockInfo of blocksToFormat) {
+            console.log('Font color: Formatting block:', {
+              blockId: blockInfo.blockId,
+              start: blockInfo.blockRelativeStart,
+              end: blockInfo.blockRelativeEnd,
+            });
+
+            // Set selectedBlockId so formatAttribute uses the correct block
+            doc.selectedBlockId = blockInfo.blockId;
+
+            // Apply formatting with block-relative offsets
+            toggleFontColor(
+              blockInfo.blockRelativeStart,
+              blockInfo.blockRelativeEnd,
+              chosenColor
+            );
+          }
+
+          renderFromModel();
+          return;
+        }
+
+        // Single block case: Calculate block-relative offsets
+        // First, calculate the absolute offset of the start of this block
+        let blockStartOffset = 0;
+        for (const block of doc.blocks) {
+          if (block.dataId === startBlockId) {
+            break;
+          }
+          if (block.type === 'text') {
+            blockStartOffset += block.pieces.map(p => p.text).join('').length;
+          }
+        }
+
+        // Get block text length - use model if DOM is empty (text is direct child of editor)
+        const block = doc.blocks.find(b => b.dataId === startBlockId);
+        const modelText = block ? block.pieces.map(p => p.text).join('') : '';
+        const domText = startBlockElement.textContent || '';
+        const blockTextLength = modelText.length || domText.length;
+
+        console.log('Font color: Block text info (single block):', {
+          blockId: startBlockId,
+          modelText: modelText,
+          modelTextLength: modelText.length,
+          domText: domText,
+          domTextLength: domText.length,
+          blockStartOffset,
+        });
+
+        // If block text is empty in DOM but we have model text, text is likely direct child
+        if (domText.length === 0 && modelText.length > 0) {
+          // Use model text length
+          const blockRelativeStart = Math.max(0, start - blockStartOffset);
+          const blockRelativeEnd = Math.min(
+            end - blockStartOffset,
+            modelText.length
+          );
+
+          console.log('Font color: Block-relative offsets (using model):', {
+            blockId: startBlockId,
+            blockStartOffset,
+            start,
+            end,
+            blockRelativeStart,
+            blockRelativeEnd,
+            modelText: modelText,
+            modelTextLength: modelText.length,
+          });
+
+          // Set selectedBlockId so formatAttribute uses the correct block
+          doc.selectedBlockId = startBlockId;
+
+          // Apply formatting with block-relative offsets
+          toggleFontColor(blockRelativeStart, blockRelativeEnd, chosenColor);
+          renderFromModel();
+          return;
+        }
+
+        // Normal case: Calculate block-relative start and end
+        const blockRelativeStart = Math.max(0, start - blockStartOffset);
+        const blockRelativeEnd = Math.min(
+          end - blockStartOffset,
+          blockTextLength
+        );
+
+        console.log('Font color: Block-relative offsets (normal case):', {
+          blockId: startBlockId,
+          blockStartOffset,
+          start,
+          end,
+          blockRelativeStart,
+          blockRelativeEnd,
+          blockTextLength,
+          modelText: modelText,
+          domText: domText,
+        });
+
+        // Set selectedBlockId so formatAttribute uses the correct block
+        doc.selectedBlockId = startBlockId;
+
+        // Apply formatting with block-relative offsets
+        toggleFontColor(blockRelativeStart, blockRelativeEnd, chosenColor);
+        renderFromModel();
+      });
+
+      // 🔄 Reset to black
+      resetColor.addEventListener('click', () => {
+        setActiveFontColor('#000000');
+        updateIndicator();
+      });
+
+      // 📏 Font size handling
+      // Set initial font size
+      fontSizeSelect.value = getActiveFontSize();
+
+      // Update font size when dropdown changes (matches core behavior)
+      fontSizeSelect.addEventListener('change', () => {
+        const selectedSize = fontSizeSelect.value;
+
+        // Always update active font size (like dropdown value in core)
+        setActiveFontSize(selectedSize);
+
+        // Get selection range (matches core getSelectionRange)
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+          // If no selection, just update active size for future typing
+          return;
+        }
+
+        // Sync ALL blocks from DOM to model before applying formatting
+        syncModelFromEditor();
+
+        const {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement,
+          endBlockElement,
+        } = getAbsoluteOffsets(editor, selection);
+        console.log('Font size: Selection range:', {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement: startBlockElement?.tagName,
+          endBlockElement: endBlockElement?.tagName,
+          spansMultipleBlocks: startBlockId !== endBlockId,
+        });
+
+        if (start === end) {
+          console.log('Font size: No selection, skipping');
+          // If start === end (no selection), just update active size for future typing
+          return;
+        }
+
+        if (!startBlockId || !startBlockElement) {
+          console.warn('Font size: Could not find start block');
+          return;
+        }
+
+        const doc = getDocForSync();
+
+        // Check if selection spans multiple blocks
+        if (startBlockId !== endBlockId && endBlockId) {
+          console.log(
+            'Font size: Selection spans multiple blocks, processing all blocks...'
+          );
+
+          // Find all blocks between start and end (inclusive)
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex === -1 || endBlockIndex === -1) {
+            console.warn('Font size: Could not find block indices');
+            return;
+          }
+
+          console.log('Font size: Block indices:', {
+            startBlockIndex,
+            endBlockIndex,
+            totalBlocks: doc.blocks.length,
+          });
+
+          // Calculate absolute offsets for each block
+          let accumulatedOffset = 0;
+          const blocksToFormat = [];
+
+          for (let i = 0; i < doc.blocks.length; i++) {
+            const block = doc.blocks[i];
+            if (block.type !== 'text') {
+              // Skip non-text blocks but don't add to offset
+              continue;
+            }
+
+            const blockText = block.pieces.map(p => p.text).join('');
+            const blockLength = blockText.length;
+            const blockStart = accumulatedOffset;
+            const blockEnd = accumulatedOffset + blockLength;
+
+            // Check if this block is within the selection range
+            if (i >= startBlockIndex && i <= endBlockIndex) {
+              let blockRelativeStart = 0;
+              let blockRelativeEnd = blockLength;
+
+              // For the first block, calculate where selection starts
+              if (i === startBlockIndex) {
+                blockRelativeStart = Math.max(0, start - blockStart);
+              }
+
+              // For the last block, calculate where selection ends
+              if (i === endBlockIndex) {
+                blockRelativeEnd = Math.min(end - blockStart, blockLength);
+              }
+
+              // Only format if there's actual text selected in this block
+              if (blockRelativeStart < blockRelativeEnd) {
+                blocksToFormat.push({
+                  blockId: block.dataId,
+                  blockIndex: i,
+                  blockRelativeStart,
+                  blockRelativeEnd,
+                  blockText: blockText.substring(0, 50) + '...',
+                });
+              }
+            }
+
+            accumulatedOffset += blockLength;
+          }
+
+          console.log('Font size: Blocks to format:', blocksToFormat);
+
+          // Apply formatting to each block
+          for (const blockInfo of blocksToFormat) {
+            console.log('Font size: Formatting block:', {
+              blockId: blockInfo.blockId,
+              start: blockInfo.blockRelativeStart,
+              end: blockInfo.blockRelativeEnd,
+            });
+
+            // Set selectedBlockId so formatAttribute uses the correct block
+            doc.selectedBlockId = blockInfo.blockId;
+
+            // Apply formatting with block-relative offsets
+            toggleFontSize(
+              blockInfo.blockRelativeStart,
+              blockInfo.blockRelativeEnd,
+              selectedSize
+            );
+          }
+
+          renderFromModel();
+          return;
+        }
+
+        // Single block case: Calculate block-relative offsets
+        // First, calculate the absolute offset of the start of this block
+        let blockStartOffset = 0;
+        for (const block of doc.blocks) {
+          if (block.dataId === startBlockId) {
+            break;
+          }
+          if (block.type === 'text') {
+            blockStartOffset += block.pieces.map(p => p.text).join('').length;
+          }
+        }
+
+        // Get block text length - use model if DOM is empty (text is direct child of editor)
+        const block = doc.blocks.find(b => b.dataId === startBlockId);
+        const modelText = block ? block.pieces.map(p => p.text).join('') : '';
+        const domText = startBlockElement.textContent || '';
+        const blockTextLength = modelText.length || domText.length;
+
+        console.log('Font size: Block text info (single block):', {
+          blockId: startBlockId,
+          modelText: modelText,
+          modelTextLength: modelText.length,
+          domText: domText,
+          domTextLength: domText.length,
+          blockStartOffset,
+        });
+
+        // If block text is empty in DOM but we have model text, text is likely direct child
+        if (domText.length === 0 && modelText.length > 0) {
+          // Use model text length
+          const blockRelativeStart = Math.max(0, start - blockStartOffset);
+          const blockRelativeEnd = Math.min(
+            end - blockStartOffset,
+            modelText.length
+          );
+
+          console.log('Font size: Block-relative offsets (using model):', {
+            blockId: startBlockId,
+            blockStartOffset,
+            start,
+            end,
+            blockRelativeStart,
+            blockRelativeEnd,
+            modelText: modelText,
+            modelTextLength: modelText.length,
+          });
+
+          // Set selectedBlockId so formatAttribute uses the correct block
+          doc.selectedBlockId = startBlockId;
+
+          // Apply formatting with block-relative offsets
+          toggleFontSize(blockRelativeStart, blockRelativeEnd, selectedSize);
+          renderFromModel();
+          return;
+        }
+
+        // Normal case: Calculate block-relative start and end
+        const blockRelativeStart = Math.max(0, start - blockStartOffset);
+        const blockRelativeEnd = Math.min(
+          end - blockStartOffset,
+          blockTextLength
+        );
+
+        console.log('Font size: Block-relative offsets (normal case):', {
+          blockId: startBlockId,
+          blockStartOffset,
+          start,
+          end,
+          blockRelativeStart,
+          blockRelativeEnd,
+          blockTextLength,
+          modelText: modelText,
+          domText: domText,
+        });
+
+        // Set selectedBlockId so formatAttribute uses the correct block
+        doc.selectedBlockId = startBlockId;
+
+        // Apply formatting with block-relative offsets
+        toggleFontSize(blockRelativeStart, blockRelativeEnd, selectedSize);
+        renderFromModel();
+      });
+
+      // 🔤 Font family handling
+      // Set initial font family
+      fontFamilySelect.value = getActiveFontFamily();
+
+      // Update font family when dropdown changes (matches core behavior)
+      fontFamilySelect.addEventListener('change', () => {
+        const selectedFamily = fontFamilySelect.value;
+        setActiveFontFamily(selectedFamily);
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+          // If no selection, just update active family for future typing
+          return;
+        }
+
+        // Sync model with current editor content before applying formatting
+        syncModelFromEditor();
+
+        const {
+          start,
+          end,
+          startBlockId,
+          endBlockId,
+          startBlockElement,
+          endBlockElement,
+        } = getAbsoluteOffsets(editor, selection);
+
+        if (start === end) {
+          // If start === end (no selection), just update active family for future typing
+          return;
+        }
+
+        if (!startBlockId || !startBlockElement) {
+          console.warn('Font family: Could not find start block');
+          return;
+        }
+
+        const doc = getDocForSync();
+
+        // Check if selection spans multiple blocks
+        if (startBlockId !== endBlockId && endBlockId) {
+          console.log(
+            'Font family: Selection spans multiple blocks, processing all blocks...'
+          );
+
+          const startBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === startBlockId
+          );
+          const endBlockIndex = doc.blocks.findIndex(
+            b => b.dataId === endBlockId
+          );
+
+          if (startBlockIndex === -1 || endBlockIndex === -1) {
+            console.warn('Font family: Could not find block indices');
+            return;
+          }
+
+          let accumulatedOffset = 0;
+          const blocksToFormat = [];
+
+          for (let i = 0; i < doc.blocks.length; i++) {
+            const block = doc.blocks[i];
+            if (block.type !== 'text') continue;
+
+            const blockText = block.pieces.map(p => p.text).join('');
+            const blockLength = blockText.length;
+            const blockStart = accumulatedOffset;
+
+            if (i >= startBlockIndex && i <= endBlockIndex) {
+              let blockRelativeStart = 0;
+              let blockRelativeEnd = blockLength;
+
+              if (i === startBlockIndex) {
+                blockRelativeStart = Math.max(0, start - blockStart);
+              }
+
+              if (i === endBlockIndex) {
+                blockRelativeEnd = Math.min(end - blockStart, blockLength);
+              }
+
+              if (blockRelativeStart < blockRelativeEnd) {
+                blocksToFormat.push({
+                  blockId: block.dataId,
+                  blockRelativeStart,
+                  blockRelativeEnd,
+                });
+              }
+            }
+
+            accumulatedOffset += blockLength;
+          }
+
+          for (const blockInfo of blocksToFormat) {
+            doc.selectedBlockId = blockInfo.blockId;
+            toggleFontFamily(
+              blockInfo.blockRelativeStart,
+              blockInfo.blockRelativeEnd,
+              selectedFamily
+            );
+          }
+
+          renderFromModel();
+          return;
+        }
+
+        // Single block case
+        let blockStartOffset = 0;
+        for (const block of doc.blocks) {
+          if (block.dataId === startBlockId) {
+            break;
+          }
+          if (block.type === 'text') {
+            blockStartOffset += block.pieces.map(p => p.text).join('').length;
+          }
+        }
+
+        const block = doc.blocks.find(b => b.dataId === startBlockId);
+        const modelText = block ? block.pieces.map(p => p.text).join('') : '';
+        const domText = startBlockElement.textContent || '';
+        const blockTextLength = modelText.length || domText.length;
+
+        const blockRelativeStart = Math.max(0, start - blockStartOffset);
+        const blockRelativeEnd = Math.min(
+          end - blockStartOffset,
+          blockTextLength
+        );
+
+        doc.selectedBlockId = startBlockId;
+        toggleFontFamily(blockRelativeStart, blockRelativeEnd, selectedFamily);
+        renderFromModel();
+      });
+
+      renderFromModel();
+
+      // Image management: track highlighted image
+      let highlightedImageDataId = null;
+      let isCrossIconVisible = false;
+
+      // Function to add styling and cross button to image
+      function addStyleToImage(dataId) {
+        if (!dataId || isCrossIconVisible) return;
+
+        const div = editor.querySelector(`[data-id="${dataId}"]`);
+        if (!div) return;
+
+        const span = div.querySelector('span');
+        if (span) {
+          span.style.position = 'relative';
+        }
+
+        const img = div.querySelector('img');
+        if (img) {
+          img.style.border = '2px solid blue';
+        }
+
+        // Create cross button
+        const cross = document.createElement('div');
+        cross.className = 'image-cross';
+        cross.innerHTML = 'x';
+        Object.assign(cross.style, {
+          position: 'absolute',
+          top: '0',
+          left: '50%',
+          transform: 'translate(-50%, 0)',
+          background: '#fff',
+          borderRadius: '50%',
+          width: '30px',
+          height: '30px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          border: '3px solid blue',
+          zIndex: '999',
+        });
+
+        cross.addEventListener('mouseover', () => {
+          cross.style.border = '3px solid black';
+        });
+
+        cross.addEventListener('mouseout', () => {
+          cross.style.border = '3px solid blue';
+        });
+
+        cross.addEventListener('click', e => {
+          e.stopPropagation();
+          deleteImage(dataId);
+        });
+
+        span?.appendChild(cross);
+        highlightedImageDataId = dataId;
+        isCrossIconVisible = true;
+      }
+
+      // Function to clear image styling
+      function clearImageStyling() {
+        if (!highlightedImageDataId) return;
+
+        const div = editor.querySelector(
+          `[data-id="${highlightedImageDataId}"]`
+        );
+        if (div) {
+          const span = div.querySelector('span');
+          if (span) {
+            span.removeAttribute('style');
+          }
+
+          const img = span?.querySelector('img');
+          if (img) {
+            img.removeAttribute('style');
+          }
+
+          const cross = span?.querySelector('.image-cross');
+          if (cross) {
+            cross.remove();
+          }
+        }
+
+        highlightedImageDataId = null;
+        isCrossIconVisible = false;
+      }
+
+      // Function to delete image
+      function deleteImage(dataId) {
+        if (!dataId) return;
+
+        // Delete from model
+        const html = deleteImageBlock(dataId);
+
+        // Update DOM
+        editor.innerHTML = html;
+        output.textContent = html;
+
+        // Clear styling
+        clearImageStyling();
+
+        // Set cursor in next available block
+        const doc = getDocForSync();
+        if (doc.selectedBlockId) {
+          const newBlockElement = editor.querySelector(
+            `[data-id="${doc.selectedBlockId}"]`
+          );
+          if (newBlockElement) {
+            const walker = document.createTreeWalker(
+              newBlockElement,
+              NodeFilter.SHOW_TEXT,
+              null,
+              false
+            );
+            const firstTextNode = walker.nextNode();
+            if (firstTextNode) {
+              const range = document.createRange();
+              range.setStart(firstTextNode, 0);
+              range.collapse(true);
+              const sel = window.getSelection();
+              if (sel) {
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            }
+          }
+        }
+      }
+
+      // Add click handler for images (delegated event listener)
+      editor.addEventListener('click', e => {
+        // Check if clicked on an image
+        const img = e.target.closest('img');
+        if (img) {
+          const blockDiv = img.closest('[data-id]');
+          if (blockDiv) {
+            const dataId = blockDiv.getAttribute('data-id');
+            if (dataId) {
+              // Clear previous styling
+              clearImageStyling();
+              // Add styling to clicked image
+              addStyleToImage(dataId);
+            }
+          }
+          return;
+        }
+
+        // Check if clicked on cross button
+        const cross = e.target.closest('.image-cross');
+        if (cross) {
+          // Cross button click is handled in addStyleToImage
+          return;
+        }
+
+        // Clicked elsewhere - clear image styling
+        if (isCrossIconVisible) {
+          clearImageStyling();
+        }
+      });
+
+      // Image insertion handler
+      const imageBtn = document.getElementById('imageBtn');
+      console.log('Image button element:', imageBtn);
+
+      if (imageBtn) {
+        imageBtn.addEventListener('click', () => {
+          console.log('Image button clicked');
+
+          // IMPORTANT: Sync model FIRST to ensure it matches DOM
+          syncModelFromEditor();
+
+          // IMPORTANT: Save cursor position and block info BEFORE opening file dialog
+          let savedCursorInfo = null;
+          const selection = window.getSelection();
+
+          if (selection && selection.rangeCount > 0) {
+            try {
+              // PRIMARY METHOD: Use DOM-based calculation (more reliable)
+              // Find the block element containing the cursor
+              let node = selection.anchorNode;
+              let currentBlockElement = null;
+              let currentBlockId = null;
+
+              // Walk up the DOM tree to find the block element
+              while (node && node !== editor) {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                  const element = node;
+                  const dataId = element.getAttribute('data-id');
+                  if (dataId) {
+                    currentBlockElement = element;
+                    currentBlockId = dataId;
+                    break;
+                  }
+                }
+                node = node.parentNode;
+              }
+
+              if (currentBlockElement && currentBlockId) {
+                // Calculate cursor offset relative to this block
+                const range = selection.getRangeAt(0);
+                const blockRange = document.createRange();
+                blockRange.selectNodeContents(currentBlockElement);
+                blockRange.setEnd(range.startContainer, range.startOffset);
+                const cursorOffset = blockRange.toString().length;
+
+                // Get the actual text from the block to verify
+                const blockText =
+                  currentBlockElement.innerText ||
+                  currentBlockElement.textContent ||
+                  '';
+
+                console.log('DOM method - Block found:', {
+                  blockId: currentBlockId,
+                  blockText: blockText.substring(0, 50),
+                  blockTextLength: blockText.length,
+                  cursorOffset: cursorOffset,
+                  cursorAtEnd: cursorOffset === blockText.length,
+                });
+
+                // Verify cursor offset is within block bounds
+                if (cursorOffset >= 0 && cursorOffset <= blockText.length) {
+                  savedCursorInfo = {
+                    blockId: currentBlockId,
+                    cursorOffset: cursorOffset,
+                  };
+                  console.log(
+                    'Saved cursor info (DOM method - PRIMARY):',
+                    savedCursorInfo
+                  );
+                } else {
+                  console.warn(
+                    'Cursor offset out of bounds, using end of block'
+                  );
+                  savedCursorInfo = {
+                    blockId: currentBlockId,
+                    cursorOffset: blockText.length, // Use end of block
+                  };
+                }
+              } else {
+                // FALLBACK: Use absolute position method
+                console.log(
+                  'Block element not found, trying absolute position method...'
+                );
+                const { start: absoluteCursorPos } = getAbsoluteOffsets(
+                  editor,
+                  selection
+                );
+                console.log(
+                  'Absolute cursor position in editor:',
+                  absoluteCursorPos
+                );
+
+                // Sync model to get current state
+                syncModelFromEditor();
+                const doc = getDocForSync();
+
+                // Find which block contains this cursor position
+                let accumulatedLength = 0;
+                let foundBlock = null;
+                let cursorOffsetInBlock = 0;
+
+                for (const block of doc.blocks) {
+                  if (block.type === 'text') {
+                    const blockText = block.pieces.map(p => p.text).join('');
+                    const blockLength = blockText.length;
+
+                    // Check if cursor is within this block
+                    if (
+                      absoluteCursorPos >= accumulatedLength &&
+                      absoluteCursorPos <= accumulatedLength + blockLength
+                    ) {
+                      foundBlock = block;
+                      cursorOffsetInBlock =
+                        absoluteCursorPos - accumulatedLength;
+                      console.log(
+                        'Found block containing cursor (absolute method):',
+                        {
+                          blockId: block.dataId,
+                          blockText: blockText.substring(0, 50) + '...',
+                          cursorOffsetInBlock: cursorOffsetInBlock,
+                          blockLength: blockLength,
+                        }
+                      );
+                      break;
+                    }
+
+                    accumulatedLength += blockLength;
+                  }
+                }
+
+                if (foundBlock) {
+                  savedCursorInfo = {
+                    blockId: foundBlock.dataId,
+                    cursorOffset: cursorOffsetInBlock,
+                  };
+                  console.log(
+                    'Saved cursor info (absolute position method - FALLBACK):',
+                    savedCursorInfo
+                  );
+                }
+              }
+            } catch (error) {
+              console.error('Error capturing cursor position:', error);
+            }
+          }
+
+          // Final fallback: use selectedBlockId from model
+          if (!savedCursorInfo) {
+            syncModelFromEditor();
+            const doc = getDocForSync();
+            if (doc.selectedBlockId) {
+              const block = doc.blocks.find(
+                b => b.dataId === doc.selectedBlockId
+              );
+              let cursorOffset = 0;
+              if (block && block.type === 'text') {
+                // Default to end of block if we can't determine position
+                const blockText = block.pieces.map(p => p.text).join('');
+                cursorOffset = blockText.length;
+              }
+
+              savedCursorInfo = {
+                blockId: doc.selectedBlockId,
+                cursorOffset: cursorOffset,
+              };
+              console.log('Using fallback cursor info:', savedCursorInfo);
+            }
+          }
+
+          // Create file input
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.accept = 'image/*';
+          fileInput.style.display = 'none';
+          document.body.appendChild(fileInput);
+
+          fileInput.click();
+          console.log('File input opened');
+
+          fileInput.onchange = () => {
+            console.log('File input changed');
+            const file = fileInput.files ? fileInput.files[0] : null;
+            console.log(
+              'Selected file:',
+              file
+                ? { name: file.name, type: file.type, size: file.size }
+                : 'null'
+            );
+
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = e => {
+                console.log('FileReader onload triggered');
+                const dataUrl = e.target?.result;
+                console.log('Data URL type:', typeof dataUrl);
+                console.log(
+                  'Data URL length:',
+                  dataUrl
+                    ? typeof dataUrl === 'string'
+                      ? dataUrl.length
+                      : 'not a string'
+                    : 'null'
+                );
+                console.log(
+                  'Data URL preview:',
+                  dataUrl && typeof dataUrl === 'string'
+                    ? dataUrl.substring(0, 50) + '...'
+                    : 'N/A'
+                );
+
+                if (dataUrl && typeof dataUrl === 'string') {
+                  console.log('Step 1: Syncing model from editor...');
+                  // Sync model first to ensure we have latest state
+                  syncModelFromEditor();
+
+                  console.log('Step 2: Getting document for sync...');
+                  const doc = getDocForSync();
+                  console.log('Document blocks:', doc.blocks.length);
+                  console.log('Selected block ID:', doc.selectedBlockId);
+
+                  // Use saved cursor info (from before file dialog)
+                  let currentBlockId =
+                    savedCursorInfo?.blockId || doc.selectedBlockId;
+                  let cursorOffset = savedCursorInfo?.cursorOffset || 0;
+
+                  // Verify the block still exists after sync
+                  const blockExists = doc.blocks.some(
+                    b => b.dataId === currentBlockId
+                  );
+                  if (!blockExists && doc.blocks.length > 0) {
+                    console.warn(
+                      'Saved block ID not found after sync, using first block'
+                    );
+                    currentBlockId = doc.blocks[0].dataId;
+                    cursorOffset = 0;
+                  }
+
+                  // If still no block ID, use first block
+                  if (!currentBlockId && doc.blocks.length > 0) {
+                    currentBlockId = doc.blocks[0].dataId;
+                    cursorOffset = 0;
+                    console.log('Using fallback block ID:', currentBlockId);
+                  }
+
+                  console.log('Final currentBlockId:', currentBlockId);
+                  console.log('Final cursorOffset:', cursorOffset);
+
+                  // Log block details for debugging
+                  const targetBlock = doc.blocks.find(
+                    b => b.dataId === currentBlockId
+                  );
+                  if (targetBlock) {
+                    const blockText = targetBlock.pieces
+                      .map(p => p.text)
+                      .join('');
+                    console.log(
+                      'Target block text:',
+                      blockText.substring(0, 100)
+                    );
+                    console.log('Target block length:', blockText.length);
+                    console.log('Cursor offset:', cursorOffset);
+                    if (cursorOffset > blockText.length) {
+                      console.warn(
+                        'Cursor offset exceeds block length, clamping to end'
+                      );
+                      cursorOffset = blockText.length;
+                    }
+                  }
+
+                  console.log('Step 5: Calling insertImageAtPosition...');
+                  console.log('Parameters:', {
+                    dataId: currentBlockId,
+                    position: cursorOffset,
+                    imageDataUrlLength: dataUrl.length,
+                  });
+
+                  // Insert image
+                  const html = insertImageAtPosition(
+                    currentBlockId,
+                    cursorOffset,
+                    dataUrl
+                  );
+
+                  console.log('Step 6: Image insertion returned HTML');
+                  console.log('HTML length:', html.length);
+                  console.log('HTML preview:', html.substring(0, 200) + '...');
+
+                  // Update DOM
+                  console.log('Step 7: Updating DOM...');
+                  editor.innerHTML = html;
+                  output.textContent = html;
+                  console.log('DOM updated');
+
+                  // Set cursor in the new text block after image
+                  console.log('Step 8: Setting cursor position...');
+                  const docAfter = getDocForSync();
+                  const newBlockId = docAfter.selectedBlockId;
+                  console.log('New block ID after insertion:', newBlockId);
+
+                  if (newBlockId) {
+                    const newBlockElement = editor.querySelector(
+                      `[data-id="${newBlockId}"]`
+                    );
+                    console.log('New block element found:', !!newBlockElement);
+
+                    if (newBlockElement) {
+                      // Find first text node and set cursor
+                      const walker = document.createTreeWalker(
+                        newBlockElement,
+                        NodeFilter.SHOW_TEXT,
+                        null,
+                        false
+                      );
+                      const firstTextNode = walker.nextNode();
+                      console.log('First text node found:', !!firstTextNode);
+
+                      if (firstTextNode) {
+                        const range = document.createRange();
+                        range.setStart(firstTextNode, 0);
+                        range.collapse(true);
+                        const sel = window.getSelection();
+                        if (sel) {
+                          sel.removeAllRanges();
+                          sel.addRange(range);
+                          console.log('Cursor set successfully');
+                        }
+                      }
+                    }
+                  }
+
+                  console.log('Image insertion complete!');
+                } else {
+                  console.error('Invalid data URL:', dataUrl);
+                }
+              };
+
+              reader.onerror = error => {
+                console.error('FileReader error:', error);
+              };
+
+              console.log('Starting to read file as data URL...');
+              reader.readAsDataURL(file);
+            } else {
+              console.log('No file selected');
+            }
+            // Clean up
+            document.body.removeChild(fileInput);
+          };
+        });
+      } else {
+        console.error('Image button not found!');
+      }
+    </script>
+  </body>
+</html>
