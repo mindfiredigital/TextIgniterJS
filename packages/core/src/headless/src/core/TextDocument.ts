@@ -1,5 +1,5 @@
 import Piece from './Piece';
-import type { Block, TextAttribute } from '../types';
+import type { Block, TextAttribute, BlockSelection } from '../types';
 import { mergePieces } from '../utils/pieceMerger';
 
 class TextDocument {
@@ -95,6 +95,124 @@ class TextDocument {
 
     // Merge adjacent pieces with identical attributes
     block.pieces = mergePieces(newPieces);
+  }
+
+  /**
+   * Checks if all blocks in a multi-block selection have a specific attribute applied.
+   * @param selections - Array of block selections with their ranges
+   * @param attr - The attribute to check
+   * @returns true if all selected ranges have the attribute
+   */
+  isRangeEntirelyAttributeForMultipleBlocks(
+    selections: BlockSelection[],
+    attr: TextAttribute
+  ): boolean {
+    for (const selection of selections) {
+      const block = this.blocks.find(b => b.dataId === selection.blockId);
+      if (!block) return false;
+
+      let offset = 0;
+      for (const piece of block.pieces) {
+        const pieceEnd = offset + piece.text.length;
+        if (pieceEnd <= selection.start) {
+          offset = pieceEnd;
+          continue;
+        }
+        if (offset >= selection.end) break;
+
+        const inRangeStart = Math.max(selection.start, offset);
+        const inRangeEnd = Math.min(selection.end, pieceEnd);
+
+        if (inRangeEnd > inRangeStart && !piece.attributes[attr]) {
+          return false;
+        }
+        offset = pieceEnd;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Formats a specific block with an attribute value.
+   * @param blockId - The block's dataId
+   * @param start - Start offset within the block
+   * @param end - End offset within the block
+   * @param attr - The attribute to set
+   * @param value - The value to set
+   */
+  formatAttributeForBlock(
+    blockId: string,
+    start: number,
+    end: number,
+    attr: TextAttribute,
+    value: boolean
+  ): void {
+    const block = this.blocks.find(b => b.dataId === blockId);
+    if (!block) return;
+
+    const newPieces: Piece[] = [];
+    let offset = 0;
+
+    for (const piece of block.pieces) {
+      const pieceEnd = offset + piece.text.length;
+
+      if (pieceEnd <= start || offset >= end) {
+        newPieces.push(piece);
+      } else {
+        // Split the piece at the range boundaries
+        const pieceStart = offset;
+        const pieceText = piece.text;
+        const startInPiece = Math.max(start - pieceStart, 0);
+        const endInPiece = Math.min(end - pieceStart, pieceText.length);
+
+        if (startInPiece > 0) {
+          newPieces.push(
+            new Piece(pieceText.slice(0, startInPiece), { ...piece.attributes })
+          );
+        }
+
+        // Create selected piece with updated attribute
+        const selectedPiece = new Piece(
+          pieceText.slice(startInPiece, endInPiece),
+          { ...piece.attributes, [attr]: value }
+        );
+        newPieces.push(selectedPiece);
+
+        if (endInPiece < pieceText.length) {
+          newPieces.push(
+            new Piece(pieceText.slice(endInPiece), { ...piece.attributes })
+          );
+        }
+      }
+
+      offset = pieceEnd;
+    }
+
+    // Merge adjacent pieces with identical attributes
+    block.pieces = mergePieces(newPieces);
+  }
+
+  /**
+   * Formats multiple blocks with a specific attribute value.
+   * @param selections - Array of block selections with their ranges
+   * @param attr - The attribute to set
+   * @param value - The value to set
+   */
+  formatAttributeForMultipleBlocks(
+    selections: BlockSelection[],
+    attr: TextAttribute,
+    value: boolean
+  ): void {
+    for (const selection of selections) {
+      this.formatAttributeForBlock(
+        selection.blockId,
+        selection.start,
+        selection.end,
+        attr,
+        value
+      );
+    }
   }
 
   /**
