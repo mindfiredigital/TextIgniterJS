@@ -2,6 +2,16 @@ export type TextAttribute = 'bold' | 'italic' | 'underline' | 'strikethrough';
 export type BlockType = 'text' | 'image';
 export type Alignment = 'left' | 'center' | 'right' | 'justify';
 
+/**
+ * Represents a selection range within a specific block.
+ * Used for multi-block formatting operations.
+ */
+export interface BlockSelection {
+  blockId: string;
+  start: number;
+  end: number;
+}
+
 export interface PieceAttributes {
   bold?: boolean;
   italic?: boolean;

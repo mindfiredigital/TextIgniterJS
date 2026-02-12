@@ -123,38 +123,91 @@ export function insertTextAt(position: number, text: string): string {
 }
 
 /**
- * Toggles bold formatting on a range.
+ * Represents a selection range within a specific block.
  */
-export function toggleBold(start: number, end: number): string {
+export interface BlockSelection {
+  blockId: string;
+  start: number;
+  end: number;
+}
+
+/**
+ * Toggles bold formatting on a range.
+ * @param start - Start offset (used when selections is null)
+ * @param end - End offset (used when selections is null)
+ * @param selections - Optional array of block selections for multi-block formatting
+ */
+export function toggleBold(
+  start: number,
+  end: number,
+  selections?: BlockSelection[] | null
+): string {
   const service = new FormattingService(state);
-  service.toggleStyle(start, end, 'bold');
+  if (selections && selections.length > 0) {
+    service.toggleStyleForMultipleBlocks(selections, 'bold');
+  } else {
+    service.toggleStyle(start, end, 'bold');
+  }
   return getContentHtml();
 }
 
 /**
  * Toggles italic formatting on a range.
+ * @param start - Start offset (used when selections is null)
+ * @param end - End offset (used when selections is null)
+ * @param selections - Optional array of block selections for multi-block formatting
  */
-export function toggleItalic(start: number, end: number): string {
+export function toggleItalic(
+  start: number,
+  end: number,
+  selections?: BlockSelection[] | null
+): string {
   const service = new FormattingService(state);
-  service.toggleStyle(start, end, 'italic');
+  if (selections && selections.length > 0) {
+    service.toggleStyleForMultipleBlocks(selections, 'italic');
+  } else {
+    service.toggleStyle(start, end, 'italic');
+  }
   return getContentHtml();
 }
 
 /**
  * Toggles underline formatting on a range.
+ * @param start - Start offset (used when selections is null)
+ * @param end - End offset (used when selections is null)
+ * @param selections - Optional array of block selections for multi-block formatting
  */
-export function toggleUnderline(start: number, end: number): string {
+export function toggleUnderline(
+  start: number,
+  end: number,
+  selections?: BlockSelection[] | null
+): string {
   const service = new FormattingService(state);
-  service.toggleStyle(start, end, 'underline');
+  if (selections && selections.length > 0) {
+    service.toggleStyleForMultipleBlocks(selections, 'underline');
+  } else {
+    service.toggleStyle(start, end, 'underline');
+  }
   return getContentHtml();
 }
 
 /**
  * Toggles strikethrough formatting on a range.
+ * @param start - Start offset (used when selections is null)
+ * @param end - End offset (used when selections is null)
+ * @param selections - Optional array of block selections for multi-block formatting
  */
-export function toggleStrikethrough(start: number, end: number): string {
+export function toggleStrikethrough(
+  start: number,
+  end: number,
+  selections?: BlockSelection[] | null
+): string {
   const service = new FormattingService(state);
-  service.toggleStyle(start, end, 'strikethrough');
+  if (selections && selections.length > 0) {
+    service.toggleStyleForMultipleBlocks(selections, 'strikethrough');
+  } else {
+    service.toggleStyle(start, end, 'strikethrough');
+  }
   return getContentHtml();
 }
 
