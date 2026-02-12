@@ -1,5 +1,5 @@
 import HeadlessState from '../core/HeadlessState';
-import type { TextAttribute } from '../types';
+import type { TextAttribute, BlockSelection } from '../types';
 
 /**
  * Service for handling text formatting operations.
@@ -18,6 +18,28 @@ class FormattingService {
 
     const allActive = doc.isRangeEntirelyAttribute(start, end, attr);
     doc.formatAttribute(start, end, attr, !allActive);
+  }
+
+  /**
+   * Toggles a style attribute across multiple blocks.
+   * @param selections - Array of block selections with their ranges
+   * @param attr - The attribute to toggle
+   */
+  toggleStyleForMultipleBlocks(
+    selections: BlockSelection[],
+    attr: TextAttribute
+  ): void {
+    const doc = this.state.getDocument();
+    if (selections.length === 0) return;
+
+    // Check if all selections already have the attribute
+    const allActive = doc.isRangeEntirelyAttributeForMultipleBlocks(
+      selections,
+      attr
+    );
+
+    // Toggle: if all have attribute, remove it; otherwise, add it
+    doc.formatAttributeForMultipleBlocks(selections, attr, !allActive);
   }
 
   /**
