@@ -8,10 +8,13 @@ import HtmlToJsonParser from './HtmlToJsonParser';
 import { EditorConfig } from './types/editorConfig';
 import { ImageHandler } from './handlers/image';
 import UndoRedoManager from './handlers/undoRedoManager';
+import PopupToolbarView from './view/popupToolbarView';
+import LinkPopupView from './view/linkPopupView';
 export interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
     underline: boolean;
+    strikethrough?: boolean;
     undo?: boolean;
     redo?: boolean;
     hyperlink?: string | boolean;
@@ -32,6 +35,8 @@ declare class TextIgniter {
     lastPiece: Piece | null;
     editorContainer: HTMLElement | null;
     toolbarContainer: HTMLElement | null;
+    popupToolbarView: PopupToolbarView;
+    linkPopupView: LinkPopupView;
     savedSelection: {
         start: number;
         end: number;
@@ -52,5 +57,10 @@ declare class TextIgniter {
     addBlockAfter(data: any[], targetDataId: string, newBlock: any): any[];
     syncCurrentAttributesWithCursor(): void;
     setCursorPosition(position: number, dataId?: string | null): void;
+    private showAcknowledgement;
+    private showLinkPopup;
+    private hideLinkPopup;
+    private openLink;
+    private unlinkText;
 }
 export { TextIgniter };

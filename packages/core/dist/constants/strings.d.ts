@@ -30,4 +30,10 @@ export declare const strings: {
     PARAGRAPH_BLOCK_CLASS: string;
     IMAGE_CROSS_CLASS: string;
     TEST_HTML_CODE: string;
+    POPUP_TOOLBAR_CLASSNAME: string;
+    POPUP_TOOLBAR_ID: string;
+    TOAST_ID: string;
+    TOAST_SHOW_CLASS: string;
+    TOAST_DEFAULT_MESSAGE: string;
+    TOAST_DEFAULT_DURATION_MS: number;
 };

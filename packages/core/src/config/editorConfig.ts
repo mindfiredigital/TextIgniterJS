@@ -2,6 +2,32 @@ import { EditorConfig, EditorConfigReturnType } from '../types/editorConfig';
 import { icons } from '../assets/icons';
 import { strings } from '../constants/strings';
 
+// Feature groups for adding separators
+const featureGroups = {
+  dropdowns: ['fontFamily', 'fontSize'],
+  colors: ['fontColor', 'bgColor'],
+  formatting: ['bold', 'italic', 'underline', 'strikethrough'],
+  alignment: ['alignLeft', 'alignCenter', 'alignRight'],
+  lists: ['unorderedList', 'orderedList'],
+  media: ['hyperlink', 'image'],
+  utility: ['getHtmlContent', 'loadHtmlContent'],
+};
+
+// Helper to create separator
+function createSeparator(): HTMLElement {
+  const separator = document.createElement('div');
+  separator.className = 'toolbar-separator';
+  return separator;
+}
+
+// Helper to determine which group a feature belongs to
+function getFeatureGroup(feature: string): string | null {
+  for (const [group, features] of Object.entries(featureGroups)) {
+    if (features.includes(feature)) return group;
+  }
+  return null;
+}
+
 export function createEditor(
   editorId: string,
   config: EditorConfig
@@ -20,6 +46,9 @@ export function createEditor(
 
   const container = document.getElementById(editorId);
   if (!container) throw new Error(strings.EDITOR_ELEMENT_NT_FOUND);
+
+  // Add editor-container class to parent
+  container.classList.add('editor-container');
 
   const toolbar = document.createElement('div');
   toolbar.className = strings.TOOLBAR_CLASSNAME;
@@ -56,6 +85,25 @@ export function createEditor(
     colors: '&#127912;',
   };
 
+  // Better tooltips with keyboard shortcuts
+  const featureTitles: Record<string, string> = {
+    bold: 'Bold (Ctrl+B)',
+    italic: 'Italic (Ctrl+I)',
+    underline: 'Underline (Ctrl+U)',
+    strikethrough: 'Strikethrough',
+    hyperlink: 'Insert Link (Ctrl+H)',
+    alignLeft: 'Align Left (Ctrl+L)',
+    alignCenter: 'Align Center (Ctrl+E)',
+    alignRight: 'Align Right (Ctrl+R)',
+    unorderedList: 'Bullet List',
+    orderedList: 'Numbered List',
+    fontColor: 'Text Color',
+    bgColor: 'Highlight Color',
+    image: 'Insert Image',
+    getHtmlContent: 'Get HTML',
+    loadHtmlContent: 'Load HTML',
+  };
+
   const featuresWithPngIcon = [
     { feature: 'alignLeft', id: 'alignLeft', icon: icons.left_align },
     { feature: 'alignCenter', id: 'alignCenter', icon: icons.center_align },
@@ -90,22 +138,39 @@ export function createEditor(
   container.appendChild(popupToolbar);
 
   if (config.popupFeatures) {
-    config.popupFeatures.forEach(feature => {
+    config.popupFeatures.forEach((feature, index) => {
+      // Add separator between formatting and other features in popup
+      if (index > 0 && feature === 'hyperlink') {
+        popupToolbar.appendChild(createSeparator());
+      }
+
       const featureData = featuresWithPngIcon.find(
         item => item.feature === feature
       ) || { icon: featureLabels[feature] || feature };
       const button = document.createElement('button');
       button.dataset.action = feature;
       button.innerHTML = featureData.icon;
-      button.title = feature
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+      button.dataset.tooltip =
+        featureTitles[feature] ||
+        feature
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
       popupToolbar.appendChild(button);
     });
   }
 
-  config.features.forEach(feature => {
+  let lastGroup: string | null = null;
+
+  config.features.forEach((feature, index) => {
+    const currentGroup = getFeatureGroup(feature);
+
+    // Add separator between different groups (but not before the first item)
+    if (index > 0 && currentGroup && lastGroup && currentGroup !== lastGroup) {
+      toolbar.appendChild(createSeparator());
+    }
+    lastGroup = currentGroup;
+
     if (feature === 'fontFamily') {
       const fontFamilySelect = createSelect(
         strings.FONT_FAMILY_SELECT_ID,
@@ -122,13 +187,14 @@ export function createEditor(
       if (document.getElementById(strings.FONT_COLOR_WRAPPER_ID)) return;
       const span = document.createElement('span');
       span.id = strings.FONT_COLOR_WRAPPER_ID;
-      span.style.display = 'inline-block';
-      span.style.marginRight = '8px';
+      span.style.display = 'inline-flex';
+      span.style.alignItems = 'center';
 
       const button = document.createElement('button');
       button.id = strings.FONT_COLOR_ID;
       button.type = 'button';
       button.textContent = 'A';
+      button.dataset.tooltip = featureTitles['fontColor'] || 'Text Color';
       span.appendChild(button);
 
       const span1 = document.createElement('span');
@@ -156,13 +222,14 @@ export function createEditor(
       if (document.getElementById(strings.BG_COLOR_WRAPPER_ID)) return;
       const span = document.createElement('span');
       span.id = strings.BG_COLOR_WRAPPER_ID;
-      span.style.display = 'inline-block';
-      span.style.marginRight = '8px';
+      span.style.display = 'inline-flex';
+      span.style.alignItems = 'center';
 
       const button = document.createElement('button');
       button.id = strings.BG_COLOR_ID;
       button.type = 'button';
       button.textContent = 'B';
+      button.dataset.tooltip = featureTitles['bgColor'] || 'Highlight Color';
       span.appendChild(button);
 
       const span1 = document.createElement('div');
@@ -195,24 +262,14 @@ export function createEditor(
       button.id = strings.GET_HTML_BUTTON_ID;
       button.type = 'button';
       button.textContent = 'Get HTML';
-      button.style.padding = '8px 12px';
-      button.style.marginRight = '8px';
-      button.style.border = '1px solid #ccc';
-      button.style.borderRadius = '4px';
-      button.style.cursor = 'pointer';
-      button.style.background = '#f4f4f4';
+      button.dataset.tooltip = featureTitles['getHtmlContent'] || 'Get HTML';
       toolbar.appendChild(button);
     } else if (feature === 'loadHtmlContent') {
       const button = document.createElement('button');
       button.id = strings.LOAD_HTML_BUTTON_ID;
       button.type = 'button';
       button.textContent = 'Load HTML';
-      button.style.padding = '8px 12px';
-      button.style.marginRight = '8px';
-      button.style.border = '1px solid #ccc';
-      button.style.borderRadius = '4px';
-      button.style.cursor = 'pointer';
-      button.style.background = '#f4f4f4';
+      button.dataset.tooltip = featureTitles['loadHtmlContent'] || 'Load HTML';
       toolbar.appendChild(button);
     } else if (
       featuresWithPngIcon.map(item => item.feature).includes(feature)
@@ -224,16 +281,19 @@ export function createEditor(
       button.id = feature;
       button.dataset.action = feature;
       button.innerHTML = featureData?.icon || '';
+      button.dataset.tooltip = featureTitles[feature] || feature;
       toolbar.appendChild(button);
     } else {
       const button = document.createElement('button');
       button.dataset.action = feature;
       button.innerHTML = featureLabels[feature] || feature;
       button.id = feature;
-      button.title = feature
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+      button.dataset.tooltip =
+        featureTitles[feature] ||
+        feature
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
       toolbar.appendChild(button);
     }
   });

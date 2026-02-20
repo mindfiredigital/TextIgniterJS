@@ -84,9 +84,11 @@ export function extractTextFromDataId(dataId, textDocument) {
             return block;
         }
     });
+    if (!_block[0] || !_block[0].pieces) {
+        return { remainingText: '', piece: null };
+    }
     const element = document.querySelector(`[data-id="${dataId}"]`);
     const textPosition = textDocument.getCursorOffsetInParent(`[data-id="${dataId}"]`);
-    console.log(textPosition, 'textPosition:vicky');
     let _piece = [];
     let index = 0;
     _block[0].pieces.forEach((obj, i) => {

@@ -13,6 +13,7 @@ declare class EditorView {
         bold: boolean;
         italic: boolean;
         underline: boolean;
+        strikethrough?: boolean;
         fontFamily?: string;
         fontSize?: string;
         hyperlink?: string | boolean;

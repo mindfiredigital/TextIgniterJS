@@ -7,6 +7,6 @@ declare class HtmlToJsonParser {
     private parseListItems;
     private parseParagraphText;
     private extractTextAttributes;
-    private rgbToHex;
+    rgbToHex(rgb: string, isBackground?: boolean): string | null;
 }
 export default HtmlToJsonParser;
