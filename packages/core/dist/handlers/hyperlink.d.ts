@@ -1,7 +1,7 @@
-import { blockType } from "../types/pieces";
-import EditorView from "../view/editorView";
-import TextDocument from "../textDocument";
-import UndoRedoManager from "./undoRedoManager";
+import { blockType } from '../types/pieces';
+import EditorView from '../view/editorView';
+import TextDocument from '../textDocument';
+import UndoRedoManager from './undoRedoManager';
 declare class HyperlinkHandler {
     savedSelection: {
         start: number;
@@ -20,7 +20,10 @@ declare class HyperlinkHandler {
     removeHighlightSelection(): void;
     applyHyperlink(url: string, dataIdsSnapshot: any): void;
     removeHyperlink(dataIdsSnapshot: any): void;
-    showHyperlinkViewButton(link: string | ""): void;
+    clickOutsideHandler: ((event: MouseEvent) => void) | null;
+    addClickOutsideListener(container: HTMLElement): void;
+    removeClickOutsideListener(): void;
+    showHyperlinkViewButton(link: string | ''): void;
     hideHyperlinkViewButton(): void;
 }
 export default HyperlinkHandler;

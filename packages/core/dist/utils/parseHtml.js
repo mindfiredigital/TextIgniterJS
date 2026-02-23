@@ -1,13 +1,24 @@
-import Piece from "../piece";
+import Piece from '../piece';
 export function parseHtmlToPieces(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    return extractPiecesFromNode(doc.body, { bold: false, italic: false, underline: false });
+    return extractPiecesFromNode(doc.body, {
+        bold: false,
+        italic: false,
+        underline: false,
+        hyperlink: false,
+    });
 }
 export function extractPiecesFromNode(node, inheritedAttrs) {
     let currentAttrs = Object.assign({}, inheritedAttrs);
     const pieces = [];
     if (node instanceof HTMLElement) {
+        if (node.tagName === 'A') {
+            const href = node.getAttribute('href');
+            if (href) {
+                currentAttrs.hyperlink = href;
+            }
+        }
         if (node.tagName === 'STRONG' || node.tagName === 'B')
             currentAttrs.bold = true;
         if (node.tagName === 'EM' || node.tagName === 'I')

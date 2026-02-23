@@ -25,6 +25,7 @@ export default class UndoRedoManager {
     }
     saveUndoSnapshot() {
         const snapshot = this.createSnapshot();
+        console.log('Saving snapshot:', snapshot.cursorPosition, 'Stack length:', this.snapshotUndoStack.length);
         this.snapshotUndoStack.push(snapshot);
         if (this.snapshotUndoStack.length > this.maxSnapshots) {
             this.snapshotUndoStack.shift();
@@ -42,11 +43,13 @@ export default class UndoRedoManager {
             }
         }
         this.document.emit('documentChanged', this.document);
-        this.document.setCursorPosition(snapshot.cursorPosition || 0);
+        setTimeout(() => {
+            this.document.setCursorPosition(snapshot.cursorPosition || 0);
+        }, 0);
     }
     undo() {
-        console.log('   ', this.snapshotUndoStack);
-        console.log('uuuno', this.snapshotRedoStack);
+        console.log('UNDO - Undo stack length:', this.snapshotUndoStack.length);
+        console.log('UNDO - Redo stack length:', this.snapshotRedoStack.length);
         if (this.snapshotUndoStack.length === 0)
             return;
         const currentSnapshot = this.createSnapshot();
@@ -56,6 +59,7 @@ export default class UndoRedoManager {
         }
         const snapshot = this.snapshotUndoStack.pop();
         if (snapshot) {
+            console.log('UNDO - Restoring cursor position:', snapshot.cursorPosition);
             this.restoreSnapshot(snapshot);
         }
     }

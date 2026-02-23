@@ -33,16 +33,22 @@ export class ImageHandler {
         };
     }
     insertImageAtCursor(dataUrl) {
+        if (!dataUrl)
+            return;
         const [start, end] = getSelectionRange(this.editorView);
-        console.log(start, end, 'vicky insertImage', dataUrl);
         if (end > start) {
             this.document.deleteRange(start, end, this.document.selectedBlockId);
         }
         this.insertImageAtPosition(dataUrl, start, this.document.selectedBlockId);
     }
     setCursorPostion(postion, dataId) {
+        if (typeof postion !== 'number' || !dataId)
+            return;
         const div = document.querySelector(`[data-id="${dataId}"]`);
-        div.focus();
+        if (!div)
+            return;
+        if (typeof div.focus === 'function')
+            div.focus();
         setTimeout(() => {
             const range = document.createRange();
             const sel = window.getSelection();
@@ -60,6 +66,8 @@ export class ImageHandler {
         }, 0);
     }
     insertImageAtPosition(dataUrl, position, dataId) {
+        if (!dataUrl || typeof position !== 'number' || !this.editorView)
+            return;
         console.log(dataUrl, position, dataId, 'vicky insertImageAtPosition', this.document.blocks);
         const uniqueId1 = `data-id-${Date.now()}-${Math.random() * 1000}`;
         const uniqueId2 = `data-id-${Date.now()}-${Math.random() * 1000}`;
@@ -150,6 +158,8 @@ export class ImageHandler {
         }, 0);
     }
     createImageFragment(imageUrl, dataId) {
+        if (!imageUrl || !dataId)
+            return document.createDocumentFragment();
         const fragment = document.createDocumentFragment();
         const img = document.createElement('img');
         img.src = imageUrl;
@@ -163,6 +173,8 @@ export class ImageHandler {
         return span;
     }
     addStyleToImage(dataId) {
+        if (!dataId)
+            return;
         if (!this.isCrossIconVisible) {
             const div = document.querySelector(`[data-id="${dataId}"]`);
             const span = div === null || div === void 0 ? void 0 : div.querySelector('span');
@@ -204,6 +216,8 @@ export class ImageHandler {
         }
     }
     clearImageStyling() {
+        if (!this.highLightedImageDataId)
+            return;
         const div = document.querySelector(`[data-id="${this.highLightedImageDataId}"]`);
         if (div) {
             const span = div.querySelector('span');
@@ -219,6 +233,8 @@ export class ImageHandler {
         this.isCrossIconVisible = false;
     }
     deleteImage() {
+        if (!this.highLightedImageDataId)
+            return;
         this.document.blocks = this.document.blocks.filter((block) => block.dataId !== this.highLightedImageDataId);
         this.highLightedImageDataId = '';
         this.isImageHighlighted = false;

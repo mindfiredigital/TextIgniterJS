@@ -14,7 +14,7 @@ export declare class ImageHandler {
     insertImageAtCursor(dataUrl: string): void;
     setCursorPostion(postion: number, dataId: string): void;
     insertImageAtPosition(dataUrl: string, position: number, dataId: string | null): void;
-    createImageFragment(imageUrl: string, dataId: string): HTMLSpanElement;
+    createImageFragment(imageUrl: string, dataId: string): DocumentFragment | HTMLSpanElement;
     addStyleToImage(dataId: string): void;
     clearImageStyling(): void;
     deleteImage(): void;

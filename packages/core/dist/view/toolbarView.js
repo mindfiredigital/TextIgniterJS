@@ -1,4 +1,4 @@
-import EventEmitter from "../utils/events";
+import EventEmitter from '../utils/events';
 class ToolbarView extends EventEmitter {
     constructor(container) {
         super();
@@ -7,11 +7,11 @@ class ToolbarView extends EventEmitter {
     }
     setupButtons() {
         this.container.querySelectorAll('button').forEach(button => {
-            button.addEventListener('mousedown', (e) => {
+            button.addEventListener('mousedown', e => {
                 e.preventDefault();
             });
         });
-        this.container.addEventListener('click', (e) => {
+        this.container.addEventListener('click', e => {
             const target = e.target;
             const btn = target.closest('button');
             if (btn) {
@@ -31,6 +31,8 @@ class ToolbarView extends EventEmitter {
             if (action === 'italic' && attributes.italic)
                 isActive = true;
             if (action === 'underline' && attributes.underline)
+                isActive = true;
+            if (action === 'strikethrough' && attributes.strikethrough)
                 isActive = true;
             if (action === 'hyperlink' && attributes.hyperlink)
                 isActive = true;
