@@ -133,67 +133,108 @@ class TextIgniter {
         this.document.selectAll = false;
       }
     });
+
+    // Font Color Picker
     document.getElementById('fontColor')?.addEventListener('click', e => {
+      e.stopPropagation();
+      const colorWrapper = document.getElementById(
+        'colorWrapper'
+      ) as HTMLElement;
       const fontColorPicker = document.getElementById(
         'fontColorPicker'
       ) as HTMLInputElement;
 
-      fontColorPicker.style.display = 'inline';
-      const colorWrapper = document.getElementById(
-        'colorWrapper'
-      ) as HTMLElement;
-      // Get the button's position (x, y)
-      const rect = (e.target as HTMLElement).getBoundingClientRect();
-      const x = rect.left + window.scrollX; // Adjust for scrolling
-      const y = rect.bottom + window.scrollY; // Position below the button
+      if (!colorWrapper || !fontColorPicker) return;
 
-      const resetButton = document.getElementById(
-        'colorResetFont'
-      ) as HTMLElement;
-      resetButton.style.display = 'inline-block';
-      resetButton.addEventListener('click', () => {
-        fontColorPicker.value = '#000000';
-        resetButton.style.display = 'none';
-      });
-      // Position the color picker
-      colorWrapper.style.position = 'absolute';
-      colorWrapper.style.left = `${x - 2}px`;
-      colorWrapper.style.top = `${y - 15}px`;
-      colorWrapper.style.display = 'block'; // Show the color picker
+      // Toggle visibility
+      const isVisible = colorWrapper.style.display === 'block';
 
-      fontColorPicker.click();
-      if (fontColorPicker) {
-        fontColorPicker.addEventListener('input', event => {
-          const selectedColor = (event.target as HTMLInputElement).value;
-          const [start, end] = this.getSelectionRange();
+      if (isVisible) {
+        colorWrapper.style.display = 'none';
+      } else {
+        // Simply show the popup (positioned by CSS relative to parent)
+        colorWrapper.style.display = 'block';
+      }
+    });
 
-          if (this.document.dataIds.length > 1) {
-            this.document.blocks.forEach((block: any) => {
-              if (this.document.dataIds.includes(block.dataId)) {
-                this.document.selectedBlockId = block.dataId;
-                let countE = 0;
-                block.pieces.forEach((obj: any) => {
-                  countE += obj.text.length;
-                });
-                let countS = start - countE;
-                this.document.applyFontColor(countS, countE, selectedColor);
-              }
-            });
-          } else {
-            if (this.debounceTimer) {
-              clearTimeout(this.debounceTimer); // Clear previous timer
+    // Font Color Picker Input Handler
+    document
+      .getElementById('fontColorPicker')
+      ?.addEventListener('input', event => {
+        const selectedColor = (event.target as HTMLInputElement).value;
+        const [start, end] = this.getSelectionRange();
+
+        // Update the color indicator
+        const indicator = document.getElementById('fontColorIndicator');
+        if (indicator) {
+          indicator.style.backgroundColor = selectedColor;
+        }
+
+        if (this.document.dataIds.length > 1) {
+          this.document.blocks.forEach((block: any) => {
+            if (this.document.dataIds.includes(block.dataId)) {
+              this.document.selectedBlockId = block.dataId;
+              let countE = 0;
+              block.pieces.forEach((obj: any) => {
+                countE += obj.text.length;
+              });
+              let countS = start - countE;
+              this.document.applyFontColor(countS, countE, selectedColor);
             }
-            this.debounceTimer = setTimeout(() => {
-              this.document.applyFontColor(start, end, selectedColor);
-            }, 300);
+          });
+        } else {
+          if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
           }
-        });
+          this.debounceTimer = setTimeout(() => {
+            this.document.applyFontColor(start, end, selectedColor);
+          }, 300);
+        }
+      });
+
+    // Font Color Reset Button
+    document.getElementById('colorResetFont')?.addEventListener('click', () => {
+      const fontColorPicker = document.getElementById(
+        'fontColorPicker'
+      ) as HTMLInputElement;
+      const indicator = document.getElementById('fontColorIndicator');
+      if (fontColorPicker) {
+        fontColorPicker.value = '#000000';
+        if (indicator) {
+          indicator.style.backgroundColor = '#000000';
+        }
+        fontColorPicker.dispatchEvent(new Event('input'));
       }
     });
 
     document.addEventListener('click', e => {
       // Check if the click is outside the editor and hyperlink popup
       const target = e.target as HTMLElement;
+
+      // Close color pickers if clicked outside
+      const colorWrapper = document.getElementById('colorWrapper');
+      const colorBgWrapper = document.getElementById('colorBgWrapper');
+      const fontColorBtn = document.getElementById('fontColor');
+      const bgColorBtn = document.getElementById('bgColor');
+
+      if (
+        colorWrapper &&
+        !target.closest('#colorWrapper') &&
+        target !== fontColorBtn &&
+        !fontColorBtn?.contains(target)
+      ) {
+        colorWrapper.style.display = 'none';
+      }
+
+      if (
+        colorBgWrapper &&
+        !target.closest('#colorBgWrapper') &&
+        target !== bgColorBtn &&
+        !bgColorBtn?.contains(target)
+      ) {
+        colorBgWrapper.style.display = 'none';
+      }
+
       if (
         !this.editorContainer?.contains(target) &&
         !target.closest('.hyperlink-popup')
@@ -202,66 +243,76 @@ class TextIgniter {
       }
     });
 
+    // Background Color Picker
     document.getElementById('bgColor')?.addEventListener('click', e => {
+      e.stopPropagation();
+      const colorBgWrapper = document.getElementById(
+        'colorBgWrapper'
+      ) as HTMLElement;
       const bgColorPicker = document.getElementById(
         'bgColorPicker'
       ) as HTMLInputElement;
 
-      bgColorPicker.style.display = 'inline';
-      const colorBgWrapper = document.getElementById(
-        'colorBgWrapper'
-      ) as HTMLElement;
+      if (!colorBgWrapper || !bgColorPicker) return;
 
-      // Get the button's position (x, y)
-      const rect = (e.target as HTMLElement).getBoundingClientRect();
-      const x = rect.left + window.scrollX; // Adjust for scrolling
-      const y = rect.bottom + window.scrollY; // Position below the button
+      // Toggle visibility
+      const isVisible = colorBgWrapper.style.display === 'block';
 
-      const resetButton = document.getElementById(
-        'colorResetBG'
-      ) as HTMLElement;
-      resetButton.style.display = 'inline-block';
-      resetButton.addEventListener('click', () => {
-        bgColorPicker.value = '#ffffff';
-        resetButton.style.display = 'none';
-        console.log(y, 'resetb');
+      if (isVisible) {
+        colorBgWrapper.style.display = 'none';
+      } else {
+        // Simply show the popup (positioned by CSS relative to parent)
+        colorBgWrapper.style.display = 'block';
+      }
+    });
+
+    // Background Color Picker Input Handler
+    document
+      .getElementById('bgColorPicker')
+      ?.addEventListener('input', event => {
+        const selectedColor = (event.target as HTMLInputElement).value;
+        const [start, end] = this.getSelectionRange();
+
+        // Update the color indicator
+        const indicator = document.getElementById('bgColorIndicator');
+        if (indicator) {
+          indicator.style.backgroundColor = selectedColor;
+        }
+
+        if (this.document.dataIds.length > 1) {
+          this.document.blocks.forEach((block: any) => {
+            if (this.document.dataIds.includes(block.dataId)) {
+              this.document.selectedBlockId = block.dataId;
+              let countE = 0;
+              block.pieces.forEach((obj: any) => {
+                countE += obj.text.length;
+              });
+              let countS = start - countE;
+              this.document.applyBgColor(countS, countE, selectedColor);
+            }
+          });
+        } else {
+          if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+          }
+          this.debounceTimer = setTimeout(() => {
+            this.document.applyBgColor(start, end, selectedColor);
+          }, 300);
+        }
       });
 
-      // Position the color picker
-      colorBgWrapper.style.position = 'absolute';
-      colorBgWrapper.style.left = `${x - 2}px`;
-      colorBgWrapper.style.top = `${y - 15}px`;
-      colorBgWrapper.style.display = 'block'; // Show the color picker
-
-      bgColorPicker.click();
+    // Background Color Reset Button
+    document.getElementById('colorResetBG')?.addEventListener('click', () => {
+      const bgColorPicker = document.getElementById(
+        'bgColorPicker'
+      ) as HTMLInputElement;
+      const indicator = document.getElementById('bgColorIndicator');
       if (bgColorPicker) {
-        bgColorPicker.addEventListener('input', event => {
-          const selectedColor = (event.target as HTMLInputElement).value;
-          const [start, end] = this.getSelectionRange();
-
-          if (this.document.dataIds.length > 1) {
-            this.document.blocks.forEach((block: any) => {
-              if (this.document.dataIds.includes(block.dataId)) {
-                this.document.selectedBlockId = block.dataId;
-                let countE = 0;
-                block.pieces.forEach((obj: any) => {
-                  countE += obj.text.length;
-                });
-                let countS = start - countE;
-                this.document.applyBgColor(countS, countE, selectedColor);
-              }
-            });
-          } else {
-            if (this.debounceTimer) {
-              clearTimeout(this.debounceTimer); // Clear previous timer
-            }
-            this.debounceTimer = setTimeout(() => {
-              this.document.applyBgColor(start, end, selectedColor);
-            }, 300);
-          }
-
-          // this.document.applyFontColor(start, end, selectedColor);
-        });
+        bgColorPicker.value = '#ffffff';
+        if (indicator) {
+          indicator.style.backgroundColor = '#ffffff';
+        }
+        bgColorPicker.dispatchEvent(new Event('input'));
       }
     });
 
