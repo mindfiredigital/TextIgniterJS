@@ -15,6 +15,7 @@ import UndoRedoManager from './handlers/undoRedoManager';
 import PopupToolbarView from './view/popupToolbarView';
 import LinkPopupView from './view/linkPopupView';
 import { detectUrlsInText } from './utils/urlDetector';
+import EventEmitter from './utils/events';
 // Link functionality imports
 
 export interface CurrentAttributeDTO {
@@ -31,7 +32,7 @@ export interface CurrentAttributeDTO {
   bgColor?: string;
 }
 
-class TextIgniter {
+class TextIgniter extends EventEmitter {
   document: TextDocument;
   htmlToJsonParser: HtmlToJsonParser | undefined;
   editorView: EditorView;
@@ -50,6 +51,8 @@ class TextIgniter {
   undoRedoManager: UndoRedoManager;
 
   constructor(editorId: string, config: EditorConfig) {
+    super();
+
     const { mainEditorId, toolbarId, popupToolbarId } = createEditor(
       editorId,
       config
@@ -109,6 +112,16 @@ class TextIgniter {
       this.handleToolbarAction(action)
     );
     this.document.on('documentChanged', () => this.editorView.render());
+
+    // Emit content change event with HTML content
+    this.document.on('documentChanged', () => {
+      const htmlContent = this.document.getHtmlContent();
+      this.emit('contentChange', {
+        html: htmlContent,
+        text: this.editorContainer?.textContent || '',
+      });
+    });
+
     this.editorContainer.addEventListener('keydown', e => {
       this.syncCurrentAttributesWithCursor();
       this.handleKeydown(e as KeyboardEvent);
@@ -1491,6 +1504,39 @@ class TextIgniter {
     }
 
     this.hideLinkPopup();
+  }
+
+  /**
+   * Subscribe to content changes in the editor
+   * @param callback - Function to be called when content changes
+   * @returns Unsubscribe function
+   * @example
+   * const editor = new TextIgniter('editor-container', config);
+   * editor.onContentChange((data) => {
+   *   console.log('HTML:', data.html);
+   *   console.log('Text:', data.text);
+   * });
+   */
+  public onContentChange(
+    callback: (data: { html: string; text: string }) => void
+  ): void {
+    this.on('contentChange', callback);
+  }
+
+  /**
+   * Get the current HTML content of the editor
+   * @returns The HTML content as a string
+   */
+  public getContent(): string {
+    return this.document.getHtmlContent() || '';
+  }
+
+  /**
+   * Get the current text content of the editor (without HTML tags)
+   * @returns The plain text content
+   */
+  public getTextContent(): string {
+    return this.editorContainer?.textContent || '';
   }
 }
 (window as any).TextIgniter = TextIgniter;

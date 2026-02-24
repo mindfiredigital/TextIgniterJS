@@ -1,50 +1,70 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rich Text Editor</title>
-    <meta name="description" content="New features implemented." />
-    <style></style>
-  </head>
 
-  <body style="margin-top: 46px;">
-    <div id="editor-container"></div>
-    <link rel="stylesheet" href="dist/index.css" />
-    <script src="dist/index.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rich Text Editor</title>
+  <meta name="description" content="New features implemented." />
+  <style></style>
+</head>
 
-    <script>
-      const config = {
-        showToolbar: true,
-        features: [
-          'bold',
-          'italic',
-          'underline',
-          'strikethrough',
-          'hyperlink',
+<body style="margin-top: 46px;">
+  <div id="editor-container"></div>
 
-          'fontFamily',
-          'fontSize',
-          'alignLeft',
-          'alignCenter',
-          'alignRight',
-          'unorderedList',
-          'orderedList',
-          'image',
-          'fontColor',
-          'bgColor',
-          'getHtmlContent',
-          'loadHtmlContent',
-          // "subscript",
-          // "superscript",
-          // "insert_table",
-          // "insert_layout",
-          // "heading",
-          // "colors"
-        ],
-        popupFeatures: ['bold', 'italic', 'underline', 'hyperlink'],
-      };
-      new TextIgniter('editor-container', config);
-    </script>
-  </body>
+  <!-- Display area for real-time content -->
+  <div style="margin-top: 20px; padding: 20px; border: 1px solid #ccc; background: #f9f9f9;">
+    <h3>Real-time Content Preview:</h3>
+    <div style="margin-top: 10px;">
+      <strong>HTML Content:</strong>
+      <pre id="html-output" style="background: white; padding: 10px; overflow: auto; max-height: 200px;"></pre>
+    </div>
+    <div style="margin-top: 10px;">
+      <strong>Text Content:</strong>
+      <pre id="text-output" style="background: white; padding: 10px; overflow: auto; max-height: 100px;"></pre>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="dist/index.css" />
+  <script src="dist/index.js"></script>
+
+  <script>
+    const config = {
+      showToolbar: true,
+      features: [
+        'bold',
+        'italic',
+        'underline',
+        'strikethrough',
+        'hyperlink',
+
+        'fontFamily',
+        'fontSize',
+        'alignLeft',
+        'alignCenter',
+        'alignRight',
+        'unorderedList',
+        'orderedList',
+        'image',
+        'fontColor',
+        'bgColor',
+        'getHtmlContent',
+        'loadHtmlContent',
+        // "subscript",
+        // "superscript",
+        // "insert_table",
+        // "insert_layout",
+        // "heading",
+        // "colors"
+      ],
+      popupFeatures: ['bold', 'italic', 'underline', 'hyperlink'],
+    };
+    const editor = new TextIgniter('editor-container', config);
+    editor.onContentChange((data) => {
+      document.getElementById('html-output').textContent = data.html;
+      document.getElementById('text-output').textContent = data.text;
+    });
+  </script>
+</body>
+
 </html>

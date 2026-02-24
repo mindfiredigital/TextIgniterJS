@@ -10,6 +10,7 @@ import { ImageHandler } from './handlers/image';
 import UndoRedoManager from './handlers/undoRedoManager';
 import PopupToolbarView from './view/popupToolbarView';
 import LinkPopupView from './view/linkPopupView';
+import EventEmitter from './utils/events';
 export interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
@@ -23,7 +24,7 @@ export interface CurrentAttributeDTO {
     fontColor?: string;
     bgColor?: string;
 }
-declare class TextIgniter {
+declare class TextIgniter extends EventEmitter {
     document: TextDocument;
     htmlToJsonParser: HtmlToJsonParser | undefined;
     editorView: EditorView;
@@ -62,5 +63,11 @@ declare class TextIgniter {
     private hideLinkPopup;
     private openLink;
     private unlinkText;
+    onContentChange(callback: (data: {
+        html: string;
+        text: string;
+    }) => void): void;
+    getContent(): string;
+    getTextContent(): string;
 }
 export { TextIgniter };
