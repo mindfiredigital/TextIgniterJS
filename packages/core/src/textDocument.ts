@@ -69,6 +69,7 @@ class TextDocument extends EventEmitter {
       bold?: boolean;
       italic?: boolean;
       underline?: boolean;
+      strikethrough?: boolean;
       hyperlink?: boolean | string;
     },
     position: number,
@@ -109,6 +110,7 @@ class TextDocument extends EventEmitter {
             bold: attributes.bold || false,
             italic: attributes.italic || false,
             underline: attributes.underline || false,
+            strikethrough: attributes.strikethrough || false,
             hyperlink: attributes.hyperlink || false,
           })
         );
@@ -133,6 +135,7 @@ class TextDocument extends EventEmitter {
             bold: attributes.bold || false,
             italic: attributes.italic || false,
             underline: attributes.underline || false,
+            strikethrough: attributes.strikethrough || false,
             hyperlink: attributes.hyperlink || false,
           })
         )
@@ -144,6 +147,7 @@ class TextDocument extends EventEmitter {
             bold: attributes.bold || false,
             italic: attributes.italic || false,
             underline: attributes.underline || false,
+            strikethrough: attributes.strikethrough || false,
             hyperlink: attributes.hyperlink || false,
           })
         );

@@ -21,6 +21,7 @@ declare class TextDocument extends EventEmitter {
         bold?: boolean;
         italic?: boolean;
         underline?: boolean;
+        strikethrough?: boolean;
         hyperlink?: boolean | string;
     }, position: number, dataId?: string | null, currentOffset?: number, id?: string, actionType?: string, isSynthetic?: boolean): void;
     deleteRange(start: number, end: number, dataId?: string | null, currentOffset?: number, isBackspace?: boolean): void;
