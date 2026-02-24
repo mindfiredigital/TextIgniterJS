@@ -93,6 +93,7 @@ class TextIgniter {
       bold: false,
       italic: false,
       underline: false,
+      strikethrough: false,
       undo: false,
       redo: false,
       hyperlink: false,
@@ -1267,6 +1268,7 @@ class TextIgniter {
             bold: piece.attributes.bold,
             italic: piece.attributes.italic,
             underline: piece.attributes.underline,
+            strikethrough: piece.attributes.strikethrough || false,
             hyperlink: piece.attributes.hyperlink || false,
             fontFamily: piece.attributes.fontFamily,
             fontSize: piece.attributes.fontSize,
@@ -1285,6 +1287,7 @@ class TextIgniter {
             bold: false,
             italic: false,
             underline: false,
+            strikethrough: false,
             hyperlink: false,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
@@ -1293,7 +1296,40 @@ class TextIgniter {
         this.lastPiece = null;
       }
     } else {
+      // Text is selected - check if the entire selection has each attribute
       this.hyperlinkHandler.hideHyperlinkViewButton();
+
+      const allBold = this.document.isRangeEntirelyAttribute(
+        start,
+        end,
+        'bold'
+      );
+      const allItalic = this.document.isRangeEntirelyAttribute(
+        start,
+        end,
+        'italic'
+      );
+      const allUnderline = this.document.isRangeEntirelyAttribute(
+        start,
+        end,
+        'underline'
+      );
+      const allStrikethrough = this.document.isRangeEntirelyAttribute(
+        start,
+        end,
+        'strikethrough' as any
+      );
+
+      this.currentAttributes = {
+        bold: allBold,
+        italic: allItalic,
+        underline: allUnderline,
+        strikethrough: allStrikethrough,
+        hyperlink: false,
+      };
+
+      this.toolbarView.updateActiveStates(this.currentAttributes);
+      this.popupToolbarView.updateActiveStates(this.currentAttributes);
     }
   }
 

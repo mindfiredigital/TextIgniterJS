@@ -69,6 +69,8 @@ class PopupToolbarView extends EventEmitter {
       if (action === 'bold' && attributes.bold) isActive = true;
       if (action === 'italic' && attributes.italic) isActive = true;
       if (action === 'underline' && attributes.underline) isActive = true;
+      if (action === 'strikethrough' && attributes.strikethrough)
+        isActive = true;
       if (action === 'hyperlink' && attributes.hyperlink) isActive = true;
       btn.classList.toggle('active', isActive);
     });
