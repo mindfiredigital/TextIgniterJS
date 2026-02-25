@@ -1,7 +1,7 @@
 {
   "name": "@mindfiredigital/textigniter-web-component",
   "description": "TextIgniter Web-Component",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/mindfiredigital/textigniterjs.git"
