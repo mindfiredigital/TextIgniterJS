@@ -37,7 +37,8 @@ module.exports = __toCommonJS(src_exports);
 // src/components/TextIgniter.tsx
 var import_react = __toESM(require("react"));
 var TextigniterReact = ({
-  config
+  config,
+  onContentChange
 }) => {
   const builderRef = (0, import_react.useRef)(null);
   const [processedConfig, setProcessedConfig] = (0, import_react.useState)(config);
@@ -60,6 +61,18 @@ var TextigniterReact = ({
       }
     }
   }, [processedConfig]);
+  (0, import_react.useEffect)(() => {
+    const element = builderRef.current;
+    if (!element || !onContentChange)
+      return;
+    const handleContentChange = (event) => {
+      onContentChange(event.detail);
+    };
+    element.addEventListener("content-change", handleContentChange);
+    return () => {
+      element.removeEventListener("content-change", handleContentChange);
+    };
+  }, [onContentChange]);
   return /* @__PURE__ */ import_react.default.createElement("text-igniter", { ref: builderRef });
 };
 // Annotate the CommonJS export names for ESM import in node:

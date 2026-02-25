@@ -47,6 +47,18 @@
   background: #f3f4f6;
 }
 
+/* Remove hover effect from color picker buttons */
+.toolbar button:hover#fontColor,
+.toolbar button:hover#bgColor {
+  background: transparent !important;
+}
+
+/* Ensure tooltip still works but no background color change */
+.toolbar button[data-tooltip]:hover#fontColor,
+.toolbar button[data-tooltip]:hover#bgColor {
+  background: transparent !important;
+}
+
 .toolbar button.active {
   background: #e5e7eb;
   color: #111827;
@@ -96,7 +108,7 @@
   left: 50%;
   transform: translateX(-50%) scale(0.9);
   border: 5px solid transparent;
-  border-top-color: #1f2937;
+  /* border-top-color: #1f2937; */
   z-index: 1000;
   pointer-events: none;
   opacity: 0;
@@ -195,7 +207,7 @@
   transform: translateX(-50%);
   width: 14px;
   height: 3px;
-  background: var(--font-color-indicator, #000);
+  /* background: var(--font-color-indicator, #000); */
   border-radius: 2px;
 }
 
@@ -207,7 +219,7 @@
   transform: translateX(-50%);
   width: 14px;
   height: 3px;
-  background: var(--bg-color-indicator, #fbbf24);
+  /* background: var(--bg-color-indicator, #fbbf24); */
   border-radius: 2px;
 }
 

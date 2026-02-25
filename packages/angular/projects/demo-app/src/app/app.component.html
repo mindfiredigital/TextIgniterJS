@@ -1,2 +1,25 @@
+<h1>TextIgniter Angular Example</h1>
 
-<ngx-text-igniter [config]="config"></ngx-text-igniter>
+<ngx-text-igniter [config]="config" (contentChange)="onContentChange($event)"></ngx-text-igniter>
+
+<!-- Real-time Content Preview -->
+<div style="margin-top: 20px; padding: 20px; border: 1px solid #ccc; background: #f9f9f9;">
+    <h3>Real-time Content Preview:</h3>
+
+    <div style="margin-top: 10px;">
+        <strong>HTML Content:</strong>
+        <pre
+            style="background: white; padding: 10px; overflow: auto; max-height: 200px;">{{ htmlContent || 'Start typing to see content...' }}</pre>
+    </div>
+
+    <div style="margin-top: 10px;">
+        <strong>Text Content:</strong>
+        <pre
+            style="background: white; padding: 10px; overflow: auto; max-height: 100px;">{{ textContent || 'Start typing to see text...' }}</pre>
+    </div>
+
+    <div style="margin-top: 10px;">
+        <strong>Stats:</strong>
+        <p>Characters: {{ characterCount }} | Words: {{ wordCount }}</p>
+    </div>
+</div>
