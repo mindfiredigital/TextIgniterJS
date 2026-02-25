@@ -938,23 +938,50 @@ class TextIgniter extends EventEmitter {
         const cursorBlockId = cursorBlock?.toString();
 
         if (cursorBlockId && currentBlock && currentBlock.type === 'text') {
-          // Get the full text content
-          const fullText = currentBlock.pieces.map((p: any) => p.text).join('');
           const cursorOffset = start - this.document.currentOffset;
 
-          // Split text into before and after cursor
-          const beforeText = fullText.slice(0, cursorOffset);
-          const afterText = fullText.slice(cursorOffset);
+          // Split pieces at cursor position while preserving formatting
+          const beforePieces: Piece[] = [];
+          const afterPieces: Piece[] = [];
+          let offset = 0;
 
-          // Update current block text to before-cursor
-          currentBlock.pieces = [
-            new Piece(beforeText || '\u200B', lastPieceAttributes),
-          ];
+          for (const piece of currentBlock.pieces) {
+            const pieceEnd = offset + piece.text.length;
 
-          // Create new block with text after cursor
+            if (pieceEnd <= cursorOffset) {
+              // Entire piece is before cursor
+              beforePieces.push(piece.clone());
+            } else if (offset >= cursorOffset) {
+              // Entire piece is after cursor
+              afterPieces.push(piece.clone());
+            } else {
+              // Piece spans the cursor - split it
+              const splitPoint = cursorOffset - offset;
+              const beforeText = piece.text.slice(0, splitPoint);
+              const afterText = piece.text.slice(splitPoint);
+
+              if (beforeText) {
+                beforePieces.push(
+                  new Piece(beforeText, { ...piece.attributes })
+                );
+              }
+              if (afterText) {
+                afterPieces.push(new Piece(afterText, { ...piece.attributes }));
+              }
+            }
+            offset = pieceEnd;
+          }
+
+          // Update current block with before-cursor pieces (preserve formatting)
+          currentBlock.pieces =
+            beforePieces.length > 0
+              ? beforePieces
+              : [new Piece('\u200B', lastPieceAttributes)];
+
+          // Create new block with after-cursor pieces (preserve formatting)
           const newPieces =
-            afterText && afterText.trim().length > 0
-              ? [new Piece(afterText, lastPieceAttributes)]
+            afterPieces.length > 0
+              ? afterPieces
               : [new Piece('\u200B', lastPieceAttributes)];
 
           const updatedBlock = this.addBlockAfter(
