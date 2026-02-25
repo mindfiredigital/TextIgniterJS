@@ -912,7 +912,7 @@ class TextDocument extends EventEmitter {
     this.emit('documentChanged', this); // Trigger re-render
   }
 
-  getHtmlContent() {
+  getHtmlContent(copyToClipboard: boolean = false) {
     const editorContainer = document.getElementById('editor'); // Adjust to your editor's ID
     if (!editorContainer) {
       console.error('Editor container not found.');
@@ -921,13 +921,16 @@ class TextDocument extends EventEmitter {
 
     const htmlContent = editorContainer.innerHTML;
 
-    // You can also copy it to the clipboard
-    navigator.clipboard
-      .writeText(htmlContent)
-      .then(() => {
-        console.log('HTML copied to clipboard!');
-      })
-      .catch(err => console.error('Failed to copy HTML:', err));
+    // Optionally copy it to the clipboard (only when explicitly requested)
+    if (copyToClipboard) {
+      navigator.clipboard
+        .writeText(htmlContent)
+        .then(() => {
+          console.log('HTML copied to clipboard!');
+        })
+        .catch(err => console.error('Failed to copy HTML:', err));
+    }
+
     return htmlContent;
   }
 

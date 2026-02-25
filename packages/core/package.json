@@ -1,6 +1,6 @@
 {
   "name": "@mindfiredigital/textigniter",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "TextIgniter JS is a lightweight, powerful, and intuitive HTML editor built using TypeScript.",
   "publishConfig": {
     "access": "public"

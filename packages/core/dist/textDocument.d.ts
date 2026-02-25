@@ -54,7 +54,7 @@ declare class TextDocument extends EventEmitter {
     setFontFamily(start: number, end: number, fontFamily: string): void;
     setFontSize(start: number, end: number, fontSize: string): void;
     setAlignment(alignment: 'left' | 'center' | 'right', dataId: string | null): void;
-    getHtmlContent(): string | undefined;
+    getHtmlContent(copyToClipboard?: boolean): string | undefined;
     getCursorOffsetInParent(parentSelector: string): {
         offset: number;
         childNode: Node | null;

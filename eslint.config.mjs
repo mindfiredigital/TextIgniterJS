@@ -8,6 +8,11 @@ export default [
       "**/test/**",
       "**/dist/**",
       "**/*.d.ts",
+      "**/.angular/**",
+      "**/build/**",
+      "**/coverage/**",
+      "**/.turbo/**",
+      "**/*.min.js",
     ],
   },
   {
