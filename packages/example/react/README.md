@@ -1,54 +1,266 @@
-# React + TypeScript + Vite
+# TextIgniter React Example
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This example demonstrates how to integrate and use the **@mindfiredigital/textigniter-react** package in a React + TypeScript + Vite application.
 
-Currently, two official plugins are available:
+## 🎯 What This Example Shows
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This example demonstrates:
 
-## Expanding the ESLint configuration
+- ✅ Basic TextIgniter React integration
+- ✅ Real-time content change events with `onContentChange` callback
+- ✅ HTML and plain text content preview
+- ✅ Character and word counting
+- ✅ TypeScript usage with the component
+- ✅ All available editor features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📦 Installation
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+# Install dependencies
+npm install
+
+# or
+pnpm install
+
+# or
+yarn install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Running the Example
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Start development server
+npm run dev
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+# or
+pnpm dev
+
+# or
+yarn dev
 ```
+
+Then open your browser to `http://localhost:5173` (or the port shown in your terminal).
+
+## 📝 Code Overview
+
+### Basic Usage
+
+The example in `src/App.tsx` shows how to use the TextIgniter component:
+
+```tsx
+import { Textigniter } from '@mindfiredigital/textigniter-react';
+
+function App() {
+  return (
+    <Textigniter
+      config={{
+        showToolbar: true,
+        features: ['bold', 'italic', 'underline', 'fontColor'],
+      }}
+    />
+  );
+}
+```
+
+### With Content Change Handler
+
+```tsx
+import { useState } from 'react';
+import { Textigniter } from '@mindfiredigital/textigniter-react';
+
+function App() {
+  const [htmlContent, setHtmlContent] = useState('');
+  const [textContent, setTextContent] = useState('');
+
+  const handleContentChange = (data: { html: string; text: string }) => {
+    console.log('Content changed:', data);
+    setHtmlContent(data.html);
+    setTextContent(data.text);
+  };
+
+  return (
+    <div>
+      <Textigniter
+        config={{
+          showToolbar: true,
+          features: ['bold', 'italic', 'underline'],
+        }}
+        onContentChange={handleContentChange}
+      />
+
+      {/* Display content */}
+      <div>
+        <h3>HTML: {htmlContent}</h3>
+        <h3>Text: {textContent}</h3>
+        <p>Characters: {textContent.length}</p>
+      </div>
+    </div>
+  );
+}
+```
+
+## 🎨 Available Features
+
+The example includes all available features:
+
+```tsx
+features: [
+  // Text Formatting
+  'bold',
+  'italic',
+  'underline',
+  'strikethrough',
+  'subscript',
+  'superscript',
+
+  // Text Styling
+  'fontFamily',
+  'fontSize',
+  'fontColor',
+  'bgColor',
+
+  // Alignment
+  'alignLeft',
+  'alignCenter',
+  'alignRight',
+  'justify',
+
+  // Lists
+  'unorderedList',
+  'orderedList',
+
+  // Content
+  'heading',
+  'hyperlink',
+  'image',
+
+  // Structure
+  'insertTable',
+  'insertLayout',
+
+  // Actions
+  'getHtmlContent',
+  'loadHtmlContent',
+];
+```
+
+## 📚 Configuration Options
+
+```tsx
+interface EditorConfig {
+  showToolbar?: boolean; // Show/hide toolbar (default: true)
+  features?: string[]; // Array of feature names to enable
+  height?: string; // Editor height (e.g., '500px', '80vh')
+  placeholder?: string; // Placeholder text
+}
+```
+
+## 🎪 onContentChange Event
+
+The `onContentChange` callback provides real-time updates:
+
+```tsx
+interface ContentChangeData {
+  html: string; // Formatted HTML content
+  text: string; // Plain text without HTML tags
+}
+
+const handleContentChange = (data: ContentChangeData) => {
+  console.log('HTML:', data.html);
+  console.log('Text:', data.text);
+
+  // Use the content
+  // - Save to state
+  // - Send to API
+  // - Update character count
+  // - Validate content
+  // etc.
+};
+```
+
+## 🛠️ Build for Production
+
+```bash
+# Build the example
+npm run build
+
+# or
+pnpm build
+
+# or
+yarn build
+```
+
+The build output will be in the `dist` directory.
+
+## 📖 Learn More
+
+- **TextIgniter React Package**: [@mindfiredigital/textigniter-react](https://www.npmjs.com/package/@mindfiredigital/textigniter-react)
+- **TextIgniter Core**: [@mindfiredigital/textigniter](https://www.npmjs.com/package/@mindfiredigital/textigniter)
+- **GitHub Repository**: [TextIgniterJS](https://github.com/mindfiredigital/textigniterjs)
+- **Documentation**: [Docs](https://github.com/mindfiredigital/textigniterjs/tree/main/docs)
+
+## 🎯 Common Use Cases
+
+### Character Counter
+
+```tsx
+const [content, setContent] = useState({ html: '', text: '' });
+
+const charCount = content.text.length;
+const wordCount = content.text
+  .trim()
+  .split(/\s+/)
+  .filter(w => w.length > 0).length;
+```
+
+### Auto-Save
+
+```tsx
+useEffect(() => {
+  if (!content.html) return;
+
+  const timer = setTimeout(() => {
+    // Save content to backend
+    fetch('/api/save', {
+      method: 'POST',
+      body: JSON.stringify({ content: content.html }),
+    });
+  }, 2000);
+
+  return () => clearTimeout(timer);
+}, [content]);
+```
+
+### Content Validation
+
+```tsx
+const [error, setError] = useState('');
+
+const handleContentChange = (data: { html: string; text: string }) => {
+  if (data.text.length < 50) {
+    setError('Content too short');
+  } else if (data.text.length > 500) {
+    setError('Content too long');
+  } else {
+    setError('');
+  }
+};
+```
+
+## 🔧 Tech Stack
+
+- **React 19** - UI library
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
+- **@mindfiredigital/textigniter-react** - Rich text editor component
+
+## 📄 License
+
+MIT License - See the main repository for details.
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/mindfiredigital">Mindfire Digital</a>
+</p>

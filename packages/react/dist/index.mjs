@@ -1,7 +1,8 @@
 // src/components/TextIgniter.tsx
 import React, { useEffect, useRef, useState } from "react";
 var TextigniterReact = ({
-  config
+  config,
+  onContentChange
 }) => {
   const builderRef = useRef(null);
   const [processedConfig, setProcessedConfig] = useState(config);
@@ -24,6 +25,18 @@ var TextigniterReact = ({
       }
     }
   }, [processedConfig]);
+  useEffect(() => {
+    const element = builderRef.current;
+    if (!element || !onContentChange)
+      return;
+    const handleContentChange = (event) => {
+      onContentChange(event.detail);
+    };
+    element.addEventListener("content-change", handleContentChange);
+    return () => {
+      element.removeEventListener("content-change", handleContentChange);
+    };
+  }, [onContentChange]);
   return /* @__PURE__ */ React.createElement("text-igniter", { ref: builderRef });
 };
 export {

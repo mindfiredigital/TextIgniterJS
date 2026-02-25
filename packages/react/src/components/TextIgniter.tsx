@@ -14,12 +14,15 @@ import '../types/textigniter.d.ts';
 //   title?: string;
 // }
 
-// interface TextigniterReactProps {
-//   config: DynamicComponents;
-//   customComponents?: Record<string, CustomComponentConfig>;
-// }
+interface TextigniterReactProps {
+  config: any;
+  onContentChange?: (data: { html: string; text: string }) => void;
+}
 
-export const TextigniterReact: React.FC<any> = ({ config }) => {
+export const TextigniterReact: React.FC<TextigniterReactProps> = ({
+  config,
+  onContentChange,
+}) => {
   const builderRef = useRef<HTMLElement>(null);
   const [processedConfig, setProcessedConfig] = useState<any>(config);
 
@@ -52,6 +55,22 @@ export const TextigniterReact: React.FC<any> = ({ config }) => {
       }
     }
   }, [processedConfig]);
+
+  // Effect to handle content change events
+  useEffect(() => {
+    const element = builderRef.current;
+    if (!element || !onContentChange) return;
+
+    const handleContentChange = (event: any) => {
+      onContentChange(event.detail);
+    };
+
+    element.addEventListener('content-change', handleContentChange);
+
+    return () => {
+      element.removeEventListener('content-change', handleContentChange);
+    };
+  }, [onContentChange]);
 
   return <text-igniter ref={builderRef} />;
 };
