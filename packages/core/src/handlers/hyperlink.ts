@@ -1,13 +1,14 @@
-import { blockType } from "../types/pieces";
+import { blockType } from '../types/pieces';
 import {
   saveSelection,
   restoreSelection,
   getSelectionRange,
-} from "../utils/selectionManager";
-import EditorView from "../view/editorView";
-import TextDocument from "../textDocument";
-import UndoRedoManager from "./undoRedoManager";
-import { strings } from "../constants/strings";
+} from '../utils/selectionManager';
+import EditorView from '../view/editorView';
+import TextDocument from '../textDocument';
+import UndoRedoManager from './undoRedoManager';
+import { strings } from '../constants/strings';
+import { ensureProtocol } from '../utils/urlDetector';
 
 class HyperlinkHandler {
   savedSelection: { start: number; end: number } | null = null;
@@ -80,23 +81,42 @@ class HyperlinkHandler {
   }
 
   showHyperlinkInput(existingLink: string | null): void {
-    const hyperlinkContainer = document.getElementById(strings.HYPERLINK_CONTAINER_ID);
-    const hyperlinkInput = document.getElementById(strings.HYPERLINK_INPUT_ID) as HTMLInputElement;
+    const hyperlinkContainer = document.getElementById(
+      strings.HYPERLINK_CONTAINER_ID
+    );
+    const hyperlinkInput = document.getElementById(
+      strings.HYPERLINK_INPUT_ID
+    ) as HTMLInputElement;
     const applyButton = document.getElementById(strings.HYPERLINK_APPLY_BTN_ID);
-    const cancelButton = document.getElementById(strings.HYPERLINK_CANCEL_BTN_ID);
+    const cancelButton = document.getElementById(
+      strings.HYPERLINK_CANCEL_BTN_ID
+    );
 
     if (hyperlinkContainer && hyperlinkInput && applyButton && cancelButton) {
-      hyperlinkContainer.style.display = "block";
+      hyperlinkContainer.style.display = 'block';
 
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        hyperlinkContainer.style.top = `${rect.bottom + window.scrollY + 5}px`;
-        hyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
+        const range = selection.getRangeAt(0) as any;
+        // Safely compute a rect in environments like jsdom where Range#getBoundingClientRect may not exist
+        let rect: any = null;
+        if (range && typeof range.getBoundingClientRect === 'function') {
+          rect = range.getBoundingClientRect();
+        } else if (range && typeof range.getClientRects === 'function') {
+          const list = range.getClientRects?.();
+          rect = list && list.length ? list[0] : null;
+        }
+        if (!rect || (Number.isNaN(rect.top) && Number.isNaN(rect.left))) {
+          // Fallback to the editor container's position
+          rect = this.editorView.container.getBoundingClientRect();
+        }
+        const scrollY = (window as any)?.scrollY || 0;
+        const scrollX = (window as any)?.scrollX || 0;
+        hyperlinkContainer.style.top = `${(rect.bottom ?? rect.top) + scrollY + 5}px`;
+        hyperlinkContainer.style.left = `${(rect.left ?? 0) + scrollX}px`;
       }
 
-      hyperlinkInput.value = existingLink || "";
+      hyperlinkInput.value = existingLink || '';
       this.savedSelection = saveSelection(this.editorView.container);
       this.highlightSelection();
       hyperlinkInput.focus();
@@ -106,17 +126,37 @@ class HyperlinkHandler {
 
       const dataIdsSnapshot = this.document.dataIds;
 
-      applyButton.onclick = () => {
-        const url = hyperlinkInput.value.trim();
+      // Original button click handler (commented out)
+      // applyButton.onclick = () => {
+      //   const url = hyperlinkInput.value.trim();
+      //   if (url) {
+      //     this.applyHyperlink(url, dataIdsSnapshot);
+      //   }
+      //   hyperlinkContainer.style.display = 'none';
+      // };
+
+      // Function to apply hyperlink (used by both button click and Enter key)
+      const applyHyperlinkAction = () => {
+        const url = ensureProtocol(hyperlinkInput.value.trim());
         if (url) {
           this.applyHyperlink(url, dataIdsSnapshot);
         }
-        hyperlinkContainer.style.display = "none";
+        hyperlinkContainer.style.display = 'none';
+      };
+
+      applyButton.onclick = applyHyperlinkAction;
+
+      // Add Enter key support to the input field
+      hyperlinkInput.onkeydown = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyHyperlinkAction();
+        }
       };
 
       cancelButton.onclick = () => {
         this.removeHyperlink(dataIdsSnapshot);
-        hyperlinkContainer.style.display = "none";
+        hyperlinkContainer.style.display = 'none';
       };
     }
   }
@@ -127,7 +167,7 @@ class HyperlinkHandler {
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
-      const span = document.createElement("span");
+      const span = document.createElement('span');
       span.className = strings.TEMPORARY_SELECTION_HIGHLIGHT_CLASS;
       span.appendChild(range.extractContents());
       range.insertNode(span);
@@ -142,7 +182,7 @@ class HyperlinkHandler {
     const highlights = this.editorContainer?.querySelectorAll(
       `span.${strings.TEMPORARY_SELECTION_HIGHLIGHT_CLASS}`
     );
-    highlights?.forEach((span) => {
+    highlights?.forEach(span => {
       const parent = span.parentNode;
       if (parent) {
         while (span.firstChild) {
@@ -159,6 +199,7 @@ class HyperlinkHandler {
     restoreSelection(this.editorView.container, this.savedSelection);
     const [start, end] = getSelectionRange(this.editorView);
     if (start < end) {
+      const normalizedUrl = ensureProtocol(url);
       if (dataIdsSnapshot.length > 1) {
         this.document.blocks.forEach((block: any) => {
           if (dataIdsSnapshot.includes(block.dataId)) {
@@ -168,14 +209,24 @@ class HyperlinkHandler {
               countE += obj.text.length;
             });
             let countS = start - countE;
-            this.document.formatAttribute(countS, countE, "hyperlink", url);
+            this.document.formatAttribute(
+              countS,
+              countE,
+              'hyperlink',
+              normalizedUrl
+            );
           }
         });
       } else {
-        this.document.formatAttribute(start, end, "hyperlink", url);
+        this.document.formatAttribute(start, end, 'hyperlink', normalizedUrl);
       }
       this.editorView.render();
-      restoreSelection(this.editorView.container, this.savedSelection);
+      // restoreSelection(this.editorView.container, this.savedSelection);
+
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+      }
       this.editorView.container.focus();
     }
     this.savedSelection = null;
@@ -196,11 +247,11 @@ class HyperlinkHandler {
               countE += obj.text.length;
             });
             let countS = start - countE;
-            this.document.formatAttribute(countS, countE, "hyperlink", false);
+            this.document.formatAttribute(countS, countE, 'hyperlink', false);
           }
         });
       } else {
-        this.document.formatAttribute(start, end, "hyperlink", false);
+        this.document.formatAttribute(start, end, 'hyperlink', false);
       }
       this.editorView.render();
       restoreSelection(this.editorView.container, this.savedSelection);
@@ -209,33 +260,76 @@ class HyperlinkHandler {
     this.savedSelection = null;
   }
 
-  showHyperlinkViewButton(link: string | ""): void {
-    const viewHyperlinkContainer = document.getElementById(strings.VIEW_HYPERLINK_CONTAINER_ID) as HTMLDivElement;
-    const hyperLinkAnchor = document.getElementById(strings.VIEW_HYPERLINK_ANCHOR_ID) as HTMLAnchorElement;
+  clickOutsideHandler: ((event: MouseEvent) => void) | null = null;
+
+  addClickOutsideListener(container: HTMLElement): void {
+    this.removeClickOutsideListener(); // Clean up any old listener
+    this.clickOutsideHandler = (event: MouseEvent) => {
+      if (container && !container.contains(event.target as Node)) {
+        this.hideHyperlinkViewButton();
+      }
+    };
+    // Delay to avoid immediate closure when opening
+    setTimeout(() => {
+      document.addEventListener('click', this.clickOutsideHandler!);
+    }, 100);
+  }
+
+  removeClickOutsideListener(): void {
+    if (this.clickOutsideHandler) {
+      document.removeEventListener('click', this.clickOutsideHandler);
+      this.clickOutsideHandler = null;
+    }
+  }
+
+  showHyperlinkViewButton(link: string | ''): void {
+    const viewHyperlinkContainer = document.getElementById(
+      strings.VIEW_HYPERLINK_CONTAINER_ID
+    ) as HTMLDivElement;
+    const hyperLinkAnchor = document.getElementById(
+      strings.VIEW_HYPERLINK_ANCHOR_ID
+    ) as HTMLAnchorElement;
 
     if (viewHyperlinkContainer && hyperLinkAnchor) {
-      viewHyperlinkContainer.style.display = "block";
+      viewHyperlinkContainer.style.display = 'block';
 
       const selection = window.getSelection();
-      if (selection) {
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        viewHyperlinkContainer.style.top = `${rect.bottom + window.scrollY + 5}px`;
-        viewHyperlinkContainer.style.left = `${rect.left + window.scrollX}px`;
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0) as any;
+        let rect: any = null;
+        if (range && typeof range.getBoundingClientRect === 'function') {
+          rect = range.getBoundingClientRect();
+        } else if (range && typeof range.getClientRects === 'function') {
+          const list = range.getClientRects?.();
+          rect = list && list.length ? list[0] : null;
+        }
+        if (!rect) {
+          rect = this.editorView.container.getBoundingClientRect();
+        }
+        const scrollY = (window as any)?.scrollY || 0;
+        const scrollX = (window as any)?.scrollX || 0;
+        if (rect) {
+          viewHyperlinkContainer.style.top = `${(rect.bottom ?? rect.top) + scrollY + 5}px`;
+          viewHyperlinkContainer.style.left = `${(rect.left ?? 0) + scrollX}px`;
+        }
       }
 
       if (link) {
         hyperLinkAnchor.innerText = link;
-        hyperLinkAnchor.href = link;
+        hyperLinkAnchor.href = ensureProtocol(link);
       }
     }
+    this.addClickOutsideListener(viewHyperlinkContainer);
   }
 
   hideHyperlinkViewButton() {
-    const hyperlinkContainer = document.getElementById(strings.VIEW_HYPERLINK_CONTAINER_ID);
+    const hyperlinkContainer = document.getElementById(
+      strings.VIEW_HYPERLINK_CONTAINER_ID
+    );
     if (hyperlinkContainer) {
-      hyperlinkContainer.style.display = "none";
+      hyperlinkContainer.style.display = 'none';
     }
+    this.removeClickOutsideListener();
   }
 }
 

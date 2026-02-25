@@ -11,20 +11,28 @@ import HtmlToJsonParser from './HtmlToJsonParser';
 import { ImageHandler } from './handlers/image';
 import { strings } from './constants/strings';
 import UndoRedoManager from './handlers/undoRedoManager';
+import PopupToolbarView from './view/popupToolbarView';
+import LinkPopupView from './view/linkPopupView';
+import { detectUrlsInText } from './utils/urlDetector';
 class TextIgniter {
     constructor(editorId, config) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         this.savedSelection = null;
         this.debounceTimer = null;
-        const { mainEditorId, toolbarId } = createEditor(editorId, config);
+        const { mainEditorId, toolbarId, popupToolbarId } = createEditor(editorId, config);
         this.editorContainer = document.getElementById(mainEditorId) || null;
         this.toolbarContainer = document.getElementById(toolbarId) || null;
-        if (!this.editorContainer || !this.toolbarContainer) {
+        const popupToolbarContainer = document.getElementById(popupToolbarId) || null;
+        if (!this.editorContainer ||
+            !this.toolbarContainer ||
+            !popupToolbarContainer) {
             throw new Error('Editor element not found or incorrect element type.');
         }
         this.document = new TextDocument();
         this.editorView = new EditorView(this.editorContainer, this.document);
         this.toolbarView = new ToolbarView(this.toolbarContainer);
+        this.popupToolbarView = new PopupToolbarView(popupToolbarContainer);
+        this.linkPopupView = new LinkPopupView();
         this.hyperlinkHandler = new HyperlinkHandler(this.editorContainer, this.editorView, this.document);
         this.imageHandler = new ImageHandler(this.editorContainer, this.document);
         this.undoRedoManager = new UndoRedoManager(this.document, this.editorView);
@@ -33,6 +41,7 @@ class TextIgniter {
         this.document.setEditorView(this.editorView);
         this.document.setUndoRedoManager(this.undoRedoManager);
         this.hyperlinkHandler.setUndoRedoManager(this.undoRedoManager);
+        this.linkPopupView.setCallbacks((url) => this.openLink(url), (linkElement) => this.unlinkText(linkElement));
         this.currentAttributes = {
             bold: false,
             italic: false,
@@ -44,6 +53,7 @@ class TextIgniter {
         this.manualOverride = false;
         this.lastPiece = null;
         this.toolbarView.on('toolbarAction', (action, dataId = []) => this.handleToolbarAction(action, dataId));
+        this.popupToolbarView.on('popupAction', (action) => this.handleToolbarAction(action));
         this.document.on('documentChanged', () => this.editorView.render());
         this.editorContainer.addEventListener('keydown', e => {
             this.syncCurrentAttributesWithCursor();
@@ -56,7 +66,14 @@ class TextIgniter {
         document.addEventListener('mouseup', () => {
             this.syncCurrentAttributesWithCursor();
             const dataId = this.document.getAllSelectedDataIds();
-            console.log(dataId, "dataId lntgerr");
+            console.log(dataId, 'dataId lntgerr');
+        });
+        document.addEventListener('selectionchange', () => {
+            const selection = window.getSelection();
+            if (!selection || selection.isCollapsed) {
+                this.document.dataIds = [];
+                this.document.selectAll = false;
+            }
         });
         (_a = document.getElementById('fontColor')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', e => {
             const fontColorPicker = document.getElementById('fontColorPicker');
@@ -102,6 +119,14 @@ class TextIgniter {
                         }, 300);
                     }
                 });
+            }
+        });
+        document.addEventListener('click', e => {
+            var _a;
+            const target = e.target;
+            if (!((_a = this.editorContainer) === null || _a === void 0 ? void 0 : _a.contains(target)) &&
+                !target.closest('.hyperlink-popup')) {
+                this.hyperlinkHandler.hideHyperlinkViewButton();
             }
         });
         (_b = document.getElementById('bgColor')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', e => {
@@ -157,6 +182,7 @@ class TextIgniter {
             this.htmlToJsonParser = new HtmlToJsonParser(htmlString);
             const jsonOutput = this.htmlToJsonParser.parse();
             console.log('htmltoJson', JSON.stringify(jsonOutput, null, 2), jsonOutput);
+            this.showAcknowledgement('HTML copied to clipboard', 2000);
         });
         (_d = document.getElementById('loadHtmlButton')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', e => {
             this.undoRedoManager.saveUndoSnapshot();
@@ -168,7 +194,7 @@ class TextIgniter {
             this.document.dataIds[0] = jsonOutput[0].dataId;
             this.document.selectedBlockId = 'data-id-1734604240404';
             this.document.emit('documentChanged', this);
-            const [start, end] = this.getSelectionRange();
+            const [start] = this.getSelectionRange();
             this.document.blocks.forEach((block) => {
                 if (this.document.dataIds.includes(block.dataId)) {
                     this.document.selectedBlockId = block.dataId;
@@ -289,6 +315,23 @@ class TextIgniter {
             }
         });
         document.addEventListener('selectionchange', this.handleSelectionChange.bind(this));
+        this.editorContainer.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.tagName === 'A' || target.closest('a')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const linkElement = (target.tagName === 'A' ? target : target.closest('a'));
+                this.showLinkPopup(linkElement, e.clientX, e.clientY);
+            }
+            else {
+                this.hideLinkPopup();
+            }
+        });
+        document.addEventListener('click', (e) => {
+            if (!this.linkPopupView.isPopup(e.target)) {
+                this.hideLinkPopup();
+            }
+        });
         this.document.emit('documentChanged', this.document);
         this.editorContainer.addEventListener('paste', (e) => {
             var _a, _b;
@@ -297,7 +340,7 @@ class TextIgniter {
             const html = (_a = e.clipboardData) === null || _a === void 0 ? void 0 : _a.getData('text/html');
             const [start, end] = this.getSelectionRange();
             if (end > start) {
-                this.document.deleteRange(start, end);
+                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
             }
             let piecesToInsert = [];
             if (html) {
@@ -305,11 +348,19 @@ class TextIgniter {
             }
             else {
                 const text = ((_b = e.clipboardData) === null || _b === void 0 ? void 0 : _b.getData('text/plain')) || '';
-                piecesToInsert = [new Piece(text, Object.assign({}, this.currentAttributes))];
+                const segments = detectUrlsInText(text);
+                piecesToInsert = segments.map(segment => {
+                    if (segment.isUrl && segment.url) {
+                        return new Piece(segment.text, Object.assign(Object.assign({}, this.currentAttributes), { hyperlink: segment.url }));
+                    }
+                    else {
+                        return new Piece(segment.text, Object.assign({}, this.currentAttributes));
+                    }
+                });
             }
             let offset = start;
             for (const p of piecesToInsert) {
-                this.document.insertAt(p.text, Object.assign({}, p.attributes), offset, this.document.selectedBlockId);
+                this.document.insertAt(p.text, Object.assign({}, p.attributes), offset, this.document.selectedBlockId, 0, '', 'batch');
                 offset += p.text.length;
             }
             this.setCursorPosition(offset);
@@ -320,10 +371,11 @@ class TextIgniter {
         this.editorContainer.addEventListener('drop', (e) => {
             var _a, _b;
             e.preventDefault();
+            this.undoRedoManager.saveUndoSnapshot();
             const html = (_a = e.dataTransfer) === null || _a === void 0 ? void 0 : _a.getData('text/html');
             const [start, end] = this.getSelectionRange();
             if (end > start) {
-                this.document.deleteRange(start, end);
+                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
             }
             let piecesToInsert = [];
             if (html) {
@@ -335,7 +387,7 @@ class TextIgniter {
             }
             let offset = start;
             for (const p of piecesToInsert) {
-                this.document.insertAt(p.text, Object.assign({}, p.attributes), offset, this.document.selectedBlockId);
+                this.document.insertAt(p.text, Object.assign({}, p.attributes), offset, this.document.selectedBlockId, 0, '', 'batch');
                 offset += p.text.length;
             }
             this.setCursorPosition(offset);
@@ -360,9 +412,13 @@ class TextIgniter {
         const [start, end] = this.getSelectionRange();
         switch (action) {
             case 'orderedList':
-                this.document.dataIds.forEach((id) => {
-                    this.document.toggleOrderedList(id);
-                });
+                if (this.document.dataIds.length > 1) {
+                    this.document.toggleOrderedListForMultipleBlocks(this.document.dataIds);
+                }
+                else {
+                    const currentBlockId = this.document.selectedBlockId || this.document.dataIds[0];
+                    this.document.toggleOrderedList(currentBlockId);
+                }
                 this.document.updateOrderedListNumbers();
                 break;
             case 'unorderedList':
@@ -431,6 +487,24 @@ class TextIgniter {
                                 this.document.toggleUnderlineRange(start, end);
                             }
                             break;
+                        case 'strikethrough':
+                            if (this.document.dataIds.length > 1) {
+                                this.document.blocks.forEach((block) => {
+                                    if (this.document.dataIds.includes(block.dataId)) {
+                                        this.document.selectedBlockId = block.dataId;
+                                        let countE = 0;
+                                        block.pieces.forEach((obj) => {
+                                            countE += obj.text.length;
+                                        });
+                                        let countS = start - countE;
+                                        this.document.toggleStrikethroughRange(countS, countE);
+                                    }
+                                });
+                            }
+                            else {
+                                this.document.toggleStrikethroughRange(start, end);
+                            }
+                            break;
                         case 'hyperlink':
                             this.hyperlinkHandler.hanldeHyperlinkClick(start, end, this.document.currentOffset, this.document.selectedBlockId, this.document.blocks);
                             break;
@@ -446,18 +520,39 @@ class TextIgniter {
         this.toolbarView.updateActiveStates(this.currentAttributes);
     }
     handleSelectionChange() {
-        var _a;
+        var _a, _b;
+        const selection = window.getSelection();
+        if (!selection ||
+            selection.rangeCount === 0 ||
+            !((_a = this.editorContainer) === null || _a === void 0 ? void 0 : _a.contains(selection.anchorNode))) {
+            this.hyperlinkHandler.hideHyperlinkViewButton();
+            this.popupToolbarView.hide();
+            return;
+        }
         const [start] = this.getSelectionRange();
         this.imageHandler.currentCursorLocation = start;
-        const selection = window.getSelection();
+        if (selection.isCollapsed) {
+            this.document.dataIds = [];
+            this.document.selectAll = false;
+            this.popupToolbarView.hide();
+        }
+        else {
+            this.document.getAllSelectedDataIds();
+            if (this.document.dataIds.length === this.document.blocks.length &&
+                this.document.blocks.length > 0) {
+                this.document.selectAll = true;
+            }
+            this.popupToolbarView.show(selection);
+        }
         if (!selection || selection.rangeCount === 0) {
             return;
         }
         if (selection && selection.isCollapsed === true) {
             this.document.dataIds = [];
+            this.document.selectAll = false;
         }
         const range = selection.getRangeAt(0);
-        const parentBlock = ((_a = range.startContainer.parentElement) === null || _a === void 0 ? void 0 : _a.closest('[data-id]')) ||
+        const parentBlock = ((_b = range.startContainer.parentElement) === null || _b === void 0 ? void 0 : _b.closest('[data-id]')) ||
             range.startContainer;
         if (parentBlock instanceof HTMLElement) {
             this.document.selectedBlockId =
@@ -469,23 +564,37 @@ class TextIgniter {
         this.syncCurrentAttributesWithCursor();
     }
     handleKeydown(e) {
+        var _a, _b;
         const [start, end] = this.getSelectionRange();
         this.imageHandler.currentCursorLocation = start;
-        let ending = end;
         if (e.key === 'Enter') {
             e.preventDefault();
+            this.undoRedoManager.saveUndoSnapshot();
             const uniqueId = `data-id-${Date.now()}`;
             const currentBlockIndex = this.document.blocks.findIndex((block) => block.dataId === this.document.selectedBlockId);
             const currentBlock = this.document.blocks[currentBlockIndex];
+            const lastPiece = ((_a = currentBlock === null || currentBlock === void 0 ? void 0 : currentBlock.pieces) === null || _a === void 0 ? void 0 : _a.length) > 0
+                ? currentBlock.pieces[currentBlock.pieces.length - 1]
+                : null;
+            const lastPieceAttributes = lastPiece
+                ? Object.assign({}, lastPiece.attributes) : {
+                fontFamily: 'Arial',
+                fontSize: '16px',
+                fontColor: '#000000',
+                bgColor: '#ffffff',
+                bold: false,
+                italic: false,
+                underline: false,
+                strikethrough: false,
+            };
             if (currentBlock && currentBlock.type === 'image') {
                 this.document.blocks.splice(currentBlockIndex + 1, 0, {
                     dataId: uniqueId,
                     class: 'paragraph-block',
-                    pieces: [new Piece(' ')],
+                    pieces: [new Piece('\u200B', lastPieceAttributes)],
                     type: 'text',
                 });
                 this.document.emit('documentChanged', this);
-                console.log('image - vicky', uniqueId);
                 this.imageHandler.setCursorPostion(1, uniqueId);
             }
             else if (currentBlock &&
@@ -495,7 +604,7 @@ class TextIgniter {
                 let newBlock = {
                     dataId: uniqueId,
                     class: 'paragraph-block',
-                    pieces: [new Piece(' ')],
+                    pieces: [new Piece('\u200B', lastPieceAttributes)],
                     type: 'text',
                 };
                 let listParentId = '';
@@ -529,65 +638,39 @@ class TextIgniter {
                 }
             }
             else {
-                if (this.getCurrentCursorBlock() !== null) {
-                    const { remainingText, piece } = this.extractTextFromDataId(this.getCurrentCursorBlock().toString());
-                    const extractedContent = ' ' + remainingText;
-                    let updatedBlock = this.document.blocks;
-                    if (extractedContent.length > 0) {
-                        const _extractedContent = remainingText.split(' ');
-                        let _pieces = [];
-                        if (_extractedContent[0] !== '' ||
-                            _extractedContent[1] !== undefined) {
-                            if (piece.length === 1) {
-                                _pieces = [new Piece(extractedContent, piece[0].attributes)];
-                            }
-                            else {
-                                _pieces.push(new Piece(' ' + _extractedContent[0] + ' ', piece[0].attributes));
-                                if (piece.length >= 2) {
-                                    piece.forEach((obj, i) => {
-                                        if (i !== 0) {
-                                            _pieces.push(obj);
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                        else {
-                            _pieces = [new Piece(' ')];
-                        }
-                        updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock().toString(), {
-                            dataId: uniqueId,
-                            class: 'paragraph-block',
-                            pieces: _pieces,
-                            type: 'text',
-                        });
-                        ending = start + extractedContent.length - 1;
-                    }
-                    else {
-                        updatedBlock = this.addBlockAfter(this.document.blocks, this.getCurrentCursorBlock().toString(), {
-                            dataId: uniqueId,
-                            class: 'paragraph-block',
-                            pieces: [new Piece(' ')],
-                            type: 'text',
-                        });
-                    }
+                const cursorBlock = this.getCurrentCursorBlock();
+                const cursorBlockId = cursorBlock === null || cursorBlock === void 0 ? void 0 : cursorBlock.toString();
+                if (cursorBlockId && currentBlock && currentBlock.type === 'text') {
+                    const fullText = currentBlock.pieces.map((p) => p.text).join('');
+                    const cursorOffset = start - this.document.currentOffset;
+                    const beforeText = fullText.slice(0, cursorOffset);
+                    const afterText = fullText.slice(cursorOffset);
+                    currentBlock.pieces = [
+                        new Piece(beforeText || '\u200B', lastPieceAttributes),
+                    ];
+                    const newPieces = afterText && afterText.trim().length > 0
+                        ? [new Piece(afterText, lastPieceAttributes)]
+                        : [new Piece('\u200B', lastPieceAttributes)];
+                    const updatedBlock = this.addBlockAfter(this.document.blocks, cursorBlockId, {
+                        dataId: uniqueId,
+                        class: 'paragraph-block',
+                        pieces: newPieces,
+                        type: 'text',
+                    });
                     this.document.blocks = updatedBlock;
                 }
                 else {
                     this.document.blocks.push({
                         dataId: uniqueId,
                         class: 'paragraph-block',
-                        pieces: [new Piece(' ')],
+                        pieces: [new Piece('\u200B', lastPieceAttributes)],
                         type: 'text',
                     });
                 }
             }
             this.syncCurrentAttributesWithCursor();
             this.editorView.render();
-            this.setCursorPosition(ending + 1, uniqueId);
-            if (ending > start) {
-                this.document.deleteRange(start, ending, this.document.selectedBlockId, this.document.currentOffset);
-            }
+            this.setCursorPosition(end + 1, uniqueId);
         }
         else if (e.key === 'Backspace') {
             e.preventDefault();
@@ -598,20 +681,53 @@ class TextIgniter {
                 return;
             }
             const selection = window.getSelection();
-            console.log(selection, "selection lntgerr");
-            if (this.document.dataIds.length >= 1 && this.document.selectAll) {
+            console.log(selection, 'selection lntgerr');
+            const isAllTextSelected = this.document.selectAll ||
+                (this.document.dataIds.length === this.document.blocks.length &&
+                    this.document.dataIds.length > 0);
+            if ((isAllTextSelected || this.document.dataIds.length > 1) &&
+                !((_b = window.getSelection()) === null || _b === void 0 ? void 0 : _b.isCollapsed)) {
+                this.undoRedoManager.saveUndoSnapshot();
+                const firstDeletedId = this.document.dataIds[0];
+                const deletedIndex = this.document.blocks.findIndex((block) => block.dataId === firstDeletedId);
                 this.document.deleteBlocks();
-                this.setCursorPosition(start + 1);
+                let targetBlockId = null;
+                let cursorPos = 0;
+                if (this.document.blocks.length === 0) {
+                    const newId = `data-id-${Date.now()}`;
+                    this.document.blocks.push({
+                        dataId: newId,
+                        class: 'paragraph-block',
+                        pieces: [new Piece(' ')],
+                        type: 'text',
+                    });
+                    targetBlockId = newId;
+                    cursorPos = 0;
+                    this.editorView.render();
+                }
+                else if (deletedIndex < this.document.blocks.length) {
+                    targetBlockId = this.document.blocks[deletedIndex].dataId;
+                    cursorPos = 0;
+                }
+                else {
+                    const prevBlock = this.document.blocks[this.document.blocks.length - 1];
+                    targetBlockId = prevBlock.dataId;
+                    cursorPos = prevBlock.pieces.reduce((acc, p) => acc + p.text.length, 0);
+                }
+                this.setCursorPosition(cursorPos, targetBlockId);
+                return;
             }
-            if (start === end && start > 0) {
-                this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset);
+            if (end > start) {
+                this.undoRedoManager.saveUndoSnapshot();
+                const adjustedOffset = Math.min(this.document.currentOffset, start);
+                this.document.deleteRange(start, end, this.document.selectedBlockId, adjustedOffset, true);
                 this.setCursorPosition(start - 1);
                 const index = this.document.blocks.findIndex((block) => block.dataId === this.document.selectedBlockId);
                 console.log(index, 'index lntgerr');
                 const chkBlock = document.querySelector(`[data-id="${this.document.selectedBlockId}"]`);
                 if (chkBlock === null) {
                     let listStart = 0;
-                    console.log(listStart, " listStart lntgerr");
+                    console.log(listStart, ' listStart lntgerr');
                     const _blocks = this.document.blocks.map((block, index) => {
                         if ((block === null || block === void 0 ? void 0 : block.listType) !== undefined || (block === null || block === void 0 ? void 0 : block.listType) !== null) {
                             if ((block === null || block === void 0 ? void 0 : block.listType) === 'ol') {
@@ -625,19 +741,20 @@ class TextIgniter {
                         }
                         return block;
                     });
-                    console.log(_blocks, "blocks lntgerr");
+                    console.log(_blocks, 'blocks lntgerr');
                     this.document.emit('documentChanged', this);
                 }
             }
-            else if (end > start) {
-                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
-                this.setCursorPosition(start + 1);
+            else if (start === end && start > 0) {
+                this.document.deleteRange(start - 1, start, this.document.selectedBlockId, this.document.currentOffset, true);
+                this.setCursorPosition(start - 1);
             }
         }
         else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
             e.preventDefault();
             if (end > start) {
-                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+                this.undoRedoManager.saveUndoSnapshot();
+                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset, false);
             }
             console.log('insertat', e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset, '', '', !e.isTrusted || false);
             this.document.insertAt(e.key, this.currentAttributes, start, this.document.selectedBlockId, this.document.currentOffset, '', '', !e.isTrusted || false);
@@ -646,15 +763,35 @@ class TextIgniter {
         else if (e.key === 'Delete') {
             e.preventDefault();
             if (start === end) {
-                this.document.deleteRange(start, start + 1, this.document.selectedBlockId);
-                this.setCursorPosition(start);
+                this.undoRedoManager.saveUndoSnapshot();
+                if (end > start) {
+                    const adjustedOffset = Math.min(this.document.currentOffset, start);
+                    this.document.deleteRange(start, end, this.document.selectedBlockId, adjustedOffset);
+                    this.setCursorPosition(start);
+                }
+                else if (end > start) {
+                    this.undoRedoManager.saveUndoSnapshot();
+                    this.document.deleteRange(start, end, this.document.selectedBlockId);
+                    return;
+                }
+                const blockIndex = this.document.blocks.findIndex((block) => block.dataId === this.document.selectedBlockId);
+                if (blockIndex === -1)
+                    return;
+                const block = this.document.blocks[blockIndex];
+                const blockTextLength = block.pieces.reduce((acc, p) => acc + p.text.length, 0);
+                const relPos = start - this.document.currentOffset;
+                if (relPos < blockTextLength) {
+                    this.document.deleteRange(start, start + 1, this.document.selectedBlockId, this.document.currentOffset, false);
+                    this.setCursorPosition(start);
+                }
+                else if (end > start) {
+                    this.undoRedoManager.saveUndoSnapshot();
+                    this.document.deleteRange(start, end, this.document.selectedBlockId);
+                    this.setCursorPosition(start);
+                }
             }
-            else if (end > start) {
-                this.document.deleteRange(start, end, this.document.selectedBlockId);
-                this.setCursorPosition(start);
-            }
+            this.hyperlinkHandler.hideHyperlinkViewButton();
         }
-        this.hyperlinkHandler.hideHyperlinkViewButton();
     }
     extractTextFromDataId(dataId) {
         const selection = window.getSelection();
@@ -666,7 +803,7 @@ class TextIgniter {
         const cursorNode = range.startContainer;
         let fText = '';
         let count = 0;
-        console.log(count, "count lntgerr");
+        console.log(count, 'count lntgerr');
         const _block = this.document.blocks.filter((block) => {
             if (block.dataId === dataId) {
                 return block;
@@ -712,10 +849,13 @@ class TextIgniter {
         }
         const range = selection.getRangeAt(0);
         const container = range.startContainer;
-        const elementWithId = (container.nodeType === Node.TEXT_NODE
+        const elementWithId = container.nodeType === Node.TEXT_NODE
             ? container.parentElement
-            : container);
-        const dataIdElement = elementWithId === null || elementWithId === void 0 ? void 0 : elementWithId.closest('[data-id]');
+            : container;
+        let dataIdElement = null;
+        if (elementWithId && elementWithId instanceof Element) {
+            dataIdElement = elementWithId.closest('[data-id]');
+        }
         return (dataIdElement === null || dataIdElement === void 0 ? void 0 : dataIdElement.getAttribute('data-id')) || null;
     }
     addBlockAfter(data, targetDataId, newBlock) {
@@ -763,16 +903,12 @@ class TextIgniter {
                         bgColor: piece.attributes.bgColor,
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
+                    this.popupToolbarView.updateActiveStates(this.currentAttributes);
                 }
-                const hyperlink = piece === null || piece === void 0 ? void 0 : piece.attributes.hyperlink;
-                if (hyperlink && typeof hyperlink === 'string') {
-                    this.hyperlinkHandler.showHyperlinkViewButton(hyperlink);
-                }
-                else {
-                    this.hyperlinkHandler.hideHyperlinkViewButton();
-                }
+                this.hyperlinkHandler.hideHyperlinkViewButton();
             }
             else {
+                this.hyperlinkHandler.hideHyperlinkViewButton();
                 if (!this.manualOverride) {
                     this.currentAttributes = {
                         bold: false,
@@ -781,9 +917,13 @@ class TextIgniter {
                         hyperlink: false,
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
+                    this.popupToolbarView.updateActiveStates(this.currentAttributes);
                 }
                 this.lastPiece = null;
             }
+        }
+        else {
+            this.hyperlinkHandler.hideHyperlinkViewButton();
         }
     }
     setCursorPosition(position, dataId = '') {
@@ -791,7 +931,9 @@ class TextIgniter {
             this.editorView.container.focus();
         else {
             const divDataid = document.querySelector('[data-id="' + dataId + '"]');
-            divDataid.focus();
+            if (divDataid) {
+                divDataid.focus();
+            }
         }
         const sel = window.getSelection();
         if (!sel)
@@ -829,6 +971,44 @@ class TextIgniter {
         }
         sel.removeAllRanges();
         sel.addRange(range);
+    }
+    showAcknowledgement(message, durationMs = 2000) {
+        const existing = document.getElementById(strings.TOAST_ID);
+        if (existing) {
+            existing.remove();
+        }
+        const toast = document.createElement('div');
+        toast.id = strings.TOAST_ID;
+        toast.className = 'ti-toast';
+        toast.textContent = message || strings.TOAST_DEFAULT_MESSAGE;
+        document.body.appendChild(toast);
+        toast.offsetHeight;
+        toast.classList.add(strings.TOAST_SHOW_CLASS);
+        setTimeout(() => {
+            toast.classList.remove(strings.TOAST_SHOW_CLASS);
+            setTimeout(() => toast.remove(), 200);
+        }, durationMs || strings.TOAST_DEFAULT_DURATION_MS);
+    }
+    showLinkPopup(linkElement, x, y) {
+        this.linkPopupView.show(linkElement, x, y);
+    }
+    hideLinkPopup() {
+        this.linkPopupView.hide();
+    }
+    openLink(url) {
+        window.open(url, '_blank');
+        this.hideLinkPopup();
+    }
+    unlinkText(linkElement) {
+        this.undoRedoManager.saveUndoSnapshot();
+        const linkText = linkElement.textContent || '';
+        const documentText = this.editorView.container.textContent || '';
+        const linkIndex = documentText.indexOf(linkText);
+        if (linkIndex !== -1) {
+            this.document.formatAttribute(linkIndex, linkIndex + linkText.length, 'hyperlink', false);
+            this.editorView.render();
+        }
+        this.hideLinkPopup();
     }
 }
 window.TextIgniter = TextIgniter;

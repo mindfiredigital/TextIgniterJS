@@ -1,5 +1,5 @@
-import { CurrentAttributeDTO } from "../TextIgniter";
-import EventEmitter from "../utils/events";
+import { CurrentAttributeDTO } from '../TextIgniter';
+import EventEmitter from '../utils/events';
 declare class ToolbarView extends EventEmitter {
     container: HTMLElement;
     constructor(container: HTMLElement);

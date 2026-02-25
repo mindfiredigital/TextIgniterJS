@@ -41,10 +41,10 @@ class TextDocument extends EventEmitter {
         dataId: 'data-id-1734604240404',
         class: 'paragraph-block',
         alignment: 'left',
-        pieces: [new Piece(' ')],
+        pieces: [new Piece('\u200B')],
         // listType: null, // null | 'ol' | 'ul'
       },
-      // { "dataId": 'data-id-1734604240401', "pieces": [new Piece("")] }
+      // { "dataId": 'data-id-1734604240401', "pieces": [new Piece("") ] }
     ];
     this.selectedBlockId = 'data-id-1734604240404';
     // this.selectedBlockId = '';
@@ -69,6 +69,7 @@ class TextDocument extends EventEmitter {
       bold?: boolean;
       italic?: boolean;
       underline?: boolean;
+      strikethrough?: boolean;
       hyperlink?: boolean | string;
     },
     position: number,
@@ -78,7 +79,7 @@ class TextDocument extends EventEmitter {
     actionType = '',
     isSynthetic = false
   ): void {
-    if (!isSynthetic) {
+    if (!isSynthetic && actionType !== 'batch') {
       this.undoRedoManager.saveUndoSnapshot();
     }
     console.log('inserted,', { start: position, text });
@@ -87,7 +88,7 @@ class TextDocument extends EventEmitter {
     let newPieces: Piece[] = [];
     let inserted = false;
     let index = 0;
-    if (dataId) {
+    if (dataId !== '' && dataId !== null) {
       index = this.blocks.findIndex((block: any) => block.dataId === dataId);
       // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
       offset = this.currentOffset;
@@ -109,6 +110,7 @@ class TextDocument extends EventEmitter {
             bold: attributes.bold || false,
             italic: attributes.italic || false,
             underline: attributes.underline || false,
+            strikethrough: attributes.strikethrough || false,
             hyperlink: attributes.hyperlink || false,
           })
         );
@@ -133,6 +135,7 @@ class TextDocument extends EventEmitter {
             bold: attributes.bold || false,
             italic: attributes.italic || false,
             underline: attributes.underline || false,
+            strikethrough: attributes.strikethrough || false,
             hyperlink: attributes.hyperlink || false,
           })
         )
@@ -144,13 +147,14 @@ class TextDocument extends EventEmitter {
             bold: attributes.bold || false,
             italic: attributes.italic || false,
             underline: attributes.underline || false,
+            strikethrough: attributes.strikethrough || false,
             hyperlink: attributes.hyperlink || false,
           })
         );
       }
     }
 
-    const _data = this.mergePieces(newPieces);
+    let _data: Piece[] = this.mergePieces(newPieces);
 
     this.blocks[index].pieces = _data;
     console.log({ position });
@@ -162,7 +166,8 @@ class TextDocument extends EventEmitter {
     start: number,
     end: number,
     dataId: string | null = '',
-    currentOffset: number = 0
+    currentOffset: number = 0,
+    isBackspace: boolean = false
   ): void {
     console.log('deleted2,', { start, end });
     if (start === end) return;
@@ -170,72 +175,140 @@ class TextDocument extends EventEmitter {
     let offset = 0;
     let index = 0;
     let runBackspace = false;
-    if (dataId !== '' || dataId !== null) {
+    if (dataId !== '' && dataId !== null) {
       index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-
+      if (index === -1) return; // Block not found, cannot delete
       offset = currentOffset;
     }
 
     // const previousValue = this.getRangeText(start, end);
-    let previousTextBlockIndex = 0;
+    let previousTextBlockIndex = -1;
 
-    if (start === offset) {
+    // FIX: Only merge with previous block on backspace when there's NO selection (collapsed cursor).
+    // Previously it also merged when an entire block was selected, causing the next list item to shift up.
+    if (
+      isBackspace &&
+      start === offset &&
+      index > 0 &&
+      end ===
+        start /* ensures no selection; though function returns earlier if so, kept for clarity */
+    ) {
       if (index - 1 >= 0 && this.blocks[index - 1].type === 'image') {
         previousTextBlockIndex = index - 2;
       } else {
         previousTextBlockIndex = index - 1;
       }
-      for (let piece1 of this.blocks[previousTextBlockIndex].pieces) {
-        newPieces.push(piece1.clone());
-        runBackspace = true;
+
+      // Only proceed if we have a valid previous block
+      if (previousTextBlockIndex >= 0 && this.blocks[previousTextBlockIndex]) {
+        for (let piece1 of this.blocks[previousTextBlockIndex].pieces) {
+          newPieces.push(piece1.clone());
+          runBackspace = true;
+        }
       }
     }
     for (let piece of this.blocks[index].pieces) {
       const pieceEnd = offset + piece.text.length;
-      if (pieceEnd <= start || offset >= end) {
+      const pieceStart = offset;
+
+      // Check if this piece is completely outside the deletion range
+      if (pieceEnd <= start || pieceStart >= end) {
         newPieces.push(piece.clone());
       } else {
-        const pieceStart = offset;
+        // This piece overlaps with the deletion range
         const pieceText = piece.text;
-        if (start > pieceStart && start < pieceEnd) {
-          newPieces.push(
-            new Piece(pieceText.slice(0, start - pieceStart), {
-              ...piece.attributes,
-            })
-          );
+
+        // Add the part before the deletion range (if any)
+        if (start > pieceStart) {
+          const beforeText = pieceText.slice(0, start - pieceStart);
+          if (beforeText.length > 0) {
+            newPieces.push(
+              new Piece(beforeText, {
+                ...piece.attributes,
+              })
+            );
+          }
         }
+
+        // Add the part after the deletion range (if any)
         if (end < pieceEnd) {
-          newPieces.push(
-            new Piece(pieceText.slice(end - pieceStart), {
-              ...piece.attributes,
-            })
-          );
+          const afterText = pieceText.slice(end - pieceStart);
+          if (afterText.length > 0) {
+            newPieces.push(
+              new Piece(afterText, {
+                ...piece.attributes,
+              })
+            );
+          }
         }
+
+        // Note: The part between start and end is deleted (not added to newPieces)
       }
       offset = pieceEnd;
     }
 
-    const _data = this.mergePieces(newPieces);
+    let _data = this.mergePieces(newPieces);
 
-    if (runBackspace) {
+    let listItemDeleted = false;
+
+    if (runBackspace && previousTextBlockIndex >= 0) {
+      // Check if we're deleting a list item
+      if (
+        this.blocks[index] &&
+        (this.blocks[index].listType === 'ol' ||
+          this.blocks[index].listType === 'li')
+      ) {
+        listItemDeleted = true;
+      }
+
+      // Merge the content with the previous block
       this.blocks[previousTextBlockIndex].pieces = _data;
 
-      this.blocks[index].pieces = [new Piece(' ')];
-      this.blocks = this.blocks.filter((block: any, i: number) => {
-        if (i !== index) return block;
-      });
-    } else this.blocks[index].pieces = _data;
+      // Remove the current block
+      this.blocks.splice(index, 1);
+    } else {
+      // Handle normal deletion within a block
+      if (_data.length === 0) {
+        // If the block becomes empty, check if we should remove it
+        if (this.blocks.length > 1) {
+          // Check if we're deleting a list item
+          if (
+            this.blocks[index] &&
+            (this.blocks[index].listType === 'ol' ||
+              this.blocks[index].listType === 'li')
+          ) {
+            listItemDeleted = true;
+          }
+          // Remove the empty block
+          this.blocks.splice(index, 1);
+        } else {
+          // Keep at least one block with a space
+          _data = [new Piece(' ')];
+          this.blocks[index].pieces = _data;
+        }
+      } else {
+        // Update the block with the remaining content
+        this.blocks[index].pieces = _data;
+      }
+    }
 
-    if (_data.length === 0 && this.blocks.length > 1) {
-      this.blocks = this.blocks.filter((blocks: any) => {
-        return blocks.pieces.length !== 0;
-      });
+    // Update list numbering if any list items were deleted
+    if (listItemDeleted) {
+      this.updateOrderedListNumbers();
     }
 
     this.emit('documentChanged', this);
   }
 
   deleteBlocks() {
+    // Check if any of the blocks to be deleted are list items
+    const listItemsDeleted = this.blocks.some((block: any) => {
+      return (
+        this.dataIds.includes(block.dataId) &&
+        (block.listType === 'ol' || block.listType === 'li')
+      );
+    });
+
     this.blocks = this.blocks.filter((block: any) => {
       if (!this.dataIds.includes(block.dataId)) {
         return block;
@@ -245,12 +318,19 @@ class TextDocument extends EventEmitter {
     this.selectAll = false;
     if (this.blocks.length === 0) {
       this.blocks.push({
-        dataId: 'data-id-1734604240404',
+        dataId: `data-id-${Date.now()}`,
         class: 'paragraph-block',
-        pieces: [new Piece(' ')],
+        type: 'text',
+        pieces: [new Piece('\u200B')],
         // listType: null, // null | 'ol' | 'ul'
       });
     }
+
+    // Update list numbering if any list items were deleted
+    if (listItemsDeleted) {
+      this.updateOrderedListNumbers();
+    }
+
     this.emit('documentChanged', this);
   }
 
@@ -303,6 +383,10 @@ class TextDocument extends EventEmitter {
         }
       }
     }
+
+    // --- Fix triple-click including next empty-start block ---
+    this.removeExclusiveEndBlock(range, selectedIds);
+
     this.dataIds = selectedIds;
     console.log('selected id 3', this.dataIds, selectedIds);
     return selectedIds;
@@ -351,6 +435,9 @@ class TextDocument extends EventEmitter {
     if (endDataId && !selectedIds.includes(endDataId)) {
       selectedIds.push(endDataId);
     }
+
+    // --- Fix triple-click including next empty-start block ---
+    this.removeExclusiveEndBlock(range, selectedIds);
 
     this.dataIds = selectedIds;
     console.log('selected id 1', this.dataIds, selectedIds);
@@ -409,10 +496,11 @@ class TextDocument extends EventEmitter {
     let newPieces: Piece[] = [];
     let offset = 0;
     let index = -1;
-    if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
+    if (this.selectedBlockId !== '' && this.selectedBlockId !== null) {
       index = this.blocks.findIndex(
         (block: any) => block.dataId === this.selectedBlockId
       );
+      if (index === -1) return; // Block not found, cannot format
       offset = this.currentOffset;
     }
 
@@ -441,6 +529,7 @@ class TextDocument extends EventEmitter {
           (attribute === 'bold' ||
             attribute === 'italic' ||
             attribute === 'underline' ||
+            attribute === 'strikethrough' ||
             attribute === 'undo' ||
             attribute === 'redo' ||
             attribute === 'hyperlink') &&
@@ -493,6 +582,61 @@ class TextDocument extends EventEmitter {
       block.parentId = block.dataId;
     }
 
+    // Update list numbering after toggling
+    this.updateOrderedListNumbers();
+    this.emit('documentChanged', this);
+  }
+
+  toggleOrderedListForMultipleBlocks(dataIds: string[]): void {
+    if (dataIds.length === 0) return;
+
+    // Sort dataIds by their order in the blocks array
+    const sortedDataIds = dataIds.sort((a, b) => {
+      const indexA = this.blocks.findIndex((block: any) => block.dataId === a);
+      const indexB = this.blocks.findIndex((block: any) => block.dataId === b);
+      return indexA - indexB;
+    });
+
+    // Check if all blocks are already ordered lists
+    const allAreOrderedLists = sortedDataIds.every(dataId => {
+      const block = this.blocks.find((block: any) => block.dataId === dataId);
+      return block && (block.listType === 'ol' || block.listType === 'li');
+    });
+
+    if (allAreOrderedLists) {
+      // Remove ordered list formatting from all blocks
+      sortedDataIds.forEach(dataId => {
+        const block = this.blocks.find((block: any) => block.dataId === dataId);
+        if (block) {
+          block.listType = null;
+          block.listStart = undefined;
+          block.parentId = undefined;
+        }
+      });
+    } else {
+      // Convert all blocks to ordered list
+      const firstBlockId = sortedDataIds[0];
+
+      sortedDataIds.forEach((dataId, index) => {
+        const block = this.blocks.find((block: any) => block.dataId === dataId);
+        if (block) {
+          if (index === 0) {
+            // First block is the parent
+            block.listType = 'ol';
+            block.listStart = 1;
+            block.parentId = firstBlockId;
+          } else {
+            // Subsequent blocks are list items
+            block.listType = 'li';
+            block.listStart = index + 1;
+            block.parentId = firstBlockId;
+          }
+        }
+      });
+    }
+
+    // Update list numbering after toggling
+    this.updateOrderedListNumbers();
     this.emit('documentChanged', this);
   }
 
@@ -509,18 +653,25 @@ class TextDocument extends EventEmitter {
   updateOrderedListNumbers(): void {
     let currentNumber = 1;
     let currentParentId: string | null = null;
+
     for (let i = 0; i < this.blocks.length; i++) {
       const block = this.blocks[i];
+
       if (block.listType === 'ol' || block.listType === 'li') {
-        // If this block is the start of a new list group, reset the counter.
-        if (block.listType === 'ol' || block.parentId !== currentParentId) {
+        // Check if this is the start of a new list group
+        const isNewListGroup =
+          block.listType === 'ol' || block.parentId !== currentParentId;
+
+        if (isNewListGroup) {
           currentNumber = 1;
           currentParentId =
             block.listType === 'ol' ? block.dataId : block.parentId;
         }
+
         block.listStart = currentNumber;
         currentNumber++;
       } else {
+        // Reset when encountering non-list blocks
         currentNumber = 1;
         currentParentId = null;
       }
@@ -644,6 +795,14 @@ class TextDocument extends EventEmitter {
     const allUnderline = this.isRangeEntirelyAttribute(start, end, 'underline');
     this.formatAttribute(start, end, 'underline', !allUnderline);
   }
+  toggleStrikethroughRange(start: number, end: number, id = ''): void {
+    const allStrike = this.isRangeEntirelyAttribute(
+      start,
+      end,
+      'strikethrough' as any
+    );
+    this.formatAttribute(start, end, 'strikethrough' as any, !allStrike);
+  }
   toggleUndoRange(start: number, end: number, id = ''): void {
     const allUndo = this.isRangeEntirelyAttribute(start, end, 'undo');
     this.formatAttribute(start, end, 'undo', !allUndo);
@@ -669,15 +828,16 @@ class TextDocument extends EventEmitter {
   isRangeEntirelyAttribute(
     start: number,
     end: number,
-    attr: 'bold' | 'italic' | 'underline' | 'undo' | 'redo'
+    attr: 'bold' | 'italic' | 'underline' | 'strikethrough' | 'undo' | 'redo'
   ): boolean {
     let offset = this.currentOffset;
     let allHaveAttr = true;
 
-    if (this.selectedBlockId !== '') {
+    if (this.selectedBlockId !== '' && this.selectedBlockId !== null) {
       const index = this.blocks.findIndex(
         (block: any) => block.dataId === this.selectedBlockId
       );
+      if (index === -1) return false; // Block not found
 
       for (let piece of this.blocks[index].pieces) {
         const pieceEnd = offset + piece.text.length;
@@ -708,7 +868,7 @@ class TextDocument extends EventEmitter {
 
   findPieceAtOffset(offset: number, dataId: string | null = ''): Piece | null {
     let currentOffset = 0;
-    if (dataId) {
+    if (dataId !== '' && dataId !== null) {
       for (let block of this.blocks) {
         const blockLength = block.pieces.reduce(
           (acc: number, curr: any) => acc + curr.text.length,
@@ -826,6 +986,36 @@ class TextDocument extends EventEmitter {
       innerHTML: matchedChild!.innerHTML,
       innerText: matchedChild!.innerText,
     };
+  }
+
+  private removeExclusiveEndBlock(range: Range, ids: string[]) {
+    if (ids.length <= 1) return; // nothing to trim
+    // If selection ends exactly at start of next block (offset 0), do not include that block.
+    const endNode = range.endContainer;
+    const endOffset = range.endOffset;
+
+    // Determine if end is at the logical start of its block
+    // Cases:
+    // 1. endOffset === 0 in a text node => start of that text node
+    // 2. endContainer is an element and endOffset refers to first child index 0
+    let atStartOfContainer = false;
+    if (endNode.nodeType === Node.TEXT_NODE) {
+      atStartOfContainer = endOffset === 0;
+    } else if (endNode.nodeType === Node.ELEMENT_NODE) {
+      atStartOfContainer = endOffset === 0; // before first child
+    }
+
+    if (!atStartOfContainer) return;
+
+    const endBlockId = this.getDataIdFromNode(endNode);
+    if (!endBlockId) return;
+
+    const startBlockId = this.getDataIdFromNode(range.startContainer);
+    if (endBlockId !== startBlockId && ids.includes(endBlockId)) {
+      // Remove last occurrence (likely last id)
+      const idx = ids.lastIndexOf(endBlockId);
+      if (idx > -1) ids.splice(idx, 1);
+    }
   }
 }
 

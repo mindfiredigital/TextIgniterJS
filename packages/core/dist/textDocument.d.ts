@@ -21,9 +21,10 @@ declare class TextDocument extends EventEmitter {
         bold?: boolean;
         italic?: boolean;
         underline?: boolean;
+        strikethrough?: boolean;
         hyperlink?: boolean | string;
     }, position: number, dataId?: string | null, currentOffset?: number, id?: string, actionType?: string, isSynthetic?: boolean): void;
-    deleteRange(start: number, end: number, dataId?: string | null, currentOffset?: number): void;
+    deleteRange(start: number, end: number, dataId?: string | null, currentOffset?: number, isBackspace?: boolean): void;
     deleteBlocks(): void;
     getSelectedTextDataId(): string | null;
     getAllSelectedDataIds(): string[];
@@ -33,6 +34,7 @@ declare class TextDocument extends EventEmitter {
     getCursorOffset(container: HTMLElement): number;
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'], value: string | boolean): void;
     toggleOrderedList(dataId: string | null, id?: string): void;
+    toggleOrderedListForMultipleBlocks(dataIds: string[]): void;
     toggleUnorderedList(dataId: string | null): void;
     updateOrderedListNumbers(): void;
     undo(): void;
@@ -41,11 +43,12 @@ declare class TextDocument extends EventEmitter {
     toggleBoldRange(start: number, end: number, id?: string): void;
     toggleItalicRange(start: number, end: number, id?: string): void;
     toggleUnderlineRange(start: number, end: number, id?: string): void;
+    toggleStrikethroughRange(start: number, end: number, id?: string): void;
     toggleUndoRange(start: number, end: number, id?: string): void;
     toggleRedoRange(start: number, end: number): void;
     applyFontColor(start: number, end: number, color: string, id?: string): void;
     applyBgColor(start: number, end: number, color: string, id?: string): void;
-    isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline' | 'undo' | 'redo'): boolean;
+    isRangeEntirelyAttribute(start: number, end: number, attr: 'bold' | 'italic' | 'underline' | 'strikethrough' | 'undo' | 'redo'): boolean;
     mergePieces(pieces: Piece[]): Piece[];
     findPieceAtOffset(offset: number, dataId?: string | null): Piece | null;
     setFontFamily(start: number, end: number, fontFamily: string): void;
@@ -58,5 +61,6 @@ declare class TextDocument extends EventEmitter {
         innerHTML: string;
         innerText: string;
     } | null;
+    private removeExclusiveEndBlock;
 }
 export default TextDocument;

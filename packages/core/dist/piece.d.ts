@@ -4,6 +4,7 @@ declare class Piece {
         bold: boolean;
         italic: boolean;
         underline: boolean;
+        strikethrough?: boolean;
         undo?: boolean;
         redo?: boolean;
         fontFamily?: string;
@@ -16,6 +17,7 @@ declare class Piece {
         bold?: boolean;
         italic?: boolean;
         underline?: boolean;
+        strikethrough?: boolean;
         undo?: boolean;
         redo?: boolean;
         fontFamily?: string;
@@ -32,6 +34,8 @@ declare class Piece {
     setItalic(v: boolean): void;
     isUnderline(): boolean;
     setUnderline(v: boolean): void;
+    isStrikethrough(): boolean;
+    setStrikethrough(v: boolean): void;
     setUndo(v: boolean): void;
     setRedo(v: boolean): void;
     clone(): Piece;

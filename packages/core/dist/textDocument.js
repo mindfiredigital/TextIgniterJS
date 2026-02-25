@@ -24,7 +24,7 @@ class TextDocument extends EventEmitter {
                 dataId: 'data-id-1734604240404',
                 class: 'paragraph-block',
                 alignment: 'left',
-                pieces: [new Piece(' ')],
+                pieces: [new Piece('\u200B')],
             },
         ];
         this.selectedBlockId = 'data-id-1734604240404';
@@ -40,7 +40,7 @@ class TextDocument extends EventEmitter {
         this.undoRedoManager = undoRedoManager;
     }
     insertAt(text, attributes, position, dataId = '', currentOffset = 0, id = '', actionType = '', isSynthetic = false) {
-        if (!isSynthetic) {
+        if (!isSynthetic && actionType !== 'batch') {
             this.undoRedoManager.saveUndoSnapshot();
         }
         console.log('inserted,', { start: position, text });
@@ -49,7 +49,7 @@ class TextDocument extends EventEmitter {
         let newPieces = [];
         let inserted = false;
         let index = 0;
-        if (dataId) {
+        if (dataId !== '' && dataId !== null) {
             index = this.blocks.findIndex((block) => block.dataId === dataId);
             offset = this.currentOffset;
         }
@@ -96,12 +96,12 @@ class TextDocument extends EventEmitter {
                 }));
             }
         }
-        const _data = this.mergePieces(newPieces);
+        let _data = this.mergePieces(newPieces);
         this.blocks[index].pieces = _data;
         console.log({ position });
         this.emit('documentChanged', this);
     }
-    deleteRange(start, end, dataId = '', currentOffset = 0) {
+    deleteRange(start, end, dataId = '', currentOffset = 0, isBackspace = false) {
         console.log('deleted2,', { start, end });
         if (start === end)
             return;
@@ -109,59 +109,94 @@ class TextDocument extends EventEmitter {
         let offset = 0;
         let index = 0;
         let runBackspace = false;
-        if (dataId !== '' || dataId !== null) {
+        if (dataId !== '' && dataId !== null) {
             index = this.blocks.findIndex((block) => block.dataId === dataId);
+            if (index === -1)
+                return;
             offset = currentOffset;
         }
-        let previousTextBlockIndex = 0;
-        if (start === offset) {
+        let previousTextBlockIndex = -1;
+        if (isBackspace &&
+            start === offset &&
+            index > 0 &&
+            end ===
+                start) {
             if (index - 1 >= 0 && this.blocks[index - 1].type === 'image') {
                 previousTextBlockIndex = index - 2;
             }
             else {
                 previousTextBlockIndex = index - 1;
             }
-            for (let piece1 of this.blocks[previousTextBlockIndex].pieces) {
-                newPieces.push(piece1.clone());
-                runBackspace = true;
+            if (previousTextBlockIndex >= 0 && this.blocks[previousTextBlockIndex]) {
+                for (let piece1 of this.blocks[previousTextBlockIndex].pieces) {
+                    newPieces.push(piece1.clone());
+                    runBackspace = true;
+                }
             }
         }
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
-            if (pieceEnd <= start || offset >= end) {
+            const pieceStart = offset;
+            if (pieceEnd <= start || pieceStart >= end) {
                 newPieces.push(piece.clone());
             }
             else {
-                const pieceStart = offset;
                 const pieceText = piece.text;
-                if (start > pieceStart && start < pieceEnd) {
-                    newPieces.push(new Piece(pieceText.slice(0, start - pieceStart), Object.assign({}, piece.attributes)));
+                if (start > pieceStart) {
+                    const beforeText = pieceText.slice(0, start - pieceStart);
+                    if (beforeText.length > 0) {
+                        newPieces.push(new Piece(beforeText, Object.assign({}, piece.attributes)));
+                    }
                 }
                 if (end < pieceEnd) {
-                    newPieces.push(new Piece(pieceText.slice(end - pieceStart), Object.assign({}, piece.attributes)));
+                    const afterText = pieceText.slice(end - pieceStart);
+                    if (afterText.length > 0) {
+                        newPieces.push(new Piece(afterText, Object.assign({}, piece.attributes)));
+                    }
                 }
             }
             offset = pieceEnd;
         }
-        const _data = this.mergePieces(newPieces);
-        if (runBackspace) {
+        let _data = this.mergePieces(newPieces);
+        let listItemDeleted = false;
+        if (runBackspace && previousTextBlockIndex >= 0) {
+            if (this.blocks[index] &&
+                (this.blocks[index].listType === 'ol' ||
+                    this.blocks[index].listType === 'li')) {
+                listItemDeleted = true;
+            }
             this.blocks[previousTextBlockIndex].pieces = _data;
-            this.blocks[index].pieces = [new Piece(' ')];
-            this.blocks = this.blocks.filter((block, i) => {
-                if (i !== index)
-                    return block;
-            });
+            this.blocks.splice(index, 1);
         }
-        else
-            this.blocks[index].pieces = _data;
-        if (_data.length === 0 && this.blocks.length > 1) {
-            this.blocks = this.blocks.filter((blocks) => {
-                return blocks.pieces.length !== 0;
-            });
+        else {
+            if (_data.length === 0) {
+                if (this.blocks.length > 1) {
+                    if (this.blocks[index] &&
+                        (this.blocks[index].listType === 'ol' ||
+                            this.blocks[index].listType === 'li')) {
+                        listItemDeleted = true;
+                    }
+                    this.blocks.splice(index, 1);
+                }
+                else {
+                    _data = [new Piece(' ')];
+                    this.blocks[index].pieces = _data;
+                }
+            }
+            else {
+                this.blocks[index].pieces = _data;
+            }
+        }
+        if (listItemDeleted) {
+            this.updateOrderedListNumbers();
         }
         this.emit('documentChanged', this);
     }
     deleteBlocks() {
+        const listItemsDeleted = this.blocks.some((block) => {
+            return (this.dataIds.includes(block.dataId) &&
+                (block.listType === 'ol' || block.listType === 'li'));
+        });
         this.blocks = this.blocks.filter((block) => {
             if (!this.dataIds.includes(block.dataId)) {
                 return block;
@@ -171,10 +206,14 @@ class TextDocument extends EventEmitter {
         this.selectAll = false;
         if (this.blocks.length === 0) {
             this.blocks.push({
-                dataId: 'data-id-1734604240404',
+                dataId: `data-id-${Date.now()}`,
                 class: 'paragraph-block',
-                pieces: [new Piece(' ')],
+                type: 'text',
+                pieces: [new Piece('\u200B')],
             });
+        }
+        if (listItemsDeleted) {
+            this.updateOrderedListNumbers();
         }
         this.emit('documentChanged', this);
     }
@@ -212,6 +251,7 @@ class TextDocument extends EventEmitter {
                 }
             }
         }
+        this.removeExclusiveEndBlock(range, selectedIds);
         this.dataIds = selectedIds;
         console.log('selected id 3', this.dataIds, selectedIds);
         return selectedIds;
@@ -249,6 +289,7 @@ class TextDocument extends EventEmitter {
         if (endDataId && !selectedIds.includes(endDataId)) {
             selectedIds.push(endDataId);
         }
+        this.removeExclusiveEndBlock(range, selectedIds);
         this.dataIds = selectedIds;
         console.log('selected id 1', this.dataIds, selectedIds);
         return selectedIds;
@@ -290,8 +331,10 @@ class TextDocument extends EventEmitter {
         let newPieces = [];
         let offset = 0;
         let index = -1;
-        if (this.selectedBlockId !== '' || this.selectedBlockId !== null) {
+        if (this.selectedBlockId !== '' && this.selectedBlockId !== null) {
             index = this.blocks.findIndex((block) => block.dataId === this.selectedBlockId);
+            if (index === -1)
+                return;
             offset = this.currentOffset;
         }
         for (let piece of this.blocks[index].pieces) {
@@ -311,6 +354,7 @@ class TextDocument extends EventEmitter {
                 if ((attribute === 'bold' ||
                     attribute === 'italic' ||
                     attribute === 'underline' ||
+                    attribute === 'strikethrough' ||
                     attribute === 'undo' ||
                     attribute === 'redo' ||
                     attribute === 'hyperlink') &&
@@ -351,6 +395,50 @@ class TextDocument extends EventEmitter {
             block.listStart = 1;
             block.parentId = block.dataId;
         }
+        this.updateOrderedListNumbers();
+        this.emit('documentChanged', this);
+    }
+    toggleOrderedListForMultipleBlocks(dataIds) {
+        if (dataIds.length === 0)
+            return;
+        const sortedDataIds = dataIds.sort((a, b) => {
+            const indexA = this.blocks.findIndex((block) => block.dataId === a);
+            const indexB = this.blocks.findIndex((block) => block.dataId === b);
+            return indexA - indexB;
+        });
+        const allAreOrderedLists = sortedDataIds.every(dataId => {
+            const block = this.blocks.find((block) => block.dataId === dataId);
+            return block && (block.listType === 'ol' || block.listType === 'li');
+        });
+        if (allAreOrderedLists) {
+            sortedDataIds.forEach(dataId => {
+                const block = this.blocks.find((block) => block.dataId === dataId);
+                if (block) {
+                    block.listType = null;
+                    block.listStart = undefined;
+                    block.parentId = undefined;
+                }
+            });
+        }
+        else {
+            const firstBlockId = sortedDataIds[0];
+            sortedDataIds.forEach((dataId, index) => {
+                const block = this.blocks.find((block) => block.dataId === dataId);
+                if (block) {
+                    if (index === 0) {
+                        block.listType = 'ol';
+                        block.listStart = 1;
+                        block.parentId = firstBlockId;
+                    }
+                    else {
+                        block.listType = 'li';
+                        block.listStart = index + 1;
+                        block.parentId = firstBlockId;
+                    }
+                }
+            });
+        }
+        this.updateOrderedListNumbers();
         this.emit('documentChanged', this);
     }
     toggleUnorderedList(dataId) {
@@ -367,7 +455,8 @@ class TextDocument extends EventEmitter {
         for (let i = 0; i < this.blocks.length; i++) {
             const block = this.blocks[i];
             if (block.listType === 'ol' || block.listType === 'li') {
-                if (block.listType === 'ol' || block.parentId !== currentParentId) {
+                const isNewListGroup = block.listType === 'ol' || block.parentId !== currentParentId;
+                if (isNewListGroup) {
                     currentNumber = 1;
                     currentParentId =
                         block.listType === 'ol' ? block.dataId : block.parentId;
@@ -457,6 +546,10 @@ class TextDocument extends EventEmitter {
         const allUnderline = this.isRangeEntirelyAttribute(start, end, 'underline');
         this.formatAttribute(start, end, 'underline', !allUnderline);
     }
+    toggleStrikethroughRange(start, end, id = '') {
+        const allStrike = this.isRangeEntirelyAttribute(start, end, 'strikethrough');
+        this.formatAttribute(start, end, 'strikethrough', !allStrike);
+    }
     toggleUndoRange(start, end, id = '') {
         const allUndo = this.isRangeEntirelyAttribute(start, end, 'undo');
         this.formatAttribute(start, end, 'undo', !allUndo);
@@ -479,8 +572,10 @@ class TextDocument extends EventEmitter {
     isRangeEntirelyAttribute(start, end, attr) {
         let offset = this.currentOffset;
         let allHaveAttr = true;
-        if (this.selectedBlockId !== '') {
+        if (this.selectedBlockId !== '' && this.selectedBlockId !== null) {
             const index = this.blocks.findIndex((block) => block.dataId === this.selectedBlockId);
+            if (index === -1)
+                return false;
             for (let piece of this.blocks[index].pieces) {
                 const pieceEnd = offset + piece.text.length;
                 if (pieceEnd > start && offset < end) {
@@ -509,7 +604,7 @@ class TextDocument extends EventEmitter {
     }
     findPieceAtOffset(offset, dataId = '') {
         let currentOffset = 0;
-        if (dataId) {
+        if (dataId !== '' && dataId !== null) {
             for (let block of this.blocks) {
                 const blockLength = block.pieces.reduce((acc, curr) => acc + curr.text.length, 0);
                 if (block.dataId == dataId) {
@@ -600,6 +695,30 @@ class TextDocument extends EventEmitter {
             innerHTML: matchedChild.innerHTML,
             innerText: matchedChild.innerText,
         };
+    }
+    removeExclusiveEndBlock(range, ids) {
+        if (ids.length <= 1)
+            return;
+        const endNode = range.endContainer;
+        const endOffset = range.endOffset;
+        let atStartOfContainer = false;
+        if (endNode.nodeType === Node.TEXT_NODE) {
+            atStartOfContainer = endOffset === 0;
+        }
+        else if (endNode.nodeType === Node.ELEMENT_NODE) {
+            atStartOfContainer = endOffset === 0;
+        }
+        if (!atStartOfContainer)
+            return;
+        const endBlockId = this.getDataIdFromNode(endNode);
+        if (!endBlockId)
+            return;
+        const startBlockId = this.getDataIdFromNode(range.startContainer);
+        if (endBlockId !== startBlockId && ids.includes(endBlockId)) {
+            const idx = ids.lastIndexOf(endBlockId);
+            if (idx > -1)
+                ids.splice(idx, 1);
+        }
     }
 }
 export default TextDocument;

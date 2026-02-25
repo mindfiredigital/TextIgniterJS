@@ -22,6 +22,15 @@ export const icons = {
                     <title>Underline</title>
                     <path d="M5 18h14v2H5zM6 4v6c0 3.309 2.691 6 6 6s6-2.691 6-6V4h-2v6c0 2.206-1.794 4-4 4s-4-1.794-4-4V4H6z"></path>
                 </svg>`,
+  strikethrough: `<svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="18" 
+        height="18" 
+        viewBox="0 0 24 24" 
+        style="fill: rgba(0, 0, 0, 1);">
+        <title>Strikethrough</title>
+        <path d="M5 12.5h14v-1H5v1zm7-7c-2.21 0-4 1.79-4 4h2a2 2 0 1 1 4 0c0 1.1-.9 2-2 2h-1v2h1a4 4 0 0 0 0-8zm0 14c2.21 0 4-1.79 4-4h-2a2 2 0 1 1-4 0c0-1.1.9-2 2-2h1v-2h-1a4 4 0 0 0 0 8z"/>
+    </svg>`,
   subscript: `<svg 
                 xmlns="http://www.w3.org/2000/svg" 
                     width="18" height="18" 

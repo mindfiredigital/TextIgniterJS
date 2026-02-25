@@ -3,6 +3,8 @@ export function setCursorPosition(editorView, position, dataId = '') {
         editorView.container.focus();
     else {
         const divDataid = document.querySelector('[data-id="' + dataId + '"]');
+        if (!divDataid)
+            return;
         divDataid.focus();
     }
     const sel = window.getSelection();

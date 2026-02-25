@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TextIgniter Angular Real Component Test</title>
+  <script src="https://unpkg.com/zone.js@0.15.0/dist/zone.min.js"></script>
+  <script src="https://unpkg.com/@angular/core@19/bundles/core.umd.js"></script>
+  <script src="https://unpkg.com/@angular/common@19/bundles/common.umd.js"></script>
+  <script src="https://unpkg.com/@angular/platform-browser@19/bundles/platform-browser.umd.js"></script>
+  <script src="https://unpkg.com/@angular/platform-browser-dynamic@19/bundles/platform-browser-dynamic.umd.js"></script>
+  
+  <!-- Load the actual built TextIgniter components -->
+  <script src="../core/dist/index.umd.js"></script>
+  <script src="../web-component/dist/index.umd.js"></script>
+  
+  <style>
+    .app-container {
+      margin: 20px;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    .editor-section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .controls {
+      margin: 10px 0;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 4px;
+    }
+    .controls button {
+      margin: 5px;
+      padding: 8px 16px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      background: white;
+      cursor: pointer;
+    }
+    .test-output {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: white;
+    }
+    .test-result {
+      padding: 5px;
+      margin: 2px 0;
+    }
+    .test-pass { color: green; }
+    .test-fail { color: red; }
+  </style>
+</head>
+<body>
+  <div id="angular-app" class="app-container">
+    <h1>TextIgniter Angular Real Component Test</h1>
+    
+    <div class="controls">
+      <button id="toggle-config-btn">Toggle Config</button>
+      <button id="change-features-btn">Change Features</button>
+      <button id="test-editor-btn">Test Editor Functions</button>
+      <button id="run-integration-tests-btn">Run Integration Tests</button>
+    </div>
+    
+    <div class="editor-section">
+      <h3>Angular TextIgniter Component:</h3>
+      <div id="angular-textigniter-container">
+        <!-- This will be populated by Angular -->
+      </div>
+    </div>
+    
+    <div class="test-output">
+      <h3>Integration Test Results:</h3>
+      <div id="integration-test-results"></div>
+    </div>
+  </div>
+
+  <script>
+    // Angular component definition using the real TextIgniter
+    const { Component, Input, OnInit, OnChanges, SimpleChanges, NgModule, platformBrowserDynamic } = ng.core;
+    const { CommonModule } = ng.common;
+    const { BrowserModule } = ng.platformBrowser;
+
+    // Real Angular TextIgniter Component that uses the actual library
+    @Component({
+      selector: 'app-textigniter-wrapper',
+      template: `
+        <div [id]="editorId" class="textigniter-wrapper" 
+             [attr.data-testid]="'real-angular-editor-' + editorId"></div>
+      `,
+      standalone: false
+    })
+    class TextIgniterWrapperComponent {
+      @Input() config = {
+        showToolbar: true,
+        features: ['bold', 'italic', 'underline', 'hyperlink']
+      };
+      @Input() editorId = 'real-angular-editor';
+      
+      textIgniterInstance = null;
+
+      ngAfterViewInit() {
+        this.initializeTextIgniter();
+      }
+
+      ngOnChanges(changes) {
+        if (changes['config'] && !changes['config'].firstChange) {
+          this.reinitializeTextIgniter();
+        }
+      }
+
+      initializeTextIgniter() {
+        try {
+          // Wait for DOM to be ready
+          setTimeout(() => {
+            if (window.TextIgniter && this.editorId !== 'editor') {
+              this.textIgniterInstance = new window.TextIgniter(this.editorId, this.config);
+              console.log('TextIgniter initialized for Angular component:', this.editorId);
+              
+              // Mark as initialized for testing
+              const container = document.getElementById(this.editorId);
+              if (container) {
+                container.setAttribute('data-angular-textigniter-ready', 'true');
+              }
+            }
+          }, 100);
+        } catch (error) {
+          console.error('Error initializing TextIgniter:', error);
+        }
+      }
+
+      reinitializeTextIgniter() {
+        // Clear existing instance
+        const container = document.getElementById(this.editorId);
+        if (container) {
+          container.innerHTML = '';
+        }
+        this.initializeTextIgniter();
+      }
+    }
+
+    // Test Application Component
+    @Component({
+      selector: 'app-root',
+      template: `
+        <app-textigniter-wrapper 
+          [config]="currentConfig" 
+          [editorId]="'angular-editor-test'">
+        </app-textigniter-wrapper>
+      `,
+      standalone: false
+    })
+    class AppComponent {
+      currentConfig = {
+        showToolbar: true,
+        features: ['bold', 'italic', 'underline', 'hyperlink']
+      };
+
+      toggleConfig() {
+        this.currentConfig = {
+          ...this.currentConfig,
+          showToolbar: !this.currentConfig.showToolbar
+        };
+      }
+
+      changeFeatures() {
+        this.currentConfig = {
+          ...this.currentConfig,
+          features: this.currentConfig.features.length > 4 
+            ? ['bold', 'italic'] 
+            : ['bold', 'italic', 'underline', 'hyperlink', 'fontColor', 'alignCenter']
+        };
+      }
+    }
+
+    // Angular Module
+    @NgModule({
+      declarations: [AppComponent, TextIgniterWrapperComponent],
+      imports: [BrowserModule, CommonModule],
+      bootstrap: [AppComponent]
+    })
+    class AppModule {}
+
+    // Bootstrap the application
+    let appInstance = null;
+    platformBrowserDynamic()
+      .bootstrapModule(AppModule)
+      .then(moduleRef => {
+        appInstance = moduleRef.instance;
+        console.log('Angular application bootstrapped successfully');
+        
+        // Set up event handlers
+        setupEventHandlers();
+        
+        // Run initial tests
+        setTimeout(() => {
+          runIntegrationTests();
+        }, 2000);
+      })
+      .catch(err => {
+        console.error('Error starting Angular app:', err);
+      });
+
+    // Event handlers for testing
+    function setupEventHandlers() {
+      document.getElementById('toggle-config-btn').addEventListener('click', () => {
+        const appComponent = document.querySelector('app-root');
+        if (appComponent && appComponent.__ngContext__) {
+          const component = appComponent.__ngContext__[8]; // Get component instance
+          component.toggleConfig();
+        }
+      });
+
+      document.getElementById('change-features-btn').addEventListener('click', () => {
+        const appComponent = document.querySelector('app-root');
+        if (appComponent && appComponent.__ngContext__) {
+          const component = appComponent.__ngContext__[8];
+          component.changeFeatures();
+        }
+      });
+
+      document.getElementById('test-editor-btn').addEventListener('click', () => {
+        testEditorFunctionality();
+      });
+
+      document.getElementById('run-integration-tests-btn').addEventListener('click', () => {
+        runIntegrationTests();
+      });
+    }
+
+    // Integration tests
+    const integrationTestResults = [];
+
+    function addIntegrationTestResult(testName, passed, message) {
+      integrationTestResults.push({ testName, passed, message });
+      updateIntegrationTestDisplay();
+    }
+
+    function updateIntegrationTestDisplay() {
+      const output = document.getElementById('integration-test-results');
+      output.innerHTML = integrationTestResults.map(result => 
+        `<div class="test-result ${result.passed ? 'test-pass' : 'test-fail'}" 
+              data-test="${result.testName.toLowerCase().replace(/ /g, '-')}"
+              data-passed="${result.passed}">
+          ${result.testName}: ${result.passed ? 'PASS' : 'FAIL'} - ${result.message}
+         </div>`
+      ).join('');
+    }
+
+    function runIntegrationTests() {
+      integrationTestResults.length = 0;
+      
+      // Test 1: Angular component renders
+      setTimeout(() => {
+        const wrapper = document.querySelector('app-textigniter-wrapper');
+        addIntegrationTestResult(
+          'Angular Component Renders',
+          !!wrapper,
+          wrapper ? 'Angular wrapper component found' : 'Angular wrapper component not found'
+        );
+      }, 100);
+
+      // Test 2: TextIgniter instance created
+      setTimeout(() => {
+        const container = document.getElementById('angular-editor-test');
+        const isReady = container && container.hasAttribute('data-angular-textigniter-ready');
+        addIntegrationTestResult(
+          'TextIgniter Instance Created',
+          isReady,
+          isReady ? 'TextIgniter instance initialized' : 'TextIgniter instance not found'
+        );
+      }, 200);
+
+      // Test 3: Editor DOM structure exists
+      setTimeout(() => {
+        const editorContainer = document.querySelector('#angular-editor-test .editor-container');
+        const toolbarContainer = document.querySelector('#angular-editor-test .toolbar-container');
+        addIntegrationTestResult(
+          'Editor DOM Structure',
+          !!(editorContainer || toolbarContainer || document.querySelector('#angular-editor-test .text-igniter-editor')),
+          editorContainer ? 'Editor DOM structure found' : 'Editor DOM structure missing (may be mock)'
+        );
+      }, 300);
+
+      // Test 4: Configuration applied
+      setTimeout(() => {
+        const container = document.getElementById('angular-editor-test');
+        const hasContent = container && container.innerHTML.trim().length > 0;
+        addIntegrationTestResult(
+          'Configuration Applied',
+          hasContent,
+          hasContent ? 'Editor has content/structure' : 'Editor appears empty'
+        );
+      }, 400);
+
+      // Test 5: Event binding works
+      setTimeout(() => {
+        const appRoot = document.querySelector('app-root');
+        const hasAngularContext = appRoot && appRoot.__ngContext__;
+        addIntegrationTestResult(
+          'Angular Binding Active',
+          hasAngularContext,
+          hasAngularContext ? 'Angular data binding active' : 'Angular binding not detected'
+        );
+      }, 500);
+    }
+
+    function testEditorFunctionality() {
+      const container = document.getElementById('angular-editor-test');
+      if (container) {
+        // Try to interact with the editor
+        const editableArea = container.querySelector('[contenteditable="true"]');
+        if (editableArea) {
+          editableArea.focus();
+          editableArea.textContent = 'Integration test text';
+          console.log('Editor functionality test completed');
+        } else {
+          console.log('No editable area found - using mock implementation');
+        }
+      }
+    }
+  </script>
+</body>
+</html>

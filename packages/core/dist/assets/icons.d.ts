@@ -2,6 +2,7 @@ export declare const icons: {
     bold: string;
     italic: string;
     underline: string;
+    strikethrough: string;
     subscript: string;
     superscript: string;
     left_align: string;
