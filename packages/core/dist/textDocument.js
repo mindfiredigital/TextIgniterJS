@@ -64,6 +64,7 @@ class TextDocument extends EventEmitter {
                     bold: attributes.bold || false,
                     italic: attributes.italic || false,
                     underline: attributes.underline || false,
+                    strikethrough: attributes.strikethrough || false,
                     hyperlink: attributes.hyperlink || false,
                 }));
                 if (relPos < piece.text.length) {
@@ -83,6 +84,7 @@ class TextDocument extends EventEmitter {
                     bold: attributes.bold || false,
                     italic: attributes.italic || false,
                     underline: attributes.underline || false,
+                    strikethrough: attributes.strikethrough || false,
                     hyperlink: attributes.hyperlink || false,
                 }))) {
                 lastPiece.text += text;
@@ -92,6 +94,7 @@ class TextDocument extends EventEmitter {
                     bold: attributes.bold || false,
                     italic: attributes.italic || false,
                     underline: attributes.underline || false,
+                    strikethrough: attributes.strikethrough || false,
                     hyperlink: attributes.hyperlink || false,
                 }));
             }
@@ -639,19 +642,21 @@ class TextDocument extends EventEmitter {
         block.alignment = alignment;
         this.emit('documentChanged', this);
     }
-    getHtmlContent() {
+    getHtmlContent(copyToClipboard = false) {
         const editorContainer = document.getElementById('editor');
         if (!editorContainer) {
             console.error('Editor container not found.');
             return;
         }
         const htmlContent = editorContainer.innerHTML;
-        navigator.clipboard
-            .writeText(htmlContent)
-            .then(() => {
-            console.log('HTML copied to clipboard!');
-        })
-            .catch(err => console.error('Failed to copy HTML:', err));
+        if (copyToClipboard) {
+            navigator.clipboard
+                .writeText(htmlContent)
+                .then(() => {
+                console.log('HTML copied to clipboard!');
+            })
+                .catch(err => console.error('Failed to copy HTML:', err));
+        }
         return htmlContent;
     }
     getCursorOffsetInParent(parentSelector) {

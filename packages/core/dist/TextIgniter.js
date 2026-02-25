@@ -14,9 +14,11 @@ import UndoRedoManager from './handlers/undoRedoManager';
 import PopupToolbarView from './view/popupToolbarView';
 import LinkPopupView from './view/linkPopupView';
 import { detectUrlsInText } from './utils/urlDetector';
-class TextIgniter {
+import EventEmitter from './utils/events';
+class TextIgniter extends EventEmitter {
     constructor(editorId, config) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+        super();
         this.savedSelection = null;
         this.debounceTimer = null;
         const { mainEditorId, toolbarId, popupToolbarId } = createEditor(editorId, config);
@@ -46,6 +48,7 @@ class TextIgniter {
             bold: false,
             italic: false,
             underline: false,
+            strikethrough: false,
             undo: false,
             redo: false,
             hyperlink: false,
@@ -55,6 +58,14 @@ class TextIgniter {
         this.toolbarView.on('toolbarAction', (action, dataId = []) => this.handleToolbarAction(action, dataId));
         this.popupToolbarView.on('popupAction', (action) => this.handleToolbarAction(action));
         this.document.on('documentChanged', () => this.editorView.render());
+        this.document.on('documentChanged', () => {
+            var _a;
+            const htmlContent = this.document.getHtmlContent();
+            this.emit('contentChange', {
+                html: htmlContent,
+                text: ((_a = this.editorContainer) === null || _a === void 0 ? void 0 : _a.textContent) || '',
+            });
+        });
         this.editorContainer.addEventListener('keydown', e => {
             this.syncCurrentAttributesWithCursor();
             this.handleKeydown(e);
@@ -76,115 +87,148 @@ class TextIgniter {
             }
         });
         (_a = document.getElementById('fontColor')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', e => {
-            const fontColorPicker = document.getElementById('fontColorPicker');
-            fontColorPicker.style.display = 'inline';
+            e.stopPropagation();
             const colorWrapper = document.getElementById('colorWrapper');
-            const rect = e.target.getBoundingClientRect();
-            const x = rect.left + window.scrollX;
-            const y = rect.bottom + window.scrollY;
-            const resetButton = document.getElementById('colorResetFont');
-            resetButton.style.display = 'inline-block';
-            resetButton.addEventListener('click', () => {
-                fontColorPicker.value = '#000000';
-                resetButton.style.display = 'none';
-            });
-            colorWrapper.style.position = 'absolute';
-            colorWrapper.style.left = `${x - 2}px`;
-            colorWrapper.style.top = `${y - 15}px`;
-            colorWrapper.style.display = 'block';
-            fontColorPicker.click();
-            if (fontColorPicker) {
-                fontColorPicker.addEventListener('input', event => {
-                    const selectedColor = event.target.value;
-                    const [start, end] = this.getSelectionRange();
-                    if (this.document.dataIds.length > 1) {
-                        this.document.blocks.forEach((block) => {
-                            if (this.document.dataIds.includes(block.dataId)) {
-                                this.document.selectedBlockId = block.dataId;
-                                let countE = 0;
-                                block.pieces.forEach((obj) => {
-                                    countE += obj.text.length;
-                                });
-                                let countS = start - countE;
-                                this.document.applyFontColor(countS, countE, selectedColor);
-                            }
+            const fontColorPicker = document.getElementById('fontColorPicker');
+            if (!colorWrapper || !fontColorPicker)
+                return;
+            const isVisible = colorWrapper.style.display === 'block';
+            if (isVisible) {
+                colorWrapper.style.display = 'none';
+            }
+            else {
+                colorWrapper.style.display = 'block';
+            }
+        });
+        (_b = document
+            .getElementById('fontColorPicker')) === null || _b === void 0 ? void 0 : _b.addEventListener('input', event => {
+            const selectedColor = event.target.value;
+            const [start, end] = this.getSelectionRange();
+            const indicator = document.getElementById('fontColorIndicator');
+            if (indicator) {
+                indicator.style.backgroundColor = selectedColor;
+            }
+            if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block) => {
+                    if (this.document.dataIds.includes(block.dataId)) {
+                        this.document.selectedBlockId = block.dataId;
+                        let countE = 0;
+                        block.pieces.forEach((obj) => {
+                            countE += obj.text.length;
                         });
-                    }
-                    else {
-                        if (this.debounceTimer) {
-                            clearTimeout(this.debounceTimer);
-                        }
-                        this.debounceTimer = setTimeout(() => {
-                            this.document.applyFontColor(start, end, selectedColor);
-                        }, 300);
+                        let countS = start - countE;
+                        this.document.applyFontColor(countS, countE, selectedColor);
                     }
                 });
+            }
+            else {
+                if (this.debounceTimer) {
+                    clearTimeout(this.debounceTimer);
+                }
+                this.debounceTimer = setTimeout(() => {
+                    this.document.applyFontColor(start, end, selectedColor);
+                }, 300);
+            }
+        });
+        (_c = document.getElementById('colorResetFont')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', () => {
+            const fontColorPicker = document.getElementById('fontColorPicker');
+            const indicator = document.getElementById('fontColorIndicator');
+            if (fontColorPicker) {
+                fontColorPicker.value = '#000000';
+                if (indicator) {
+                    indicator.style.backgroundColor = '#000000';
+                }
+                fontColorPicker.dispatchEvent(new Event('input'));
             }
         });
         document.addEventListener('click', e => {
             var _a;
             const target = e.target;
+            const colorWrapper = document.getElementById('colorWrapper');
+            const colorBgWrapper = document.getElementById('colorBgWrapper');
+            const fontColorBtn = document.getElementById('fontColor');
+            const bgColorBtn = document.getElementById('bgColor');
+            if (colorWrapper &&
+                !target.closest('#colorWrapper') &&
+                target !== fontColorBtn &&
+                !(fontColorBtn === null || fontColorBtn === void 0 ? void 0 : fontColorBtn.contains(target))) {
+                colorWrapper.style.display = 'none';
+            }
+            if (colorBgWrapper &&
+                !target.closest('#colorBgWrapper') &&
+                target !== bgColorBtn &&
+                !(bgColorBtn === null || bgColorBtn === void 0 ? void 0 : bgColorBtn.contains(target))) {
+                colorBgWrapper.style.display = 'none';
+            }
             if (!((_a = this.editorContainer) === null || _a === void 0 ? void 0 : _a.contains(target)) &&
                 !target.closest('.hyperlink-popup')) {
                 this.hyperlinkHandler.hideHyperlinkViewButton();
             }
         });
-        (_b = document.getElementById('bgColor')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', e => {
-            const bgColorPicker = document.getElementById('bgColorPicker');
-            bgColorPicker.style.display = 'inline';
+        (_d = document.getElementById('bgColor')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', e => {
+            e.stopPropagation();
             const colorBgWrapper = document.getElementById('colorBgWrapper');
-            const rect = e.target.getBoundingClientRect();
-            const x = rect.left + window.scrollX;
-            const y = rect.bottom + window.scrollY;
-            const resetButton = document.getElementById('colorResetBG');
-            resetButton.style.display = 'inline-block';
-            resetButton.addEventListener('click', () => {
-                bgColorPicker.value = '#ffffff';
-                resetButton.style.display = 'none';
-                console.log(y, 'resetb');
-            });
-            colorBgWrapper.style.position = 'absolute';
-            colorBgWrapper.style.left = `${x - 2}px`;
-            colorBgWrapper.style.top = `${y - 15}px`;
-            colorBgWrapper.style.display = 'block';
-            bgColorPicker.click();
-            if (bgColorPicker) {
-                bgColorPicker.addEventListener('input', event => {
-                    const selectedColor = event.target.value;
-                    const [start, end] = this.getSelectionRange();
-                    if (this.document.dataIds.length > 1) {
-                        this.document.blocks.forEach((block) => {
-                            if (this.document.dataIds.includes(block.dataId)) {
-                                this.document.selectedBlockId = block.dataId;
-                                let countE = 0;
-                                block.pieces.forEach((obj) => {
-                                    countE += obj.text.length;
-                                });
-                                let countS = start - countE;
-                                this.document.applyBgColor(countS, countE, selectedColor);
-                            }
+            const bgColorPicker = document.getElementById('bgColorPicker');
+            if (!colorBgWrapper || !bgColorPicker)
+                return;
+            const isVisible = colorBgWrapper.style.display === 'block';
+            if (isVisible) {
+                colorBgWrapper.style.display = 'none';
+            }
+            else {
+                colorBgWrapper.style.display = 'block';
+            }
+        });
+        (_e = document
+            .getElementById('bgColorPicker')) === null || _e === void 0 ? void 0 : _e.addEventListener('input', event => {
+            const selectedColor = event.target.value;
+            const [start, end] = this.getSelectionRange();
+            const indicator = document.getElementById('bgColorIndicator');
+            if (indicator) {
+                indicator.style.backgroundColor = selectedColor;
+            }
+            if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block) => {
+                    if (this.document.dataIds.includes(block.dataId)) {
+                        this.document.selectedBlockId = block.dataId;
+                        let countE = 0;
+                        block.pieces.forEach((obj) => {
+                            countE += obj.text.length;
                         });
-                    }
-                    else {
-                        if (this.debounceTimer) {
-                            clearTimeout(this.debounceTimer);
-                        }
-                        this.debounceTimer = setTimeout(() => {
-                            this.document.applyBgColor(start, end, selectedColor);
-                        }, 300);
+                        let countS = start - countE;
+                        this.document.applyBgColor(countS, countE, selectedColor);
                     }
                 });
             }
+            else {
+                if (this.debounceTimer) {
+                    clearTimeout(this.debounceTimer);
+                }
+                this.debounceTimer = setTimeout(() => {
+                    this.document.applyBgColor(start, end, selectedColor);
+                }, 300);
+            }
         });
-        (_c = document.getElementById('getHtmlButton')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', e => {
-            const htmlString = this.document.getHtmlContent();
+        (_f = document.getElementById('colorResetBG')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', () => {
+            const bgColorPicker = document.getElementById('bgColorPicker');
+            const indicator = document.getElementById('bgColorIndicator');
+            if (bgColorPicker) {
+                bgColorPicker.value = '#ffffff';
+                if (indicator) {
+                    indicator.style.backgroundColor = '#ffffff';
+                }
+                bgColorPicker.dispatchEvent(new Event('input'));
+            }
+        });
+        (_g = document.getElementById('getHtmlButton')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', e => {
+            const htmlString = this.document.getHtmlContent(true);
             console.log('Editor HTML Content:', htmlString);
             this.htmlToJsonParser = new HtmlToJsonParser(htmlString);
             const jsonOutput = this.htmlToJsonParser.parse();
             console.log('htmltoJson', JSON.stringify(jsonOutput, null, 2), jsonOutput);
             this.showAcknowledgement('HTML copied to clipboard', 2000);
         });
-        (_d = document.getElementById('loadHtmlButton')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', e => {
+        (_h = document.getElementById('loadHtmlButton')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', e => {
             this.undoRedoManager.saveUndoSnapshot();
             const str = strings.TEST_HTML_CODE;
             this.htmlToJsonParser = new HtmlToJsonParser(str);
@@ -209,7 +253,7 @@ class TextIgniter {
             console.log('blocks', this.document.blocks, this.document.dataIds, this.document.currentOffset);
             console.log('htmltoJson', JSON.stringify(jsonOutput, null, 2), jsonOutput);
         });
-        (_e = document.getElementById('fontFamily')) === null || _e === void 0 ? void 0 : _e.addEventListener('change', e => {
+        (_j = document.getElementById('fontFamily')) === null || _j === void 0 ? void 0 : _j.addEventListener('change', e => {
             this.undoRedoManager.saveUndoSnapshot();
             const fontFamily = e.target.value;
             const [start, end] = this.getSelectionRange();
@@ -230,7 +274,7 @@ class TextIgniter {
                 this.document.setFontFamily(start, end, fontFamily);
             }
         });
-        (_f = document.getElementById('fontSize')) === null || _f === void 0 ? void 0 : _f.addEventListener('change', e => {
+        (_k = document.getElementById('fontSize')) === null || _k === void 0 ? void 0 : _k.addEventListener('change', e => {
             this.undoRedoManager.saveUndoSnapshot();
             const fontSize = e.target.value;
             const [start, end] = this.getSelectionRange();
@@ -251,15 +295,15 @@ class TextIgniter {
                 this.document.setFontSize(start, end, fontSize);
             }
         });
-        (_g = document.getElementById('alignLeft')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', () => {
+        (_l = document.getElementById('alignLeft')) === null || _l === void 0 ? void 0 : _l.addEventListener('click', () => {
             console.log('alignment alignLeft', this.document.dataIds);
             this.document.dataIds.forEach(obj => this.document.setAlignment('left', obj));
         });
-        (_h = document.getElementById('alignCenter')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', () => {
+        (_m = document.getElementById('alignCenter')) === null || _m === void 0 ? void 0 : _m.addEventListener('click', () => {
             console.log('alignment alignCenter', this.document.dataIds);
             this.document.dataIds.forEach(obj => this.document.setAlignment('center', obj));
         });
-        (_j = document.getElementById('alignRight')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
+        (_o = document.getElementById('alignRight')) === null || _o === void 0 ? void 0 : _o.addEventListener('click', () => {
             console.log('alignment alignRight', this.document.dataIds);
             this.document.dataIds.forEach(obj => this.document.setAlignment('right', obj));
         });
@@ -896,6 +940,7 @@ class TextIgniter {
                         bold: piece.attributes.bold,
                         italic: piece.attributes.italic,
                         underline: piece.attributes.underline,
+                        strikethrough: piece.attributes.strikethrough || false,
                         hyperlink: piece.attributes.hyperlink || false,
                         fontFamily: piece.attributes.fontFamily,
                         fontSize: piece.attributes.fontSize,
@@ -914,6 +959,7 @@ class TextIgniter {
                         bold: false,
                         italic: false,
                         underline: false,
+                        strikethrough: false,
                         hyperlink: false,
                     };
                     this.toolbarView.updateActiveStates(this.currentAttributes);
@@ -924,6 +970,19 @@ class TextIgniter {
         }
         else {
             this.hyperlinkHandler.hideHyperlinkViewButton();
+            const allBold = this.document.isRangeEntirelyAttribute(start, end, 'bold');
+            const allItalic = this.document.isRangeEntirelyAttribute(start, end, 'italic');
+            const allUnderline = this.document.isRangeEntirelyAttribute(start, end, 'underline');
+            const allStrikethrough = this.document.isRangeEntirelyAttribute(start, end, 'strikethrough');
+            this.currentAttributes = {
+                bold: allBold,
+                italic: allItalic,
+                underline: allUnderline,
+                strikethrough: allStrikethrough,
+                hyperlink: false,
+            };
+            this.toolbarView.updateActiveStates(this.currentAttributes);
+            this.popupToolbarView.updateActiveStates(this.currentAttributes);
         }
     }
     setCursorPosition(position, dataId = '') {
@@ -1009,6 +1068,16 @@ class TextIgniter {
             this.editorView.render();
         }
         this.hideLinkPopup();
+    }
+    onContentChange(callback) {
+        this.on('contentChange', callback);
+    }
+    getContent() {
+        return this.document.getHtmlContent() || '';
+    }
+    getTextContent() {
+        var _a;
+        return ((_a = this.editorContainer) === null || _a === void 0 ? void 0 : _a.textContent) || '';
     }
 }
 window.TextIgniter = TextIgniter;

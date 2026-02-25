@@ -11,11 +11,27 @@
 </head>
 
 <body>
-  <div id="editor-container"></div>
+  <div style="margin-top: 10px;">
+    <div id="editor-container"></div>
+  </div>
+
+  <!-- Display area for real-time content -->
+  <div style="margin-top: 20px; padding: 20px; border: 1px solid #ccc; background: #f9f9f9;">
+    <h3>Real-time Content Preview:</h3>
+    <div style="margin-top: 10px;">
+      <strong>HTML Content:</strong>
+      <pre id="html-output" style="background: white; padding: 10px; overflow: auto; max-height: 200px;"></pre>
+    </div>
+    <div style="margin-top: 10px;">
+      <strong>Text Content:</strong>
+      <pre id="text-output" style="background: white; padding: 10px; overflow: auto; max-height: 100px;"></pre>
+    </div>
+  </div>
+
   <!-- <link rel="stylesheet" href="dist/index.css"> -->
   <!-- <script src="dist/index.js"></script> -->
   <script type="module" src="dist/index.js"></script>
-  <text-igniter config='{
+  <text-igniter id="text-igniter-editor" config='{
     "showToolbar": true,
     "features": [
       "bold",
@@ -37,6 +53,16 @@
     ]
 }
 '></text-igniter>
+
+  <script>
+    // Listen to the content-change event from the web component
+    const editor = document.getElementById('text-igniter-editor');
+    editor.addEventListener('content-change', (event) => {
+      console.log('Content changed:', event.detail);
+      document.getElementById('html-output').textContent = event.detail.html;
+      document.getElementById('text-output').textContent = event.detail.text;
+    });
+  </script>
 </body>
 
 </html>

@@ -330,7 +330,7 @@ class TextIgniter extends EventEmitter {
     });
 
     document.getElementById('getHtmlButton')?.addEventListener('click', e => {
-      const htmlString = this.document.getHtmlContent();
+      const htmlString = this.document.getHtmlContent(true);
       console.log('Editor HTML Content:', htmlString);
       this.htmlToJsonParser = new HtmlToJsonParser(htmlString as string);
       const jsonOutput = this.htmlToJsonParser.parse();
