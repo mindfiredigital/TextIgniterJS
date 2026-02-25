@@ -54,6 +54,16 @@ export class TextIgniterComponent extends HTMLElement {
         editorContainer as any,
         this.config as any
       );
+
+      // Subscribe to content changes and dispatch custom event
+      this.textIgniter.onContentChange(data => {
+        const event = new CustomEvent('content-change', {
+          detail: data,
+          bubbles: true,
+          composed: true,
+        });
+        this.dispatchEvent(event);
+      });
     } catch (error) {
       console.error('Failed to initialize TextIgniter:', error);
       this.initialized = false;

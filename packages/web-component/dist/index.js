@@ -2,7 +2,6 @@
 import { TextIgniter } from "@mindfiredigital/textigniter/dist/TextIgniter.js";
 var TextIgniterComponent = class extends HTMLElement {
   constructor() {
-    console.log("TextIgniterComponent constructor called");
     super();
     this.initialized = false;
     this.config = {};
@@ -48,6 +47,14 @@ var TextIgniterComponent = class extends HTMLElement {
         editorContainer,
         this.config
       );
+      this.textIgniter.onContentChange((data) => {
+        const event = new CustomEvent("content-change", {
+          detail: data,
+          bubbles: true,
+          composed: true
+        });
+        this.dispatchEvent(event);
+      });
     } catch (error) {
       console.error("Failed to initialize TextIgniter:", error);
       this.initialized = false;
