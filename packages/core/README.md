@@ -132,7 +132,7 @@ pnpm add @mindfiredigital/textigniter
     />
   </head>
   <body>
-    <div id="editor"></div>
+    <div id="editor-container"></div>
 
     <script src="node_modules/@mindfiredigital/textigniter/dist/index.js"></script>
     <script>
@@ -157,7 +157,7 @@ pnpm add @mindfiredigital/textigniter
         ],
       };
 
-      const editor = new TextIgniter('editor', config);
+      const editor = new TextIgniter('editor-container', config);
     </script>
   </body>
 </html>
@@ -178,7 +178,7 @@ pnpm add @mindfiredigital/textigniter
     />
   </head>
   <body>
-    <div id="editor"></div>
+    <div id="editor-container"></div>
 
     <!-- Real-time Content Preview -->
     <div style="margin-top: 20px; padding: 20px; border: 1px solid #ccc;">
@@ -194,7 +194,7 @@ pnpm add @mindfiredigital/textigniter
         features: ['bold', 'italic', 'underline', 'fontColor'],
       };
 
-      const editor = new TextIgniter('editor', config);
+      const editor = new TextIgniter('editor-container', config);
 
       // Listen to content changes
       editor.onContentChange(data => {
