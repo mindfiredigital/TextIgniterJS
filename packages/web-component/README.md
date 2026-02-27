@@ -119,7 +119,7 @@ pnpm add @mindfiredigital/textigniter-web-component
   </head>
   <body>
     <text-igniter
-      id="editor"
+      id="editor-container"
       config='{
         "showToolbar": true,
         "features": [
@@ -163,7 +163,7 @@ pnpm add @mindfiredigital/textigniter-web-component
   </head>
   <body>
     <text-igniter
-      id="editor"
+      id="editor-container"
       config='{
         "showToolbar": true,
         "features": ["bold", "italic", "underline", "fontColor"]
@@ -195,7 +195,7 @@ pnpm add @mindfiredigital/textigniter-web-component
     ></script>
     <script>
       // Listen to content-change event
-      const editor = document.getElementById('editor');
+      const editor = document.getElementById('editor-container');
       editor.addEventListener('content-change', event => {
         console.log('Content changed:', event.detail);
         document.getElementById('html-output').textContent = event.detail.html;
@@ -213,7 +213,7 @@ pnpm add @mindfiredigital/textigniter-web-component
 ### Custom Element
 
 ```html
-<text-igniter id="editor" config="..."></text-igniter>
+<text-igniter id="editor-container" config="..."></text-igniter>
 ```
 
 #### Attributes

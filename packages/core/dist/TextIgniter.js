@@ -685,15 +685,37 @@ class TextIgniter extends EventEmitter {
                 const cursorBlock = this.getCurrentCursorBlock();
                 const cursorBlockId = cursorBlock === null || cursorBlock === void 0 ? void 0 : cursorBlock.toString();
                 if (cursorBlockId && currentBlock && currentBlock.type === 'text') {
-                    const fullText = currentBlock.pieces.map((p) => p.text).join('');
                     const cursorOffset = start - this.document.currentOffset;
-                    const beforeText = fullText.slice(0, cursorOffset);
-                    const afterText = fullText.slice(cursorOffset);
-                    currentBlock.pieces = [
-                        new Piece(beforeText || '\u200B', lastPieceAttributes),
-                    ];
-                    const newPieces = afterText && afterText.trim().length > 0
-                        ? [new Piece(afterText, lastPieceAttributes)]
+                    const beforePieces = [];
+                    const afterPieces = [];
+                    let offset = 0;
+                    for (const piece of currentBlock.pieces) {
+                        const pieceEnd = offset + piece.text.length;
+                        if (pieceEnd <= cursorOffset) {
+                            beforePieces.push(piece.clone());
+                        }
+                        else if (offset >= cursorOffset) {
+                            afterPieces.push(piece.clone());
+                        }
+                        else {
+                            const splitPoint = cursorOffset - offset;
+                            const beforeText = piece.text.slice(0, splitPoint);
+                            const afterText = piece.text.slice(splitPoint);
+                            if (beforeText) {
+                                beforePieces.push(new Piece(beforeText, Object.assign({}, piece.attributes)));
+                            }
+                            if (afterText) {
+                                afterPieces.push(new Piece(afterText, Object.assign({}, piece.attributes)));
+                            }
+                        }
+                        offset = pieceEnd;
+                    }
+                    currentBlock.pieces =
+                        beforePieces.length > 0
+                            ? beforePieces
+                            : [new Piece('\u200B', lastPieceAttributes)];
+                    const newPieces = afterPieces.length > 0
+                        ? afterPieces
                         : [new Piece('\u200B', lastPieceAttributes)];
                     const updatedBlock = this.addBlockAfter(this.document.blocks, cursorBlockId, {
                         dataId: uniqueId,
