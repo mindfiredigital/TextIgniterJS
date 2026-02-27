@@ -1,4 +1,5 @@
-import { TextIgniter } from '@mindfiredigital/textigniter/dist/TextIgniter.js';
+import { TextIgniter } from '@mindfiredigital/textigniter';
+import '@mindfiredigital/textigniter/dist/styles/text-igniter.css';
 
 export class TextIgniterComponent extends HTMLElement {
   private textIgniter!: TextIgniter;
