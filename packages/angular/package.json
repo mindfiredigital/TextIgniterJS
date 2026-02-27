@@ -1,6 +1,6 @@
 {
   "name": "@mindfiredigital/textigniter-angular",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": false,
   "publishConfig": {
     "access": "public"
@@ -23,8 +23,8 @@
     "@angular/platform-browser": "^19.2.0",
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
-    "@mindfiredigital/textigniter": "workspace:^1.0.0",
-    "@mindfiredigital/textigniter-web-component": "workspace:^1.0.0",
+    "@mindfiredigital/textigniter": "workspace:^1.2.0",
+    "@mindfiredigital/textigniter-web-component": "^1.2.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
