@@ -1,13 +1,26 @@
 {
-  "name": "text-igniter",
-  "version": "0.0.1",
+  "name": "@mindfiredigital/textigniter-angular",
+  "version": "1.1.0",
+  "description": "Angular wrapper for TextIgniter rich text editor",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mindfiredigital/textigniterjs.git"
+  },
+  "keywords": [
+    "angular",
+    "editor",
+    "rich-text",
+    "wysiwyg",
+    "textigniter"
+  ],
+  "license": "MIT",
   "peerDependencies": {
-    "@angular/common": "^19.2.0",
-    "@angular/core": "^19.2.0"
+    "@angular/common": "^19.0.0",
+    "@angular/core": "^19.0.0"
   },
   "dependencies": {
     "tslib": "^2.3.0",
-    "@mindfiredigital/textigniter": "workspace:*"
+    "@mindfiredigital/textigniter": "^1.2.0"
   },
   "sideEffects": false
 }
