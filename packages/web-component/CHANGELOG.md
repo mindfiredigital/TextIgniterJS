@@ -1,5 +1,11 @@
 # @mindfiredigital/textigniter-web-component
 
+## 1.2.2
+
+### Patch Changes
+
+- fixed web component readme file
+
 ## 1.0.1
 
 ### Patch Changes
