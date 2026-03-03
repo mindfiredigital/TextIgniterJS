@@ -443,6 +443,8 @@ const editor = new TextIgniter('editor', {
 });
 ```
 
+**Note:** Do not use "editor" as id for editors.
+
 <br>
 
 ## 🤝 Contributing

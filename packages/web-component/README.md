@@ -284,7 +284,7 @@ const allFeatures = [
 The `content-change` event is dispatched whenever the editor content changes, providing real-time updates.
 
 ```javascript
-const editor = document.getElementById('editor');
+const editor = document.getElementById('editor-container');
 
 editor.addEventListener('content-change', event => {
   // event.detail.html - HTML content with formatting
@@ -317,10 +317,10 @@ The event is a standard CustomEvent with:
 ### Auto-Save Functionality
 
 ```html
-<text-igniter id="editor" config="..."></text-igniter>
+<text-igniter id="editor-container" config="..."></text-igniter>
 
 <script>
-  const editor = document.getElementById('editor');
+  const editor = document.getElementById('editor-container');
   let saveTimeout;
 
   editor.addEventListener('content-change', event => {
@@ -340,11 +340,11 @@ The event is a standard CustomEvent with:
 ### Character Counter
 
 ```html
-<text-igniter id="editor" config="..."></text-igniter>
+<text-igniter id="editor-container" config="..."></text-igniter>
 <div id="counter">0 characters, 0 words</div>
 
 <script>
-  const editor = document.getElementById('editor');
+  const editor = document.getElementById('editor-container');
   const counter = document.getElementById('counter');
 
   editor.addEventListener('content-change', event => {
@@ -358,11 +358,11 @@ The event is a standard CustomEvent with:
 ### Content Validation
 
 ```html
-<text-igniter id="editor" config="..."></text-igniter>
+<text-igniter id="editor-container" config="..."></text-igniter>
 <div id="error" style="color: red;"></div>
 
 <script>
-  const editor = document.getElementById('editor');
+  const editor = document.getElementById('editor-container');
   const errorDiv = document.getElementById('error');
   const minLength = 100;
 
@@ -382,13 +382,13 @@ The event is a standard CustomEvent with:
 
 ```html
 <form id="myForm">
-  <text-igniter id="editor" config="..."></text-igniter>
+  <text-igniter id="editor-container" config="..."></text-igniter>
   <input type="hidden" id="content" name="content" />
   <button type="submit">Submit</button>
 </form>
 
 <script>
-  const editor = document.getElementById('editor');
+  const editor = document.getElementById('editor-container');
   const hiddenInput = document.getElementById('content');
   const form = document.getElementById('myForm');
 
@@ -432,7 +432,7 @@ The event is a standard CustomEvent with:
 
 ```html
 <text-igniter
-  id="editor"
+  id="editor-container"
   config='{
     "showToolbar": true,
     "height": "600px",
@@ -440,6 +440,8 @@ The event is a standard CustomEvent with:
   }'
 ></text-igniter>
 ```
+
+**Note:** Do not use "editor" as id for editors.
 
 <br>
 
