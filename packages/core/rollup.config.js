@@ -1,3 +1,4 @@
+require('dotenv').config();
 const typescript = require('@rollup/plugin-typescript');
 const resolve = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
@@ -10,6 +11,9 @@ const copy = require('rollup-plugin-copy');
 // Get command line arguments
 const args = process.argv.slice(2);
 const noDts = args.includes('--no-dts');
+
+// Check if production build
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Main JS bundle
 const mainConfig = {
@@ -42,7 +46,11 @@ const mainConfig = {
       babelHelpers: 'bundled',
       presets: ['@babel/preset-env'],
     }),
-    terser(),
+    terser({
+      compress: {
+        drop_console: isProduction,
+      },
+    }),
     copy({
       targets: [{ src: 'src/assets/**/*', dest: 'dist/assets' }],
     }),

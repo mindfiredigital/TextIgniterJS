@@ -53,10 +53,10 @@ var require_dist = __commonJS({
         constructor(t2, e2 = {}) {
           this.text = t2;
           const n2 = document.getElementById("fontFamily"), i2 = document.getElementById("fontSize");
-          let o2 = "Arial", s2 = "16px", l2 = document.getElementById("fontColorPicker"), r2 = document.getElementById("bgColorPicker");
-          n2 && (o2 = n2.value), i2 && (s2 = i2.value);
+          let s2 = "Arial", o2 = "16px", l2 = document.getElementById("fontColorPicker"), r2 = document.getElementById("bgColorPicker");
+          n2 && (s2 = n2.value), i2 && (o2 = i2.value);
           const a2 = e2.fontColor || (l2 ? l2.value : "#000000"), d2 = e2.bgColor || (r2 ? r2.value : "#ffffff");
-          this.attributes = { bold: e2.bold || false, italic: e2.italic || false, underline: e2.underline || false, strikethrough: e2.strikethrough || false, undo: e2.undo || false, redo: e2.redo || false, fontFamily: e2.fontFamily || o2, fontSize: e2.fontSize || s2, hyperlink: e2.hyperlink || false, fontColor: a2, bgColor: d2 };
+          this.attributes = { bold: e2.bold || false, italic: e2.italic || false, underline: e2.underline || false, strikethrough: e2.strikethrough || false, undo: e2.undo || false, redo: e2.redo || false, fontFamily: e2.fontFamily || s2, fontSize: e2.fontSize || o2, hyperlink: e2.hyperlink || false, fontColor: a2, bgColor: d2 };
         }
         isBold() {
           return this.attributes.bold;
@@ -130,49 +130,49 @@ var require_dist = __commonJS({
         setUndoRedoManager(t2) {
           this.undoRedoManager = t2;
         }
-        insertAt(t2, e2, i2, o2 = "", s2 = 0, l2 = "", r2 = "", a2 = false) {
-          a2 || "batch" === r2 || this.undoRedoManager.saveUndoSnapshot(), console.log("inserted,", { start: i2, text: t2 }), console.log("inserted,", this.blocks);
+        insertAt(t2, e2, i2, s2 = "", o2 = 0, l2 = "", r2 = "", a2 = false) {
+          a2 || "batch" === r2 || this.undoRedoManager.saveUndoSnapshot();
           let d2 = 0, c2 = [], h2 = false, u2 = 0;
-          "" !== o2 && null !== o2 && (u2 = this.blocks.findIndex((t3) => t3.dataId === o2), d2 = this.currentOffset);
-          for (let o3 of this.blocks[u2].pieces) {
-            const s3 = d2 + o3.text.length;
-            if (!h2 && i2 <= s3) {
-              const s4 = i2 - d2;
-              s4 > 0 && c2.push(new n(o3.text.slice(0, s4), Object.assign({}, o3.attributes))), c2.push(new n(t2, { bold: e2.bold || false, italic: e2.italic || false, underline: e2.underline || false, strikethrough: e2.strikethrough || false, hyperlink: e2.hyperlink || false })), s4 < o3.text.length && c2.push(new n(o3.text.slice(s4), Object.assign({}, o3.attributes))), h2 = true;
-            } else c2.push(o3.clone());
-            d2 = s3;
+          "" !== s2 && null !== s2 && (u2 = this.blocks.findIndex((t3) => t3.dataId === s2), d2 = this.currentOffset);
+          for (let s3 of this.blocks[u2].pieces) {
+            const o3 = d2 + s3.text.length;
+            if (!h2 && i2 <= o3) {
+              const o4 = i2 - d2;
+              o4 > 0 && c2.push(new n(s3.text.slice(0, o4), Object.assign({}, s3.attributes))), c2.push(new n(t2, { bold: e2.bold || false, italic: e2.italic || false, underline: e2.underline || false, strikethrough: e2.strikethrough || false, hyperlink: e2.hyperlink || false })), o4 < s3.text.length && c2.push(new n(s3.text.slice(o4), Object.assign({}, s3.attributes))), h2 = true;
+            } else c2.push(s3.clone());
+            d2 = o3;
           }
           if (!h2) {
             const i3 = c2[c2.length - 1];
             i3 && i3.hasSameAttributes(new n("", { bold: e2.bold || false, italic: e2.italic || false, underline: e2.underline || false, strikethrough: e2.strikethrough || false, hyperlink: e2.hyperlink || false })) ? i3.text += t2 : c2.push(new n(t2, { bold: e2.bold || false, italic: e2.italic || false, underline: e2.underline || false, strikethrough: e2.strikethrough || false, hyperlink: e2.hyperlink || false }));
           }
           let p2 = this.mergePieces(c2);
-          this.blocks[u2].pieces = p2, console.log({ position: i2 }), this.emit("documentChanged", this);
+          this.blocks[u2].pieces = p2, this.emit("documentChanged", this);
         }
-        deleteRange(t2, e2, i2 = "", o2 = 0, s2 = false) {
-          if (console.log("deleted2,", { start: t2, end: e2 }), t2 === e2) return;
+        deleteRange(t2, e2, i2 = "", s2 = 0, o2 = false) {
+          if (t2 === e2) return;
           let l2 = [], r2 = 0, a2 = 0, d2 = false;
           if ("" !== i2 && null !== i2) {
             if (a2 = this.blocks.findIndex((t3) => t3.dataId === i2), -1 === a2) return;
-            r2 = o2;
+            r2 = s2;
           }
           let c2 = -1;
-          if (s2 && t2 === r2 && a2 > 0 && e2 === t2 && (c2 = a2 - 1 >= 0 && "image" === this.blocks[a2 - 1].type ? a2 - 2 : a2 - 1, c2 >= 0 && this.blocks[c2])) for (let t3 of this.blocks[c2].pieces) l2.push(t3.clone()), d2 = true;
+          if (o2 && t2 === r2 && a2 > 0 && e2 === t2 && (c2 = a2 - 1 >= 0 && "image" === this.blocks[a2 - 1].type ? a2 - 2 : a2 - 1, c2 >= 0 && this.blocks[c2])) for (let t3 of this.blocks[c2].pieces) l2.push(t3.clone()), d2 = true;
           for (let i3 of this.blocks[a2].pieces) {
-            const o3 = r2 + i3.text.length, s3 = r2;
-            if (o3 <= t2 || s3 >= e2) l2.push(i3.clone());
+            const s3 = r2 + i3.text.length, o3 = r2;
+            if (s3 <= t2 || o3 >= e2) l2.push(i3.clone());
             else {
               const r3 = i3.text;
-              if (t2 > s3) {
-                const e3 = r3.slice(0, t2 - s3);
+              if (t2 > o3) {
+                const e3 = r3.slice(0, t2 - o3);
                 e3.length > 0 && l2.push(new n(e3, Object.assign({}, i3.attributes)));
               }
-              if (e2 < o3) {
-                const t3 = r3.slice(e2 - s3);
+              if (e2 < s3) {
+                const t3 = r3.slice(e2 - o3);
                 t3.length > 0 && l2.push(new n(t3, Object.assign({}, i3.attributes)));
               }
             }
-            r2 = o3;
+            r2 = s3;
           }
           let h2 = this.mergePieces(l2), u2 = false;
           d2 && c2 >= 0 ? (!this.blocks[a2] || "ol" !== this.blocks[a2].listType && "li" !== this.blocks[a2].listType || (u2 = true), this.blocks[c2].pieces = h2, this.blocks.splice(a2, 1)) : 0 === h2.length ? this.blocks.length > 1 ? (!this.blocks[a2] || "ol" !== this.blocks[a2].listType && "li" !== this.blocks[a2].listType || (u2 = true), this.blocks.splice(a2, 1)) : (h2 = [new n(" ")], this.blocks[a2].pieces = h2) : this.blocks[a2].pieces = h2, u2 && this.updateOrderedListNumbers(), this.emit("documentChanged", this);
@@ -193,13 +193,13 @@ var require_dist = __commonJS({
           var t2;
           const e2 = window.getSelection();
           if (!e2 || 0 === e2.rangeCount) return [];
-          const n2 = e2.getRangeAt(0), i2 = [], o2 = document.createNodeIterator(n2.commonAncestorContainer, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
-          let s2;
-          for (; s2 = o2.nextNode(); ) if (n2.intersectsNode(s2)) {
-            const e3 = s2.nodeType === Node.TEXT_NODE ? s2.parentElement : s2, n3 = null === (t2 = null == e3 ? void 0 : e3.closest("[data-id]")) || void 0 === t2 ? void 0 : t2.getAttribute("data-id");
+          const n2 = e2.getRangeAt(0), i2 = [], s2 = document.createNodeIterator(n2.commonAncestorContainer, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+          let o2;
+          for (; o2 = s2.nextNode(); ) if (n2.intersectsNode(o2)) {
+            const e3 = o2.nodeType === Node.TEXT_NODE ? o2.parentElement : o2, n3 = null === (t2 = null == e3 ? void 0 : e3.closest("[data-id]")) || void 0 === t2 ? void 0 : t2.getAttribute("data-id");
             n3 && !i2.includes(n3) && i2.push(n3);
           }
-          return this.removeExclusiveEndBlock(n2, i2), this.dataIds = i2, console.log("selected id 3", this.dataIds, i2), i2;
+          return this.removeExclusiveEndBlock(n2, i2), this.dataIds = i2, i2;
         }
         handleCtrlASelection() {
           const t2 = [], e2 = document.getElementById("editor");
@@ -209,13 +209,13 @@ var require_dist = __commonJS({
               n2 && !t2.includes(n2) && t2.push(n2);
             });
           }
-          return this.dataIds = t2, console.log("selected id 2", this.dataIds, t2), t2;
+          return this.dataIds = t2, t2;
         }
         getSelectedDataIds() {
           const t2 = window.getSelection();
           if (!t2 || 0 === t2.rangeCount) return [];
-          const e2 = t2.getRangeAt(0), n2 = [], i2 = e2.startContainer, o2 = e2.endContainer, s2 = this.getDataIdFromNode(i2), l2 = this.getDataIdFromNode(o2);
-          return s2 && !n2.includes(s2) && n2.push(s2), l2 && !n2.includes(l2) && n2.push(l2), this.removeExclusiveEndBlock(e2, n2), this.dataIds = n2, console.log("selected id 1", this.dataIds, n2), n2;
+          const e2 = t2.getRangeAt(0), n2 = [], i2 = e2.startContainer, s2 = e2.endContainer, o2 = this.getDataIdFromNode(i2), l2 = this.getDataIdFromNode(s2);
+          return o2 && !n2.includes(o2) && n2.push(o2), l2 && !n2.includes(l2) && n2.push(l2), this.removeExclusiveEndBlock(e2, n2), this.dataIds = n2, n2;
         }
         getDataIdFromNode(t2) {
           var e2;
@@ -227,33 +227,32 @@ var require_dist = __commonJS({
           if (!e2 || 0 === e2.rangeCount) return -1;
           const n2 = e2.getRangeAt(0);
           let i2 = 0;
-          const o2 = (t3) => {
+          const s2 = (t3) => {
             if (t3 === n2.startContainer) return i2 += n2.startOffset, true;
             t3.nodeType === Node.TEXT_NODE && (i2 += (t3.textContent || "").length);
-            for (const e3 of Array.from(t3.childNodes)) if (o2(e3)) return true;
+            for (const e3 of Array.from(t3.childNodes)) if (s2(e3)) return true;
             return false;
           };
-          return o2(t2), i2;
+          return s2(t2), i2;
         }
-        formatAttribute(t2, e2, i2, o2) {
-          console.log("formatAttribute", t2, e2, i2, o2);
-          let s2 = [], l2 = 0, r2 = -1;
+        formatAttribute(t2, e2, i2, s2) {
+          let o2 = [], l2 = 0, r2 = -1;
           if ("" !== this.selectedBlockId && null !== this.selectedBlockId) {
             if (r2 = this.blocks.findIndex((t3) => t3.dataId === this.selectedBlockId), -1 === r2) return;
             l2 = this.currentOffset;
           }
           for (let a3 of this.blocks[r2].pieces) {
             const r3 = l2 + a3.text.length;
-            if (r3 <= t2 || l2 >= e2) s2.push(a3.clone());
+            if (r3 <= t2 || l2 >= e2) o2.push(a3.clone());
             else {
               const r4 = l2, d2 = a3.text, c2 = Math.max(t2 - r4, 0), h2 = Math.min(e2 - r4, d2.length);
-              c2 > 0 && s2.push(new n(d2.slice(0, c2), Object.assign({}, a3.attributes)));
+              c2 > 0 && o2.push(new n(d2.slice(0, c2), Object.assign({}, a3.attributes)));
               const u2 = new n(d2.slice(c2, h2), Object.assign({}, a3.attributes));
-              ("bold" !== i2 && "italic" !== i2 && "underline" !== i2 && "strikethrough" !== i2 && "undo" !== i2 && "redo" !== i2 && "hyperlink" !== i2 || "boolean" != typeof o2) && ("fontFamily" !== i2 && "fontSize" !== i2 && "hyperlink" !== i2 && "fontColor" !== i2 && "bgColor" !== i2 || "string" != typeof o2) || (u2.attributes[i2] = o2), s2.push(u2), h2 < d2.length && s2.push(new n(d2.slice(h2), Object.assign({}, a3.attributes)));
+              ("bold" !== i2 && "italic" !== i2 && "underline" !== i2 && "strikethrough" !== i2 && "undo" !== i2 && "redo" !== i2 && "hyperlink" !== i2 || "boolean" != typeof s2) && ("fontFamily" !== i2 && "fontSize" !== i2 && "hyperlink" !== i2 && "fontColor" !== i2 && "bgColor" !== i2 || "string" != typeof s2) || (u2.attributes[i2] = s2), o2.push(u2), h2 < d2.length && o2.push(new n(d2.slice(h2), Object.assign({}, a3.attributes)));
             }
             l2 = r3;
           }
-          const a2 = this.mergePieces(s2);
+          const a2 = this.mergePieces(o2);
           this.blocks[r2].pieces = a2, this.emit("documentChanged", this);
         }
         toggleOrderedList(t2, e2 = "") {
@@ -298,45 +297,45 @@ var require_dist = __commonJS({
           this.emit("documentChanged", this);
         }
         undo() {
-          console.log("undo"), this.undoRedoManager.undo();
+          this.undoRedoManager.undo();
         }
         redo() {
-          this.undoRedoManager.redo(), console.log("redo");
+          this.undoRedoManager.redo();
         }
         setCursorPosition(t2, e2 = "") {
           var n2;
           if ("" !== e2) {
             const t3 = document.querySelector(`[data-id="${e2}"]`);
-            if (!t3) return void console.warn(`Element with data-id="${e2}" not found.`);
+            if (!t3) return;
             setTimeout(() => t3.focus(), 0);
           } else this.editorView.container.focus();
           const i2 = window.getSelection();
           if (!i2) return;
-          const o2 = document.createRange();
-          let s2 = 0;
+          const s2 = document.createRange();
+          let o2 = 0;
           const l2 = [this.editorView.container];
           let r2;
           const a2 = (null === (n2 = this.editorView.container.textContent) || void 0 === n2 ? void 0 : n2.length) || 0;
           if (!(t2 < 0 || t2 > a2)) {
             for (; r2 = l2.pop(); ) if (3 === r2.nodeType) {
-              const e3 = r2, n3 = s2 + e3.length;
-              if (t2 >= s2 && t2 <= n3) {
-                o2.setStart(e3, Math.min(t2 - s2, e3.length)), o2.collapse(true);
+              const e3 = r2, n3 = o2 + e3.length;
+              if (t2 >= o2 && t2 <= n3) {
+                s2.setStart(e3, Math.min(t2 - o2, e3.length)), s2.collapse(true);
                 break;
               }
-              s2 = n3;
+              o2 = n3;
             } else if ("BR" === r2.tagName) {
-              if (t2 === s2) {
-                o2.setStartBefore(r2), o2.collapse(true);
+              if (t2 === o2) {
+                s2.setStartBefore(r2), s2.collapse(true);
                 break;
               }
-              s2++;
+              o2++;
             } else {
               const t3 = r2;
               let e3 = t3.childNodes.length;
               for (; e3--; ) l2.push(t3.childNodes[e3]);
             }
-            i2.removeAllRanges(), i2.addRange(o2);
+            i2.removeAllRanges(), i2.addRange(s2);
           }
         }
         toggleBoldRange(t2, e2, n2 = "") {
@@ -364,26 +363,26 @@ var require_dist = __commonJS({
           this.formatAttribute(t2, e2, "redo", !n2);
         }
         applyFontColor(t2, e2, n2, i2 = "") {
-          t2 < e2 && (this.formatAttribute(t2, e2, "fontColor", n2), console.log("applyFontColor-color", n2, t2, e2));
+          t2 < e2 && this.formatAttribute(t2, e2, "fontColor", n2);
         }
         applyBgColor(t2, e2, n2, i2 = "") {
           t2 < e2 && this.formatAttribute(t2, e2, "bgColor", n2);
         }
         isRangeEntirelyAttribute(t2, e2, n2) {
-          let i2 = this.currentOffset, o2 = true;
+          let i2 = this.currentOffset, s2 = true;
           if ("" !== this.selectedBlockId && null !== this.selectedBlockId) {
-            const s2 = this.blocks.findIndex((t3) => t3.dataId === this.selectedBlockId);
-            if (-1 === s2) return false;
-            for (let l2 of this.blocks[s2].pieces) {
-              const s3 = i2 + l2.text.length;
-              if (s3 > t2 && i2 < e2 && !l2.attributes[n2]) {
-                o2 = false;
+            const o2 = this.blocks.findIndex((t3) => t3.dataId === this.selectedBlockId);
+            if (-1 === o2) return false;
+            for (let l2 of this.blocks[o2].pieces) {
+              const o3 = i2 + l2.text.length;
+              if (o3 > t2 && i2 < e2 && !l2.attributes[n2]) {
+                s2 = false;
                 break;
               }
-              i2 = s3;
+              i2 = o3;
             }
           }
-          return o2;
+          return s2;
         }
         mergePieces(t2) {
           let e2 = [];
@@ -396,15 +395,15 @@ var require_dist = __commonJS({
         findPieceAtOffset(t2, e2 = "") {
           let n2 = 0;
           if ("" !== e2 && null !== e2) for (let i2 of this.blocks) {
-            const o2 = i2.pieces.reduce((t3, e3) => t3 + e3.text.length, 0);
+            const s2 = i2.pieces.reduce((t3, e3) => t3 + e3.text.length, 0);
             if (i2.dataId == e2) {
               let e3 = null;
-              for (let o3 of i2.pieces) {
-                const i3 = n2, s2 = i3 + o3.text.length;
-                if (t2 >= i3 && t2 < s2) return t2 === i3 && e3 ? e3 : o3;
-                e3 = o3, n2 = s2;
+              for (let s3 of i2.pieces) {
+                const i3 = n2, o2 = i3 + s3.text.length;
+                if (t2 >= i3 && t2 < o2) return t2 === i3 && e3 ? e3 : s3;
+                e3 = s3, n2 = o2;
               }
-            } else n2 += o2;
+            } else n2 += s2;
           }
           return null;
         }
@@ -420,77 +419,76 @@ var require_dist = __commonJS({
         }
         getHtmlContent(t2 = false) {
           const e2 = document.getElementById("editor");
-          if (!e2) return void console.error("Editor container not found.");
+          if (!e2) return;
           const n2 = e2.innerHTML;
           return t2 && navigator.clipboard.writeText(n2).then(() => {
-            console.log("HTML copied to clipboard!");
-          }).catch((t3) => console.error("Failed to copy HTML:", t3)), n2;
+          }).catch((t3) => {
+          }), n2;
         }
         getCursorOffsetInParent(t2) {
           var e2;
-          console.log("textPosition -1:vicky", t2);
           const n2 = document.querySelector(t2);
           if (!n2) return null;
           const i2 = window.getSelection();
           if (!i2 || 0 === i2.rangeCount) return null;
-          const o2 = i2.getRangeAt(0);
-          if (!n2.contains(o2.startContainer)) return null;
-          let s2 = 0, l2 = null;
+          const s2 = i2.getRangeAt(0);
+          if (!n2.contains(s2.startContainer)) return null;
+          let o2 = 0, l2 = null;
           const r2 = document.createTreeWalker(n2, NodeFilter.SHOW_TEXT, null);
           let a2 = null;
           for (; r2.nextNode(); ) {
             const t3 = r2.currentNode;
-            if (console.log(t3, "textPosition - currentNode: vicky"), t3 === o2.startContainer) {
-              s2 += o2.startOffset, l2 = t3, a2 = t3.parentElement;
+            if (t3 === s2.startContainer) {
+              o2 += s2.startOffset, l2 = t3, a2 = t3.parentElement;
               break;
             }
-            s2 += (null === (e2 = t3.textContent) || void 0 === e2 ? void 0 : e2.length) || 0;
+            o2 += (null === (e2 = t3.textContent) || void 0 === e2 ? void 0 : e2.length) || 0;
           }
-          return console.log({ offset: s2, childNode: l2, innerHTML: a2.innerHTML, innerText: a2.innerText }, "textPosition - return values: vicky"), { offset: s2, childNode: l2, innerHTML: a2.innerHTML, innerText: a2.innerText };
+          return { offset: o2, childNode: l2, innerHTML: a2.innerHTML, innerText: a2.innerText };
         }
         removeExclusiveEndBlock(t2, e2) {
           if (e2.length <= 1) return;
           const n2 = t2.endContainer, i2 = t2.endOffset;
-          let o2 = false;
-          if ((n2.nodeType === Node.TEXT_NODE || n2.nodeType === Node.ELEMENT_NODE) && (o2 = 0 === i2), !o2) return;
-          const s2 = this.getDataIdFromNode(n2);
-          if (!s2) return;
-          if (s2 !== this.getDataIdFromNode(t2.startContainer) && e2.includes(s2)) {
-            const t3 = e2.lastIndexOf(s2);
+          let s2 = false;
+          if ((n2.nodeType === Node.TEXT_NODE || n2.nodeType === Node.ELEMENT_NODE) && (s2 = 0 === i2), !s2) return;
+          const o2 = this.getDataIdFromNode(n2);
+          if (!o2) return;
+          if (o2 !== this.getDataIdFromNode(t2.startContainer) && e2.includes(o2)) {
+            const t3 = e2.lastIndexOf(o2);
             t3 > -1 && e2.splice(t3, 1);
           }
         }
       }
-      function o(t2) {
+      function s(t2) {
         const e2 = window.getSelection();
         if (!e2 || 0 === e2.rangeCount) return null;
         const n2 = e2.getRangeAt(0), i2 = n2.cloneRange();
         i2.selectNodeContents(t2), i2.setEnd(n2.startContainer, n2.startOffset);
-        const o2 = i2.toString().length;
+        const s2 = i2.toString().length;
         i2.setEnd(n2.endContainer, n2.endOffset);
-        return { start: o2, end: i2.toString().length };
+        return { start: s2, end: i2.toString().length };
       }
-      function s(t2, e2) {
+      function o(t2, e2) {
         if (!e2) return;
         let n2 = 0;
         const i2 = document.createRange();
         i2.setStart(t2, 0), i2.collapse(true);
-        const o2 = [t2];
-        let s2, l2 = false, r2 = false;
-        for (; !r2 && (s2 = o2.pop()); ) if (3 === s2.nodeType) {
-          const t3 = s2, o3 = n2 + t3.length;
-          !l2 && e2.start >= n2 && e2.start <= o3 && (i2.setStart(t3, e2.start - n2), l2 = true), l2 && e2.end >= n2 && e2.end <= o3 && (i2.setEnd(t3, e2.end - n2), r2 = true), n2 = o3;
-        } else if ("BR" === s2.tagName) l2 || e2.start !== n2 || (i2.setStartBefore(s2), l2 = true), l2 && e2.end === n2 && (i2.setEndBefore(s2), r2 = true), n2++;
+        const s2 = [t2];
+        let o2, l2 = false, r2 = false;
+        for (; !r2 && (o2 = s2.pop()); ) if (3 === o2.nodeType) {
+          const t3 = o2, s3 = n2 + t3.length;
+          !l2 && e2.start >= n2 && e2.start <= s3 && (i2.setStart(t3, e2.start - n2), l2 = true), l2 && e2.end >= n2 && e2.end <= s3 && (i2.setEnd(t3, e2.end - n2), r2 = true), n2 = s3;
+        } else if ("BR" === o2.tagName) l2 || e2.start !== n2 || (i2.setStartBefore(o2), l2 = true), l2 && e2.end === n2 && (i2.setEndBefore(o2), r2 = true), n2++;
         else {
-          const t3 = s2;
+          const t3 = o2;
           let e3 = t3.childNodes.length;
-          for (; e3--; ) o2.push(t3.childNodes[e3]);
+          for (; e3--; ) s2.push(t3.childNodes[e3]);
         }
         const a2 = window.getSelection();
         a2 && (a2.removeAllRanges(), a2.addRange(i2));
       }
       function l(t2) {
-        const e2 = o(t2.container);
+        const e2 = s(t2.container);
         return e2 ? [e2.start, e2.end] : [0, 0];
       }
       const r = /((https?:\/\/|www\.)[\w\-._~:\/?#[\]@!$&'()*+,;=%]+|\b[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[\w\-._~:\/?#[\]@!$&'()*+,;=%]*)?)/g;
@@ -511,7 +509,7 @@ var require_dist = __commonJS({
           this.imageHandler = t2;
         }
         render() {
-          const t2 = o(this.container);
+          const t2 = s(this.container);
           this.container.innerHTML = "", this.document.blocks.forEach((t3) => {
             var e2;
             if ("" !== t3.dataId) {
@@ -532,7 +530,7 @@ var require_dist = __commonJS({
               });
               this.container.appendChild(n2);
             }
-          }), s(this.container, t2);
+          }), o(this.container, t2);
         }
         renderPiece(t2) {
           const e2 = t2.text.split("\n");
@@ -540,23 +538,23 @@ var require_dist = __commonJS({
         }
         wrapAttributes(t2, e2) {
           const n2 = document.createDocumentFragment();
-          return t2.forEach((i2, o2) => {
-            let s2 = document.createTextNode(i2);
+          return t2.forEach((i2, s2) => {
+            let o2 = document.createTextNode(i2);
             if (e2.strikethrough) {
               const t3 = document.createElement("s");
-              t3.appendChild(s2), s2 = t3;
+              t3.appendChild(o2), o2 = t3;
             }
             if (e2.underline) {
               const t3 = document.createElement("u");
-              t3.appendChild(s2), s2 = t3;
+              t3.appendChild(o2), o2 = t3;
             }
             if (e2.italic) {
               const t3 = document.createElement("em");
-              t3.appendChild(s2), s2 = t3;
+              t3.appendChild(o2), o2 = t3;
             }
             if (e2.bold) {
               const t3 = document.createElement("strong");
-              t3.appendChild(s2), s2 = t3;
+              t3.appendChild(o2), o2 = t3;
             }
             const l2 = document.getElementById("fontFamily"), r2 = document.getElementById("fontSize");
             let a2 = "Arial", c2 = "16px";
@@ -564,9 +562,9 @@ var require_dist = __commonJS({
             const h2 = document.createElement("span");
             if (h2.style.fontFamily = e2.fontFamily || a2, h2.style.fontSize = e2.fontSize || c2, e2.fontColor && "string" == typeof e2.fontColor && (h2.style.color = e2.fontColor), e2.bgColor && "string" == typeof e2.bgColor && (h2.style.backgroundColor = e2.bgColor), e2.hyperlink && "string" == typeof e2.hyperlink) {
               const t3 = document.createElement("a");
-              t3.href = d(e2.hyperlink), t3.appendChild(s2), s2 = t3;
+              t3.href = d(e2.hyperlink), t3.appendChild(o2), o2 = t3;
             }
-            h2.appendChild(s2), s2 = h2, n2.appendChild(s2), o2 < t2.length - 1 && n2.appendChild(document.createElement("br"));
+            h2.appendChild(o2), o2 = h2, n2.appendChild(o2), s2 < t2.length - 1 && n2.appendChild(document.createElement("br"));
           }), n2;
         }
       }
@@ -613,53 +611,53 @@ var require_dist = __commonJS({
         setUndoRedoManager(t2) {
           this.undoRedoManager = t2;
         }
-        hanldeHyperlinkClick(t2, e2, n2, i2, o2) {
-          const s2 = this.getCommonHyperlinkInRange(t2, e2, n2, i2, o2);
-          this.showHyperlinkInput(s2);
+        hanldeHyperlinkClick(t2, e2, n2, i2, s2) {
+          const o2 = this.getCommonHyperlinkInRange(t2, e2, n2, i2, s2);
+          this.showHyperlinkInput(o2);
         }
-        getCommonHyperlinkInRange(t2, e2, n2, i2, o2) {
-          let s2 = n2, l2 = 0;
-          i2 && (l2 = o2.findIndex((t3) => t3.dataId === i2));
-          const r2 = o2[l2].pieces;
+        getCommonHyperlinkInRange(t2, e2, n2, i2, s2) {
+          let o2 = n2, l2 = 0;
+          i2 && (l2 = s2.findIndex((t3) => t3.dataId === i2));
+          const r2 = s2[l2].pieces;
           let a2 = null;
           for (let n3 of r2) {
-            const i3 = s2 + n3.text.length;
-            if (i3 > t2 && s2 < e2) {
+            const i3 = o2 + n3.text.length;
+            if (i3 > t2 && o2 < e2) {
               const t3 = n3.attributes.hyperlink || null;
               if (null === a2) a2 = t3;
               else if (a2 !== t3) return null;
             }
-            s2 = i3;
+            o2 = i3;
           }
           return a2;
         }
         showHyperlinkInput(t2) {
           var e2, n2, i2;
-          const s2 = document.getElementById(u.HYPERLINK_CONTAINER_ID), l2 = document.getElementById(u.HYPERLINK_INPUT_ID), r2 = document.getElementById(u.HYPERLINK_APPLY_BTN_ID), a2 = document.getElementById(u.HYPERLINK_CANCEL_BTN_ID);
-          if (s2 && l2 && r2 && a2) {
-            s2.style.display = "block";
+          const o2 = document.getElementById(u.HYPERLINK_CONTAINER_ID), l2 = document.getElementById(u.HYPERLINK_INPUT_ID), r2 = document.getElementById(u.HYPERLINK_APPLY_BTN_ID), a2 = document.getElementById(u.HYPERLINK_CANCEL_BTN_ID);
+          if (o2 && l2 && r2 && a2) {
+            o2.style.display = "block";
             const c2 = window.getSelection();
             if (c2 && c2.rangeCount > 0) {
               const t3 = c2.getRangeAt(0);
-              let o2 = null;
-              if (t3 && "function" == typeof t3.getBoundingClientRect) o2 = t3.getBoundingClientRect();
+              let s2 = null;
+              if (t3 && "function" == typeof t3.getBoundingClientRect) s2 = t3.getBoundingClientRect();
               else if (t3 && "function" == typeof t3.getClientRects) {
                 const n3 = null === (e2 = t3.getClientRects) || void 0 === e2 ? void 0 : e2.call(t3);
-                o2 = n3 && n3.length ? n3[0] : null;
+                s2 = n3 && n3.length ? n3[0] : null;
               }
-              (!o2 || Number.isNaN(o2.top) && Number.isNaN(o2.left)) && (o2 = this.editorView.container.getBoundingClientRect());
+              (!s2 || Number.isNaN(s2.top) && Number.isNaN(s2.left)) && (s2 = this.editorView.container.getBoundingClientRect());
               const l3 = (null === window || void 0 === window ? void 0 : window.scrollY) || 0, r3 = (null === window || void 0 === window ? void 0 : window.scrollX) || 0;
-              s2.style.top = `${(null !== (n2 = o2.bottom) && void 0 !== n2 ? n2 : o2.top) + l3 + 5}px`, s2.style.left = `${(null !== (i2 = o2.left) && void 0 !== i2 ? i2 : 0) + r3}px`;
+              o2.style.top = `${(null !== (n2 = s2.bottom) && void 0 !== n2 ? n2 : s2.top) + l3 + 5}px`, o2.style.left = `${(null !== (i2 = s2.left) && void 0 !== i2 ? i2 : 0) + r3}px`;
             }
-            l2.value = t2 || "", this.savedSelection = o(this.editorView.container), this.highlightSelection(), l2.focus(), r2.onclick = null, a2.onclick = null;
+            l2.value = t2 || "", this.savedSelection = s(this.editorView.container), this.highlightSelection(), l2.focus(), r2.onclick = null, a2.onclick = null;
             const h2 = this.document.dataIds, u2 = () => {
               const t3 = d(l2.value.trim());
-              t3 && this.applyHyperlink(t3, h2), s2.style.display = "none";
+              t3 && this.applyHyperlink(t3, h2), o2.style.display = "none";
             };
             r2.onclick = u2, l2.onkeydown = (t3) => {
               "Enter" === t3.key && (t3.preventDefault(), u2());
             }, a2.onclick = () => {
-              this.removeHyperlink(h2), s2.style.display = "none";
+              this.removeHyperlink(h2), o2.style.display = "none";
             };
           }
         }
@@ -685,10 +683,10 @@ var require_dist = __commonJS({
           });
         }
         applyHyperlink(t2, e2) {
-          this.undoRedoManager.saveUndoSnapshot(), this.removeHighlightSelection(), s(this.editorView.container, this.savedSelection);
+          this.undoRedoManager.saveUndoSnapshot(), this.removeHighlightSelection(), o(this.editorView.container, this.savedSelection);
           const [n2, i2] = l(this.editorView);
           if (n2 < i2) {
-            const o2 = d(t2);
+            const s2 = d(t2);
             e2.length > 1 ? this.document.blocks.forEach((t3) => {
               if (e2.includes(t3.dataId)) {
                 this.document.selectedBlockId = t3.dataId;
@@ -697,16 +695,16 @@ var require_dist = __commonJS({
                   e3 += t4.text.length;
                 });
                 let i3 = n2 - e3;
-                this.document.formatAttribute(i3, e3, "hyperlink", o2);
+                this.document.formatAttribute(i3, e3, "hyperlink", s2);
               }
-            }) : this.document.formatAttribute(n2, i2, "hyperlink", o2), this.editorView.render();
-            const s2 = window.getSelection();
-            s2 && s2.removeAllRanges(), this.editorView.container.focus();
+            }) : this.document.formatAttribute(n2, i2, "hyperlink", s2), this.editorView.render();
+            const o2 = window.getSelection();
+            o2 && o2.removeAllRanges(), this.editorView.container.focus();
           }
           this.savedSelection = null;
         }
         removeHyperlink(t2) {
-          this.undoRedoManager.saveUndoSnapshot(), this.removeHighlightSelection(), s(this.editorView.container, this.savedSelection);
+          this.undoRedoManager.saveUndoSnapshot(), this.removeHighlightSelection(), o(this.editorView.container, this.savedSelection);
           const [e2, n2] = l(this.editorView);
           e2 < n2 && (t2.length > 1 ? this.document.blocks.forEach((n3) => {
             if (t2.includes(n3.dataId)) {
@@ -718,7 +716,7 @@ var require_dist = __commonJS({
               let i2 = e2 - t3;
               this.document.formatAttribute(i2, t3, "hyperlink", false);
             }
-          }) : this.document.formatAttribute(e2, n2, "hyperlink", false), this.editorView.render(), s(this.editorView.container, this.savedSelection), this.editorView.container.focus()), this.savedSelection = null;
+          }) : this.document.formatAttribute(e2, n2, "hyperlink", false), this.editorView.render(), o(this.editorView.container, this.savedSelection), this.editorView.container.focus()), this.savedSelection = null;
         }
         addClickOutsideListener(t2) {
           this.removeClickOutsideListener(), this.clickOutsideHandler = (e2) => {
@@ -732,25 +730,25 @@ var require_dist = __commonJS({
         }
         showHyperlinkViewButton(t2) {
           var e2, n2, i2;
-          const o2 = document.getElementById(u.VIEW_HYPERLINK_CONTAINER_ID), s2 = document.getElementById(u.VIEW_HYPERLINK_ANCHOR_ID);
-          if (o2 && s2) {
-            o2.style.display = "block";
+          const s2 = document.getElementById(u.VIEW_HYPERLINK_CONTAINER_ID), o2 = document.getElementById(u.VIEW_HYPERLINK_ANCHOR_ID);
+          if (s2 && o2) {
+            s2.style.display = "block";
             const l2 = window.getSelection();
             if (l2 && l2.rangeCount > 0) {
               const t3 = l2.getRangeAt(0);
-              let s3 = null;
-              if (t3 && "function" == typeof t3.getBoundingClientRect) s3 = t3.getBoundingClientRect();
+              let o3 = null;
+              if (t3 && "function" == typeof t3.getBoundingClientRect) o3 = t3.getBoundingClientRect();
               else if (t3 && "function" == typeof t3.getClientRects) {
                 const n3 = null === (e2 = t3.getClientRects) || void 0 === e2 ? void 0 : e2.call(t3);
-                s3 = n3 && n3.length ? n3[0] : null;
+                o3 = n3 && n3.length ? n3[0] : null;
               }
-              s3 || (s3 = this.editorView.container.getBoundingClientRect());
+              o3 || (o3 = this.editorView.container.getBoundingClientRect());
               const r2 = (null === window || void 0 === window ? void 0 : window.scrollY) || 0, a2 = (null === window || void 0 === window ? void 0 : window.scrollX) || 0;
-              s3 && (o2.style.top = `${(null !== (n2 = s3.bottom) && void 0 !== n2 ? n2 : s3.top) + r2 + 5}px`, o2.style.left = `${(null !== (i2 = s3.left) && void 0 !== i2 ? i2 : 0) + a2}px`);
+              o3 && (s2.style.top = `${(null !== (n2 = o3.bottom) && void 0 !== n2 ? n2 : o3.top) + r2 + 5}px`, s2.style.left = `${(null !== (i2 = o3.left) && void 0 !== i2 ? i2 : 0) + a2}px`);
             }
-            t2 && (s2.innerText = t2, s2.href = d(t2));
+            t2 && (o2.innerText = t2, o2.href = d(t2));
           }
-          this.addClickOutsideListener(o2);
+          this.addClickOutsideListener(s2);
         }
         hideHyperlinkViewButton() {
           const t2 = document.getElementById(u.VIEW_HYPERLINK_CONTAINER_ID);
@@ -762,20 +760,20 @@ var require_dist = __commonJS({
       }
       function m(t2, e2) {
         let i2 = Object.assign({}, e2);
-        const o2 = [];
+        const s2 = [];
         if (t2 instanceof HTMLElement) {
           if ("A" === t2.tagName) {
             const e3 = t2.getAttribute("href");
             e3 && (i2.hyperlink = e3);
           }
           "STRONG" !== t2.tagName && "B" !== t2.tagName || (i2.bold = true), "EM" !== t2.tagName && "I" !== t2.tagName || (i2.italic = true), "U" === t2.tagName && (i2.underline = true), t2.childNodes.forEach((t3) => {
-            o2.push(...m(t3, i2));
+            s2.push(...m(t3, i2));
           });
         } else if (t2 instanceof Text) {
           const e3 = t2.nodeValue || "";
-          "" !== e3.trim() && o2.push(new n(e3, Object.assign({}, i2)));
+          "" !== e3.trim() && s2.push(new n(e3, Object.assign({}, i2)));
         }
-        return o2;
+        return s2;
       }
       const f = { bold: '<svg \n                xmlns="http://www.w3.org/2000/svg" \n                width="18" \n                height="18" \n                viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;">\n                <title>Bold</title>\n                <path d="M17.061 11.22A4.46 4.46 0 0 0 18 8.5C18 6.019 15.981 4 13.5 4H6v15h8c2.481 0 4.5-2.019 4.5-4.5a4.48 4.48 0 0 0-1.439-3.28zM13.5 7c.827 0 1.5.673 1.5 1.5s-.673 1.5-1.5 1.5H9V7h4.5zm.5 9H9v-3h5c.827 0 1.5.673 1.5 1.5S14.827 16 14 16z"></path>\n            </svg>', italic: '<svg \n                xmlns="http://www.w3.org/2000/svg" \n                width="18" \n                height="18" \n                viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;">\n                <title>Italic</title>\n                <path d="M19 7V4H9v3h2.868L9.012 17H5v3h10v-3h-2.868l2.856-10z"></path>\n            </svg>', underline: '<svg \n                    xmlns="http://www.w3.org/2000/svg" \n                    width="18" height="18" \n                    viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;">\n                    <title>Underline</title>\n                    <path d="M5 18h14v2H5zM6 4v6c0 3.309 2.691 6 6 6s6-2.691 6-6V4h-2v6c0 2.206-1.794 4-4 4s-4-1.794-4-4V4H6z"></path>\n                </svg>', strikethrough: '<svg \n        xmlns="http://www.w3.org/2000/svg" \n        width="18" \n        height="18" \n        viewBox="0 0 24 24" \n        style="fill: rgba(0, 0, 0, 1);">\n        <title>Strikethrough</title>\n        <path d="M5 12.5h14v-1H5v1zm7-7c-2.21 0-4 1.79-4 4h2a2 2 0 1 1 4 0c0 1.1-.9 2-2 2h-1v2h1a4 4 0 0 0 0-8zm0 14c2.21 0 4-1.79 4-4h-2a2 2 0 1 1-4 0c0-1.1.9-2 2-2h1v-2h-1a4 4 0 0 0 0 8z"/>\n    </svg>', subscript: '<svg \n                xmlns="http://www.w3.org/2000/svg" \n                    width="18" height="18" \n                    viewBox="0 0 24 24">\n                    <title>Subscript</title>\n                    <path fill="currentColor" d="M19 20v-3h3v-1h-3v-1h4v3h-3v1h3v1zM5.875 18l4.625-7.275L6.2 4h2.65l3.1 5h.1l3.075-5H17.8l-4.325 6.725L18.125 18H15.45l-3.4-5.425h-.1L8.55 18z"/>\n                </svg>', superscript: '<svg \n                    xmlns="http://www.w3.org/2000/svg" \n                    width="18" \n                    height="18" \n                    viewBox="0 0 24 24">\n                    <title>Superscript</title>\n                    <path fill="currentColor" d="M19 9V6h3V5h-3V4h4v3h-3v1h3v1zM5.875 20l4.625-7.275L6.2 6h2.65l3.1 5h.1l3.075-5H17.8l-4.325 6.725L18.125 20H15.45l-3.4-5.425h-.1L8.55 20z"/>\n                </svg>', left_align: '<svg \n                    xmlns="http://www.w3.org/2000/svg" \n                    width="18" \n                    height="18" \n                    viewBox="0 0 24 24">\n                    <title>Left Align</title>\n                    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1.5" d="M4.5 12h8m-8 6.25h15m-15-12.5h15"/>\n                </svg>', center_align: '<svg \n                    xmlns="http://www.w3.org/2000/svg" \n                    width="18" \n                    height="18" \n                    viewBox="0 0 24 24">\n                    <title>Center Align</title><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M8 12h8M6 18h12"/>\n                </svg>', right_align: '<svg \n                    xmlns="http://www.w3.org/2000/svg" \n                    width="18" \n                    height="18" \n                    viewBox="0 0 24 24">\n                    <title>Right Align</title><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1.5" d="M19.5 12h-8m8-6.25h-15m15 12.5h-15"/></svg>', justify: '<svg \n                xmlns="http://www.w3.org/2000/svg" \n                width="18" \n                height="18" \n                viewBox="0 0 20 20">\n                <title>Justify</title><path fill="currentColor" d="M2 4.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.25m0 5a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 9.25m.75 4.25a.75.75 0 0 0 0 1.5h14.5a.75.75 0 0 0 0-1.5z"/>\n            </svg>', bullet_list: '<svg \n                    xmlns="http://www.w3.org/2000/svg" \n                    width="18" \n                    height="18" \n                    viewBox="0 0 16 16">\n                    <title>Bullet List</title><path fill="currentColor" d="M2 4.5a1 1 0 1 0 0-2a1 1 0 0 0 0 2M2 9a1 1 0 1 0 0-2a1 1 0 0 0 0 2m1 3.5a1 1 0 1 1-2 0a1 1 0 0 1 2 0M5.5 3a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zM5 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 5 8m.5 4a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1z"/></svg>', numbered_list: '<svg \n                    xmlns="http://www.w3.org/2000/svg" \n                    width="18" \n                    height="18" \n                    viewBox="0 0 512 512">\n                    <title>Numbererd List</title>\n                    <path fill="currentColor" d="M184 80h288v32H184zm0 160h288v32H184zm0 160h288v32H184zm-64-240V40H56v32h32v88zM56 262.111V312h80v-32H91.777L136 257.889V192H56v32h48v14.111zM56 440v32h80V344H56v32h48v16H80v32h24v16z"/>\n                </svg>', insert_table: '<svg \n                    xmlns="http://www.w3.org/2000/svg" \n                    width="18" \n                    height="18" \n                    viewBox="0 0 20 20">\n                    <title>Insert Table</title>\n                    <path fill="currentColor" d="M1.364 5.138v12.02h17.272V5.138zM.909 1.5h18.182c.502 0 .909.4.909.895v15.21a.9.9 0 0 1-.91.895H.91c-.503 0-.91-.4-.91-.895V2.395C0 1.9.407 1.5.91 1.5m5.227 1.759c0-.37.306-.671.682-.671s.682.3.682.671v13.899c0 .37-.305.67-.682.67a.676.676 0 0 1-.682-.67zm6.96-.64c.377 0 .682.3.682.67v4.995h4.91c.377 0 .683.301.683.672c0 .37-.306.671-.682.671l-4.911-.001v3.062h5.002c.377 0 .682.3.682.671c0 .37-.305.671-.682.671h-5.002v3.158a.676.676 0 0 1-.682.671a.676.676 0 0 1-.681-.67l-.001-3.159H1.001a.676.676 0 0 1-.682-.67c0-.371.305-.672.682-.672h11.413V9.626L.909 9.627a.676.676 0 0 1-.682-.671c0-.37.306-.671.682-.671l11.505-.001V3.289c0-.37.306-.67.682-.67"/>\n                </svg>', insert_layout: '<svg \n                    xmlns="http://www.w3.org/2000/svg" \n                    width="18" \n                    height="18" \n                    viewBox="0 0 256 256">\n                    <title>Insert Layout</title>\n                    <path fill="currentColor" d="M216 42H40a14 14 0 0 0-14 14v144a14 14 0 0 0 14 14h176a14 14 0 0 0 14-14V56a14 14 0 0 0-14-14M40 54h176a2 2 0 0 1 2 2v42H38V56a2 2 0 0 1 2-2m-2 146v-90h60v92H40a2 2 0 0 1-2-2m178 2H110v-92h108v90a2 2 0 0 1-2 2"/>\n                </svg>', heading: '<svg \n                xmlns="http://www.w3.org/2000/svg" \n                width="18" \n                height="18" \n                viewBox="0 0 24 24">\n                <title>Heading</title>\n                <path fill="currentColor" d="M17 11V4h2v17h-2v-8H7v8H5V4h2v7z"/>\n            </svg>', hyperlink: '<svg \n                xmlns="http://www.w3.org/2000/svg" \n                width="18" \n                height="18" \n                viewBox="0 0 24 24">\n                <title>Hyperlink</title>\n                <path fill="currentColor" d="M14.78 3.653a3.936 3.936 0 1 1 5.567 5.567l-3.627 3.627a3.936 3.936 0 0 1-5.88-.353a.75.75 0 0 0-1.18.928a5.436 5.436 0 0 0 8.12.486l3.628-3.628a5.436 5.436 0 1 0-7.688-7.688l-3 3a.75.75 0 0 0 1.06 1.061z"/>\n                <path fill="currentColor" d="M7.28 11.153a3.936 3.936 0 0 1 5.88.353a.75.75 0 0 0 1.18-.928a5.436 5.436 0 0 0-8.12-.486L2.592 13.72a5.436 5.436 0 1 0 7.688 7.688l3-3a.75.75 0 1 0-1.06-1.06l-3 3a3.936 3.936 0 0 1-5.567-5.568z"/>\n            </svg>', image: '<svg \n            xmlns="http://www.w3.org/2000/svg" \n            width="18" \n            height="18" \n            viewBox="0 0 16 16">\n            <title>Insert Image</title>\n            <path fill="currentColor" d="M6 5a2 2 0 1 1-4 0a2 2 0 0 1 4 0m9-4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm-3.448 6.134l-3.76 2.769a.5.5 0 0 1-.436.077l-.087-.034l-1.713-.87L1 11.8V14h14V9.751zM15 2H1v8.635l4.28-2.558a.5.5 0 0 1 .389-.054l.094.037l1.684.855l3.813-2.807a.5.5 0 0 1 .52-.045l.079.05L15 8.495z"/>\n        </svg>' }, b = { dropdowns: ["fontFamily", "fontSize"], colors: ["fontColor", "bgColor"], formatting: ["bold", "italic", "underline", "strikethrough"], alignment: ["alignLeft", "alignCenter", "alignRight"], lists: ["unorderedList", "orderedList"], media: ["hyperlink", "image"], utility: ["getHtmlContent", "loadHtmlContent"] };
       function y() {
@@ -783,7 +781,7 @@ var require_dist = __commonJS({
         return t2.className = "toolbar-separator", t2;
       }
       function k(t2, e2) {
-        const n2 = u.EDITOR_ID, i2 = u.TOOLBAR_ID, o2 = u.POPUP_TOOLBAR_ID, s2 = ["Arial", "Times New Roman", "Courier New", "Verdana"], l2 = ["12px", "14px", "16px", "18px", "20px"], r2 = document.getElementById(t2);
+        const n2 = u.EDITOR_ID, i2 = u.TOOLBAR_ID, s2 = u.POPUP_TOOLBAR_ID, o2 = ["Arial", "Times New Roman", "Courier New", "Verdana"], l2 = ["12px", "14px", "16px", "18px", "20px"], r2 = document.getElementById(t2);
         if (!r2) throw new Error(u.EDITOR_ELEMENT_NT_FOUND);
         r2.classList.add("editor-container");
         const a2 = document.createElement("div");
@@ -797,7 +795,7 @@ var require_dist = __commonJS({
             e4.value = t4, e4.textContent = t4, n3.appendChild(e4);
           }), n3;
         }, m2 = document.createElement("div");
-        m2.id = o2, m2.className = u.POPUP_TOOLBAR_CLASSNAME, m2.style.display = "none", r2.appendChild(m2), e2.popupFeatures && e2.popupFeatures.forEach((t3, e3) => {
+        m2.id = s2, m2.className = u.POPUP_TOOLBAR_CLASSNAME, m2.style.display = "none", r2.appendChild(m2), e2.popupFeatures && e2.popupFeatures.forEach((t3, e3) => {
           e3 > 0 && "hyperlink" === t3 && m2.appendChild(y());
           const n3 = p2.find((e4) => e4.feature === t3) || { icon: c2[t3] || t3 }, i3 = document.createElement("button");
           i3.dataset.action = t3, i3.innerHTML = n3.icon, i3.dataset.tooltip = h2[t3] || t3.split("_").map((t4) => t4.charAt(0).toUpperCase() + t4.slice(1)).join(" "), m2.appendChild(i3);
@@ -809,7 +807,7 @@ var require_dist = __commonJS({
             return null;
           })(t3);
           if (e3 > 0 && n3 && k2 && n3 !== k2 && a2.appendChild(y()), k2 = n3, "fontFamily" === t3) {
-            const t4 = g2(u.FONT_FAMILY_SELECT_ID, s2);
+            const t4 = g2(u.FONT_FAMILY_SELECT_ID, o2);
             a2.appendChild(t4);
           } else if ("fontSize" === t3) {
             const t4 = g2(u.FONT_SIZE_SELECT_ID, l2);
@@ -824,8 +822,8 @@ var require_dist = __commonJS({
             n4.id = u.FONT_COLOR_PICKER_WRAPPER_ID, n4.style.display = "none", n4.style.position = "absolute", n4.style.top = "100%", n4.style.left = "0", n4.style.marginTop = "4px", n4.style.zIndex = "1000", n4.style.backgroundColor = "#ffffff", n4.style.border = "1px solid #d1d1d1", n4.style.borderRadius = "4px", n4.style.padding = "8px", n4.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)", n4.style.width = "135px";
             const i3 = document.createElement("input");
             i3.type = "color", i3.id = u.FONT_COLOR_PICKER_ID, i3.setAttribute("data-action", "fontColor"), i3.style.width = "100%", i3.style.height = "32px", i3.style.border = "1px solid #d1d1d1", i3.style.borderRadius = "4px", i3.style.cursor = "pointer", i3.style.marginBottom = "8px", i3.value = "#000000", n4.appendChild(i3);
-            const o3 = document.createElement("button");
-            o3.id = u.FONT_COLOR_RESET_ID, o3.type = "button", o3.textContent = "Reset", o3.style.display = "block", o3.style.width = "100%", o3.style.padding = "6px 12px", o3.style.fontSize = "12px", o3.style.border = "1px solid #000000", o3.style.borderRadius = "4px", o3.style.backgroundColor = "#f8f8f8", o3.style.cursor = "pointer", o3.style.transition = "background-color 0.2s", o3.onmouseenter = () => o3.style.backgroundColor = "#e8e8e8", o3.onmouseleave = () => o3.style.backgroundColor = "#f8f8f8", n4.appendChild(o3), t4.appendChild(n4), a2.appendChild(t4);
+            const s3 = document.createElement("button");
+            s3.id = u.FONT_COLOR_RESET_ID, s3.type = "button", s3.textContent = "Reset", s3.style.display = "block", s3.style.width = "100%", s3.style.padding = "6px 12px", s3.style.fontSize = "12px", s3.style.border = "1px solid #000000", s3.style.borderRadius = "4px", s3.style.backgroundColor = "#f8f8f8", s3.style.cursor = "pointer", s3.style.transition = "background-color 0.2s", s3.onmouseenter = () => s3.style.backgroundColor = "#e8e8e8", s3.onmouseleave = () => s3.style.backgroundColor = "#f8f8f8", n4.appendChild(s3), t4.appendChild(n4), a2.appendChild(t4);
           } else if ("bgColor" === t3) {
             if (document.getElementById(u.BG_COLOR_WRAPPER_ID)) return;
             const t4 = document.createElement("span");
@@ -836,8 +834,8 @@ var require_dist = __commonJS({
             n4.id = u.BG_COLOR_PICKER_WRAPPER_ID, n4.style.display = "none", n4.style.position = "absolute", n4.style.top = "100%", n4.style.left = "0", n4.style.marginTop = "4px", n4.style.zIndex = "1000", n4.style.backgroundColor = "#ffffff", n4.style.border = "1px solid #000000", n4.style.borderRadius = "4px", n4.style.padding = "8px", n4.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)", n4.style.width = "135px";
             const i3 = document.createElement("input");
             i3.setAttribute("data-action", "bgColor"), i3.type = "color", i3.id = u.BG_COLOR_PICKER_ID, i3.style.width = "100%", i3.style.height = "32px", i3.style.border = "1px solid #000000ff", i3.style.borderRadius = "4px", i3.style.cursor = "pointer", i3.style.marginBottom = "8px", i3.value = "#ffffff", n4.appendChild(i3);
-            const o3 = document.createElement("button");
-            o3.id = u.BG_COLOR_RESET_ID, o3.type = "button", o3.textContent = "Reset", o3.style.display = "block", o3.style.width = "100%", o3.style.padding = "6px 12px", o3.style.fontSize = "12px", o3.style.border = "1px solid #d1d1d1", o3.style.borderRadius = "4px", o3.style.backgroundColor = "#f8f8f8", o3.style.cursor = "pointer", o3.style.transition = "background-color 0.2s", o3.onmouseenter = () => o3.style.backgroundColor = "#e8e8e8", o3.onmouseleave = () => o3.style.backgroundColor = "#f8f8f8", n4.appendChild(o3), t4.appendChild(n4), a2.appendChild(t4);
+            const s3 = document.createElement("button");
+            s3.id = u.BG_COLOR_RESET_ID, s3.type = "button", s3.textContent = "Reset", s3.style.display = "block", s3.style.width = "100%", s3.style.padding = "6px 12px", s3.style.fontSize = "12px", s3.style.border = "1px solid #d1d1d1", s3.style.borderRadius = "4px", s3.style.backgroundColor = "#f8f8f8", s3.style.cursor = "pointer", s3.style.transition = "background-color 0.2s", s3.onmouseenter = () => s3.style.backgroundColor = "#e8e8e8", s3.onmouseleave = () => s3.style.backgroundColor = "#f8f8f8", n4.appendChild(s3), t4.appendChild(n4), a2.appendChild(t4);
           } else if ("getHtmlContent" === t3) {
             const t4 = document.createElement("button");
             t4.id = u.GET_HTML_BUTTON_ID, t4.type = "button", t4.textContent = "Get HTML", t4.dataset.tooltip = h2.getHtmlContent, a2.appendChild(t4);
@@ -865,7 +863,7 @@ var require_dist = __commonJS({
         const x2 = document.createElement("span");
         x2.id = u.VIEW_HYPERLINK_LABEL_ID, x2.innerHTML = "Visit URL : ";
         const A = document.createElement("a");
-        return A.id = u.VIEW_HYPERLINK_ANCHOR_ID, A.href = "", A.target = "_blank", w2.appendChild(x2), w2.appendChild(A), a2.appendChild(w2), { mainEditorId: n2, toolbarId: i2, popupToolbarId: o2 };
+        return A.id = u.VIEW_HYPERLINK_ANCHOR_ID, A.href = "", A.target = "_blank", w2.appendChild(x2), w2.appendChild(A), a2.appendChild(w2), { mainEditorId: n2, toolbarId: i2, popupToolbarId: s2 };
       }
       class I {
         constructor(t2) {
@@ -876,15 +874,15 @@ var require_dist = __commonJS({
           let e2 = [];
           return Array.from(t2).forEach((t3, n2) => {
             const i2 = this.parseElement(t3);
-            console.log(t3, "element parse", n2, i2), e2.push(i2);
-          }), console.log(e2, "element--jsondata"), e2;
+            e2.push(i2);
+          }), e2;
         }
         parseElement(t2) {
           const e2 = t2.getAttribute("data-id") || "", n2 = t2.className || "paragraph-block", i2 = t2.style.textAlign || "left";
-          let o2 = null, s2 = null;
-          "UL" === t2.tagName ? o2 = "ul" : "OL" === t2.tagName && (o2 = "ol", s2 = parseInt(t2.getAttribute("start") || "1", 10));
+          let s2 = null, o2 = null;
+          "UL" === t2.tagName ? s2 = "ul" : "OL" === t2.tagName && (s2 = "ol", o2 = parseInt(t2.getAttribute("start") || "1", 10));
           let l2 = [];
-          return o2 ? this.parseListItems(t2, l2) : this.parseParagraphText(t2, l2), Object.assign(Object.assign(Object.assign({ dataId: e2, class: n2, alignment: i2, pieces: l2 }, o2 ? { listType: o2 } : {}), null !== s2 ? { listStart: s2 } : {}), {});
+          return s2 ? this.parseListItems(t2, l2) : this.parseParagraphText(t2, l2), Object.assign(Object.assign(Object.assign({ dataId: e2, class: n2, alignment: i2, pieces: l2 }, s2 ? { listType: s2 } : {}), null !== o2 ? { listStart: o2 } : {}), {});
         }
         parseListItems(t2, e2) {
           t2.querySelectorAll("li").forEach((t3) => {
@@ -893,21 +891,21 @@ var require_dist = __commonJS({
           });
         }
         parseParagraphText(t2, e2) {
-          const i2 = t2.querySelectorAll("span"), o2 = /* @__PURE__ */ new Map();
+          const i2 = t2.querySelectorAll("span"), s2 = /* @__PURE__ */ new Map();
           i2.forEach((t3) => {
             const e3 = this.extractTextAttributes(t3);
-            if (console.log(e3, "piece parseParagraphText span", t3.textContent, t3.style.color), e3) {
-              const t4 = o2.get(e3.text);
-              t4 ? (t4.attributes.bold = t4.attributes.bold || e3.attributes.bold, t4.attributes.italic = t4.attributes.italic || e3.attributes.italic, t4.attributes.underline = t4.attributes.underline || e3.attributes.underline, t4.attributes.fontFamily = e3.attributes.fontFamily || t4.attributes.fontFamily, t4.attributes.fontSize = e3.attributes.fontSize || t4.attributes.fontSize, t4.attributes.fontColor = e3.attributes.fontColor || t4.attributes.fontColor, t4.attributes.bgColor = e3.attributes.bgColor || t4.attributes.bgColor) : o2.set(e3.text, Object.assign({}, e3));
+            if (e3) {
+              const t4 = s2.get(e3.text);
+              t4 ? (t4.attributes.bold = t4.attributes.bold || e3.attributes.bold, t4.attributes.italic = t4.attributes.italic || e3.attributes.italic, t4.attributes.underline = t4.attributes.underline || e3.attributes.underline, t4.attributes.fontFamily = e3.attributes.fontFamily || t4.attributes.fontFamily, t4.attributes.fontSize = e3.attributes.fontSize || t4.attributes.fontSize, t4.attributes.fontColor = e3.attributes.fontColor || t4.attributes.fontColor, t4.attributes.bgColor = e3.attributes.bgColor || t4.attributes.bgColor) : s2.set(e3.text, Object.assign({}, e3));
             }
-          }), o2.forEach((t3) => {
+          }), s2.forEach((t3) => {
             e2.push(new n(t3.text, t3.attributes));
-          }), console.log(e2, "pieces--parseParagraphText (merged)");
+          });
         }
         extractTextAttributes(t2) {
           var e2;
           const n2 = t2.textContent || "";
-          return n2 ? (console.log("extractTextAttributes node", t2, t2.style.color), { text: n2, attributes: { bold: null !== t2.querySelector("b, strong"), italic: null !== t2.querySelector("i, em"), underline: null !== t2.querySelector("u"), undo: false, redo: false, fontFamily: t2.style.fontFamily || "Arial", fontSize: t2.style.fontSize || "12px", hyperlink: !!t2.querySelector("a") && (null === (e2 = t2.querySelector("a")) || void 0 === e2 ? void 0 : e2.getAttribute("href")), fontColor: t2.style.color, bgColor: t2.style.backgroundColor } }) : null;
+          return n2 ? { text: n2, attributes: { bold: null !== t2.querySelector("b, strong"), italic: null !== t2.querySelector("i, em"), underline: null !== t2.querySelector("u"), undo: false, redo: false, fontFamily: t2.style.fontFamily || "Arial", fontSize: t2.style.fontSize || "12px", hyperlink: !!t2.querySelector("a") && (null === (e2 = t2.querySelector("a")) || void 0 === e2 ? void 0 : e2.getAttribute("href")), fontColor: t2.style.color, bgColor: t2.style.backgroundColor } } : null;
         }
         rgbToHex(t2, e2 = false) {
           const n2 = t2.match(/\d+/g);
@@ -960,8 +958,7 @@ var require_dist = __commonJS({
         }
         insertImageAtPosition(t2, e2, i2) {
           if (!t2 || "number" != typeof e2 || !this.editorView) return;
-          console.log(t2, e2, i2, "vicky insertImageAtPosition", this.document.blocks);
-          const o2 = `data-id-${Date.now()}-${1e3 * Math.random()}`, s2 = `data-id-${Date.now()}-${1e3 * Math.random()}`, l2 = `data-id-${Date.now()}-${1e3 * Math.random()}`, r2 = { dataId: o2, class: u.PARAGRAPH_BLOCK_CLASS, pieces: [new n(" ")], type: "image", image: t2 }, a2 = { dataId: s2, class: u.PARAGRAPH_BLOCK_CLASS, pieces: [new n(" ")], type: "text" };
+          const s2 = `data-id-${Date.now()}-${1e3 * Math.random()}`, o2 = `data-id-${Date.now()}-${1e3 * Math.random()}`, l2 = `data-id-${Date.now()}-${1e3 * Math.random()}`, r2 = { dataId: s2, class: u.PARAGRAPH_BLOCK_CLASS, pieces: [new n(" ")], type: "image", image: t2 }, a2 = { dataId: o2, class: u.PARAGRAPH_BLOCK_CLASS, pieces: [new n(" ")], type: "text" };
           let d2 = this.document.selectedBlockId;
           const c2 = this.document.blocks.findIndex((t3) => t3.dataId === this.document.selectedBlockId);
           let h2 = [];
@@ -969,33 +966,31 @@ var require_dist = __commonJS({
             const n2 = window.getSelection();
             if (!n2 || 0 === n2.rangeCount) return { remainingText: "", piece: null };
             const i3 = n2.getRangeAt(0).startContainer;
-            let o3 = "";
-            const s3 = e3.blocks.filter((e4) => {
+            let s3 = "";
+            const o3 = e3.blocks.filter((e4) => {
               if (e4.dataId === t3) return e4;
             });
-            if (!s3[0] || !s3[0].pieces) return { remainingText: "", piece: null };
+            if (!o3[0] || !o3[0].pieces) return { remainingText: "", piece: null };
             const l3 = document.querySelector(`[data-id="${t3}"]`), r3 = e3.getCursorOffsetInParent(`[data-id="${t3}"]`);
             let a3 = [], d3 = 0;
-            if (s3[0].pieces.forEach((t4, e4) => {
-              o3 += t4.text, (null == r3 ? void 0 : r3.innerText) === t4.text && (d3 = e4, a3.push(t4));
-            }), s3[0].pieces.length > 1 && s3[0].pieces.forEach((t4, e4) => {
+            if (o3[0].pieces.forEach((t4, e4) => {
+              s3 += t4.text, (null == r3 ? void 0 : r3.innerText) === t4.text && (d3 = e4, a3.push(t4));
+            }), o3[0].pieces.length > 1 && o3[0].pieces.forEach((t4, e4) => {
               d3 < e4 && a3.push(t4);
-            }), !l3) return console.error(`Element with data-id "${t3}" not found.`), { remainingText: "", piece: null };
-            if (!l3.contains(i3)) return console.error(`Cursor is not inside the element with data-id "${t3}".`), { remainingText: "", piece: null };
-            const c3 = o3, h3 = null == r3 ? void 0 : r3.offset, u2 = c3.slice(h3), p3 = c3.slice(0, h3);
+            }), !l3) return { remainingText: "", piece: null };
+            if (!l3.contains(i3)) return { remainingText: "", piece: null };
+            const c3 = s3, h3 = null == r3 ? void 0 : r3.offset, u2 = c3.slice(h3), p3 = c3.slice(0, h3);
             return l3.textContent = p3, { remainingText: u2, piece: a3 };
-          })(d2 || "", this.document);
-          console.log(d2 || "", this.document, "extractTextFromDataId-vicky", p2, g2);
-          const m2 = " " + p2;
+          })(d2 || "", this.document), m2 = " " + p2;
           let f2 = this.document.blocks;
           if (m2.length > 0) {
             const t3 = p2.split(" ");
             let e3 = [];
             "" !== t3[0] || void 0 !== t3[1] ? 1 === g2.length ? e3 = [new n(m2, g2[0].attributes)] : (e3.push(new n(" " + t3[0] + " ", g2[0].attributes)), g2.length >= 2 && g2.forEach((t4, n2) => {
               0 !== n2 && e3.push(t4);
-            })) : e3 = [new n(" ")], console.log(this.document.selectedBlockId, "uniqueId3 extractTextFromDataId-vicky", l2), f2 = (function(t4, e4, n2) {
+            })) : e3 = [new n(" ")], f2 = (function(t4, e4, n2) {
               const i3 = t4.findIndex((t5) => t5.dataId === e4);
-              return -1 === i3 ? (console.error(`Block with dataId "${e4}" not found.`), t4) : [...t4.slice(0, i3 + 1), n2, ...t4.slice(i3 + 1)];
+              return -1 === i3 ? t4 : [...t4.slice(0, i3 + 1), n2, ...t4.slice(i3 + 1)];
             })(this.document.blocks, this.document.selectedBlockId || "", { dataId: l2, class: u.PARAGRAPH_BLOCK_CLASS, pieces: e3, type: "text" });
           }
           this.document.blocks = f2, this.document.deleteRange(this.currentCursorLocation, this.currentCursorLocation + p2.length, this.document.selectedBlockId, this.document.currentOffset), this.document.blocks.length > c2 + 1 ? this.document.blocks.forEach((t3, e3) => {
@@ -1016,8 +1011,8 @@ var require_dist = __commonJS({
           if (!t2 || !e2) return document.createDocumentFragment();
           const n2 = document.createDocumentFragment(), i2 = document.createElement("img");
           i2.src = t2, i2.style.maxWidth = "30%", i2.setAttribute("contenteditable", "false"), n2.appendChild(i2);
-          const o2 = document.createElement("span");
-          return o2.setAttribute("contenteditable", "false"), o2.appendChild(n2), i2.addEventListener("click", () => this.addStyleToImage(e2)), o2;
+          const s2 = document.createElement("span");
+          return s2.setAttribute("contenteditable", "false"), s2.appendChild(n2), i2.addEventListener("click", () => this.addStyleToImage(e2)), s2;
         }
         addStyleToImage(t2) {
           if (t2 && !this.isCrossIconVisible) {
@@ -1025,10 +1020,10 @@ var require_dist = __commonJS({
             n2 && (n2.style.position = "relative");
             const i2 = null == e2 ? void 0 : e2.querySelector("img");
             i2 && (i2.style.border = "2px solid blue");
-            const o2 = document.createElement("div");
-            o2.className = u.IMAGE_CROSS_CLASS, o2.innerHTML = "x", Object.assign(o2.style, { position: "absolute", top: "0", left: "50%", transform: "translate(-50%, 0)", background: "#fff", borderRadius: "50%", width: "30px", height: "30px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", border: "3px solid blue", zIndex: "999" }), o2.addEventListener("mouseover", () => o2.style.border = "3px solid black"), o2.addEventListener("mouseout", () => o2.style.border = "3px solid blue"), o2.addEventListener("click", (t3) => {
+            const s2 = document.createElement("div");
+            s2.className = u.IMAGE_CROSS_CLASS, s2.innerHTML = "x", Object.assign(s2.style, { position: "absolute", top: "0", left: "50%", transform: "translate(-50%, 0)", background: "#fff", borderRadius: "50%", width: "30px", height: "30px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", border: "3px solid blue", zIndex: "999" }), s2.addEventListener("mouseover", () => s2.style.border = "3px solid black"), s2.addEventListener("mouseout", () => s2.style.border = "3px solid blue"), s2.addEventListener("click", (t3) => {
               t3.stopPropagation(), this.deleteImage();
-            }), null == n2 || n2.appendChild(o2), this.isImageHighlighted = true, this.highLightedImageDataId = t2, this.isCrossIconVisible = true;
+            }), null == n2 || n2.appendChild(s2), this.isImageHighlighted = true, this.highLightedImageDataId = t2, this.isCrossIconVisible = true;
           }
         }
         clearImageStyling() {
@@ -1057,12 +1052,12 @@ var require_dist = __commonJS({
           return { blocks: JSON.parse(JSON.stringify(this.document.blocks)), dataIds: [...this.document.dataIds], selectedBlockId: this.document.selectedBlockId, currentOffset: this.document.currentOffset, selection: this.getCurrentSelection(), cursorPosition: t2 };
         }
         getCurrentSelection() {
-          const t2 = o(this.document.editorView.container);
+          const t2 = s(this.document.editorView.container);
           return t2 ? { start: t2.start, end: t2.end } : { start: 0, end: 0 };
         }
         saveUndoSnapshot() {
           const t2 = this.createSnapshot();
-          console.log("Saving snapshot:", t2.cursorPosition, "Stack length:", this.snapshotUndoStack.length), this.snapshotUndoStack.push(t2), this.snapshotUndoStack.length > this.maxSnapshots && this.snapshotUndoStack.shift(), this.snapshotRedoStack = [];
+          this.snapshotUndoStack.push(t2), this.snapshotUndoStack.length > this.maxSnapshots && this.snapshotUndoStack.shift(), this.snapshotRedoStack = [];
         }
         restoreSnapshot(t2) {
           this.document.blocks = t2.blocks, this.document.dataIds = t2.dataIds, this.document._selectedBlockId = t2.selectedBlockId, this.document.currentOffset = t2.currentOffset;
@@ -1072,11 +1067,11 @@ var require_dist = __commonJS({
           }, 0);
         }
         undo() {
-          if (console.log("UNDO - Undo stack length:", this.snapshotUndoStack.length), console.log("UNDO - Redo stack length:", this.snapshotRedoStack.length), 0 === this.snapshotUndoStack.length) return;
+          if (0 === this.snapshotUndoStack.length) return;
           const t2 = this.createSnapshot();
           this.snapshotRedoStack.push(t2), this.snapshotRedoStack.length > this.maxSnapshots && this.snapshotRedoStack.shift();
           const e2 = this.snapshotUndoStack.pop();
-          e2 && (console.log("UNDO - Restoring cursor position:", e2.cursorPosition), this.restoreSnapshot(e2));
+          e2 && this.restoreSnapshot(e2);
         }
         redo() {
           if (0 === this.snapshotRedoStack.length) return;
@@ -1106,8 +1101,8 @@ var require_dist = __commonJS({
           if (0 === e2.width && 0 === e2.height) return void this.hide();
           this.container.style.display = "flex";
           const n2 = this.container.offsetWidth, i2 = this.container.offsetHeight;
-          let o2 = e2.top + window.scrollY - i2 - 8, s2 = e2.left + window.scrollX + e2.width / 2 - n2 / 2;
-          o2 < window.scrollY && (o2 = e2.bottom + window.scrollY + 8), s2 < 0 && (s2 = 5), this.container.style.top = `${o2}px`, this.container.style.left = `${s2}px`;
+          let s2 = e2.top + window.scrollY - i2 - 8, o2 = e2.left + window.scrollX + e2.width / 2 - n2 / 2;
+          s2 < window.scrollY && (s2 = e2.bottom + window.scrollY + 8), o2 < 0 && (o2 = 5), this.container.style.top = `${s2}px`, this.container.style.left = `${o2}px`;
         }
         hide() {
           this.container.style.display = "none";
@@ -1167,7 +1162,7 @@ var require_dist = __commonJS({
       }
       class x extends e {
         constructor(t2, e2) {
-          var o2, s2, l2, d2, m2, f2, b2, y2, x2, A, S, T, R;
+          var s2, o2, l2, d2, m2, f2, b2, y2, x2, A, S, T, R;
           super(), this.savedSelection = null, this.debounceTimer = null;
           const { mainEditorId: L, toolbarId: _, popupToolbarId: O } = k(t2, e2);
           this.editorContainer = document.getElementById(L) || null, this.toolbarContainer = document.getElementById(_) || null;
@@ -1183,28 +1178,27 @@ var require_dist = __commonJS({
             this.hyperlinkHandler.hideHyperlinkViewButton();
           }), document.addEventListener("mouseup", () => {
             this.syncCurrentAttributesWithCursor();
-            const t3 = this.document.getAllSelectedDataIds();
-            console.log(t3, "dataId lntgerr");
+            this.document.getAllSelectedDataIds();
           }), document.addEventListener("selectionchange", () => {
             const t3 = window.getSelection();
             t3 && !t3.isCollapsed || (this.document.dataIds = [], this.document.selectAll = false);
-          }), null === (o2 = document.getElementById("fontColor")) || void 0 === o2 || o2.addEventListener("click", (t3) => {
+          }), null === (s2 = document.getElementById("fontColor")) || void 0 === s2 || s2.addEventListener("click", (t3) => {
             t3.stopPropagation();
             const e3 = document.getElementById("colorWrapper"), n2 = document.getElementById("fontColorPicker");
             if (!e3 || !n2) return;
             const i2 = "block" === e3.style.display;
             e3.style.display = i2 ? "none" : "block";
-          }), null === (s2 = document.getElementById("fontColorPicker")) || void 0 === s2 || s2.addEventListener("input", (t3) => {
-            const e3 = t3.target.value, [n2, i2] = this.getSelectionRange(), o3 = document.getElementById("fontColorIndicator");
-            o3 && (o3.style.backgroundColor = e3), this.document.dataIds.length > 1 ? this.document.blocks.forEach((t4) => {
+          }), null === (o2 = document.getElementById("fontColorPicker")) || void 0 === o2 || o2.addEventListener("input", (t3) => {
+            const e3 = t3.target.value, [n2, i2] = this.getSelectionRange(), s3 = document.getElementById("fontColorIndicator");
+            s3 && (s3.style.backgroundColor = e3), this.document.dataIds.length > 1 ? this.document.blocks.forEach((t4) => {
               if (this.document.dataIds.includes(t4.dataId)) {
                 this.document.selectedBlockId = t4.dataId;
                 let i3 = 0;
                 t4.pieces.forEach((t5) => {
                   i3 += t5.text.length;
                 });
-                let o4 = n2 - i3;
-                this.document.applyFontColor(o4, i3, e3);
+                let s4 = n2 - i3;
+                this.document.applyFontColor(s4, i3, e3);
               }
             }) : (this.debounceTimer && clearTimeout(this.debounceTimer), this.debounceTimer = setTimeout(() => {
               this.document.applyFontColor(n2, i2, e3);
@@ -1214,8 +1208,8 @@ var require_dist = __commonJS({
             t3 && (t3.value = "#000000", e3 && (e3.style.backgroundColor = "#000000"), t3.dispatchEvent(new Event("input")));
           }), document.addEventListener("click", (t3) => {
             var e3;
-            const n2 = t3.target, i2 = document.getElementById("colorWrapper"), o3 = document.getElementById("colorBgWrapper"), s3 = document.getElementById("fontColor"), l3 = document.getElementById("bgColor");
-            !i2 || n2.closest("#colorWrapper") || n2 === s3 || (null == s3 ? void 0 : s3.contains(n2)) || (i2.style.display = "none"), !o3 || n2.closest("#colorBgWrapper") || n2 === l3 || (null == l3 ? void 0 : l3.contains(n2)) || (o3.style.display = "none"), (null === (e3 = this.editorContainer) || void 0 === e3 ? void 0 : e3.contains(n2)) || n2.closest(".hyperlink-popup") || this.hyperlinkHandler.hideHyperlinkViewButton();
+            const n2 = t3.target, i2 = document.getElementById("colorWrapper"), s3 = document.getElementById("colorBgWrapper"), o3 = document.getElementById("fontColor"), l3 = document.getElementById("bgColor");
+            !i2 || n2.closest("#colorWrapper") || n2 === o3 || (null == o3 ? void 0 : o3.contains(n2)) || (i2.style.display = "none"), !s3 || n2.closest("#colorBgWrapper") || n2 === l3 || (null == l3 ? void 0 : l3.contains(n2)) || (s3.style.display = "none"), (null === (e3 = this.editorContainer) || void 0 === e3 ? void 0 : e3.contains(n2)) || n2.closest(".hyperlink-popup") || this.hyperlinkHandler.hideHyperlinkViewButton();
           }), null === (d2 = document.getElementById("bgColor")) || void 0 === d2 || d2.addEventListener("click", (t3) => {
             t3.stopPropagation();
             const e3 = document.getElementById("colorBgWrapper"), n2 = document.getElementById("bgColorPicker");
@@ -1223,16 +1217,16 @@ var require_dist = __commonJS({
             const i2 = "block" === e3.style.display;
             e3.style.display = i2 ? "none" : "block";
           }), null === (m2 = document.getElementById("bgColorPicker")) || void 0 === m2 || m2.addEventListener("input", (t3) => {
-            const e3 = t3.target.value, [n2, i2] = this.getSelectionRange(), o3 = document.getElementById("bgColorIndicator");
-            o3 && (o3.style.backgroundColor = e3), this.document.dataIds.length > 1 ? this.document.blocks.forEach((t4) => {
+            const e3 = t3.target.value, [n2, i2] = this.getSelectionRange(), s3 = document.getElementById("bgColorIndicator");
+            s3 && (s3.style.backgroundColor = e3), this.document.dataIds.length > 1 ? this.document.blocks.forEach((t4) => {
               if (this.document.dataIds.includes(t4.dataId)) {
                 this.document.selectedBlockId = t4.dataId;
                 let i3 = 0;
                 t4.pieces.forEach((t5) => {
                   i3 += t5.text.length;
                 });
-                let o4 = n2 - i3;
-                this.document.applyBgColor(o4, i3, e3);
+                let s4 = n2 - i3;
+                this.document.applyBgColor(s4, i3, e3);
               }
             }) : (this.debounceTimer && clearTimeout(this.debounceTimer), this.debounceTimer = setTimeout(() => {
               this.document.applyBgColor(n2, i2, e3);
@@ -1242,13 +1236,13 @@ var require_dist = __commonJS({
             t3 && (t3.value = "#ffffff", e3 && (e3.style.backgroundColor = "#ffffff"), t3.dispatchEvent(new Event("input")));
           }), null === (b2 = document.getElementById("getHtmlButton")) || void 0 === b2 || b2.addEventListener("click", (t3) => {
             const e3 = this.document.getHtmlContent(true);
-            console.log("Editor HTML Content:", e3), this.htmlToJsonParser = new I(e3);
-            const n2 = this.htmlToJsonParser.parse();
-            console.log("htmltoJson", JSON.stringify(n2, null, 2), n2), this.showAcknowledgement("HTML copied to clipboard", 2e3);
+            this.htmlToJsonParser = new I(e3);
+            this.htmlToJsonParser.parse();
+            this.showAcknowledgement("HTML copied to clipboard", 2e3);
           }), null === (y2 = document.getElementById("loadHtmlButton")) || void 0 === y2 || y2.addEventListener("click", (t3) => {
             this.undoRedoManager.saveUndoSnapshot();
             const e3 = u.TEST_HTML_CODE;
-            this.htmlToJsonParser = new I(e3), console.log(this.htmlToJsonParser, "this.htmlToJsonParser");
+            this.htmlToJsonParser = new I(e3);
             const n2 = this.htmlToJsonParser.parse();
             this.document.blocks = n2, this.document.dataIds[0] = n2[0].dataId, this.document.selectedBlockId = "data-id-1734604240404", this.document.emit("documentChanged", this);
             const [i2] = this.getSelectionRange();
@@ -1262,7 +1256,7 @@ var require_dist = __commonJS({
                 let n3 = i2 - e4;
                 this.document.setFontSize(n3, e4, t4.fontSize);
               }
-            }), console.log("blocks", this.document.blocks, this.document.dataIds, this.document.currentOffset), console.log("htmltoJson", JSON.stringify(n2, null, 2), n2);
+            });
           }), null === (x2 = document.getElementById("fontFamily")) || void 0 === x2 || x2.addEventListener("change", (t3) => {
             this.undoRedoManager.saveUndoSnapshot();
             const e3 = t3.target.value, [n2, i2] = this.getSelectionRange();
@@ -1273,8 +1267,8 @@ var require_dist = __commonJS({
                 t4.pieces.forEach((t5) => {
                   i3 += t5.text.length;
                 });
-                let o3 = n2 - i3;
-                this.document.setFontFamily(o3, i3, e3);
+                let s3 = n2 - i3;
+                this.document.setFontFamily(s3, i3, e3);
               }
             }) : this.document.setFontFamily(n2, i2, e3);
           }), null === (A = document.getElementById("fontSize")) || void 0 === A || A.addEventListener("change", (t3) => {
@@ -1287,16 +1281,16 @@ var require_dist = __commonJS({
                 t4.pieces.forEach((t5) => {
                   i3 += t5.text.length;
                 });
-                let o3 = n2 - i3;
-                this.document.setFontSize(o3, i3, e3);
+                let s3 = n2 - i3;
+                this.document.setFontSize(s3, i3, e3);
               }
             }) : this.document.setFontSize(n2, i2, e3);
           }), null === (S = document.getElementById("alignLeft")) || void 0 === S || S.addEventListener("click", () => {
-            console.log("alignment alignLeft", this.document.dataIds), this.document.dataIds.forEach((t3) => this.document.setAlignment("left", t3));
+            this.document.dataIds.forEach((t3) => this.document.setAlignment("left", t3));
           }), null === (T = document.getElementById("alignCenter")) || void 0 === T || T.addEventListener("click", () => {
-            console.log("alignment alignCenter", this.document.dataIds), this.document.dataIds.forEach((t3) => this.document.setAlignment("center", t3));
+            this.document.dataIds.forEach((t3) => this.document.setAlignment("center", t3));
           }), null === (R = document.getElementById("alignRight")) || void 0 === R || R.addEventListener("click", () => {
-            console.log("alignment alignRight", this.document.dataIds), this.document.dataIds.forEach((t3) => this.document.setAlignment("right", t3));
+            this.document.dataIds.forEach((t3) => this.document.setAlignment("right", t3));
           }), this.editorContainer.addEventListener("keydown", (t3) => {
             if ((t3.ctrlKey || t3.metaKey) && !t3.altKey) {
               const e3 = t3.key.toLowerCase();
@@ -1319,8 +1313,8 @@ var require_dist = __commonJS({
                 this.handleToolbarAction(n2);
               }
               if ("z" === e3 ? (t3.preventDefault(), this.undoRedoManager.undo()) : "y" === e3 && (t3.preventDefault(), this.undoRedoManager.redo()), "a" === e3) {
-                const t4 = this.document.handleCtrlASelection();
-                this.document.selectAll = true, console.log("Selected text is inside element with data-id:", t4);
+                this.document.handleCtrlASelection();
+                this.document.selectAll = true;
               }
               "l" === t3.key ? (t3.preventDefault(), this.document.setAlignment("left", this.document.selectedBlockId)) : "e" === t3.key ? (t3.preventDefault(), this.document.setAlignment("center", this.document.selectedBlockId)) : "r" === t3.key && (t3.preventDefault(), this.document.setAlignment("right", this.document.selectedBlockId));
             }
@@ -1336,28 +1330,28 @@ var require_dist = __commonJS({
           }), this.document.emit("documentChanged", this.document), this.editorContainer.addEventListener("paste", (t3) => {
             var e3, i2;
             this.undoRedoManager.saveUndoSnapshot(), t3.preventDefault();
-            const o3 = null === (e3 = t3.clipboardData) || void 0 === e3 ? void 0 : e3.getData("text/html"), [s3, l3] = this.getSelectionRange();
-            l3 > s3 && this.document.deleteRange(s3, l3, this.document.selectedBlockId, this.document.currentOffset);
+            const s3 = null === (e3 = t3.clipboardData) || void 0 === e3 ? void 0 : e3.getData("text/html"), [o3, l3] = this.getSelectionRange();
+            l3 > o3 && this.document.deleteRange(o3, l3, this.document.selectedBlockId, this.document.currentOffset);
             let d3 = [];
-            if (o3) d3 = g(o3);
+            if (s3) d3 = g(s3);
             else {
               const e4 = (function(t4) {
                 const e5 = [];
                 let n2, i3 = 0;
                 for (; null !== (n2 = r.exec(t4)); ) {
-                  const o4 = n2.index;
-                  let s4 = n2[0], l4 = "";
-                  const r2 = s4.match(/[.,!?;:)\]\}"']+$/);
-                  if (r2 && (l4 = r2[0], s4 = s4.slice(0, -l4.length)), a(t4, o4)) continue;
-                  o4 > i3 && e5.push({ text: t4.substring(i3, o4), isUrl: false });
-                  let d4 = s4;
-                  d4.startsWith("http") || (d4 = "https://" + d4), e5.push({ text: s4, isUrl: true, url: d4 }), l4 && e5.push({ text: l4, isUrl: false }), i3 = o4 + n2[0].length;
+                  const s4 = n2.index;
+                  let o4 = n2[0], l4 = "";
+                  const r2 = o4.match(/[.,!?;:)\]\}"']+$/);
+                  if (r2 && (l4 = r2[0], o4 = o4.slice(0, -l4.length)), a(t4, s4)) continue;
+                  s4 > i3 && e5.push({ text: t4.substring(i3, s4), isUrl: false });
+                  let d4 = o4;
+                  d4.startsWith("http") || (d4 = "https://" + d4), e5.push({ text: o4, isUrl: true, url: d4 }), l4 && e5.push({ text: l4, isUrl: false }), i3 = s4 + n2[0].length;
                 }
                 return i3 < t4.length && e5.push({ text: t4.substring(i3), isUrl: false }), e5;
               })((null === (i2 = t3.clipboardData) || void 0 === i2 ? void 0 : i2.getData("text/plain")) || "");
               d3 = e4.map((t4) => t4.isUrl && t4.url ? new n(t4.text, Object.assign(Object.assign({}, this.currentAttributes), { hyperlink: t4.url })) : new n(t4.text, Object.assign({}, this.currentAttributes)));
             }
-            let c2 = s3;
+            let c2 = o3;
             for (const t4 of d3) this.document.insertAt(t4.text, Object.assign({}, t4.attributes), c2, this.document.selectedBlockId, 0, "", "batch"), c2 += t4.text.length;
             this.setCursorPosition(c2);
           }), this.editorContainer.addEventListener("dragover", (t3) => {
@@ -1365,21 +1359,21 @@ var require_dist = __commonJS({
           }), this.editorContainer.addEventListener("drop", (t3) => {
             var e3, i2;
             t3.preventDefault(), this.undoRedoManager.saveUndoSnapshot();
-            const o3 = null === (e3 = t3.dataTransfer) || void 0 === e3 ? void 0 : e3.getData("text/html"), [s3, l3] = this.getSelectionRange();
-            l3 > s3 && this.document.deleteRange(s3, l3, this.document.selectedBlockId, this.document.currentOffset);
+            const s3 = null === (e3 = t3.dataTransfer) || void 0 === e3 ? void 0 : e3.getData("text/html"), [o3, l3] = this.getSelectionRange();
+            l3 > o3 && this.document.deleteRange(o3, l3, this.document.selectedBlockId, this.document.currentOffset);
             let r2 = [];
-            if (o3) r2 = g(o3);
+            if (s3) r2 = g(s3);
             else {
               const e4 = (null === (i2 = t3.dataTransfer) || void 0 === i2 ? void 0 : i2.getData("text/plain")) || "";
               r2 = [new n(e4, Object.assign({}, this.currentAttributes))];
             }
-            let a2 = s3;
+            let a2 = o3;
             for (const t4 of r2) this.document.insertAt(t4.text, Object.assign({}, t4.attributes), a2, this.document.selectedBlockId, 0, "", "batch"), a2 += t4.text.length;
             this.setCursorPosition(a2);
           });
         }
         getSelectionRange() {
-          const t2 = o(this.editorView.container);
+          const t2 = s(this.editorView.container);
           return t2 ? [t2.start, t2.end] : [0, 0];
         }
         applyFontColor(t2) {
@@ -1474,32 +1468,32 @@ var require_dist = __commonJS({
           const [i2] = this.getSelectionRange();
           if (this.imageHandler.currentCursorLocation = i2, n2.isCollapsed ? (this.document.dataIds = [], this.document.selectAll = false, this.popupToolbarView.hide()) : (this.document.getAllSelectedDataIds(), this.document.dataIds.length === this.document.blocks.length && this.document.blocks.length > 0 && (this.document.selectAll = true), this.popupToolbarView.show(n2)), !n2 || 0 === n2.rangeCount) return;
           n2 && true === n2.isCollapsed && (this.document.dataIds = [], this.document.selectAll = false);
-          const o2 = n2.getRangeAt(0), s2 = (null === (e2 = o2.startContainer.parentElement) || void 0 === e2 ? void 0 : e2.closest("[data-id]")) || o2.startContainer;
-          s2 instanceof HTMLElement && (this.document.selectedBlockId = s2.getAttribute("data-id") || (o2.startContainer instanceof HTMLElement ? o2.startContainer.getAttribute("data-id") : null)), this.syncCurrentAttributesWithCursor();
+          const s2 = n2.getRangeAt(0), o2 = (null === (e2 = s2.startContainer.parentElement) || void 0 === e2 ? void 0 : e2.closest("[data-id]")) || s2.startContainer;
+          o2 instanceof HTMLElement && (this.document.selectedBlockId = o2.getAttribute("data-id") || (s2.startContainer instanceof HTMLElement ? s2.startContainer.getAttribute("data-id") : null)), this.syncCurrentAttributesWithCursor();
         }
         handleKeydown(t2) {
           var e2, i2;
-          const [o2, s2] = this.getSelectionRange();
-          if (this.imageHandler.currentCursorLocation = o2, "Enter" === t2.key) {
+          const [s2, o2] = this.getSelectionRange();
+          if (this.imageHandler.currentCursorLocation = s2, "Enter" === t2.key) {
             t2.preventDefault(), this.undoRedoManager.saveUndoSnapshot();
             const i3 = `data-id-${Date.now()}`, l2 = this.document.blocks.findIndex((t3) => t3.dataId === this.document.selectedBlockId), r2 = this.document.blocks[l2], a2 = (null === (e2 = null == r2 ? void 0 : r2.pieces) || void 0 === e2 ? void 0 : e2.length) > 0 ? r2.pieces[r2.pieces.length - 1] : null, d2 = a2 ? Object.assign({}, a2.attributes) : { fontFamily: "Arial", fontSize: "16px", fontColor: "#000000", bgColor: "#ffffff", bold: false, italic: false, underline: false, strikethrough: false };
             if (r2 && "image" === r2.type) this.document.blocks.splice(l2 + 1, 0, { dataId: i3, class: "paragraph-block", pieces: [new n("\u200B", d2)], type: "text" }), this.document.emit("documentChanged", this), this.imageHandler.setCursorPostion(1, i3);
             else if (!r2 || "ol" !== r2.listType && "ul" !== r2.listType && "li" !== r2.listType) {
               const t3 = this.getCurrentCursorBlock(), e3 = null == t3 ? void 0 : t3.toString();
               if (e3 && r2 && "text" === r2.type) {
-                const t4 = o2 - this.document.currentOffset, s3 = [], l3 = [];
+                const t4 = s2 - this.document.currentOffset, o3 = [], l3 = [];
                 let a3 = 0;
                 for (const e4 of r2.pieces) {
                   const i4 = a3 + e4.text.length;
-                  if (i4 <= t4) s3.push(e4.clone());
+                  if (i4 <= t4) o3.push(e4.clone());
                   else if (a3 >= t4) l3.push(e4.clone());
                   else {
-                    const i5 = t4 - a3, o3 = e4.text.slice(0, i5), r3 = e4.text.slice(i5);
-                    o3 && s3.push(new n(o3, Object.assign({}, e4.attributes))), r3 && l3.push(new n(r3, Object.assign({}, e4.attributes)));
+                    const i5 = t4 - a3, s3 = e4.text.slice(0, i5), r3 = e4.text.slice(i5);
+                    s3 && o3.push(new n(s3, Object.assign({}, e4.attributes))), r3 && l3.push(new n(r3, Object.assign({}, e4.attributes)));
                   }
                   a3 = i4;
                 }
-                r2.pieces = s3.length > 0 ? s3 : [new n("\u200B", d2)];
+                r2.pieces = o3.length > 0 ? o3 : [new n("\u200B", d2)];
                 const c2 = l3.length > 0 ? l3 : [new n("\u200B", d2)], h2 = this.addBlockAfter(this.document.blocks, e3, { dataId: i3, class: "paragraph-block", pieces: c2, type: "text" });
                 this.document.blocks = h2;
               } else this.document.blocks.push({ dataId: i3, class: "paragraph-block", pieces: [new n("\u200B", d2)], type: "text" });
@@ -1511,76 +1505,72 @@ var require_dist = __commonJS({
                 n2.listStart += 1;
               }
             }
-            this.syncCurrentAttributesWithCursor(), this.editorView.render(), this.setCursorPosition(s2 + 1, i3);
+            this.syncCurrentAttributesWithCursor(), this.editorView.render(), this.setCursorPosition(o2 + 1, i3);
           } else if ("Backspace" === t2.key) {
             if (t2.preventDefault(), this.imageHandler.isImageHighlighted) {
               const t3 = this.document.blocks.findIndex((t4) => t4.dataId === this.imageHandler.highLightedImageDataId);
               return this.imageHandler.deleteImage(), void this.imageHandler.setCursorPostion(1, this.document.blocks[t3 - 1].dataId);
             }
-            const e3 = window.getSelection();
-            console.log(e3, "selection lntgerr");
+            window.getSelection();
             if ((this.document.selectAll || this.document.dataIds.length === this.document.blocks.length && this.document.dataIds.length > 0 || this.document.dataIds.length > 1) && !(null === (i2 = window.getSelection()) || void 0 === i2 ? void 0 : i2.isCollapsed)) {
               this.undoRedoManager.saveUndoSnapshot();
-              const t3 = this.document.dataIds[0], e4 = this.document.blocks.findIndex((e5) => e5.dataId === t3);
+              const t3 = this.document.dataIds[0], e3 = this.document.blocks.findIndex((e4) => e4.dataId === t3);
               this.document.deleteBlocks();
-              let i3 = null, o3 = 0;
+              let i3 = null, s3 = 0;
               if (0 === this.document.blocks.length) {
                 const t4 = `data-id-${Date.now()}`;
-                this.document.blocks.push({ dataId: t4, class: "paragraph-block", pieces: [new n(" ")], type: "text" }), i3 = t4, o3 = 0, this.editorView.render();
-              } else if (e4 < this.document.blocks.length) i3 = this.document.blocks[e4].dataId, o3 = 0;
+                this.document.blocks.push({ dataId: t4, class: "paragraph-block", pieces: [new n(" ")], type: "text" }), i3 = t4, s3 = 0, this.editorView.render();
+              } else if (e3 < this.document.blocks.length) i3 = this.document.blocks[e3].dataId, s3 = 0;
               else {
                 const t4 = this.document.blocks[this.document.blocks.length - 1];
-                i3 = t4.dataId, o3 = t4.pieces.reduce((t5, e5) => t5 + e5.text.length, 0);
+                i3 = t4.dataId, s3 = t4.pieces.reduce((t5, e4) => t5 + e4.text.length, 0);
               }
-              return void this.setCursorPosition(o3, i3);
+              return void this.setCursorPosition(s3, i3);
             }
-            if (s2 > o2) {
+            if (o2 > s2) {
               this.undoRedoManager.saveUndoSnapshot();
-              const t3 = Math.min(this.document.currentOffset, o2);
-              this.document.deleteRange(o2, s2, this.document.selectedBlockId, t3, true), this.setCursorPosition(o2 - 1);
-              const e4 = this.document.blocks.findIndex((t4) => t4.dataId === this.document.selectedBlockId);
-              console.log(e4, "index lntgerr");
+              const t3 = Math.min(this.document.currentOffset, s2);
+              this.document.deleteRange(s2, o2, this.document.selectedBlockId, t3, true), this.setCursorPosition(s2 - 1);
+              this.document.blocks.findIndex((t4) => t4.dataId === this.document.selectedBlockId);
               if (null === document.querySelector(`[data-id="${this.document.selectedBlockId}"]`)) {
                 let t4 = 0;
-                console.log(t4, " listStart lntgerr");
-                const e5 = this.document.blocks.map((e6, n2) => (void 0 === (null == e6 ? void 0 : e6.listType) && null === (null == e6 ? void 0 : e6.listType) || ("ol" === (null == e6 ? void 0 : e6.listType) ? (t4 = 1, e6.listStart = 1) : "li" === (null == e6 ? void 0 : e6.listType) && (t4 += 1, e6.listStart = t4)), e6));
-                console.log(e5, "blocks lntgerr"), this.document.emit("documentChanged", this);
+                this.document.blocks.map((e3, n2) => (void 0 === (null == e3 ? void 0 : e3.listType) && null === (null == e3 ? void 0 : e3.listType) || ("ol" === (null == e3 ? void 0 : e3.listType) ? (t4 = 1, e3.listStart = 1) : "li" === (null == e3 ? void 0 : e3.listType) && (t4 += 1, e3.listStart = t4)), e3));
+                this.document.emit("documentChanged", this);
               }
-            } else o2 === s2 && o2 > 0 && (this.document.deleteRange(o2 - 1, o2, this.document.selectedBlockId, this.document.currentOffset, true), this.setCursorPosition(o2 - 1));
+            } else s2 === o2 && s2 > 0 && (this.document.deleteRange(s2 - 1, s2, this.document.selectedBlockId, this.document.currentOffset, true), this.setCursorPosition(s2 - 1));
           } else if (1 !== t2.key.length || t2.ctrlKey || t2.metaKey || t2.altKey) {
             if ("Delete" === t2.key) {
-              if (t2.preventDefault(), o2 === s2) {
-                if (this.undoRedoManager.saveUndoSnapshot(), s2 > o2) {
-                  const t4 = Math.min(this.document.currentOffset, o2);
-                  this.document.deleteRange(o2, s2, this.document.selectedBlockId, t4), this.setCursorPosition(o2);
-                } else if (s2 > o2) return this.undoRedoManager.saveUndoSnapshot(), void this.document.deleteRange(o2, s2, this.document.selectedBlockId);
+              if (t2.preventDefault(), s2 === o2) {
+                if (this.undoRedoManager.saveUndoSnapshot(), o2 > s2) {
+                  const t4 = Math.min(this.document.currentOffset, s2);
+                  this.document.deleteRange(s2, o2, this.document.selectedBlockId, t4), this.setCursorPosition(s2);
+                } else if (o2 > s2) return this.undoRedoManager.saveUndoSnapshot(), void this.document.deleteRange(s2, o2, this.document.selectedBlockId);
                 const t3 = this.document.blocks.findIndex((t4) => t4.dataId === this.document.selectedBlockId);
                 if (-1 === t3) return;
                 const e3 = this.document.blocks[t3].pieces.reduce((t4, e4) => t4 + e4.text.length, 0);
-                o2 - this.document.currentOffset < e3 ? (this.document.deleteRange(o2, o2 + 1, this.document.selectedBlockId, this.document.currentOffset, false), this.setCursorPosition(o2)) : s2 > o2 && (this.undoRedoManager.saveUndoSnapshot(), this.document.deleteRange(o2, s2, this.document.selectedBlockId), this.setCursorPosition(o2));
+                s2 - this.document.currentOffset < e3 ? (this.document.deleteRange(s2, s2 + 1, this.document.selectedBlockId, this.document.currentOffset, false), this.setCursorPosition(s2)) : o2 > s2 && (this.undoRedoManager.saveUndoSnapshot(), this.document.deleteRange(s2, o2, this.document.selectedBlockId), this.setCursorPosition(s2));
               }
               this.hyperlinkHandler.hideHyperlinkViewButton();
             }
-          } else t2.preventDefault(), s2 > o2 && (this.undoRedoManager.saveUndoSnapshot(), this.document.deleteRange(o2, s2, this.document.selectedBlockId, this.document.currentOffset, false)), console.log("insertat", t2.key, this.currentAttributes, o2, this.document.selectedBlockId, this.document.currentOffset, "", "", !t2.isTrusted || false), this.document.insertAt(t2.key, this.currentAttributes, o2, this.document.selectedBlockId, this.document.currentOffset, "", "", !t2.isTrusted || false), this.setCursorPosition(o2 + 1);
+          } else t2.preventDefault(), o2 > s2 && (this.undoRedoManager.saveUndoSnapshot(), this.document.deleteRange(s2, o2, this.document.selectedBlockId, this.document.currentOffset, false)), this.document.insertAt(t2.key, this.currentAttributes, s2, this.document.selectedBlockId, this.document.currentOffset, "", "", !t2.isTrusted || false), this.setCursorPosition(s2 + 1);
         }
         extractTextFromDataId(t2) {
           const e2 = window.getSelection();
-          if (console.log("selection::", e2), !e2 || 0 === e2.rangeCount) return { remainingText: "", piece: null };
+          if (!e2 || 0 === e2.rangeCount) return { remainingText: "", piece: null };
           const n2 = e2.getRangeAt(0).startContainer;
           let i2 = "";
-          console.log(0, "count lntgerr");
-          const o2 = this.document.blocks.filter((e3) => {
+          const s2 = this.document.blocks.filter((e3) => {
             if (e3.dataId === t2) return e3;
-          }), s2 = document.querySelector(`[data-id="${t2}"]`), l2 = this.document.getCursorOffsetInParent(`[data-id="${t2}"]`);
+          }), o2 = document.querySelector(`[data-id="${t2}"]`), l2 = this.document.getCursorOffsetInParent(`[data-id="${t2}"]`);
           let r2 = [], a2 = 0;
-          if (o2[0].pieces.forEach((t3, e3) => {
+          if (s2[0].pieces.forEach((t3, e3) => {
             i2 += t3.text, (null == l2 ? void 0 : l2.innerText) === t3.text && (a2 = e3, r2.push(t3));
-          }), o2[0].pieces.length > 1 && o2[0].pieces.forEach((t3, e3) => {
+          }), s2[0].pieces.length > 1 && s2[0].pieces.forEach((t3, e3) => {
             a2 < e3 && r2.push(t3);
-          }), !s2) return console.error(`Element with data-id "${t2}" not found.`), { remainingText: "", piece: null };
-          if (!s2.contains(n2)) return console.error(`Cursor is not inside the element with data-id "${t2}".`), { remainingText: "", piece: null };
+          }), !o2) return { remainingText: "", piece: null };
+          if (!o2.contains(n2)) return { remainingText: "", piece: null };
           const d2 = i2, c2 = null == l2 ? void 0 : l2.offset, h2 = d2.slice(c2), u2 = d2.slice(0, c2);
-          return s2.textContent = u2, { remainingText: h2, piece: r2 };
+          return o2.textContent = u2, { remainingText: h2, piece: r2 };
         }
         getCurrentCursorBlock() {
           const t2 = window.getSelection();
@@ -1591,21 +1581,19 @@ var require_dist = __commonJS({
         }
         addBlockAfter(t2, e2, n2) {
           const i2 = t2.findIndex((t3) => t3.dataId === e2);
-          if (-1 === i2) return console.error(`Block with dataId "${e2}" not found.`), t2;
+          if (-1 === i2) return t2;
           return [...t2.slice(0, i2 + 1), n2, ...t2.slice(i2 + 1)];
         }
         syncCurrentAttributesWithCursor() {
           var t2;
-          const [e2, n2] = this.getSelectionRange();
-          console.log("log1", { start: e2, end: n2 });
-          const i2 = this.document.blocks.findIndex((t3) => t3.dataId === this.document.selectedBlockId);
+          const [e2, n2] = this.getSelectionRange(), i2 = this.document.blocks.findIndex((t3) => t3.dataId === this.document.selectedBlockId);
           if ("image" === (null === (t2 = this.document.blocks[i2]) || void 0 === t2 ? void 0 : t2.type) ? this.imageHandler.addStyleToImage(this.document.selectedBlockId || "") : this.imageHandler.isImageHighlighted && this.imageHandler.clearImageStyling(), e2 === n2) {
             const t3 = this.document.findPieceAtOffset(e2, this.document.selectedBlockId);
             t3 ? (t3 !== this.lastPiece && (this.manualOverride = false, this.lastPiece = t3), this.manualOverride || (this.currentAttributes = { bold: t3.attributes.bold, italic: t3.attributes.italic, underline: t3.attributes.underline, strikethrough: t3.attributes.strikethrough || false, hyperlink: t3.attributes.hyperlink || false, fontFamily: t3.attributes.fontFamily, fontSize: t3.attributes.fontSize, fontColor: t3.attributes.fontColor, bgColor: t3.attributes.bgColor }, this.toolbarView.updateActiveStates(this.currentAttributes), this.popupToolbarView.updateActiveStates(this.currentAttributes)), this.hyperlinkHandler.hideHyperlinkViewButton()) : (this.hyperlinkHandler.hideHyperlinkViewButton(), this.manualOverride || (this.currentAttributes = { bold: false, italic: false, underline: false, strikethrough: false, hyperlink: false }, this.toolbarView.updateActiveStates(this.currentAttributes), this.popupToolbarView.updateActiveStates(this.currentAttributes)), this.lastPiece = null);
           } else {
             this.hyperlinkHandler.hideHyperlinkViewButton();
-            const t3 = this.document.isRangeEntirelyAttribute(e2, n2, "bold"), i3 = this.document.isRangeEntirelyAttribute(e2, n2, "italic"), o2 = this.document.isRangeEntirelyAttribute(e2, n2, "underline"), s2 = this.document.isRangeEntirelyAttribute(e2, n2, "strikethrough");
-            this.currentAttributes = { bold: t3, italic: i3, underline: o2, strikethrough: s2, hyperlink: false }, this.toolbarView.updateActiveStates(this.currentAttributes), this.popupToolbarView.updateActiveStates(this.currentAttributes);
+            const t3 = this.document.isRangeEntirelyAttribute(e2, n2, "bold"), i3 = this.document.isRangeEntirelyAttribute(e2, n2, "italic"), s2 = this.document.isRangeEntirelyAttribute(e2, n2, "underline"), o2 = this.document.isRangeEntirelyAttribute(e2, n2, "strikethrough");
+            this.currentAttributes = { bold: t3, italic: i3, underline: s2, strikethrough: o2, hyperlink: false }, this.toolbarView.updateActiveStates(this.currentAttributes), this.popupToolbarView.updateActiveStates(this.currentAttributes);
           }
         }
         setCursorPosition(t2, e2 = "") {
@@ -1617,26 +1605,26 @@ var require_dist = __commonJS({
           const n2 = window.getSelection();
           if (!n2) return;
           const i2 = document.createRange();
-          let o2 = 0;
-          const s2 = [this.editorView.container];
+          let s2 = 0;
+          const o2 = [this.editorView.container];
           let l2;
-          for (; l2 = s2.pop(); ) if (3 === l2.nodeType) {
-            const e3 = l2, n3 = o2 + e3.length;
-            if (t2 >= o2 && t2 <= n3) {
-              i2.setStart(e3, t2 - o2), i2.collapse(true);
+          for (; l2 = o2.pop(); ) if (3 === l2.nodeType) {
+            const e3 = l2, n3 = s2 + e3.length;
+            if (t2 >= s2 && t2 <= n3) {
+              i2.setStart(e3, t2 - s2), i2.collapse(true);
               break;
             }
-            o2 = n3;
+            s2 = n3;
           } else if ("BR" === l2.tagName) {
-            if (t2 === o2) {
+            if (t2 === s2) {
               i2.setStartBefore(l2), i2.collapse(true);
               break;
             }
-            o2++;
+            s2++;
           } else {
             const t3 = l2;
             let e3 = t3.childNodes.length;
-            for (; e3--; ) s2.push(t3.childNodes[e3]);
+            for (; e3--; ) o2.push(t3.childNodes[e3]);
           }
           n2.removeAllRanges(), n2.addRange(i2);
         }

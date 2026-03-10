@@ -47,6 +47,7 @@
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/minimatch": "^6.0.0",
     "@types/node": "^22.5.4",
+    "dotenv": "^16.4.5",
     "ncp": "^2.0.0",
     "rollup": "^4.21.2",
     "rollup-plugin-copy": "^3.5.0",
