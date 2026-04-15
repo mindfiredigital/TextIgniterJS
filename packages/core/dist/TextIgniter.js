@@ -15,6 +15,8 @@ import PopupToolbarView from './view/popupToolbarView';
 import LinkPopupView from './view/linkPopupView';
 import { detectUrlsInText } from './utils/urlDetector';
 import EventEmitter from './utils/events';
+import { SpeechToTextHandler } from './handlers/speechToText';
+import { icons } from './assets/icons';
 class TextIgniter extends EventEmitter {
     constructor(editorId, config) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
@@ -44,6 +46,28 @@ class TextIgniter extends EventEmitter {
         this.document.setUndoRedoManager(this.undoRedoManager);
         this.hyperlinkHandler.setUndoRedoManager(this.undoRedoManager);
         this.linkPopupView.setCallbacks((url) => this.openLink(url), (linkElement) => this.unlinkText(linkElement));
+        this.speechToTextHandler = new SpeechToTextHandler(this.document, this.editorView, (isRecording) => {
+            const btn = document.getElementById('speechtotext');
+            if (btn) {
+                btn.innerHTML = isRecording
+                    ? icons.stop_microphone
+                    : icons.start_microphone;
+            }
+        }, (text) => {
+            const [start, end] = this.getSelectionRange();
+            if (end > start) {
+                this.document.deleteRange(start, end, this.document.selectedBlockId, this.document.currentOffset);
+            }
+            let offset = start;
+            this.document.insertAt(text, Object.assign({}, this.currentAttributes), offset, this.document.selectedBlockId, 0, '', 'batch');
+            offset += text.length;
+            this.setCursorPosition(offset);
+        });
+        const btn = document.getElementById('speechtotext');
+        if (btn) {
+            btn.innerHTML = '';
+            btn.insertAdjacentHTML('afterbegin', icons.start_microphone);
+        }
         this.currentAttributes = {
             bold: false,
             italic: false,
@@ -472,6 +496,9 @@ class TextIgniter extends EventEmitter {
                 break;
             case 'image':
                 this.imageHandler.insertImage();
+                break;
+            case 'speechtotext':
+                this.speechToTextHandler.toggleRecording();
                 break;
             default:
                 if (start < end) {

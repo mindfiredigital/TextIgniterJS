@@ -16,4 +16,6 @@ export declare const icons: {
     heading: string;
     hyperlink: string;
     image: string;
+    stop_microphone: string;
+    start_microphone: string;
 };
