@@ -16,6 +16,8 @@ import PopupToolbarView from './view/popupToolbarView';
 import LinkPopupView from './view/linkPopupView';
 import { detectUrlsInText } from './utils/urlDetector';
 import EventEmitter from './utils/events';
+import { SpeechToTextHandler } from './handlers/speechToText';
+import { icons } from './assets/icons';
 // Link functionality imports
 
 export interface CurrentAttributeDTO {
@@ -46,6 +48,7 @@ class TextIgniter extends EventEmitter {
   toolbarContainer: HTMLElement | null;
   popupToolbarView: PopupToolbarView;
   linkPopupView: LinkPopupView;
+  speechToTextHandler: SpeechToTextHandler;
   savedSelection: { start: number; end: number } | null = null;
   debounceTimer: NodeJS.Timeout | null = null;
   undoRedoManager: UndoRedoManager;
@@ -92,6 +95,46 @@ class TextIgniter extends EventEmitter {
       (url: string) => this.openLink(url),
       (linkElement: HTMLAnchorElement) => this.unlinkText(linkElement)
     );
+    this.speechToTextHandler = new SpeechToTextHandler(
+      this.document,
+      this.editorView,
+      (isRecording: boolean) => {
+        const btn = document.getElementById('speechtotext');
+        if (btn) {
+          btn.innerHTML = isRecording
+            ? icons.stop_microphone
+            : icons.start_microphone;
+        }
+      },
+      (text: string) => {
+        const [start, end] = this.getSelectionRange();
+        if (end > start) {
+          this.document.deleteRange(
+            start,
+            end,
+            this.document.selectedBlockId,
+            this.document.currentOffset
+          );
+        }
+        let offset = start;
+        this.document.insertAt(
+          text,
+          { ...this.currentAttributes },
+          offset,
+          this.document.selectedBlockId,
+          0,
+          '',
+          'batch'
+        );
+        offset += text.length;
+        this.setCursorPosition(offset);
+      }
+    );
+    const btn = document.getElementById('speechtotext');
+    if (btn) {
+      btn.innerHTML = '';
+      btn.insertAdjacentHTML('afterbegin', icons.start_microphone);
+    }
     this.currentAttributes = {
       bold: false,
       italic: false,
@@ -674,6 +717,9 @@ class TextIgniter extends EventEmitter {
         break;
       case 'image':
         this.imageHandler.insertImage();
+        break;
+      case 'speechtotext':
+        this.speechToTextHandler.toggleRecording();
         break;
       default:
         if (start < end) {

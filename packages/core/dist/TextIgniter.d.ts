@@ -11,6 +11,7 @@ import UndoRedoManager from './handlers/undoRedoManager';
 import PopupToolbarView from './view/popupToolbarView';
 import LinkPopupView from './view/linkPopupView';
 import EventEmitter from './utils/events';
+import { SpeechToTextHandler } from './handlers/speechToText';
 export interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
@@ -38,6 +39,7 @@ declare class TextIgniter extends EventEmitter {
     toolbarContainer: HTMLElement | null;
     popupToolbarView: PopupToolbarView;
     linkPopupView: LinkPopupView;
+    speechToTextHandler: SpeechToTextHandler;
     savedSelection: {
         start: number;
         end: number;
