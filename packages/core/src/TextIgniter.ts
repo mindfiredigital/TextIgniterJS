@@ -154,7 +154,22 @@ class TextIgniter extends EventEmitter {
     this.popupToolbarView.on('popupAction', (action: string) =>
       this.handleToolbarAction(action)
     );
-    this.document.on('documentChanged', () => this.editorView.render());
+    this.document.on('documentChanged', () => {
+      const isEditorEmpty =
+        this.document.blocks.length === 0 ||
+        (this.document.blocks.length === 1 &&
+          this.document.blocks[0].pieces.every(
+            (p: any) => p.text.trim() === '' || p.text === '\u200B'
+          ));
+
+      if (isEditorEmpty) {
+        const select = document.getElementById(
+          'loadHtmlButton'
+        ) as HTMLSelectElement | null;
+        if (select) select.selectedIndex = 0;
+      }
+      this.editorView.render();
+    });
 
     // Emit content change event with HTML content
     this.document.on('documentChanged', () => {
@@ -388,17 +403,21 @@ class TextIgniter extends EventEmitter {
       this.showAcknowledgement('HTML copied to clipboard', 2000);
     });
 
-    document.getElementById('loadHtmlButton')?.addEventListener('click', e => {
-      // const htmlString = this.document.getHtmlContent();
+    document.getElementById('loadHtmlButton')?.addEventListener('change', e => {
       this.undoRedoManager.saveUndoSnapshot();
-      const str = strings.TEST_HTML_CODE;
+      const target = e.target as HTMLSelectElement;
+      const selectedOption = target.options[target.selectedIndex];
+      const str = selectedOption.dataset.html || strings.TEST_HTML_CODE;
+
       this.htmlToJsonParser = new HtmlToJsonParser(str as string);
       console.log(this.htmlToJsonParser, 'this.htmlToJsonParser');
       const jsonOutput = this.htmlToJsonParser.parse();
 
       this.document.blocks = jsonOutput;
-      this.document.dataIds[0] = jsonOutput[0].dataId;
-      this.document.selectedBlockId = 'data-id-1734604240404';
+      if (jsonOutput.length > 0) {
+        this.document.dataIds[0] = jsonOutput[0].dataId;
+        this.document.selectedBlockId = jsonOutput[0].dataId;
+      }
       this.document.emit('documentChanged', this);
       const [start] = this.getSelectionRange();
       this.document.blocks.forEach((block: any) => {
@@ -410,7 +429,9 @@ class TextIgniter extends EventEmitter {
           });
           let countS = start - countE;
 
-          this.document.setFontSize(countS, countE, block.fontSize);
+          if (block.fontSize) {
+            this.document.setFontSize(countS, countE, block.fontSize);
+          }
         }
       });
       console.log(

@@ -329,12 +329,56 @@ export function createEditor(
       button.dataset.tooltip = featureTitles['getHtmlContent'] || 'Get HTML';
       toolbar.appendChild(button);
     } else if (feature === 'loadHtmlContent') {
-      const button = document.createElement('button');
-      button.id = strings.LOAD_HTML_BUTTON_ID;
-      button.type = 'button';
-      button.textContent = 'Load HTML';
-      button.dataset.tooltip = featureTitles['loadHtmlContent'] || 'Load HTML';
-      toolbar.appendChild(button);
+      const select = document.createElement('select');
+      select.id = strings.LOAD_HTML_BUTTON_ID;
+      select.dataset.action = 'loadHtmlContent';
+      select.dataset.tooltip = featureTitles['loadHtmlContent'] || 'Load HTML';
+
+      // Styling the select
+      select.style.cursor = 'pointer';
+      select.style.padding = '4px 8px';
+      select.style.border = '1px solid #ccc';
+      select.style.borderRadius = '4px';
+      select.style.backgroundColor = '#f9f9f9';
+      select.style.fontSize = '13px';
+      select.style.outline = 'none';
+      select.style.color = '#333';
+      select.style.height = '28px';
+
+      select.addEventListener('mouseenter', () => {
+        select.style.backgroundColor = '#eaeaea';
+      });
+      select.addEventListener('mouseleave', () => {
+        select.style.backgroundColor = '#f9f9f9';
+      });
+
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = 'Templates...';
+      defaultOption.disabled = true;
+      defaultOption.selected = true;
+      select.appendChild(defaultOption);
+
+      const defaultTemplates = [
+        { name: 'Default Test', html: strings.TEST_HTML_CODE },
+        { name: 'Blog Post', html: strings.TEST_BLOG_POST_HTML_CODE },
+        { name: 'Newsletter', html: strings.TEST_NEWSLATER_HTML_CODE },
+        { name: 'Resume', html: strings.TEST_RESUME_HTML_CODE },
+        { name: 'Email', html: strings.TEST_EMAIL_HTML_CODE },
+        { name: 'Meeting Notes', html: strings.TEST_MEETING_HTML_CODE },
+      ];
+
+      const allTemplates = [...defaultTemplates, ...(config.templates || [])];
+
+      allTemplates.forEach((t, i) => {
+        const option = document.createElement('option');
+        option.value = i.toString();
+        option.dataset.html = t.html;
+        option.textContent = t.name;
+        select.appendChild(option);
+      });
+
+      toolbar.appendChild(select);
     } else if (
       featuresWithPngIcon.map(item => item.feature).includes(feature)
     ) {

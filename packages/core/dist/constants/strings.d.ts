@@ -30,6 +30,11 @@ export declare const strings: {
     PARAGRAPH_BLOCK_CLASS: string;
     IMAGE_CROSS_CLASS: string;
     TEST_HTML_CODE: string;
+    TEST_BLOG_POST_HTML_CODE: string;
+    TEST_NEWSLATER_HTML_CODE: string;
+    TEST_RESUME_HTML_CODE: string;
+    TEST_EMAIL_HTML_CODE: string;
+    TEST_MEETING_HTML_CODE: string;
     POPUP_TOOLBAR_CLASSNAME: string;
     POPUP_TOOLBAR_ID: string;
     TOAST_ID: string;
