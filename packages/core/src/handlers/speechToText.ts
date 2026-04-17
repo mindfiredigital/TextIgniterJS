@@ -31,7 +31,7 @@ export class SpeechToTextHandler {
       this.recognition.interimResults = false;
 
       this.recognition.onresult = (event: any) => {
-        this.resetSilenceTimer();
+        // this.resetSilenceTimer();
         const result = event.results[event.results.length - 1];
         if (result.isFinal) {
           const text = result[0].transcript + ' ';
@@ -68,7 +68,7 @@ export class SpeechToTextHandler {
       this.recognition.start();
       this.isRecording = true;
       this.onStateChange(true);
-      this.resetSilenceTimer();
+      // this.resetSilenceTimer();
     } catch (e) {
       console.error('Failed to start speech recognition:', e);
     }
@@ -89,12 +89,12 @@ export class SpeechToTextHandler {
     }
   }
 
-  private resetSilenceTimer() {
-    if (this.silenceTimer) {
-      clearTimeout(this.silenceTimer);
-    }
-    this.silenceTimer = setTimeout(() => {
-      this.stopRecording();
-    }, 4000);
-  }
+  // private resetSilenceTimer() {
+  //   if (this.silenceTimer) {
+  //     clearTimeout(this.silenceTimer);
+  //   }
+  //   this.silenceTimer = setTimeout(() => {
+  //     this.stopRecording();
+  //   }, 4000);
+  // }
 }

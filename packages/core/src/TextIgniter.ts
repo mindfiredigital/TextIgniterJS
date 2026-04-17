@@ -104,6 +104,8 @@ class TextIgniter extends EventEmitter {
           btn.innerHTML = isRecording
             ? icons.stop_microphone
             : icons.start_microphone;
+
+          btn.dataset.tooltip = isRecording ? 'stop' : 'start';
         }
       },
       (text: string) => {
@@ -134,6 +136,7 @@ class TextIgniter extends EventEmitter {
     if (btn) {
       btn.innerHTML = '';
       btn.insertAdjacentHTML('afterbegin', icons.start_microphone);
+      btn.dataset.tooltip = 'start';
     }
     this.currentAttributes = {
       bold: false,
