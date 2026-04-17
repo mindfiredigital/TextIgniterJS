@@ -214,10 +214,15 @@ declare class HtmlToJsonParser {
     rgbToHex(rgb: string, isBackground?: boolean): string | null;
 }
 
+interface Template {
+    name: string;
+    html: string;
+}
 type EditorConfig = {
     features: string[];
     showToolbar?: boolean;
     popupFeatures?: string[];
+    templates?: Template[];
 };
 
 declare class PopupToolbarView extends EventEmitter {
