@@ -203,7 +203,7 @@ export class InsertTableHandler {
     table.appendChild(tbody);
     wrapper.appendChild(table);
 
-    // Determine where to insert the table in the document model
+    // where to insert the table in doc model
     let insertIndex = this.document.blocks.length;
     if (this.document.selectedBlockId) {
       const idx = this.document.blocks.findIndex(
@@ -212,7 +212,6 @@ export class InsertTableHandler {
       if (idx !== -1) insertIndex = idx + 1;
     }
 
-    // Add table and a paragraph after it to the model
     const tableBlock = {
       dataId: tableId,
       type: 'table',
@@ -238,10 +237,9 @@ export class InsertTableHandler {
     this.document.selectedBlockId = tableId;
     this.document.currentOffset = 0;
 
-    // Trigger re-render which will attach the elements
     this.document.emit('documentChanged', this.document);
 
-    // Focus first header cell asynchronously since render happens synchronously
+    //  Focous first header cell
     setTimeout(() => {
       const firstCell = wrapper.querySelector('.tblCell') as HTMLElement;
       if (firstCell) {
