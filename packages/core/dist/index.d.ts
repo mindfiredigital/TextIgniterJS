@@ -135,7 +135,7 @@ declare class TextDocument extends EventEmitter {
     handleCtrlASelection(): string[];
     getSelectedDataIds(): string[];
     private getDataIdFromNode;
-    getCursorOffset(container: HTMLElement): number;
+    getCursorOffset(container: HTMLElement | null): number;
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'], value: string | boolean): void;
     toggleOrderedList(dataId: string | null, id?: string): void;
     toggleOrderedListForMultipleBlocks(dataIds: string[]): void;
@@ -263,7 +263,22 @@ declare class SpeechToTextHandler {
     toggleRecording(): void;
     private startRecording;
     private stopRecording;
-    private resetSilenceTimer;
+}
+
+declare class InsertTableHandler {
+    private editor;
+    private document;
+    private modal;
+    private activeTable;
+    constructor(editor: HTMLDivElement, document: any);
+    openTableModal(): void;
+    private closeModal;
+    private insertTable;
+    private setupCellEvents;
+    private selectAllInCell;
+    private setActiveTable;
+    private clearTableActive;
+    private setupClickOutsideListener;
 }
 
 interface CurrentAttributeDTO {
@@ -300,6 +315,7 @@ declare class TextIgniter extends EventEmitter {
     } | null;
     debounceTimer: NodeJS.Timeout | null;
     undoRedoManager: UndoRedoManager;
+    insertTableHandler: InsertTableHandler;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];
     applyFontColor(color: string): void;

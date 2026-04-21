@@ -26,6 +26,13 @@ class EditorView {
       if (block.dataId !== '') {
         let wrapperDiv: HTMLElement;
 
+        if (block.type === 'table') {
+          if (block.element) {
+            this.container.appendChild(block.element);
+          }
+          return;
+        }
+
         // If block is an image, ignore list handling.
         if (block.type === 'image') {
           wrapperDiv = document.createElement('div');

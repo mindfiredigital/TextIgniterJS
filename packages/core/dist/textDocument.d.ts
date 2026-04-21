@@ -31,7 +31,7 @@ declare class TextDocument extends EventEmitter {
     handleCtrlASelection(): string[];
     getSelectedDataIds(): string[];
     private getDataIdFromNode;
-    getCursorOffset(container: HTMLElement): number;
+    getCursorOffset(container: HTMLElement | null): number;
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'], value: string | boolean): void;
     toggleOrderedList(dataId: string | null, id?: string): void;
     toggleOrderedListForMultipleBlocks(dataIds: string[]): void;
