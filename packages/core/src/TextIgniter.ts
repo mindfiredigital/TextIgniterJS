@@ -880,7 +880,7 @@ class TextIgniter extends EventEmitter {
       selection.anchorNode?.nodeType === Node.TEXT_NODE
         ? selection.anchorNode.parentElement
         : (selection.anchorNode as HTMLElement);
-    if (anchorEl?.closest('.ti-table-cell')) {
+    if (anchorEl?.closest('.tblCell')) {
       this.popupToolbarView.hide();
       return;
     }
@@ -1435,7 +1435,7 @@ class TextIgniter extends EventEmitter {
         sel.anchorNode?.nodeType === Node.TEXT_NODE
           ? sel.anchorNode.parentElement
           : (sel.anchorNode as HTMLElement);
-      if (anchorEl?.closest('.ti-table-cell')) return;
+      if (anchorEl?.closest('.tblCell')) return;
     }
 
     const [start, end] = this.getSelectionRange();
