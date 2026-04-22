@@ -103,6 +103,7 @@ export function createEditor(
     emoji: 'Emoji',
     getHtmlContent: 'Get HTML',
     loadHtmlContent: 'Load HTML',
+    insert_table: 'Insert table',
   };
 
   const featuresWithPngIcon = [
@@ -117,6 +118,11 @@ export function createEditor(
       feature: 'strikethrough',
       id: 'strikethrough',
       icon: icons.strikethrough,
+    },
+    {
+      feature: 'insert_table',
+      id: 'insert_table',
+      icon: icons.insert_table,
     },
   ];
 

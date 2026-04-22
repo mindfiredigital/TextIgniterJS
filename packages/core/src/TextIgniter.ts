@@ -18,6 +18,7 @@ import { detectUrlsInText } from './utils/urlDetector';
 import EventEmitter from './utils/events';
 import { SpeechToTextHandler } from './handlers/speechToText';
 import { icons } from './assets/icons';
+import { InsertTableHandler } from './insertTable';
 import EmojiPickerView from './view/emojiPickerView';
 // Link functionality imports
 
@@ -53,6 +54,7 @@ class TextIgniter extends EventEmitter {
   savedSelection: { start: number; end: number } | null = null;
   debounceTimer: NodeJS.Timeout | null = null;
   undoRedoManager: UndoRedoManager;
+  insertTableHandler: InsertTableHandler;
   emojiPickerView: EmojiPickerView;
 
   constructor(editorId: string, config: EditorConfig) {
@@ -96,6 +98,10 @@ class TextIgniter extends EventEmitter {
     this.linkPopupView.setCallbacks(
       (url: string) => this.openLink(url),
       (linkElement: HTMLAnchorElement) => this.unlinkText(linkElement)
+    );
+    this.insertTableHandler = new InsertTableHandler(
+      this.editorView.container as HTMLDivElement,
+      this.document
     );
     this.speechToTextHandler = new SpeechToTextHandler(
       this.document,
@@ -780,6 +786,9 @@ class TextIgniter extends EventEmitter {
       case 'speechToText':
         this.speechToTextHandler.toggleRecording();
         break;
+      case 'insert_table':
+        this.insertTableHandler.openTableModal();
+        break;
       case 'emoji':
         this.savedSelection = saveSelection(this.editorView.container);
 
@@ -915,6 +924,15 @@ class TextIgniter extends EventEmitter {
       return;
     }
 
+    const anchorEl =
+      selection.anchorNode?.nodeType === Node.TEXT_NODE
+        ? selection.anchorNode.parentElement
+        : (selection.anchorNode as HTMLElement);
+    if (anchorEl?.closest('.tblCell')) {
+      this.popupToolbarView.hide();
+      return;
+    }
+
     const [start] = this.getSelectionRange();
     this.imageHandler.currentCursorLocation = start;
 
@@ -949,11 +967,20 @@ class TextIgniter extends EventEmitter {
       range.startContainer.parentElement?.closest('[data-id]') ||
       range.startContainer;
     if (parentBlock instanceof HTMLElement) {
-      this.document.selectedBlockId =
+      const candidateId =
         parentBlock.getAttribute('data-id') ||
         (range.startContainer instanceof HTMLElement
           ? range.startContainer.getAttribute('data-id')
           : null);
+
+      if (candidateId) {
+        const block = this.document.blocks.find(
+          (b: any) => b.dataId === candidateId
+        );
+        if (block && block.type !== 'table') {
+          this.document.selectedBlockId = candidateId;
+        }
+      }
     }
     this.syncCurrentAttributesWithCursor();
   }
@@ -1463,6 +1490,15 @@ class TextIgniter extends EventEmitter {
     return updatedData;
   }
   syncCurrentAttributesWithCursor(): void {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const anchorEl =
+        sel.anchorNode?.nodeType === Node.TEXT_NODE
+          ? sel.anchorNode.parentElement
+          : (sel.anchorNode as HTMLElement);
+      if (anchorEl?.closest('.tblCell')) return;
+    }
+
     const [start, end] = this.getSelectionRange();
     console.log('log1', { start: start, end: end });
     const blockIndex = this.document.blocks.findIndex(

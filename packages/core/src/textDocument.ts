@@ -21,14 +21,18 @@ class TextDocument extends EventEmitter {
   set selectedBlockId(value: string | null) {
     if (this._selectedBlockId !== value) {
       this._selectedBlockId = value;
-      const editorOffset = this.getCursorOffset(
-        document.querySelector('[id="editor"]') as HTMLElement
-      );
-      const paraOffset = this.getCursorOffset(
-        document.querySelector('[data-id="' + value + '"]') as HTMLElement
-      );
+      const editorEl = document.querySelector('[id="editor"]') as HTMLElement;
+      const paraEl = document.querySelector(
+        '[data-id="' + value + '"]'
+      ) as HTMLElement;
 
-      this.currentOffset = editorOffset - paraOffset;
+      if (editorEl && paraEl) {
+        const editorOffset = this.getCursorOffset(editorEl);
+        const paraOffset = this.getCursorOffset(paraEl);
+        this.currentOffset = editorOffset - paraOffset;
+      } else {
+        this.currentOffset = 0;
+      }
     }
   }
   currentOffset: number;
@@ -91,7 +95,10 @@ class TextDocument extends EventEmitter {
     if (dataId !== '' && dataId !== null) {
       index = this.blocks.findIndex((block: any) => block.dataId === dataId);
       // index = this.blocks.findIndex((block: any) => block.dataId === dataId)
+      if (index === -1 || !this.blocks[index].pieces) return;
       offset = this.currentOffset;
+    } else {
+      return;
     }
     // const previousValue = this.getRangeText(position, position);
 
@@ -177,8 +184,10 @@ class TextDocument extends EventEmitter {
     let runBackspace = false;
     if (dataId !== '' && dataId !== null) {
       index = this.blocks.findIndex((block: any) => block.dataId === dataId);
-      if (index === -1) return; // Block not found, cannot delete
+      if (index === -1 || !this.blocks[index].pieces) return; // Block not found or is a table
       offset = currentOffset;
+    } else {
+      return; // No block selected
     }
 
     // const previousValue = this.getRangeText(start, end);
@@ -452,9 +461,9 @@ class TextDocument extends EventEmitter {
     return element?.closest('[data-id]')?.getAttribute('data-id') || null;
   }
 
-  getCursorOffset(container: HTMLElement): number {
+  getCursorOffset(container: HTMLElement | null): number {
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) {
+    if (!selection || selection.rangeCount === 0 || !container) {
       return -1; // No selection or cursor in the container
     }
 
@@ -500,8 +509,10 @@ class TextDocument extends EventEmitter {
       index = this.blocks.findIndex(
         (block: any) => block.dataId === this.selectedBlockId
       );
-      if (index === -1) return; // Block not found, cannot format
+      if (index === -1 || !this.blocks[index].pieces) return; // Block not found or is a table
       offset = this.currentOffset;
+    } else {
+      return; // No block selected
     }
 
     for (let piece of this.blocks[index].pieces) {
@@ -837,7 +848,7 @@ class TextDocument extends EventEmitter {
       const index = this.blocks.findIndex(
         (block: any) => block.dataId === this.selectedBlockId
       );
-      if (index === -1) return false; // Block not found
+      if (index === -1 || !this.blocks[index].pieces) return false; // Block not found or is a table
 
       for (let piece of this.blocks[index].pieces) {
         const pieceEnd = offset + piece.text.length;
@@ -870,6 +881,7 @@ class TextDocument extends EventEmitter {
     let currentOffset = 0;
     if (dataId !== '' && dataId !== null) {
       for (let block of this.blocks) {
+        if (block.type === 'table' || !block.pieces) continue;
         const blockLength = block.pieces.reduce(
           (acc: number, curr: any) => acc + curr.text.length,
           0
