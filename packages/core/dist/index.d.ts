@@ -263,7 +263,24 @@ declare class SpeechToTextHandler {
     toggleRecording(): void;
     private startRecording;
     private stopRecording;
-    private resetSilenceTimer;
+}
+
+declare class EmojiPickerView {
+    private popup;
+    private gridArea;
+    private searchInput;
+    private onSelectCallback?;
+    private isOpen;
+    constructor();
+    onSelect(cb: (char: string) => void): void;
+    open(element: HTMLElement): void;
+    close(): void;
+    getIsOpen(): boolean;
+    private buildPopup;
+    private getRecentEmojis;
+    private saveRecentEmoji;
+    private resolveChar;
+    private renderGrid;
 }
 
 interface CurrentAttributeDTO {
@@ -300,6 +317,7 @@ declare class TextIgniter extends EventEmitter {
     } | null;
     debounceTimer: NodeJS.Timeout | null;
     undoRedoManager: UndoRedoManager;
+    emojiPickerView: EmojiPickerView;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];
     applyFontColor(color: string): void;
