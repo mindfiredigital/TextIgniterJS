@@ -101,7 +101,7 @@ class TextIgniter extends EventEmitter {
       this.document,
       this.editorView,
       (isRecording: boolean) => {
-        const btn = document.getElementById('speechtotext');
+        const btn = document.getElementById('speechToText');
         if (btn) {
           btn.innerHTML = isRecording
             ? icons.stop_microphone
@@ -134,7 +134,7 @@ class TextIgniter extends EventEmitter {
         this.setCursorPosition(offset);
       }
     );
-    const btn = document.getElementById('speechtotext');
+    const btn = document.getElementById('speechToText');
     if (btn) {
       btn.innerHTML = '';
       btn.insertAdjacentHTML('afterbegin', icons.start_microphone);
@@ -777,7 +777,7 @@ class TextIgniter extends EventEmitter {
       case 'image':
         this.imageHandler.insertImage();
         break;
-      case 'speechtotext':
+      case 'speechToText':
         this.speechToTextHandler.toggleRecording();
         break;
       case 'emoji':
