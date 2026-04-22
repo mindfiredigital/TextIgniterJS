@@ -101,7 +101,7 @@ class TextIgniter extends EventEmitter {
       this.document,
       this.editorView,
       (isRecording: boolean) => {
-        const btn = document.getElementById('speechtotext');
+        const btn = document.getElementById('speechToText');
         if (btn) {
           btn.innerHTML = isRecording
             ? icons.stop_microphone
@@ -134,7 +134,7 @@ class TextIgniter extends EventEmitter {
         this.setCursorPosition(offset);
       }
     );
-    const btn = document.getElementById('speechtotext');
+    const btn = document.getElementById('speechToText');
     if (btn) {
       btn.innerHTML = '';
       btn.insertAdjacentHTML('afterbegin', icons.start_microphone);
@@ -143,11 +143,8 @@ class TextIgniter extends EventEmitter {
 
     this.emojiPickerView = new EmojiPickerView();
     this.emojiPickerView.onSelect((char: string) => {
-      if (this.savedSelection) {
-        this.setCursorPosition(this.savedSelection.start);
-      }
-
-      const [start, end] = this.getSelectionRange();
+      const start = this.savedSelection?.start ?? 0;
+      const end = this.savedSelection?.end ?? start;
 
       if (end > start) {
         this.document.deleteRange(
@@ -780,7 +777,7 @@ class TextIgniter extends EventEmitter {
       case 'image':
         this.imageHandler.insertImage();
         break;
-      case 'speechtotext':
+      case 'speechToText':
         this.speechToTextHandler.toggleRecording();
         break;
       case 'emoji':
@@ -1241,15 +1238,28 @@ class TextIgniter extends EventEmitter {
           this.document.emit('documentChanged', this);
         }
       } else if (start === end && start > 0) {
-        // Normal backspace - delete one character before cursor
+        const editorText = this.editorView.container.textContent || '';
+        let deleteFrom = start - 1;
+        if (start >= 2) {
+          const prevCodeUnit = editorText.charCodeAt(start - 1);
+          const prevPrevCodeUnit = editorText.charCodeAt(start - 2);
+          if (
+            prevCodeUnit >= 0xdc00 &&
+            prevCodeUnit <= 0xdfff &&
+            prevPrevCodeUnit >= 0xd800 &&
+            prevPrevCodeUnit <= 0xdbff
+          ) {
+            deleteFrom = start - 2;
+          }
+        }
         this.document.deleteRange(
-          start - 1,
+          deleteFrom,
           start,
           this.document.selectedBlockId,
           this.document.currentOffset,
           true
         );
-        this.setCursorPosition(start - 1);
+        this.setCursorPosition(deleteFrom);
       }
     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
