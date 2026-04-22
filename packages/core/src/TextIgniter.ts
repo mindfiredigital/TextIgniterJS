@@ -19,6 +19,7 @@ import EventEmitter from './utils/events';
 import { SpeechToTextHandler } from './handlers/speechToText';
 import { icons } from './assets/icons';
 import { InsertTableHandler } from './insertTable';
+import EmojiPickerView from './view/emojiPickerView';
 // Link functionality imports
 
 export interface CurrentAttributeDTO {
@@ -54,6 +55,7 @@ class TextIgniter extends EventEmitter {
   debounceTimer: NodeJS.Timeout | null = null;
   undoRedoManager: UndoRedoManager;
   insertTableHandler: InsertTableHandler;
+  emojiPickerView: EmojiPickerView;
 
   constructor(editorId: string, config: EditorConfig) {
     super();
@@ -144,6 +146,42 @@ class TextIgniter extends EventEmitter {
       btn.insertAdjacentHTML('afterbegin', icons.start_microphone);
       btn.dataset.tooltip = 'start';
     }
+
+    this.emojiPickerView = new EmojiPickerView();
+    this.emojiPickerView.onSelect((char: string) => {
+      if (this.savedSelection) {
+        this.setCursorPosition(this.savedSelection.start);
+      }
+
+      const [start, end] = this.getSelectionRange();
+
+      if (end > start) {
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          this.document.currentOffset,
+          false
+        );
+      }
+
+      this.document.insertAt(
+        char,
+        { ...this.currentAttributes },
+        start,
+        this.document.selectedBlockId,
+        0,
+        '',
+        'batch'
+      );
+
+      const newPos = start + char.length;
+
+      this.savedSelection = { start: newPos, end: newPos };
+
+      this.setCursorPosition(newPos);
+    });
+
     this.currentAttributes = {
       bold: false,
       italic: false,
@@ -753,6 +791,19 @@ class TextIgniter extends EventEmitter {
         break;
       case 'insert_table':
         this.insertTableHandler.openTableModal();
+        break;
+      case 'emoji':
+        this.savedSelection = saveSelection(this.editorView.container);
+
+        const emojiBtn = document.querySelector(
+          '[data-action="emoji"]'
+        ) as HTMLElement;
+        emojiBtn.addEventListener('mousedown', e => {
+          e.preventDefault();
+        });
+        if (emojiBtn) {
+          this.emojiPickerView.open(emojiBtn);
+        }
         break;
       default:
         if (start < end) {

@@ -13,6 +13,7 @@ import LinkPopupView from './view/linkPopupView';
 import EventEmitter from './utils/events';
 import { SpeechToTextHandler } from './handlers/speechToText';
 import { InsertTableHandler } from './insertTable';
+import EmojiPickerView from './view/emojiPickerView';
 export interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
@@ -48,6 +49,7 @@ declare class TextIgniter extends EventEmitter {
     debounceTimer: NodeJS.Timeout | null;
     undoRedoManager: UndoRedoManager;
     insertTableHandler: InsertTableHandler;
+    emojiPickerView: EmojiPickerView;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];
     applyFontColor(color: string): void;

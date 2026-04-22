@@ -9,7 +9,7 @@ const featureGroups = {
   formatting: ['bold', 'italic', 'underline', 'strikethrough'],
   alignment: ['alignLeft', 'alignCenter', 'alignRight'],
   lists: ['unorderedList', 'orderedList'],
-  media: ['hyperlink', 'image'],
+  media: ['hyperlink', 'image', 'emoji'],
   utility: ['getHtmlContent', 'loadHtmlContent'],
 };
 
@@ -100,6 +100,7 @@ export function createEditor(
     fontColor: 'Text Color',
     bgColor: 'Highlight Color',
     image: 'Insert Image',
+    emoji: 'Emoji',
     getHtmlContent: 'Get HTML',
     loadHtmlContent: 'Load HTML',
     insert_table: 'Insert table',
@@ -112,6 +113,7 @@ export function createEditor(
     { feature: 'unorderedList', id: 'unorderedList', icon: icons.bullet_list },
     { feature: 'orderedList', id: 'orderedList', icon: icons.numbered_list },
     { feature: 'hyperlink', id: 'hyperlink', icon: icons.hyperlink },
+    { feature: 'emoji', id: 'emoji', icon: icons.emoji },
     {
       feature: 'strikethrough',
       id: 'strikethrough',
