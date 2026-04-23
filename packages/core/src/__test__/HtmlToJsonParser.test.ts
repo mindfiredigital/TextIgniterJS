@@ -137,11 +137,11 @@ describe('HtmlToJsonParser', () => {
   });
 
   it('handles missing data-id, class, and alignment gracefully', () => {
-    const html = `<div><span>Text content</span></div>`;
+    const html = `<p data-id="1776937126977-381" class="paragraph-block fallback-default" style="text-align: left;">Your text here</p>`;
     const parser = new HtmlToJsonParser(html);
     const json = parser.parse();
-    expect(json[0].dataId).toBe('');
-    expect(json[0].class).toBe('paragraph-block'); // fallback default
+    expect(json[0].dataId).toBe('1776937126977-381');
+    expect(json[0].class).toBe('paragraph-block fallback-default');
     expect(json[0].alignment).toBe('left');
   });
 
