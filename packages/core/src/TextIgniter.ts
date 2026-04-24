@@ -28,6 +28,7 @@ export interface CurrentAttributeDTO {
   underline: boolean;
   strikethrough?: boolean;
   subscript?: boolean;
+  superscript?: boolean;
   undo?: boolean;
   redo?: boolean;
   hyperlink?: string | boolean;
@@ -186,6 +187,7 @@ class TextIgniter extends EventEmitter {
       underline: false,
       strikethrough: false,
       subscript: false,
+      superscript: false,
       undo: false,
       redo: false,
       hyperlink: false,
@@ -893,6 +895,23 @@ class TextIgniter extends EventEmitter {
                 this.document.toggleSubscriptRange(start, end);
               }
               break;
+            case 'superscript':
+              if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                  if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                      countE += obj.text.length;
+                    });
+                    let countS = start - countE;
+                    this.document.toggleSuperscriptRange(countS, countE);
+                  }
+                });
+              } else {
+                this.document.toggleSuperscriptRange(start, end);
+              }
+              break;
             case 'hyperlink':
               this.hyperlinkHandler.hanldeHyperlinkClick(
                 start,
@@ -911,6 +930,7 @@ class TextIgniter extends EventEmitter {
               | 'underline'
               | 'strikethrough'
               | 'subscript'
+              | 'superscript'
               | 'undo'
               | 'redo'
           ] =
@@ -921,6 +941,7 @@ class TextIgniter extends EventEmitter {
                 | 'underline'
                 | 'strikethrough'
                 | 'subscript'
+                | 'superscript'
                 | 'undo'
                 | 'redo'
             ];
@@ -1549,6 +1570,7 @@ class TextIgniter extends EventEmitter {
             underline: piece.attributes.underline,
             strikethrough: piece.attributes.strikethrough || false,
             subscript: piece.attributes.subscript || false,
+            superscript: piece.attributes.superscript || false,
             hyperlink: piece.attributes.hyperlink || false,
             fontFamily: piece.attributes.fontFamily,
             fontSize: piece.attributes.fontSize,
@@ -1569,6 +1591,7 @@ class TextIgniter extends EventEmitter {
             underline: false,
             strikethrough: false,
             subscript: false,
+            superscript: false,
             hyperlink: false,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
@@ -1606,6 +1629,11 @@ class TextIgniter extends EventEmitter {
         end,
         'subscript' as any
       );
+      const allSuperscript = this.document.isRangeEntirelyAttribute(
+        start,
+        end,
+        'superscript' as any
+      );
 
       this.currentAttributes = {
         bold: allBold,
@@ -1613,6 +1641,7 @@ class TextIgniter extends EventEmitter {
         underline: allUnderline,
         strikethrough: allStrikethrough,
         subscript: allSubscript,
+        superscript: allSuperscript,
         hyperlink: false,
       };
 

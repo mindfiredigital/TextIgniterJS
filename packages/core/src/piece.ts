@@ -6,6 +6,7 @@ class Piece {
     underline: boolean;
     strikethrough?: boolean;
     subscript?: boolean;
+    superscript?: boolean;
     undo?: boolean;
     redo?: boolean;
     fontFamily?: string;
@@ -22,6 +23,7 @@ class Piece {
       underline?: boolean;
       strikethrough?: boolean;
       subscript?: boolean;
+      superscript?: boolean;
       undo?: boolean;
       redo?: boolean;
       fontFamily?: string;
@@ -66,6 +68,7 @@ class Piece {
       underline: attributes.underline || false,
       strikethrough: attributes.strikethrough || false,
       subscript: attributes.subscript || false,
+      superscript: attributes.superscript || false,
       undo: attributes.undo || false,
       redo: attributes.redo || false,
       fontFamily: attributes.fontFamily || selectedFontFamilyValue, // Default font family
@@ -125,6 +128,8 @@ class Piece {
         (other.attributes.strikethrough || false) &&
       (this.attributes.subscript || false) ===
         (other.attributes.subscript || false) &&
+      (this.attributes.superscript || false) ===
+        (other.attributes.superscript || false) &&
       this.attributes.undo === other.attributes.undo &&
       this.attributes.redo === other.attributes.redo &&
       this.attributes.fontFamily === other.attributes.fontFamily &&

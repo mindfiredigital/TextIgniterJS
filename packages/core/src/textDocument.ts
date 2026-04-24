@@ -542,6 +542,7 @@ class TextDocument extends EventEmitter {
             attribute === 'underline' ||
             attribute === 'strikethrough' ||
             attribute === 'subscript' ||
+            attribute == 'superscript' ||
             attribute === 'undo' ||
             attribute === 'redo' ||
             attribute === 'hyperlink') &&
@@ -825,6 +826,17 @@ class TextDocument extends EventEmitter {
       this.formatAttribute(start, end, 'superscript' as any, false);
     }
     this.formatAttribute(start, end, 'subscript' as any, !allSubscript);
+  }
+  toggleSuperscriptRange(start: number, end: number, id = ''): void {
+    const allSuperscript = this.isRangeEntirelyAttribute(
+      start,
+      end,
+      'superscript' as any
+    );
+    if (!allSuperscript) {
+      this.formatAttribute(start, end, 'subscript' as any, false);
+    }
+    this.formatAttribute(start, end, 'superscript' as any, !allSuperscript);
   }
   toggleUndoRange(start: number, end: number, id = ''): void {
     const allUndo = this.isRangeEntirelyAttribute(start, end, 'undo');
