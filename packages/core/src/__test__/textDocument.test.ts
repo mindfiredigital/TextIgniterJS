@@ -428,17 +428,13 @@ describe('TextDocument', () => {
     // Should work with valid selectedBlockId
     expect(() => doc.formatAttribute(0, 4, 'bold', true)).not.toThrow();
 
-    // Set selectedBlockId to empty string - crashes because index remains -1
+    // Set selectedBlockId to empty string - should return early and not crash
     doc.selectedBlockId = '';
-    expect(() => doc.formatAttribute(0, 4, 'bold', true)).toThrow(
-      'Cannot read properties of undefined'
-    );
+    expect(() => doc.formatAttribute(0, 4, 'bold', true)).not.toThrow();
 
-    // Set selectedBlockId to null - crashes because index remains -1
+    // Set selectedBlockId to null - should return early and not crash
     doc.selectedBlockId = null;
-    expect(() => doc.formatAttribute(0, 4, 'italic', true)).toThrow(
-      'Cannot read properties of undefined'
-    );
+    expect(() => doc.formatAttribute(0, 4, 'italic', true)).not.toThrow();
   });
 
   it('handles insertAt with strict dataId validation', () => {
@@ -462,20 +458,20 @@ describe('TextDocument', () => {
     // Test case where dataId is not empty but is null
     const originalText = doc.blocks[0].pieces.map((p: any) => p.text).join('');
 
-    // With null dataId, it falls back to index 0 (default behavior) and processes
+    // With null dataId, it returns early and does not process
     doc.deleteRange(0, 6, null, 0, false);
     const textAfterNull = doc.blocks[0].pieces.map((p: any) => p.text).join('');
-    expect(textAfterNull).not.toBe(originalText); // Should be changed
+    expect(textAfterNull).toBe(originalText); // Should not be changed
 
     // Reset for next test
     doc.blocks[0].pieces = [new Piece('Sample text for testing ')];
 
-    // With empty string dataId, it falls back to index 0 (default behavior) and processes
+    // With empty string dataId, it returns early and does not process
     doc.deleteRange(0, 6, '', 0, false);
     const textAfterEmpty = doc.blocks[0].pieces
       .map((p: any) => p.text)
       .join('');
-    expect(textAfterEmpty).not.toBe('Sample text for testing '); // Should be changed
+    expect(textAfterEmpty).toBe('Sample text for testing '); // Should not be changed
 
     // Reset for next test
     doc.blocks[0].pieces = [new Piece('Sample text for testing ')];
@@ -500,17 +496,13 @@ describe('TextDocument', () => {
     doc.formatAttribute(0, 4, 'bold', false);
     expect(doc.blocks[0].pieces[0].attributes.bold).toBe(false);
 
-    // Test with selectedBlockId as empty string (crashes because index remains -1)
+    // Test with selectedBlockId as empty string - returns early, no crash
     doc.selectedBlockId = '';
-    expect(() => doc.formatAttribute(0, 4, 'bold', true)).toThrow(
-      'Cannot read properties of undefined'
-    );
+    expect(() => doc.formatAttribute(0, 4, 'bold', true)).not.toThrow();
 
-    // Test with selectedBlockId as null (crashes because index remains -1)
+    // Test with selectedBlockId as null - returns early, no crash
     doc.selectedBlockId = null;
-    expect(() => doc.formatAttribute(0, 4, 'italic', true)).toThrow(
-      'Cannot read properties of undefined'
-    );
+    expect(() => doc.formatAttribute(0, 4, 'italic', true)).not.toThrow();
   });
 
   it('setCursorPosition handles strict dataId validation', () => {
@@ -757,13 +749,12 @@ describe('TextDocument', () => {
         .map((p: Piece) => p.text)
         .join('');
 
-      // With empty string dataId, should process on index 0 (default behavior)
+      // With empty string dataId, should return early
       doc.deleteRange(0, 5, '', 0, false);
       const textAfterEmpty = doc.blocks[0].pieces
         .map((p: Piece) => p.text)
         .join('');
-      expect(textAfterEmpty).not.toBe(originalText); // Should have changed
-      expect(textAfterEmpty.length).toBeLessThan(originalText.length);
+      expect(textAfterEmpty).toBe(originalText); // Should not have changed
     });
 
     it('should process insertAt on default block when dataId is null', () => {
@@ -771,11 +762,10 @@ describe('TextDocument', () => {
         .map((p: Piece) => p.text)
         .join('');
 
-      // With null dataId, should process on index 0 (default behavior)
+      // With null dataId, should return early
       doc.insertAt('Should insert', {}, 0, null);
       const newText = doc.blocks[0].pieces.map((p: Piece) => p.text).join('');
-      expect(newText).toContain('Should insert');
-      expect(newText).not.toBe(originalText);
+      expect(newText).toBe(originalText);
     });
 
     it('should process insertAt on default block when dataId is empty string', () => {
@@ -783,31 +773,26 @@ describe('TextDocument', () => {
         .map((p: Piece) => p.text)
         .join('');
 
-      // With empty dataId, should process on index 0 (default behavior)
+      // With empty dataId, should return early
       doc.insertAt('Should insert', {}, 0, '');
       const newText = doc.blocks[0].pieces.map((p: Piece) => p.text).join('');
-      expect(newText).toContain('Should insert');
-      expect(newText).not.toBe(originalText);
+      expect(newText).toBe(originalText);
     });
 
     it('should not process formatAttribute when selectedBlockId is null', () => {
       doc.insertAt('Test text', {}, 0, doc.selectedBlockId);
       doc.selectedBlockId = null;
 
-      // With null selectedBlockId, crashes because index remains -1
-      expect(() => doc.formatAttribute(0, 4, 'bold', true)).toThrow(
-        'Cannot read properties of undefined'
-      );
+      // With null selectedBlockId, returns early
+      expect(() => doc.formatAttribute(0, 4, 'bold', true)).not.toThrow();
     });
 
     it('should not process formatAttribute when selectedBlockId is empty string', () => {
       doc.insertAt('Test text', {}, 0, doc.selectedBlockId);
       doc.selectedBlockId = '';
 
-      // With empty selectedBlockId, crashes because index remains -1
-      expect(() => doc.formatAttribute(0, 4, 'bold', true)).toThrow(
-        'Cannot read properties of undefined'
-      );
+      // With empty selectedBlockId, returns early
+      expect(() => doc.formatAttribute(0, 4, 'bold', true)).not.toThrow();
     });
 
     it('should not process isRangeEntirelyAttribute when selectedBlockId is null', () => {
@@ -851,11 +836,11 @@ describe('TextDocument', () => {
     });
 
     it('should handle insertAt with invalid dataId gracefully', () => {
-      // With non-existent dataId, the current implementation tries to access blocks[-1].pieces
-      // which causes a TypeError. This is the actual current behavior.
+      // With non-existent dataId, the current implementation returns early
+      // so it does not throw
       expect(() =>
         doc.insertAt('Should crash', {}, 0, 'non-existent-id')
-      ).toThrow('Cannot read properties of undefined');
+      ).not.toThrow();
     });
 
     it('should handle formatAttribute with invalid selectedBlockId gracefully', () => {
@@ -890,10 +875,10 @@ describe('TextDocument', () => {
         .join('');
       expect(validBlockContent).toContain('Added text');
 
-      // Process with invalid dataId - will throw error due to blocks[-1] access
+      // Process with invalid dataId - returns early without throwing
       expect(() =>
         doc.insertAt('Should throw', {}, 0, 'invalid-block')
-      ).toThrow();
+      ).not.toThrow();
       expect(doc.blocks.length).toBe(originalLength); // Should remain unchanged because of the error
     });
   });

@@ -27,8 +27,8 @@ class LinkPopupView {
       padding: 2px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.5);
       z-index: 1000;
-      display: none;
     `;
+    this.popup.style.display = 'none';
 
     // Create buttons
     const openBtn = this.createButton('Open', '🔗');
