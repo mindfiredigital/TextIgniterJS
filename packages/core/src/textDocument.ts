@@ -541,6 +541,7 @@ class TextDocument extends EventEmitter {
             attribute === 'italic' ||
             attribute === 'underline' ||
             attribute === 'strikethrough' ||
+            attribute === 'subscript' ||
             attribute === 'undo' ||
             attribute === 'redo' ||
             attribute === 'hyperlink') &&
@@ -814,6 +815,17 @@ class TextDocument extends EventEmitter {
     );
     this.formatAttribute(start, end, 'strikethrough' as any, !allStrike);
   }
+  toggleSubscriptRange(start: number, end: number, id = ''): void {
+    const allSubscript = this.isRangeEntirelyAttribute(
+      start,
+      end,
+      'subscript' as any
+    );
+    if (!allSubscript) {
+      this.formatAttribute(start, end, 'superscript' as any, false);
+    }
+    this.formatAttribute(start, end, 'subscript' as any, !allSubscript);
+  }
   toggleUndoRange(start: number, end: number, id = ''): void {
     const allUndo = this.isRangeEntirelyAttribute(start, end, 'undo');
     this.formatAttribute(start, end, 'undo', !allUndo);
@@ -881,7 +893,8 @@ class TextDocument extends EventEmitter {
     let currentOffset = 0;
     if (dataId !== '' && dataId !== null) {
       for (let block of this.blocks) {
-        if (block.type === 'table' || !block.pieces) continue;
+        if (block.type === 'table' || block.type === 'layout' || !block.pieces)
+          continue;
         const blockLength = block.pieces.reduce(
           (acc: number, curr: any) => acc + curr.text.length,
           0

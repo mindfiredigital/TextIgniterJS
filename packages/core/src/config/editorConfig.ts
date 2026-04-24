@@ -124,6 +124,16 @@ export function createEditor(
       id: 'insert_table',
       icon: icons.insert_table,
     },
+    {
+      feature: 'subscript',
+      id: 'subscript',
+      icon: icons.subscript,
+    },
+    {
+      feature: 'superscript',
+      id: 'superscript',
+      icon: icons.superscript,
+    },
   ];
 
   const createSelect = (id: string, options: string[]) => {
