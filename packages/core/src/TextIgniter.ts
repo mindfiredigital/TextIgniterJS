@@ -27,6 +27,7 @@ export interface CurrentAttributeDTO {
   italic: boolean;
   underline: boolean;
   strikethrough?: boolean;
+  subscript?: boolean;
   undo?: boolean;
   redo?: boolean;
   hyperlink?: string | boolean;
@@ -184,6 +185,7 @@ class TextIgniter extends EventEmitter {
       italic: false,
       underline: false,
       strikethrough: false,
+      subscript: false,
       undo: false,
       redo: false,
       hyperlink: false,
@@ -874,6 +876,23 @@ class TextIgniter extends EventEmitter {
                 this.document.toggleStrikethroughRange(start, end);
               }
               break;
+            case 'subscript':
+              if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                  if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                      countE += obj.text.length;
+                    });
+                    let countS = start - countE;
+                    this.document.toggleSubscriptRange(countS, countE);
+                  }
+                });
+              } else {
+                this.document.toggleSubscriptRange(start, end);
+              }
+              break;
             case 'hyperlink':
               this.hyperlinkHandler.hanldeHyperlinkClick(
                 start,
@@ -891,6 +910,7 @@ class TextIgniter extends EventEmitter {
               | 'italic'
               | 'underline'
               | 'strikethrough'
+              | 'subscript'
               | 'undo'
               | 'redo'
           ] =
@@ -900,6 +920,7 @@ class TextIgniter extends EventEmitter {
                 | 'italic'
                 | 'underline'
                 | 'strikethrough'
+                | 'subscript'
                 | 'undo'
                 | 'redo'
             ];
@@ -1527,6 +1548,7 @@ class TextIgniter extends EventEmitter {
             italic: piece.attributes.italic,
             underline: piece.attributes.underline,
             strikethrough: piece.attributes.strikethrough || false,
+            subscript: piece.attributes.subscript || false,
             hyperlink: piece.attributes.hyperlink || false,
             fontFamily: piece.attributes.fontFamily,
             fontSize: piece.attributes.fontSize,
@@ -1546,6 +1568,7 @@ class TextIgniter extends EventEmitter {
             italic: false,
             underline: false,
             strikethrough: false,
+            subscript: false,
             hyperlink: false,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
@@ -1578,11 +1601,18 @@ class TextIgniter extends EventEmitter {
         'strikethrough' as any
       );
 
+      const allSubscript = this.document.isRangeEntirelyAttribute(
+        start,
+        end,
+        'subscript' as any
+      );
+
       this.currentAttributes = {
         bold: allBold,
         italic: allItalic,
         underline: allUnderline,
         strikethrough: allStrikethrough,
+        subscript: allSubscript,
         hyperlink: false,
       };
 
