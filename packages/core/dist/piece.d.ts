@@ -5,6 +5,8 @@ declare class Piece {
         italic: boolean;
         underline: boolean;
         strikethrough?: boolean;
+        subscript?: boolean;
+        superscript?: boolean;
         undo?: boolean;
         redo?: boolean;
         fontFamily?: string;
@@ -18,6 +20,8 @@ declare class Piece {
         italic?: boolean;
         underline?: boolean;
         strikethrough?: boolean;
+        subscript?: boolean;
+        superscript?: boolean;
         undo?: boolean;
         redo?: boolean;
         fontFamily?: string;

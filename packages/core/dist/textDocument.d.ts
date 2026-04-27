@@ -44,6 +44,8 @@ declare class TextDocument extends EventEmitter {
     toggleItalicRange(start: number, end: number, id?: string): void;
     toggleUnderlineRange(start: number, end: number, id?: string): void;
     toggleStrikethroughRange(start: number, end: number, id?: string): void;
+    toggleSubscriptRange(start: number, end: number, id?: string): void;
+    toggleSuperscriptRange(start: number, end: number, id?: string): void;
     toggleUndoRange(start: number, end: number, id?: string): void;
     toggleRedoRange(start: number, end: number): void;
     applyFontColor(start: number, end: number, color: string, id?: string): void;

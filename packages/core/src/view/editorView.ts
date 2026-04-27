@@ -26,7 +26,7 @@ class EditorView {
       if (block.dataId !== '') {
         let wrapperDiv: HTMLElement;
 
-        if (block.type === 'table') {
+        if (block.type === 'table' || block.type === 'layout') {
           if (block.element) {
             this.container.appendChild(block.element);
           }
@@ -112,6 +112,8 @@ class EditorView {
       italic: boolean;
       underline: boolean;
       strikethrough?: boolean;
+      subscript?: boolean;
+      superscript?: boolean;
       fontFamily?: string;
       fontSize?: string;
       hyperlink?: string | boolean;
@@ -141,6 +143,16 @@ class EditorView {
         const strong = document.createElement('strong');
         strong.appendChild(textNode);
         textNode = strong;
+      }
+      if (attrs.subscript) {
+        const sub = document.createElement('sub');
+        sub.appendChild(textNode);
+        textNode = sub;
+      }
+      if (attrs.superscript) {
+        const sup = document.createElement('sup');
+        sup.appendChild(textNode);
+        textNode = sup;
       }
 
       // Wrap with a span to apply font family and size

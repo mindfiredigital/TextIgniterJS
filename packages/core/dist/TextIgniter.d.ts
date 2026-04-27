@@ -14,11 +14,14 @@ import EventEmitter from './utils/events';
 import { SpeechToTextHandler } from './handlers/speechToText';
 import { InsertTableHandler } from './insertTable';
 import EmojiPickerView from './view/emojiPickerView';
+import { InsertLayoutHandler } from './insertLayout';
 export interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
     underline: boolean;
     strikethrough?: boolean;
+    subscript?: boolean;
+    superscript?: boolean;
     undo?: boolean;
     redo?: boolean;
     hyperlink?: string | boolean;
@@ -49,6 +52,7 @@ declare class TextIgniter extends EventEmitter {
     debounceTimer: NodeJS.Timeout | null;
     undoRedoManager: UndoRedoManager;
     insertTableHandler: InsertTableHandler;
+    insertLayoutHandler: InsertLayoutHandler;
     emojiPickerView: EmojiPickerView;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];

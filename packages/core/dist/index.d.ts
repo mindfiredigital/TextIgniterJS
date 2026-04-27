@@ -11,6 +11,8 @@ declare class Piece {
         italic: boolean;
         underline: boolean;
         strikethrough?: boolean;
+        subscript?: boolean;
+        superscript?: boolean;
         undo?: boolean;
         redo?: boolean;
         fontFamily?: string;
@@ -24,6 +26,8 @@ declare class Piece {
         italic?: boolean;
         underline?: boolean;
         strikethrough?: boolean;
+        subscript?: boolean;
+        superscript?: boolean;
         undo?: boolean;
         redo?: boolean;
         fontFamily?: string;
@@ -83,6 +87,8 @@ declare class EditorView {
         italic: boolean;
         underline: boolean;
         strikethrough?: boolean;
+        subscript?: boolean;
+        superscript?: boolean;
         fontFamily?: string;
         fontSize?: string;
         hyperlink?: string | boolean;
@@ -148,6 +154,8 @@ declare class TextDocument extends EventEmitter {
     toggleItalicRange(start: number, end: number, id?: string): void;
     toggleUnderlineRange(start: number, end: number, id?: string): void;
     toggleStrikethroughRange(start: number, end: number, id?: string): void;
+    toggleSubscriptRange(start: number, end: number, id?: string): void;
+    toggleSuperscriptRange(start: number, end: number, id?: string): void;
     toggleUndoRange(start: number, end: number, id?: string): void;
     toggleRedoRange(start: number, end: number): void;
     applyFontColor(start: number, end: number, color: string, id?: string): void;
@@ -299,11 +307,29 @@ declare class EmojiPickerView {
     private renderGrid;
 }
 
+declare class InsertLayoutHandler {
+    private editor;
+    private document;
+    private modal;
+    private activeLayout;
+    constructor(editor: HTMLDivElement, document: any);
+    openLayoutModal(): void;
+    private closeModal;
+    private insertLayout;
+    private setupCellEvents;
+    private selectAllInCell;
+    private setActiveLayout;
+    private clearLayoutActive;
+    private setupClickOutsideListener;
+}
+
 interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
     underline: boolean;
     strikethrough?: boolean;
+    subscript?: boolean;
+    superscript?: boolean;
     undo?: boolean;
     redo?: boolean;
     hyperlink?: string | boolean;
@@ -334,6 +360,7 @@ declare class TextIgniter extends EventEmitter {
     debounceTimer: NodeJS.Timeout | null;
     undoRedoManager: UndoRedoManager;
     insertTableHandler: InsertTableHandler;
+    insertLayoutHandler: InsertLayoutHandler;
     emojiPickerView: EmojiPickerView;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];
