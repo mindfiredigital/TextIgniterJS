@@ -21,6 +21,7 @@ import { icons } from './assets/icons';
 import { InsertTableHandler } from './insertTable';
 import EmojiPickerView from './view/emojiPickerView';
 import { InsertLayoutHandler } from './insertLayout';
+import { InsertMathHandler } from './insertMath';
 // Link functionality imports
 
 export interface CurrentAttributeDTO {
@@ -59,6 +60,7 @@ class TextIgniter extends EventEmitter {
   undoRedoManager: UndoRedoManager;
   insertTableHandler: InsertTableHandler;
   insertLayoutHandler: InsertLayoutHandler;
+  insertMathHandler: InsertMathHandler;
   emojiPickerView: EmojiPickerView;
 
   constructor(editorId: string, config: EditorConfig) {
@@ -108,6 +110,10 @@ class TextIgniter extends EventEmitter {
       this.document
     );
     this.insertLayoutHandler = new InsertLayoutHandler(
+      this.editorView.container as HTMLDivElement,
+      this.document
+    );
+    this.insertMathHandler = new InsertMathHandler(
       this.editorView.container as HTMLDivElement,
       this.document
     );
@@ -801,6 +807,9 @@ class TextIgniter extends EventEmitter {
         break;
       case 'insert_layout':
         this.insertLayoutHandler.openLayoutModal();
+        break;
+      case 'insert_math':
+        this.insertMathHandler.openMathModal();
         break;
       case 'emoji':
         this.savedSelection = saveSelection(this.editorView.container);

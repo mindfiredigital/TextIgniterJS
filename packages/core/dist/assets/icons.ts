@@ -166,4 +166,10 @@ export const icons = {
     <line x1="9" y1="9" x2="9.01" y2="9"></line>
     <line x1="15" y1="9" x2="15.01" y2="9"></line>
   </svg>`,
+  insert_math: `<svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="200" height="200" 
+                    viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M18 6H8.83l6 6l-6 6H18v2H6v-2l6-6l-6-6V4h12v2Z"/>
+                </svg>`,
 };

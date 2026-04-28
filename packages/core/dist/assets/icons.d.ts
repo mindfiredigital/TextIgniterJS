@@ -20,4 +20,5 @@ export declare const icons: {
     start_microphone: string;
     close_icon: string;
     emoji: string;
+    insert_math: string;
 };
