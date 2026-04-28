@@ -60,6 +60,8 @@ export function createEditor(
   editor.id = mainEditorId;
   editor.className = strings.EDITOR_CLASSNAME;
   editor.contentEditable = 'true';
+  editor.spellcheck = true;
+  editor.lang = 'en';
   container.appendChild(editor);
 
   const featureLabels: any = {
