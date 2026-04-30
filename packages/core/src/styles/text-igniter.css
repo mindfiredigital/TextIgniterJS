@@ -698,3 +698,230 @@
 .modal_close_button_primary:hover {
   background: #2563eb;
 }
+
+.code_block_wrapper {
+  background: #f8f8f8;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  margin: 12px 0;
+  overflow: hidden;
+  font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+  position: relative;
+  cursor: default;
+  user-select: none;
+  syntax: none;
+
+}
+
+.code_block_wrapper * {
+  pointer-events: none;
+}
+
+.code_block_header {
+  background: #f0f0f0;
+  border-bottom: 1px solid #e2e2e2;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.code_block_language {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  font-family: 'Fira Code', monospace;
+  letter-spacing: 0.04em;
+  flex: 0 0 auto;
+}
+
+.code_block_hint {
+  font-size: 11px;
+  color: #bbb;
+  flex: 1;
+}
+
+.code_block_cancel {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #bbb;
+  font-size: 16px;
+  pointer-events: all;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.code_block_cancel:hover {
+  background: #ffe4e4;
+  color: #dc2626;
+}
+
+.code_block_content {
+  margin: 0;
+  padding: 14px 16px;
+  color: #1e1e1e;
+  background: #f8f8f8;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.65;
+  white-space: pre;
+  tab-size: 2;
+}
+
+
+.code_editor_modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+
+.code_editor_modal_content {
+  background: #ffffff;
+  width: 88vw;
+  height: 88vh;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
+.code_editor_modal_header {
+  background: #f5f5f5;
+  padding: 9px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e2e2;
+  flex: 0 0 auto;
+}
+
+.code_editor_modal_title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  font-family: 'Fira Code', monospace;
+  letter-spacing: 0.04em;
+}
+
+.code_editor_modal_actions {
+  display: flex;
+  gap: 6px;
+}
+
+.copy_editor_btn {
+  font-size: 12px;
+  font-family: inherit;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid #d4d4d4;
+  background: #fff;
+  color: #444;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.copy_editor_btn:hover {
+  background: #f0f0f0;
+}
+
+.copy_editor_btn--primary {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+.copy_editor_btn--primary:hover {
+  background: #333;
+  border-color: #333;
+}
+
+.copy_editor_btn--cancel:hover {
+  background: #ffe4e4;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.editor_moal_wrapper {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  background: #fff;
+}
+
+.editor_moal_line_number {
+  padding: 14px 10px 14px 12px;
+  background: #f8f8f8;
+  border-right: 1px solid #ebebeb;
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #ccc;
+  text-align: right;
+  user-select: none;
+  overflow: hidden;
+  min-width: 44px;
+  flex: 0 0 auto;
+}
+
+.editor_moal_line_number span {
+  display: block;
+}
+
+.modal_editor_text_area,
+.editor_modal_pre_block {
+  position: absolute;
+  top: 0;
+  left: 44px;
+  width: calc(100% - 44px);
+  height: 100%;
+  margin: 0;
+  padding: 14px 16px;
+  border: none;
+  font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+  font-size: 13.5px;
+  line-height: 1.65;
+  white-space: pre;
+  overflow: auto;
+  tab-size: 2;
+  box-sizing: border-box;
+}
+
+.modal_editor_text_area {
+  color: transparent;
+  background: transparent;
+  caret-color: #1a1a1a;
+  resize: none;
+  outline: none;
+  z-index: 2;
+}
+
+.editor_modal_pre_block {
+  color: #1e1e1e;
+  background: #fff;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.modal_editor_highlight {
+  display: block;
+}

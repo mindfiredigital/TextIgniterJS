@@ -11,6 +11,8 @@ declare class Piece {
         italic: boolean;
         underline: boolean;
         strikethrough?: boolean;
+        subscript?: boolean;
+        superscript?: boolean;
         undo?: boolean;
         redo?: boolean;
         fontFamily?: string;
@@ -24,6 +26,8 @@ declare class Piece {
         italic?: boolean;
         underline?: boolean;
         strikethrough?: boolean;
+        subscript?: boolean;
+        superscript?: boolean;
         undo?: boolean;
         redo?: boolean;
         fontFamily?: string;
@@ -83,6 +87,8 @@ declare class EditorView {
         italic: boolean;
         underline: boolean;
         strikethrough?: boolean;
+        subscript?: boolean;
+        superscript?: boolean;
         fontFamily?: string;
         fontSize?: string;
         hyperlink?: string | boolean;
@@ -148,6 +154,8 @@ declare class TextDocument extends EventEmitter {
     toggleItalicRange(start: number, end: number, id?: string): void;
     toggleUnderlineRange(start: number, end: number, id?: string): void;
     toggleStrikethroughRange(start: number, end: number, id?: string): void;
+    toggleSubscriptRange(start: number, end: number, id?: string): void;
+    toggleSuperscriptRange(start: number, end: number, id?: string): void;
     toggleUndoRange(start: number, end: number, id?: string): void;
     toggleRedoRange(start: number, end: number): void;
     applyFontColor(start: number, end: number, color: string, id?: string): void;
@@ -299,11 +307,35 @@ declare class EmojiPickerView {
     private renderGrid;
 }
 
+declare class CodeEditorModalView {
+    private container;
+    private textArea;
+    private lineNumbers;
+    private pre;
+    private codeHighlight;
+    private copyBtn;
+    private saveBtn;
+    private cancelBtn;
+    private currentLanguage;
+    private onSaveCallback;
+    private onCloseCallback;
+    constructor();
+    private attachEventListeners;
+    private syncHighlight;
+    private handleCopy;
+    private handleSave;
+    private handleClose;
+    open(code: string, language: string, onSave: (code: string) => void, onClose: () => void): void;
+    close(): void;
+}
+
 interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
     underline: boolean;
     strikethrough?: boolean;
+    subscript?: boolean;
+    superscript?: boolean;
     undo?: boolean;
     redo?: boolean;
     hyperlink?: string | boolean;
@@ -335,6 +367,7 @@ declare class TextIgniter extends EventEmitter {
     undoRedoManager: UndoRedoManager;
     insertTableHandler: InsertTableHandler;
     emojiPickerView: EmojiPickerView;
+    codeEditorModal: CodeEditorModalView;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];
     applyFontColor(color: string): void;
