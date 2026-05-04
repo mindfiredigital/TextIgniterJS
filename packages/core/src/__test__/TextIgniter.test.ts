@@ -1,4 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { TextIgniter } from '../TextIgniter';
 import { strings } from '../constants/strings';
 
@@ -214,6 +222,8 @@ describe('TextIgniter public API and key methods', () => {
           italic: false,
           underline: false,
           strikethrough: false,
+          subscript: false,
+          superscript: false,
           hyperlink: false,
           bgColor: '#fff',
           fontColor: '#000',
@@ -257,6 +267,10 @@ describe('TextIgniter public API and key methods', () => {
     expect(() => ti.handleToolbarAction('image')).not.toThrow();
     // Hyperlink
     expect(() => ti.handleToolbarAction('hyperlink')).not.toThrow();
+    // subscript
+    expect(() => ti.handleToolbarAction('subscript')).not.toThrow();
+    // superscript
+    expect(() => ti.handleToolbarAction('superscript')).not.toThrow();
   });
 
   it('should call setCursorPosition without error', () => {

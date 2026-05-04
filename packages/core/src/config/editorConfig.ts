@@ -9,7 +9,7 @@ const featureGroups = {
   formatting: ['bold', 'italic', 'underline', 'strikethrough'],
   alignment: ['alignLeft', 'alignCenter', 'alignRight'],
   lists: ['unorderedList', 'orderedList'],
-  media: ['hyperlink', 'image', 'emoji'],
+  media: ['hyperlink', 'image', 'emoji', 'insert_math'],
   utility: ['getHtmlContent', 'loadHtmlContent'],
 };
 
@@ -60,6 +60,8 @@ export function createEditor(
   editor.id = mainEditorId;
   editor.className = strings.EDITOR_CLASSNAME;
   editor.contentEditable = 'true';
+  editor.spellcheck = true;
+  editor.lang = 'en';
   container.appendChild(editor);
 
   const featureLabels: any = {
@@ -80,6 +82,7 @@ export function createEditor(
     justify: '&#8644;',
     insert_table: '&#8866;',
     insert_layout: '&#10064;',
+    insert_math: 'Σ',
     heading: 'H',
     image: '&#128247;',
     colors: '&#127912;',
@@ -104,6 +107,7 @@ export function createEditor(
     getHtmlContent: 'Get HTML',
     loadHtmlContent: 'Load HTML',
     insert_table: 'Insert table',
+    insert_math: 'Insert Equation',
   };
 
   const featuresWithPngIcon = [
@@ -123,6 +127,11 @@ export function createEditor(
       feature: 'insert_table',
       id: 'insert_table',
       icon: icons.insert_table,
+    },
+    {
+      feature: 'insert_math',
+      id: 'insert_math',
+      icon: icons.insert_math,
     },
     {
       feature: 'subscript',

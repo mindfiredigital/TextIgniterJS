@@ -329,6 +329,35 @@ declare class CodeEditorModalView {
     close(): void;
 }
 
+declare class InsertLayoutHandler {
+    private editor;
+    private document;
+    private modal;
+    private activeLayout;
+    constructor(editor: HTMLDivElement, document: any);
+    openLayoutModal(): void;
+    private closeModal;
+    private insertLayout;
+    private setupCellEvents;
+    private selectAllInCell;
+    private setActiveLayout;
+    private clearLayoutActive;
+    private setupClickOutsideListener;
+}
+
+declare class InsertMathHandler {
+    private editor;
+    private document;
+    private modal;
+    private isKatexLoaded;
+    private editingBlockId;
+    constructor(editor: HTMLDivElement, document: any);
+    private loadKatex;
+    openMathModal(existingLatex?: string, blockId?: string | null): void;
+    private closeModal;
+    private insertEquation;
+}
+
 interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
@@ -366,6 +395,8 @@ declare class TextIgniter extends EventEmitter {
     debounceTimer: NodeJS.Timeout | null;
     undoRedoManager: UndoRedoManager;
     insertTableHandler: InsertTableHandler;
+    insertLayoutHandler: InsertLayoutHandler;
+    insertMathHandler: InsertMathHandler;
     emojiPickerView: EmojiPickerView;
     codeEditorModal: CodeEditorModalView;
     constructor(editorId: string, config: EditorConfig);

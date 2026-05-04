@@ -26,7 +26,11 @@ class EditorView {
       if (block.dataId !== '') {
         let wrapperDiv: HTMLElement;
 
-        if (block.type === 'table') {
+        if (
+          block.type === 'table' ||
+          block.type === 'layout' ||
+          block.type === 'math'
+        ) {
           if (block.element) {
             this.container.appendChild(block.element);
           }

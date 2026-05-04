@@ -469,7 +469,9 @@
 }
 
 .table_wrapper:hover .table_controls,
-.table_wrapper:focus-within .table_controls {
+.table_wrapper:focus-within .table_controls,
+.layout_wrapper:hover .table_controls,
+.layout_wrapper:focus-within .table_controls {
   opacity: 1;
 }
 
@@ -563,6 +565,11 @@
   max-height: 220px;
   box-shadow: 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   overflow: hidden;
+}
+
+.layout_main_modal {
+  height: auto;
+  max-height: 380px;
 }
 
 .table_modal_visible .main_modal {
@@ -924,4 +931,16 @@
 
 .modal_editor_highlight {
   display: block;
+}
+
+.layout_wrapper {
+  margin: 12px 0;
+  width: 100%;
+  position: relative;
+}
+
+.layout_active {
+  outline: 2px solid #3b82f6;
+  outline-offset: 4px;
+  border-radius: 4px;
 }

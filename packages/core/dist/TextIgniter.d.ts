@@ -15,6 +15,8 @@ import { SpeechToTextHandler } from './handlers/speechToText';
 import { InsertTableHandler } from './insertTable';
 import EmojiPickerView from './view/emojiPickerView';
 import { CodeEditorModalView } from './view/codeEditorModalView';
+import { InsertLayoutHandler } from './insertLayout';
+import { InsertMathHandler } from './insertMath';
 export interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
@@ -52,6 +54,8 @@ declare class TextIgniter extends EventEmitter {
     debounceTimer: NodeJS.Timeout | null;
     undoRedoManager: UndoRedoManager;
     insertTableHandler: InsertTableHandler;
+    insertLayoutHandler: InsertLayoutHandler;
+    insertMathHandler: InsertMathHandler;
     emojiPickerView: EmojiPickerView;
     codeEditorModal: CodeEditorModalView;
     constructor(editorId: string, config: EditorConfig);

@@ -1,7 +1,6 @@
-import { describe, it, beforeEach, expect } from 'vitest';
+import { describe, it, beforeEach, expect, vi } from 'vitest';
 import { InsertLayoutHandler } from '../insertLayout';
 
-// Recursive helper to get all trimmed text inside an element
 function getDeepTextContent(element: HTMLElement): string {
   let text = '';
   element.childNodes.forEach(node => {
@@ -12,175 +11,152 @@ function getDeepTextContent(element: HTMLElement): string {
   return text.trim();
 }
 
-// Find button by exact trimmed text
 function getButton(modal: HTMLElement, label: string) {
   return Array.from(modal.querySelectorAll('button')).find(
     btn => getDeepTextContent(btn) === label
   );
 }
 
+function wait(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 describe('InsertLayoutHandler', () => {
   let editor: HTMLDivElement;
+  let mockDoc: any;
 
   beforeEach(() => {
-    document.body.innerHTML = ''; // clear DOM
+    document.body.innerHTML = '';
+
     editor = document.createElement('div');
-    editor.id = 'editor';
     document.body.appendChild(editor);
+
+    mockDoc = {
+      blocks: [],
+      selectedBlockId: null,
+      currentOffset: 0,
+      emit: vi.fn(),
+    };
   });
 
-  async function stabilizeDom() {
-    // Allow any DOM updates in jsdom to complete
-    await new Promise(r => setTimeout(r, 0));
-  }
-
-  it('renders a modal with layout buttons', async () => {
-    const handler = new InsertLayoutHandler(editor);
+  it('it should be render the layout model with all buttons and there proper names', async () => {
+    const handler = new InsertLayoutHandler(editor, mockDoc);
     handler.openLayoutModal();
 
-    await stabilizeDom();
-
-    const modal = document.body.querySelector('.modal');
+    const modal = document.body.querySelector('.table_modal');
     expect(modal).not.toBeNull();
-
-    console.log('Modal innerHTML:', modal?.innerHTML);
 
     const buttons = Array.from(modal!.querySelectorAll('button')).map(btn =>
       getDeepTextContent(btn)
     );
-    expect(buttons).toContain('Single Column');
-    expect(buttons).toContain('Two Columns');
-    expect(buttons).toContain('Three Columns');
-    expect(buttons).toContain('60-40 Split');
-    expect(buttons).toContain('40-60 Split');
-    expect(buttons).toContain('Close');
+
+    expect(buttons).toContain('Single');
+    expect(buttons).toContain('50 - 50');
+    expect(buttons).toContain('60 - 40');
+    expect(buttons).toContain('40 - 60');
+    expect(buttons).toContain('33 - 33 - 33');
+    expect(buttons).toContain('25 - 50 - 25');
+    expect(buttons).toContain('Cancel');
+    expect(buttons).toContain('Insert Custom');
   });
 
-  it('inserts single column layout on button click', async () => {
-    const handler = new InsertLayoutHandler(editor);
+  it('in layout it should be insert the single column layout', async () => {
+    const handler = new InsertLayoutHandler(editor, mockDoc);
     handler.openLayoutModal();
 
-    await stabilizeDom();
+    const modal = document.body.querySelector('.table_modal')!;
+    const btn = getButton(modal as HTMLElement, 'Single')!;
+    btn.click();
 
-    const modal = document.body.querySelector('.modal');
-    expect(modal).not.toBeNull();
+    expect(mockDoc.blocks.length).toBe(2);
 
-    const oneColBtn = getButton(modal! as HTMLElement, 'Single Column');
-    expect(oneColBtn).toBeDefined();
-    oneColBtn!.click();
+    const layoutBlock = mockDoc.blocks[0];
+    const wrapper = layoutBlock.element as HTMLElement;
 
-    expect(document.body.querySelector('.modal')).toBeNull();
-
-    expect(editor.children.length).toBe(1);
-    const layout = editor.children[0] as HTMLDivElement;
-    expect(layout.style.display).toBe('flex');
-    expect(layout.children.length).toBe(1);
-    expect((layout.children[0] as HTMLDivElement).style.flex).toBe('0 0 100%');
-    expect((layout.children[0] as HTMLDivElement).contentEditable).toBe('true');
+    const columns = wrapper.querySelectorAll('.layout_column');
+    expect(columns.length).toBe(1);
   });
 
-  it('inserts two column layout on button click', async () => {
-    const handler = new InsertLayoutHandler(editor);
+  it('in layout it should insert the 2 column 50-50', async () => {
+    const handler = new InsertLayoutHandler(editor, mockDoc);
     handler.openLayoutModal();
 
-    await stabilizeDom();
+    const modal = document.body.querySelector('.table_modal')!;
+    getButton(modal as HTMLElement, '50 - 50')!.click();
 
-    const modal = document.body.querySelector('.modal');
-    expect(modal).not.toBeNull();
+    const wrapper = mockDoc.blocks[0].element as HTMLElement;
+    const columns = wrapper.querySelectorAll('.layout_column');
 
-    const twoColBtn = getButton(modal! as HTMLElement, 'Two Columns');
-    expect(twoColBtn).toBeDefined();
-    twoColBtn!.click();
-
-    expect(document.body.querySelector('.modal')).toBeNull();
-    expect(editor.children.length).toBe(1);
-
-    const layout = editor.children[0] as HTMLDivElement;
-    expect(layout.children.length).toBe(2);
-    expect((layout.children[0] as HTMLDivElement).style.flex).toBe('0 0 50%');
-    expect((layout.children[1] as HTMLDivElement).style.flex).toBe('0 0 50%');
+    expect(columns.length).toBe(2);
+    expect((columns[0] as HTMLElement).style.flex).toContain('50%');
+    expect((columns[1] as HTMLElement).style.flex).toContain('50%');
   });
 
-  it('inserts three column layout on button click', async () => {
-    const handler = new InsertLayoutHandler(editor);
+  it('in layout it should insert the 3 column 33-33-33 ', async () => {
+    const handler = new InsertLayoutHandler(editor, mockDoc);
     handler.openLayoutModal();
 
-    await stabilizeDom();
+    const modal = document.body.querySelector('.table_modal')!;
+    getButton(modal as HTMLElement, '33 - 33 - 33')!.click();
 
-    const modal = document.body.querySelector('.modal');
-    expect(modal).not.toBeNull();
+    const wrapper = mockDoc.blocks[0].element as HTMLElement;
+    const columns = wrapper.querySelectorAll('.layout_column');
 
-    const threeColBtn = getButton(modal! as HTMLElement, 'Three Columns');
-    expect(threeColBtn).toBeDefined();
-    threeColBtn!.click();
-
-    expect(document.body.querySelector('.modal')).toBeNull();
-
-    const layout = editor.children[0] as HTMLDivElement;
-    expect(layout.children.length).toBe(3);
-    for (let i = 0; i < 3; i++) {
-      expect((layout.children[i] as HTMLDivElement).style.flex).toBe(
-        '0 0 33.33%'
-      );
-    }
+    expect(columns.length).toBe(3);
   });
 
-  it('inserts 60-40 split layout', async () => {
-    const handler = new InsertLayoutHandler(editor);
+  it('in layout it should insert the 2 column 60-40', async () => {
+    const handler = new InsertLayoutHandler(editor, mockDoc);
     handler.openLayoutModal();
 
-    await stabilizeDom();
+    const modal = document.body.querySelector('.table_modal')!;
+    getButton(modal as HTMLElement, '60 - 40')!.click();
 
-    const modal = document.body.querySelector('.modal');
-    expect(modal).not.toBeNull();
+    const wrapper = mockDoc.blocks[0].element as HTMLElement;
+    const columns = wrapper.querySelectorAll('.layout_column');
 
-    const sixtyFortyBtn = getButton(modal! as HTMLElement, '60-40 Split');
-    expect(sixtyFortyBtn).toBeDefined();
-    sixtyFortyBtn!.click();
-
-    expect(document.body.querySelector('.modal')).toBeNull();
-
-    const layout = editor.children[0] as HTMLDivElement;
-    expect(layout.children.length).toBe(2);
-    expect((layout.children[0] as HTMLDivElement).style.flex).toBe('0 0 60%');
-    expect((layout.children[1] as HTMLDivElement).style.flex).toBe('0 0 40%');
+    expect((columns[0] as HTMLElement).style.flex).toContain('60%');
+    expect((columns[1] as HTMLElement).style.flex).toContain('40%');
   });
 
-  it('inserts 40-60 split layout', async () => {
-    const handler = new InsertLayoutHandler(editor);
+  it('inserts custom layout', async () => {
+    const handler = new InsertLayoutHandler(editor, mockDoc);
     handler.openLayoutModal();
 
-    await stabilizeDom();
+    const modal = document.body.querySelector('.table_modal')!;
+    const input = modal.querySelector('input') as HTMLInputElement;
 
-    const modal = document.body.querySelector('.modal');
-    expect(modal).not.toBeNull();
+    input.value = '10,20,30,40,50,10';
 
-    const fortySixtyBtn = getButton(modal! as HTMLElement, '40-60 Split');
-    expect(fortySixtyBtn).toBeDefined();
-    fortySixtyBtn!.click();
+    getButton(modal as HTMLElement, 'Insert Custom')!.click();
 
-    expect(document.body.querySelector('.modal')).toBeNull();
+    const wrapper = mockDoc.blocks[0].element as HTMLElement;
+    const columns = wrapper.querySelectorAll('.layout_column');
 
-    const layout = editor.children[0] as HTMLDivElement;
-    expect(layout.children.length).toBe(2);
-    expect((layout.children[0] as HTMLDivElement).style.flex).toBe('0 0 40%');
-    expect((layout.children[1] as HTMLDivElement).style.flex).toBe('0 0 60%');
+    expect(columns.length).toBe(6);
   });
 
-  it('removes the modal when clicking Close', async () => {
-    const handler = new InsertLayoutHandler(editor);
+  it('closes modal on cancel', async () => {
+    const handler = new InsertLayoutHandler(editor, mockDoc);
     handler.openLayoutModal();
 
-    await stabilizeDom();
+    await wait(0);
 
-    const modal = document.body.querySelector('.modal');
-    expect(modal).not.toBeNull();
+    const modal = document.body.querySelector('.table_modal')!;
+    getButton(modal as HTMLElement, 'Cancel')!.click();
 
-    const closeBtn = getButton(modal! as HTMLElement, 'Close');
-    expect(closeBtn).toBeDefined();
-    closeBtn!.click();
+    await wait(250);
 
-    expect(document.body.querySelector('.modal')).toBeNull();
-    expect(editor.children.length).toBe(0);
+    expect(document.body.querySelector('.table_modal')).toBeNull();
+  });
+
+  it('calls emit after inserting layout', async () => {
+    const handler = new InsertLayoutHandler(editor, mockDoc);
+    handler.openLayoutModal();
+
+    const modal = document.body.querySelector('.table_modal')!;
+    getButton(modal as HTMLElement, 'Single')!.click();
+
+    expect(mockDoc.emit).toHaveBeenCalledWith('documentChanged', mockDoc);
   });
 });
