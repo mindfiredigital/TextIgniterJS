@@ -14,6 +14,8 @@ declare class EditorView {
         italic: boolean;
         underline: boolean;
         strikethrough?: boolean;
+        subscript?: boolean;
+        superscript?: boolean;
         fontFamily?: string;
         fontSize?: string;
         hyperlink?: string | boolean;
