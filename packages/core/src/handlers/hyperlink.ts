@@ -271,7 +271,9 @@ class HyperlinkHandler {
     };
     // Delay to avoid immediate closure when opening
     setTimeout(() => {
-      document.addEventListener('click', this.clickOutsideHandler!);
+      if (typeof document !== 'undefined') {
+        document.addEventListener('click', this.clickOutsideHandler!);
+      }
     }, 100);
   }
 
