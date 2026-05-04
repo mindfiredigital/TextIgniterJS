@@ -15,6 +15,7 @@ import { SpeechToTextHandler } from './handlers/speechToText';
 import { InsertTableHandler } from './insertTable';
 import EmojiPickerView from './view/emojiPickerView';
 import { InsertLayoutHandler } from './insertLayout';
+import { InsertMathHandler } from './insertMath';
 export interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
@@ -53,6 +54,7 @@ declare class TextIgniter extends EventEmitter {
     undoRedoManager: UndoRedoManager;
     insertTableHandler: InsertTableHandler;
     insertLayoutHandler: InsertLayoutHandler;
+    insertMathHandler: InsertMathHandler;
     emojiPickerView: EmojiPickerView;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];
