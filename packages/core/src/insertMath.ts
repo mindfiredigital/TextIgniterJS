@@ -63,11 +63,12 @@ export class InsertMathHandler {
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-label', 'Insert Equation');
     modal.style.width = '400px';
-    modal.style.height = 'auto';
+    modal.style.height = '390px';
     modal.style.maxHeight = '90vh';
-    modal.style.inset = 'auto';
-    modal.style.position = 'relative';
-    modal.style.margin = 'auto';
+    modal.style.position = 'fixed';
+    modal.style.top = '90px';
+    modal.style.right = '-90px';
+    modal.style.margin = '0';
 
     const header = document.createElement('div');
     header.className = 'main_modal_header';
@@ -213,9 +214,45 @@ export class InsertMathHandler {
     const wrapper = document.createElement('div');
     wrapper.setAttribute('data-id', blockId);
     wrapper.setAttribute('contenteditable', 'false');
-    wrapper.style.display = 'inline-block';
+    wrapper.style.display = 'inline-flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.gap = '6px';
     wrapper.style.margin = '4px';
     wrapper.style.cursor = 'pointer';
+    wrapper.style.position = 'relative';
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'table_delete_button';
+    deleteBtn.innerHTML = icons.close_icon;
+    deleteBtn.style.cursor = 'pointer';
+    deleteBtn.style.opacity = '0';
+    deleteBtn.style.transition = 'opacity 0.2s';
+
+    wrapper.onmouseenter = () => {
+      deleteBtn.style.opacity = '1';
+    };
+
+    wrapper.onmouseleave = () => {
+      deleteBtn.style.opacity = '0';
+    };
+
+    deleteBtn.onclick = e => {
+      e.stopPropagation();
+
+      const index = this.document.blocks.findIndex(
+        (b: any) => b.dataId === blockId
+      );
+
+      if (index !== -1) {
+        this.document.blocks.splice(index, 1);
+
+        if (this.document.selectedBlockId === blockId) {
+          this.document.selectedBlockId = null;
+        }
+
+        this.document.emit('documentChanged', this.document);
+      }
+    };
 
     const mathNode = document.createElement('span');
     mathNode.className = 'math_node';
@@ -228,6 +265,7 @@ export class InsertMathHandler {
     };
 
     wrapper.appendChild(mathNode);
+    wrapper.appendChild(deleteBtn);
 
     let insertIndex = this.document.blocks.length;
     if (this.document.selectedBlockId) {

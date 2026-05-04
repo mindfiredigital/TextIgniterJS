@@ -20,6 +20,7 @@ import { SpeechToTextHandler } from './handlers/speechToText';
 import { icons } from './assets/icons';
 import { InsertTableHandler } from './insertTable';
 import EmojiPickerView from './view/emojiPickerView';
+import { CodeEditorModalView } from './view/codeEditorModalView';
 import { InsertLayoutHandler } from './insertLayout';
 import { InsertMathHandler } from './insertMath';
 // Link functionality imports
@@ -62,6 +63,7 @@ class TextIgniter extends EventEmitter {
   insertLayoutHandler: InsertLayoutHandler;
   insertMathHandler: InsertMathHandler;
   emojiPickerView: EmojiPickerView;
+  codeEditorModal: CodeEditorModalView;
 
   constructor(editorId: string, config: EditorConfig) {
     super();
@@ -162,6 +164,7 @@ class TextIgniter extends EventEmitter {
     }
 
     this.emojiPickerView = new EmojiPickerView();
+    this.codeEditorModal = new CodeEditorModalView();
     this.emojiPickerView.onSelect((char: string) => {
       const start = this.savedSelection?.start ?? 0;
       const end = this.savedSelection?.end ?? start;
@@ -238,6 +241,33 @@ class TextIgniter extends EventEmitter {
         html: htmlContent,
         text: this.editorContainer?.textContent || '',
       });
+    });
+
+    this.editorContainer.addEventListener('dblclick', e => {
+      const target = e.target as HTMLElement;
+      const codeBlockWrapper = target.closest('.code_block_wrapper');
+      if (codeBlockWrapper) {
+        e.preventDefault();
+        const dataId = codeBlockWrapper.getAttribute('data-id');
+        if (!dataId) return;
+        const block = this.document.blocks.find(
+          (b: any) => b.dataId === dataId
+        );
+        if (block && block.type === 'code') {
+          this.codeEditorModal.open(
+            block.code || '',
+            block.language || 'text',
+            (newCode: string) => {
+              block.code = newCode;
+              this.document.emit('documentChanged', this.document);
+            },
+            () => {
+              // Focus back to editor when closed
+              this.editorContainer?.focus();
+            }
+          );
+        }
+      }
     });
 
     this.editorContainer.addEventListener('keydown', e => {
@@ -1048,6 +1078,63 @@ class TextIgniter extends EventEmitter {
   handleKeydown(e: KeyboardEvent): void {
     const [start, end] = this.getSelectionRange();
     this.imageHandler.currentCursorLocation = start;
+
+    if ((e.key === 'Enter' || e.key === ' ') && this.document.selectedBlockId) {
+      const currentBlockIndex = this.document.blocks.findIndex(
+        (block: any) => block.dataId === this.document.selectedBlockId
+      );
+      if (currentBlockIndex !== -1) {
+        const currentBlock = this.document.blocks[currentBlockIndex];
+        if (
+          currentBlock.type === 'text' &&
+          Array.isArray(currentBlock.pieces)
+        ) {
+          const text = currentBlock.pieces
+            .map((p: Piece) => p.text)
+            .join('')
+            .replace(/\u200B/g, '')
+            .trim();
+          const match = text.match(/^```([a-zA-Z0-9_\-\+]*)$/);
+          if (match) {
+            e.preventDefault();
+            this.undoRedoManager.saveUndoSnapshot();
+
+            currentBlock.type = 'code';
+            currentBlock.language = match[1] || 'text';
+            currentBlock.code = '';
+            currentBlock.pieces = [];
+            currentBlock.class = 'code_block_wrapper';
+
+            const uniqueId = `data-id-${Date.now()}`;
+            this.document.blocks.splice(currentBlockIndex + 1, 0, {
+              dataId: uniqueId,
+              class: 'paragraph-block',
+              pieces: [
+                new Piece('\u200B', {
+                  fontFamily: 'Arial',
+                  fontSize: '16px',
+                  fontColor: '#000000',
+                  bgColor: '#ffffff',
+                  bold: false,
+                  italic: false,
+                  underline: false,
+                  strikethrough: false,
+                }),
+              ],
+              type: 'text',
+            });
+            this.document.selectedBlockId = uniqueId;
+
+            this.document.emit('documentChanged', this.document);
+
+            setTimeout(() => {
+              this.setCursorPosition(this.document.currentOffset + 1, uniqueId);
+            }, 0);
+            return;
+          }
+        }
+      }
+    }
 
     if (e.key === 'Enter') {
       e.preventDefault();

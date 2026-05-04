@@ -307,6 +307,28 @@ declare class EmojiPickerView {
     private renderGrid;
 }
 
+declare class CodeEditorModalView {
+    private container;
+    private textArea;
+    private lineNumbers;
+    private pre;
+    private codeHighlight;
+    private copyBtn;
+    private saveBtn;
+    private cancelBtn;
+    private currentLanguage;
+    private onSaveCallback;
+    private onCloseCallback;
+    constructor();
+    private attachEventListeners;
+    private syncHighlight;
+    private handleCopy;
+    private handleSave;
+    private handleClose;
+    open(code: string, language: string, onSave: (code: string) => void, onClose: () => void): void;
+    close(): void;
+}
+
 declare class InsertLayoutHandler {
     private editor;
     private document;
@@ -376,6 +398,7 @@ declare class TextIgniter extends EventEmitter {
     insertLayoutHandler: InsertLayoutHandler;
     insertMathHandler: InsertMathHandler;
     emojiPickerView: EmojiPickerView;
+    codeEditorModal: CodeEditorModalView;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];
     applyFontColor(color: string): void;

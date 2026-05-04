@@ -14,6 +14,7 @@ import EventEmitter from './utils/events';
 import { SpeechToTextHandler } from './handlers/speechToText';
 import { InsertTableHandler } from './insertTable';
 import EmojiPickerView from './view/emojiPickerView';
+import { CodeEditorModalView } from './view/codeEditorModalView';
 import { InsertLayoutHandler } from './insertLayout';
 import { InsertMathHandler } from './insertMath';
 export interface CurrentAttributeDTO {
@@ -56,6 +57,7 @@ declare class TextIgniter extends EventEmitter {
     insertLayoutHandler: InsertLayoutHandler;
     insertMathHandler: InsertMathHandler;
     emojiPickerView: EmojiPickerView;
+    codeEditorModal: CodeEditorModalView;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];
     applyFontColor(color: string): void;
