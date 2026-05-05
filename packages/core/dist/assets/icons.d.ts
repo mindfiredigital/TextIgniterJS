@@ -21,4 +21,7 @@ export declare const icons: {
     close_icon: string;
     emoji: string;
     insert_math: string;
+    textToSppech: string;
+    speaker_on: string;
+    speaker_off: string;
 };

@@ -108,6 +108,7 @@ export function createEditor(
     loadHtmlContent: 'Load HTML',
     insert_table: 'Insert table',
     insert_math: 'Insert Equation',
+    textToSpeech: 'Text To Sppech',
   };
 
   const featuresWithPngIcon = [
@@ -142,6 +143,11 @@ export function createEditor(
       feature: 'superscript',
       id: 'superscript',
       icon: icons.superscript,
+    },
+    {
+      feature: 'textToSpeech',
+      id: 'textToSpeech',
+      icon: icons.speaker_on,
     },
   ];
 
