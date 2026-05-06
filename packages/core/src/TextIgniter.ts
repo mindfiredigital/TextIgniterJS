@@ -1213,17 +1213,60 @@ class TextIgniter extends EventEmitter {
         this.imageHandler.setCursorPostion(1, uniqueId);
       }
 
-      // Handle list blocks (unchanged, but ensure style inheritance)
+      // Handle list blocks (ensure style inheritance and split text)
       else if (
         currentBlock &&
         (currentBlock.listType === 'ol' ||
           currentBlock.listType === 'ul' ||
           currentBlock.listType === 'li')
       ) {
+        let newPieces: Piece[] = [new Piece('\u200B', lastPieceAttributes)];
+        const cursorOffset = start - this.document.currentOffset;
+
+        if (currentBlock.type === 'text' && currentBlock.pieces) {
+          const beforePieces: Piece[] = [];
+          const afterPieces: Piece[] = [];
+          let offset = 0;
+
+          for (const piece of currentBlock.pieces) {
+            const pieceEnd = offset + piece.text.length;
+
+            if (pieceEnd <= cursorOffset) {
+              beforePieces.push(piece.clone());
+            } else if (offset >= cursorOffset) {
+              afterPieces.push(piece.clone());
+            } else {
+              const splitPoint = cursorOffset - offset;
+              const beforeText = piece.text.slice(0, splitPoint);
+              const afterText = piece.text.slice(splitPoint);
+
+              if (beforeText) {
+                beforePieces.push(
+                  new Piece(beforeText, { ...piece.attributes })
+                );
+              }
+              if (afterText) {
+                afterPieces.push(new Piece(afterText, { ...piece.attributes }));
+              }
+            }
+            offset = pieceEnd;
+          }
+
+          currentBlock.pieces =
+            beforePieces.length > 0
+              ? beforePieces
+              : [new Piece('\u200B', lastPieceAttributes)];
+
+          newPieces =
+            afterPieces.length > 0
+              ? afterPieces
+              : [new Piece('\u200B', lastPieceAttributes)];
+        }
+
         let newBlock: any = {
           dataId: uniqueId,
           class: 'paragraph-block',
-          pieces: [new Piece('\u200B', lastPieceAttributes)], //  Inherit styles
+          pieces: newPieces,
           type: 'text',
         };
         let listParentId = '';
