@@ -8,4 +8,8 @@
 
 /.vscode
 
+.env
+**/.env
+.env*
+
 # do not add dist here

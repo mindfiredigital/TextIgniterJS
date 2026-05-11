@@ -181,6 +181,9 @@ importers:
       '@types/node':
         specifier: ^22.5.4
         version: 22.5.4
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
       ncp:
         specifier: ^2.0.0
         version: 2.0.0
@@ -8282,6 +8285,11 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       is-obj: 2.0.0
+    dev: true
+
+  /dotenv@17.4.2:
+    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
+    engines: {node: '>=12'}
     dev: true
 
   /dotenv@8.6.0:
