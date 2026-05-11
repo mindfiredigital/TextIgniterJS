@@ -17,6 +17,7 @@ import EmojiPickerView from './view/emojiPickerView';
 import { CodeEditorModalView } from './view/codeEditorModalView';
 import { InsertLayoutHandler } from './insertLayout';
 import { InsertMathHandler } from './insertMath';
+import { TextToSpeechHandler } from './handlers/textToSppech';
 export interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
@@ -58,6 +59,7 @@ declare class TextIgniter extends EventEmitter {
     insertMathHandler: InsertMathHandler;
     emojiPickerView: EmojiPickerView;
     codeEditorModal: CodeEditorModalView;
+    textToSpeechHandler: TextToSpeechHandler;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];
     applyFontColor(color: string): void;
@@ -77,6 +79,7 @@ declare class TextIgniter extends EventEmitter {
     private hideLinkPopup;
     private openLink;
     private unlinkText;
+    private getTextForSpeech;
     onContentChange(callback: (data: {
         html: string;
         text: string;

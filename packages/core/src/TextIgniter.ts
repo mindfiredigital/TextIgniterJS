@@ -23,6 +23,7 @@ import EmojiPickerView from './view/emojiPickerView';
 import { CodeEditorModalView } from './view/codeEditorModalView';
 import { InsertLayoutHandler } from './insertLayout';
 import { InsertMathHandler } from './insertMath';
+import { TextToSpeechHandler } from './handlers/textToSppech';
 // Link functionality imports
 
 export interface CurrentAttributeDTO {
@@ -64,6 +65,7 @@ class TextIgniter extends EventEmitter {
   insertMathHandler: InsertMathHandler;
   emojiPickerView: EmojiPickerView;
   codeEditorModal: CodeEditorModalView;
+  textToSpeechHandler: TextToSpeechHandler;
 
   constructor(editorId: string, config: EditorConfig) {
     super();
@@ -119,6 +121,15 @@ class TextIgniter extends EventEmitter {
       this.editorView.container as HTMLDivElement,
       this.document
     );
+    this.textToSpeechHandler = new TextToSpeechHandler(
+      (isSpeaking: boolean) => {
+        const btn = document.getElementById('textToSpeech');
+        if (btn) {
+          btn.innerHTML = isSpeaking ? icons.speaker_off : icons.speaker_on;
+          btn.dataset.tooltip = isSpeaking ? 'stop Reading' : 'start Reading';
+        }
+      }
+    );
     this.speechToTextHandler = new SpeechToTextHandler(
       this.document,
       this.editorView,
@@ -156,11 +167,17 @@ class TextIgniter extends EventEmitter {
         this.setCursorPosition(offset);
       }
     );
-    const btn = document.getElementById('speechToText');
-    if (btn) {
-      btn.innerHTML = '';
-      btn.insertAdjacentHTML('afterbegin', icons.start_microphone);
-      btn.dataset.tooltip = 'start';
+    const speechToTextBtn = document.getElementById('speechToText');
+    if (speechToTextBtn) {
+      speechToTextBtn.innerHTML = '';
+      speechToTextBtn.insertAdjacentHTML('afterbegin', icons.start_microphone);
+      speechToTextBtn.dataset.tooltip = 'start';
+    }
+    const textToSpeechBtn = document.getElementById('textToSpeech');
+    if (textToSpeechBtn) {
+      textToSpeechBtn.innerHTML = '';
+      textToSpeechBtn.insertAdjacentHTML('afterbegin', icons.speaker_on);
+      textToSpeechBtn.dataset.tooltip = 'start Reading';
     }
 
     this.emojiPickerView = new EmojiPickerView();
@@ -854,6 +871,16 @@ class TextIgniter extends EventEmitter {
           this.emojiPickerView.open(emojiBtn);
         }
         break;
+      case 'textToSpeech':
+        const text = this.getTextForSpeech();
+
+        if (!text) {
+          console.warn('Nothing to read');
+          return;
+        }
+
+        this.textToSpeechHandler.toggle(text);
+        break;
       default:
         if (start < end) {
           this.undoRedoManager.saveUndoSnapshot();
@@ -1021,6 +1048,14 @@ class TextIgniter extends EventEmitter {
     if (anchorEl?.closest('.tblCell')) {
       this.popupToolbarView.hide();
       return;
+    }
+
+    const ttsBtn = document.getElementById('textToSpeech');
+
+    if (selection && !selection.isCollapsed && selection.toString().trim()) {
+      ttsBtn?.classList.remove('hidden');
+    } else {
+      ttsBtn?.classList.add('hidden');
     }
 
     const [start] = this.getSelectionRange();
@@ -1862,6 +1897,17 @@ class TextIgniter extends EventEmitter {
     }
 
     this.hideLinkPopup();
+  }
+
+  private getTextForSpeech(): string {
+    const selection = window.getSelection();
+
+    if (selection && !selection.isCollapsed) {
+      const selectedText = selection.toString().trim();
+      if (selectedText) return selectedText;
+    }
+
+    return this.editorContainer?.textContent?.trim() || '';
   }
 
   /**
