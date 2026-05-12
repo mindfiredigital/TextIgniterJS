@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { TextigniterReact } from '../components/TextIgniter';
 
 // Mock the dynamic import for the web component
