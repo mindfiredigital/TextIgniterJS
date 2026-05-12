@@ -21,7 +21,9 @@ class HtmlToJsonParser {
   }
 
   private parseElement(element: HTMLElement): any {
-    const dataId = element.getAttribute('data-id') || '';
+    const dataId =
+      element.getAttribute('data-id') ||
+      `data-id-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const className = element.className || 'paragraph-block';
     const alignment = element.style.textAlign || 'left';
 

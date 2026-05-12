@@ -50,14 +50,19 @@
         'bgColor',
         'getHtmlContent',
         'loadHtmlContent',
-        // "subscript",
-        // "superscript",
-        // "insert_table",
-        // "insert_layout",
+        "insert_table",
+        "insert_layout",
+        'speechToText',
+        'emoji',
+        "subscript",
+        "superscript",
+        "insert_math",
+        "textToSpeech"
+
         // "heading",
         // "colors"
       ],
-      popupFeatures: ['bold', 'italic', 'underline', 'hyperlink'],
+      popupFeatures: ['bold', 'italic', 'underline', 'hyperlink',],
     };
     const editor = new TextIgniter('editor-container', config);
     editor.onContentChange((data) => {

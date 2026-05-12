@@ -26,6 +26,17 @@ class EditorView {
       if (block.dataId !== '') {
         let wrapperDiv: HTMLElement;
 
+        if (
+          block.type === 'table' ||
+          block.type === 'layout' ||
+          block.type === 'math'
+        ) {
+          if (block.element) {
+            this.container.appendChild(block.element);
+          }
+          return;
+        }
+
         // If block is an image, ignore list handling.
         if (block.type === 'image') {
           wrapperDiv = document.createElement('div');
@@ -49,6 +60,67 @@ class EditorView {
               wrapperDiv.appendChild(img);
             }
           }
+        } else if (block.type === 'code') {
+          wrapperDiv = document.createElement('div');
+          wrapperDiv.setAttribute('data-id', block.dataId);
+          wrapperDiv.setAttribute('class', 'code_block_wrapper');
+          wrapperDiv.setAttribute('type', 'code');
+          wrapperDiv.setAttribute('data-language', block.language || 'text');
+
+          wrapperDiv.addEventListener('mousedown', e => {
+            e.preventDefault();
+          });
+
+          const header = document.createElement('div');
+          header.className = 'code_block_header';
+
+          const langSpan = document.createElement('span');
+          langSpan.className = 'code_block_language';
+          langSpan.innerText = block.language || 'text';
+
+          const hintSpan = document.createElement('span');
+          hintSpan.className = 'code_block_hint';
+          hintSpan.innerText = 'double-click to edit';
+
+          const cancelBtn = document.createElement('button');
+          cancelBtn.className = 'code_block_cancel';
+          cancelBtn.innerHTML = '&times;';
+          cancelBtn.title = 'Remove block';
+
+          cancelBtn.addEventListener('mousedown', e => {
+            e.stopPropagation();
+          });
+
+          cancelBtn.onclick = e => {
+            e.stopPropagation();
+            e.preventDefault();
+            wrapperDiv.remove();
+
+            const index = this.document.blocks.findIndex(
+              (b: any) => b.dataId === block.dataId
+            );
+            if (index !== -1) {
+              this.document.blocks.splice(index, 1);
+              if (this.document.selectedBlockId === block.dataId) {
+                this.document.selectedBlockId = null;
+              }
+              this.document.emit('documentChanged', this.document);
+            }
+          };
+
+          header.appendChild(langSpan);
+          header.appendChild(hintSpan);
+          header.appendChild(cancelBtn);
+
+          const pre = document.createElement('pre');
+          pre.className = 'code_block_content';
+
+          const codeEl = document.createElement('code');
+          codeEl.textContent = block.code || '';
+          pre.appendChild(codeEl);
+
+          wrapperDiv.appendChild(header);
+          wrapperDiv.appendChild(pre);
         } else {
           // For text blocks, use list wrappers if needed.
           if (block.listType === 'ol' || block.listType === 'li') {
@@ -105,6 +177,8 @@ class EditorView {
       italic: boolean;
       underline: boolean;
       strikethrough?: boolean;
+      subscript?: boolean;
+      superscript?: boolean;
       fontFamily?: string;
       fontSize?: string;
       hyperlink?: string | boolean;
@@ -134,6 +208,16 @@ class EditorView {
         const strong = document.createElement('strong');
         strong.appendChild(textNode);
         textNode = strong;
+      }
+      if (attrs.subscript) {
+        const sub = document.createElement('sub');
+        sub.appendChild(textNode);
+        textNode = sub;
+      }
+      if (attrs.superscript) {
+        const sup = document.createElement('sup');
+        sup.appendChild(textNode);
+        textNode = sup;
       }
 
       // Wrap with a span to apply font family and size

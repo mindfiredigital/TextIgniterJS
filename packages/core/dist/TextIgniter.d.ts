@@ -11,11 +11,20 @@ import UndoRedoManager from './handlers/undoRedoManager';
 import PopupToolbarView from './view/popupToolbarView';
 import LinkPopupView from './view/linkPopupView';
 import EventEmitter from './utils/events';
+import { SpeechToTextHandler } from './handlers/speechToText';
+import { InsertTableHandler } from './insertTable';
+import EmojiPickerView from './view/emojiPickerView';
+import { CodeEditorModalView } from './view/codeEditorModalView';
+import { InsertLayoutHandler } from './insertLayout';
+import { InsertMathHandler } from './insertMath';
+import { TextToSpeechHandler } from './handlers/textToSppech';
 export interface CurrentAttributeDTO {
     bold: boolean;
     italic: boolean;
     underline: boolean;
     strikethrough?: boolean;
+    subscript?: boolean;
+    superscript?: boolean;
     undo?: boolean;
     redo?: boolean;
     hyperlink?: string | boolean;
@@ -38,12 +47,19 @@ declare class TextIgniter extends EventEmitter {
     toolbarContainer: HTMLElement | null;
     popupToolbarView: PopupToolbarView;
     linkPopupView: LinkPopupView;
+    speechToTextHandler: SpeechToTextHandler;
     savedSelection: {
         start: number;
         end: number;
     } | null;
     debounceTimer: NodeJS.Timeout | null;
     undoRedoManager: UndoRedoManager;
+    insertTableHandler: InsertTableHandler;
+    insertLayoutHandler: InsertLayoutHandler;
+    insertMathHandler: InsertMathHandler;
+    emojiPickerView: EmojiPickerView;
+    codeEditorModal: CodeEditorModalView;
+    textToSpeechHandler: TextToSpeechHandler;
     constructor(editorId: string, config: EditorConfig);
     getSelectionRange(): [number, number];
     applyFontColor(color: string): void;
@@ -63,6 +79,7 @@ declare class TextIgniter extends EventEmitter {
     private hideLinkPopup;
     private openLink;
     private unlinkText;
+    private getTextForSpeech;
     onContentChange(callback: (data: {
         html: string;
         text: string;

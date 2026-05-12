@@ -31,7 +31,7 @@ declare class TextDocument extends EventEmitter {
     handleCtrlASelection(): string[];
     getSelectedDataIds(): string[];
     private getDataIdFromNode;
-    getCursorOffset(container: HTMLElement): number;
+    getCursorOffset(container: HTMLElement | null): number;
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'], value: string | boolean): void;
     toggleOrderedList(dataId: string | null, id?: string): void;
     toggleOrderedListForMultipleBlocks(dataIds: string[]): void;
@@ -44,6 +44,8 @@ declare class TextDocument extends EventEmitter {
     toggleItalicRange(start: number, end: number, id?: string): void;
     toggleUnderlineRange(start: number, end: number, id?: string): void;
     toggleStrikethroughRange(start: number, end: number, id?: string): void;
+    toggleSubscriptRange(start: number, end: number, id?: string): void;
+    toggleSuperscriptRange(start: number, end: number, id?: string): void;
     toggleUndoRange(start: number, end: number, id?: string): void;
     toggleRedoRange(start: number, end: number): void;
     applyFontColor(start: number, end: number, color: string, id?: string): void;

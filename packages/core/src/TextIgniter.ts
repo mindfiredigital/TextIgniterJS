@@ -16,6 +16,14 @@ import PopupToolbarView from './view/popupToolbarView';
 import LinkPopupView from './view/linkPopupView';
 import { detectUrlsInText } from './utils/urlDetector';
 import EventEmitter from './utils/events';
+import { SpeechToTextHandler } from './handlers/speechToText';
+import { icons } from './assets/icons';
+import { InsertTableHandler } from './insertTable';
+import EmojiPickerView from './view/emojiPickerView';
+import { CodeEditorModalView } from './view/codeEditorModalView';
+import { InsertLayoutHandler } from './insertLayout';
+import { InsertMathHandler } from './insertMath';
+import { TextToSpeechHandler } from './handlers/textToSppech';
 // Link functionality imports
 
 export interface CurrentAttributeDTO {
@@ -23,6 +31,8 @@ export interface CurrentAttributeDTO {
   italic: boolean;
   underline: boolean;
   strikethrough?: boolean;
+  subscript?: boolean;
+  superscript?: boolean;
   undo?: boolean;
   redo?: boolean;
   hyperlink?: string | boolean;
@@ -46,9 +56,16 @@ class TextIgniter extends EventEmitter {
   toolbarContainer: HTMLElement | null;
   popupToolbarView: PopupToolbarView;
   linkPopupView: LinkPopupView;
+  speechToTextHandler: SpeechToTextHandler;
   savedSelection: { start: number; end: number } | null = null;
   debounceTimer: NodeJS.Timeout | null = null;
   undoRedoManager: UndoRedoManager;
+  insertTableHandler: InsertTableHandler;
+  insertLayoutHandler: InsertLayoutHandler;
+  insertMathHandler: InsertMathHandler;
+  emojiPickerView: EmojiPickerView;
+  codeEditorModal: CodeEditorModalView;
+  textToSpeechHandler: TextToSpeechHandler;
 
   constructor(editorId: string, config: EditorConfig) {
     super();
@@ -92,11 +109,117 @@ class TextIgniter extends EventEmitter {
       (url: string) => this.openLink(url),
       (linkElement: HTMLAnchorElement) => this.unlinkText(linkElement)
     );
+    this.insertTableHandler = new InsertTableHandler(
+      this.editorView.container as HTMLDivElement,
+      this.document
+    );
+    this.insertLayoutHandler = new InsertLayoutHandler(
+      this.editorView.container as HTMLDivElement,
+      this.document
+    );
+    this.insertMathHandler = new InsertMathHandler(
+      this.editorView.container as HTMLDivElement,
+      this.document
+    );
+    this.textToSpeechHandler = new TextToSpeechHandler(
+      (isSpeaking: boolean) => {
+        const btn = document.getElementById('textToSpeech');
+        if (btn) {
+          btn.innerHTML = isSpeaking ? icons.speaker_off : icons.speaker_on;
+          btn.dataset.tooltip = isSpeaking ? 'stop Reading' : 'start Reading';
+        }
+      }
+    );
+    this.speechToTextHandler = new SpeechToTextHandler(
+      this.document,
+      this.editorView,
+      (isRecording: boolean) => {
+        const btn = document.getElementById('speechToText');
+        if (btn) {
+          btn.innerHTML = isRecording
+            ? icons.stop_microphone
+            : icons.start_microphone;
+
+          btn.dataset.tooltip = isRecording ? 'stop' : 'start';
+        }
+      },
+      (text: string) => {
+        const [start, end] = this.getSelectionRange();
+        if (end > start) {
+          this.document.deleteRange(
+            start,
+            end,
+            this.document.selectedBlockId,
+            this.document.currentOffset
+          );
+        }
+        let offset = start;
+        this.document.insertAt(
+          text,
+          { ...this.currentAttributes },
+          offset,
+          this.document.selectedBlockId,
+          0,
+          '',
+          'batch'
+        );
+        offset += text.length;
+        this.setCursorPosition(offset);
+      }
+    );
+    const speechToTextBtn = document.getElementById('speechToText');
+    if (speechToTextBtn) {
+      speechToTextBtn.innerHTML = '';
+      speechToTextBtn.insertAdjacentHTML('afterbegin', icons.start_microphone);
+      speechToTextBtn.dataset.tooltip = 'start';
+    }
+    const textToSpeechBtn = document.getElementById('textToSpeech');
+    if (textToSpeechBtn) {
+      textToSpeechBtn.innerHTML = '';
+      textToSpeechBtn.insertAdjacentHTML('afterbegin', icons.speaker_on);
+      textToSpeechBtn.dataset.tooltip = 'start Reading';
+    }
+
+    this.emojiPickerView = new EmojiPickerView();
+    this.codeEditorModal = new CodeEditorModalView();
+    this.emojiPickerView.onSelect((char: string) => {
+      const start = this.savedSelection?.start ?? 0;
+      const end = this.savedSelection?.end ?? start;
+
+      if (end > start) {
+        this.document.deleteRange(
+          start,
+          end,
+          this.document.selectedBlockId,
+          this.document.currentOffset,
+          false
+        );
+      }
+
+      this.document.insertAt(
+        char,
+        { ...this.currentAttributes },
+        start,
+        this.document.selectedBlockId,
+        0,
+        '',
+        'batch'
+      );
+
+      const newPos = start + char.length;
+
+      this.savedSelection = { start: newPos, end: newPos };
+
+      this.setCursorPosition(newPos);
+    });
+
     this.currentAttributes = {
       bold: false,
       italic: false,
       underline: false,
       strikethrough: false,
+      subscript: false,
+      superscript: false,
       undo: false,
       redo: false,
       hyperlink: false,
@@ -111,7 +234,22 @@ class TextIgniter extends EventEmitter {
     this.popupToolbarView.on('popupAction', (action: string) =>
       this.handleToolbarAction(action)
     );
-    this.document.on('documentChanged', () => this.editorView.render());
+    this.document.on('documentChanged', () => {
+      const isEditorEmpty =
+        this.document.blocks.length === 0 ||
+        (this.document.blocks.length === 1 &&
+          this.document.blocks[0].pieces.every(
+            (p: any) => p.text.trim() === '' || p.text === '\u200B'
+          ));
+
+      if (isEditorEmpty) {
+        const select = document.getElementById(
+          'loadHtmlButton'
+        ) as HTMLSelectElement | null;
+        if (select) select.selectedIndex = 0;
+      }
+      this.editorView.render();
+    });
 
     // Emit content change event with HTML content
     this.document.on('documentChanged', () => {
@@ -120,6 +258,33 @@ class TextIgniter extends EventEmitter {
         html: htmlContent,
         text: this.editorContainer?.textContent || '',
       });
+    });
+
+    this.editorContainer.addEventListener('dblclick', e => {
+      const target = e.target as HTMLElement;
+      const codeBlockWrapper = target.closest('.code_block_wrapper');
+      if (codeBlockWrapper) {
+        e.preventDefault();
+        const dataId = codeBlockWrapper.getAttribute('data-id');
+        if (!dataId) return;
+        const block = this.document.blocks.find(
+          (b: any) => b.dataId === dataId
+        );
+        if (block && block.type === 'code') {
+          this.codeEditorModal.open(
+            block.code || '',
+            block.language || 'text',
+            (newCode: string) => {
+              block.code = newCode;
+              this.document.emit('documentChanged', this.document);
+            },
+            () => {
+              // Focus back to editor when closed
+              this.editorContainer?.focus();
+            }
+          );
+        }
+      }
     });
 
     this.editorContainer.addEventListener('keydown', e => {
@@ -345,17 +510,21 @@ class TextIgniter extends EventEmitter {
       this.showAcknowledgement('HTML copied to clipboard', 2000);
     });
 
-    document.getElementById('loadHtmlButton')?.addEventListener('click', e => {
-      // const htmlString = this.document.getHtmlContent();
+    document.getElementById('loadHtmlButton')?.addEventListener('change', e => {
       this.undoRedoManager.saveUndoSnapshot();
-      const str = strings.TEST_HTML_CODE;
+      const target = e.target as HTMLSelectElement;
+      const selectedOption = target.options[target.selectedIndex];
+      const str = selectedOption.dataset.html || strings.TEST_HTML_CODE;
+
       this.htmlToJsonParser = new HtmlToJsonParser(str as string);
       console.log(this.htmlToJsonParser, 'this.htmlToJsonParser');
       const jsonOutput = this.htmlToJsonParser.parse();
 
       this.document.blocks = jsonOutput;
-      this.document.dataIds[0] = jsonOutput[0].dataId;
-      this.document.selectedBlockId = 'data-id-1734604240404';
+      if (jsonOutput.length > 0) {
+        this.document.dataIds[0] = jsonOutput[0].dataId;
+        this.document.selectedBlockId = jsonOutput[0].dataId;
+      }
       this.document.emit('documentChanged', this);
       const [start] = this.getSelectionRange();
       this.document.blocks.forEach((block: any) => {
@@ -367,7 +536,9 @@ class TextIgniter extends EventEmitter {
           });
           let countS = start - countE;
 
-          this.document.setFontSize(countS, countE, block.fontSize);
+          if (block.fontSize) {
+            this.document.setFontSize(countS, countE, block.fontSize);
+          }
         }
       });
       console.log(
@@ -675,6 +846,41 @@ class TextIgniter extends EventEmitter {
       case 'image':
         this.imageHandler.insertImage();
         break;
+      case 'speechToText':
+        this.speechToTextHandler.toggleRecording();
+        break;
+      case 'insert_table':
+        this.insertTableHandler.openTableModal();
+        break;
+      case 'insert_layout':
+        this.insertLayoutHandler.openLayoutModal();
+        break;
+      case 'insert_math':
+        this.insertMathHandler.openMathModal();
+        break;
+      case 'emoji':
+        this.savedSelection = saveSelection(this.editorView.container);
+
+        const emojiBtn = document.querySelector(
+          '[data-action="emoji"]'
+        ) as HTMLElement;
+        emojiBtn.addEventListener('mousedown', e => {
+          e.preventDefault();
+        });
+        if (emojiBtn) {
+          this.emojiPickerView.open(emojiBtn);
+        }
+        break;
+      case 'textToSpeech':
+        const text = this.getTextForSpeech();
+
+        if (!text) {
+          console.warn('Nothing to read');
+          return;
+        }
+
+        this.textToSpeechHandler.toggle(text);
+        break;
       default:
         if (start < end) {
           this.undoRedoManager.saveUndoSnapshot();
@@ -747,6 +953,40 @@ class TextIgniter extends EventEmitter {
                 this.document.toggleStrikethroughRange(start, end);
               }
               break;
+            case 'subscript':
+              if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                  if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                      countE += obj.text.length;
+                    });
+                    let countS = start - countE;
+                    this.document.toggleSubscriptRange(countS, countE);
+                  }
+                });
+              } else {
+                this.document.toggleSubscriptRange(start, end);
+              }
+              break;
+            case 'superscript':
+              if (this.document.dataIds.length > 1) {
+                this.document.blocks.forEach((block: any) => {
+                  if (this.document.dataIds.includes(block.dataId)) {
+                    this.document.selectedBlockId = block.dataId;
+                    let countE = 0;
+                    block.pieces.forEach((obj: any) => {
+                      countE += obj.text.length;
+                    });
+                    let countS = start - countE;
+                    this.document.toggleSuperscriptRange(countS, countE);
+                  }
+                });
+              } else {
+                this.document.toggleSuperscriptRange(start, end);
+              }
+              break;
             case 'hyperlink':
               this.hyperlinkHandler.hanldeHyperlinkClick(
                 start,
@@ -764,6 +1004,8 @@ class TextIgniter extends EventEmitter {
               | 'italic'
               | 'underline'
               | 'strikethrough'
+              | 'subscript'
+              | 'superscript'
               | 'undo'
               | 'redo'
           ] =
@@ -773,6 +1015,8 @@ class TextIgniter extends EventEmitter {
                 | 'italic'
                 | 'underline'
                 | 'strikethrough'
+                | 'subscript'
+                | 'superscript'
                 | 'undo'
                 | 'redo'
             ];
@@ -795,6 +1039,23 @@ class TextIgniter extends EventEmitter {
       this.hyperlinkHandler.hideHyperlinkViewButton();
       this.popupToolbarView.hide();
       return;
+    }
+
+    const anchorEl =
+      selection.anchorNode?.nodeType === Node.TEXT_NODE
+        ? selection.anchorNode.parentElement
+        : (selection.anchorNode as HTMLElement);
+    if (anchorEl?.closest('.tblCell')) {
+      this.popupToolbarView.hide();
+      return;
+    }
+
+    const ttsBtn = document.getElementById('textToSpeech');
+
+    if (selection && !selection.isCollapsed && selection.toString().trim()) {
+      ttsBtn?.classList.remove('hidden');
+    } else {
+      ttsBtn?.classList.add('hidden');
     }
 
     const [start] = this.getSelectionRange();
@@ -831,11 +1092,20 @@ class TextIgniter extends EventEmitter {
       range.startContainer.parentElement?.closest('[data-id]') ||
       range.startContainer;
     if (parentBlock instanceof HTMLElement) {
-      this.document.selectedBlockId =
+      const candidateId =
         parentBlock.getAttribute('data-id') ||
         (range.startContainer instanceof HTMLElement
           ? range.startContainer.getAttribute('data-id')
           : null);
+
+      if (candidateId) {
+        const block = this.document.blocks.find(
+          (b: any) => b.dataId === candidateId
+        );
+        if (block && block.type !== 'table') {
+          this.document.selectedBlockId = candidateId;
+        }
+      }
     }
     this.syncCurrentAttributesWithCursor();
   }
@@ -843,6 +1113,63 @@ class TextIgniter extends EventEmitter {
   handleKeydown(e: KeyboardEvent): void {
     const [start, end] = this.getSelectionRange();
     this.imageHandler.currentCursorLocation = start;
+
+    if ((e.key === 'Enter' || e.key === ' ') && this.document.selectedBlockId) {
+      const currentBlockIndex = this.document.blocks.findIndex(
+        (block: any) => block.dataId === this.document.selectedBlockId
+      );
+      if (currentBlockIndex !== -1) {
+        const currentBlock = this.document.blocks[currentBlockIndex];
+        if (
+          currentBlock.type === 'text' &&
+          Array.isArray(currentBlock.pieces)
+        ) {
+          const text = currentBlock.pieces
+            .map((p: Piece) => p.text)
+            .join('')
+            .replace(/\u200B/g, '')
+            .trim();
+          const match = text.match(/^```([a-zA-Z0-9_\-\+]*)$/);
+          if (match) {
+            e.preventDefault();
+            this.undoRedoManager.saveUndoSnapshot();
+
+            currentBlock.type = 'code';
+            currentBlock.language = match[1] || 'text';
+            currentBlock.code = '';
+            currentBlock.pieces = [];
+            currentBlock.class = 'code_block_wrapper';
+
+            const uniqueId = `data-id-${Date.now()}`;
+            this.document.blocks.splice(currentBlockIndex + 1, 0, {
+              dataId: uniqueId,
+              class: 'paragraph-block',
+              pieces: [
+                new Piece('\u200B', {
+                  fontFamily: 'Arial',
+                  fontSize: '16px',
+                  fontColor: '#000000',
+                  bgColor: '#ffffff',
+                  bold: false,
+                  italic: false,
+                  underline: false,
+                  strikethrough: false,
+                }),
+              ],
+              type: 'text',
+            });
+            this.document.selectedBlockId = uniqueId;
+
+            this.document.emit('documentChanged', this.document);
+
+            setTimeout(() => {
+              this.setCursorPosition(this.document.currentOffset + 1, uniqueId);
+            }, 0);
+            return;
+          }
+        }
+      }
+    }
 
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -886,17 +1213,60 @@ class TextIgniter extends EventEmitter {
         this.imageHandler.setCursorPostion(1, uniqueId);
       }
 
-      // Handle list blocks (unchanged, but ensure style inheritance)
+      // Handle list blocks (ensure style inheritance and split text)
       else if (
         currentBlock &&
         (currentBlock.listType === 'ol' ||
           currentBlock.listType === 'ul' ||
           currentBlock.listType === 'li')
       ) {
+        let newPieces: Piece[] = [new Piece('\u200B', lastPieceAttributes)];
+        const cursorOffset = start - this.document.currentOffset;
+
+        if (currentBlock.type === 'text' && currentBlock.pieces) {
+          const beforePieces: Piece[] = [];
+          const afterPieces: Piece[] = [];
+          let offset = 0;
+
+          for (const piece of currentBlock.pieces) {
+            const pieceEnd = offset + piece.text.length;
+
+            if (pieceEnd <= cursorOffset) {
+              beforePieces.push(piece.clone());
+            } else if (offset >= cursorOffset) {
+              afterPieces.push(piece.clone());
+            } else {
+              const splitPoint = cursorOffset - offset;
+              const beforeText = piece.text.slice(0, splitPoint);
+              const afterText = piece.text.slice(splitPoint);
+
+              if (beforeText) {
+                beforePieces.push(
+                  new Piece(beforeText, { ...piece.attributes })
+                );
+              }
+              if (afterText) {
+                afterPieces.push(new Piece(afterText, { ...piece.attributes }));
+              }
+            }
+            offset = pieceEnd;
+          }
+
+          currentBlock.pieces =
+            beforePieces.length > 0
+              ? beforePieces
+              : [new Piece('\u200B', lastPieceAttributes)];
+
+          newPieces =
+            afterPieces.length > 0
+              ? afterPieces
+              : [new Piece('\u200B', lastPieceAttributes)];
+        }
+
         let newBlock: any = {
           dataId: uniqueId,
           class: 'paragraph-block',
-          pieces: [new Piece('\u200B', lastPieceAttributes)], //  Inherit styles
+          pieces: newPieces,
           type: 'text',
         };
         let listParentId = '';
@@ -1120,15 +1490,28 @@ class TextIgniter extends EventEmitter {
           this.document.emit('documentChanged', this);
         }
       } else if (start === end && start > 0) {
-        // Normal backspace - delete one character before cursor
+        const editorText = this.editorView.container.textContent || '';
+        let deleteFrom = start - 1;
+        if (start >= 2) {
+          const prevCodeUnit = editorText.charCodeAt(start - 1);
+          const prevPrevCodeUnit = editorText.charCodeAt(start - 2);
+          if (
+            prevCodeUnit >= 0xdc00 &&
+            prevCodeUnit <= 0xdfff &&
+            prevPrevCodeUnit >= 0xd800 &&
+            prevPrevCodeUnit <= 0xdbff
+          ) {
+            deleteFrom = start - 2;
+          }
+        }
         this.document.deleteRange(
-          start - 1,
+          deleteFrom,
           start,
           this.document.selectedBlockId,
           this.document.currentOffset,
           true
         );
-        this.setCursorPosition(start - 1);
+        this.setCursorPosition(deleteFrom);
       }
     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
@@ -1332,6 +1715,15 @@ class TextIgniter extends EventEmitter {
     return updatedData;
   }
   syncCurrentAttributesWithCursor(): void {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const anchorEl =
+        sel.anchorNode?.nodeType === Node.TEXT_NODE
+          ? sel.anchorNode.parentElement
+          : (sel.anchorNode as HTMLElement);
+      if (anchorEl?.closest('.tblCell')) return;
+    }
+
     const [start, end] = this.getSelectionRange();
     console.log('log1', { start: start, end: end });
     const blockIndex = this.document.blocks.findIndex(
@@ -1360,6 +1752,8 @@ class TextIgniter extends EventEmitter {
             italic: piece.attributes.italic,
             underline: piece.attributes.underline,
             strikethrough: piece.attributes.strikethrough || false,
+            subscript: piece.attributes.subscript || false,
+            superscript: piece.attributes.superscript || false,
             hyperlink: piece.attributes.hyperlink || false,
             fontFamily: piece.attributes.fontFamily,
             fontSize: piece.attributes.fontSize,
@@ -1379,6 +1773,8 @@ class TextIgniter extends EventEmitter {
             italic: false,
             underline: false,
             strikethrough: false,
+            subscript: false,
+            superscript: false,
             hyperlink: false,
           };
           this.toolbarView.updateActiveStates(this.currentAttributes);
@@ -1411,11 +1807,24 @@ class TextIgniter extends EventEmitter {
         'strikethrough' as any
       );
 
+      const allSubscript = this.document.isRangeEntirelyAttribute(
+        start,
+        end,
+        'subscript' as any
+      );
+      const allSuperscript = this.document.isRangeEntirelyAttribute(
+        start,
+        end,
+        'superscript' as any
+      );
+
       this.currentAttributes = {
         bold: allBold,
         italic: allItalic,
         underline: allUnderline,
         strikethrough: allStrikethrough,
+        subscript: allSubscript,
+        superscript: allSuperscript,
         hyperlink: false,
       };
 
@@ -1531,6 +1940,17 @@ class TextIgniter extends EventEmitter {
     }
 
     this.hideLinkPopup();
+  }
+
+  private getTextForSpeech(): string {
+    const selection = window.getSelection();
+
+    if (selection && !selection.isCollapsed) {
+      const selectedText = selection.toString().trim();
+      if (selectedText) return selectedText;
+    }
+
+    return this.editorContainer?.textContent?.trim() || '';
   }
 
   /**

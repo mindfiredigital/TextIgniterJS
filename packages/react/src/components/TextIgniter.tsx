@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import '../types/textigniter.d.ts';
+import React, { useEffect, useRef } from 'react';
 
-// Updated interfaces to support new configuration
+
 // interface DynamicComponents {
 //   Basic: string[];
 //   Extra: string[];
@@ -19,50 +18,44 @@ interface TextigniterReactProps {
   onContentChange?: (data: { html: string; text: string }) => void;
 }
 
-export const TextigniterReact: React.FC<TextigniterReactProps> = ({
+const TextigniterReactBase: React.FC<TextigniterReactProps> = ({
   config,
   onContentChange,
 }) => {
   const builderRef = useRef<HTMLElement>(null);
-  const [processedConfig, setProcessedConfig] = useState<any>(config);
+  const onContentChangeRef = useRef(onContentChange);
 
+  // Keep callback ref updated without triggering re-renders
   useEffect(() => {
-    // Import web component
+    onContentChangeRef.current = onContentChange;
+  }, [onContentChange]);
+
+  // Load the web component
+  useEffect(() => {
     import('@mindfiredigital/textigniter-web-component' as any).catch(error => {
       console.error('Failed to load web component:', error);
     });
   }, []);
 
-  useEffect(() => {
-    // Create a copy of the original config
-    const modifiedConfig: any = JSON.parse(JSON.stringify(config));
-
-    // Update state and set config
-    setProcessedConfig(modifiedConfig);
-  }, [config]);
-
-  // Effect to set config on web component
+  // Sync config attribute efficiently
   useEffect(() => {
     if (builderRef.current) {
-      try {
-        // Convert to JSON string
-        const configString = JSON.stringify(processedConfig);
-
-        // Set config data attribute
+      const configString = JSON.stringify(config);
+      if (builderRef.current.getAttribute('config') !== configString) {
         builderRef.current.setAttribute('config', configString);
-      } catch (error) {
-        console.error('Error setting config-data:', error);
       }
     }
-  }, [processedConfig]);
+  }, [config]);
 
-  // Effect to handle content change events
+  // Setup event listener once
   useEffect(() => {
     const element = builderRef.current;
-    if (!element || !onContentChange) return;
+    if (!element) return;
 
     const handleContentChange = (event: any) => {
-      onContentChange(event.detail);
+      if (onContentChangeRef.current) {
+        onContentChangeRef.current(event.detail);
+      }
     };
 
     element.addEventListener('content-change', handleContentChange);
@@ -70,7 +63,13 @@ export const TextigniterReact: React.FC<TextigniterReactProps> = ({
     return () => {
       element.removeEventListener('content-change', handleContentChange);
     };
-  }, [onContentChange]);
+  }, []);
 
-  return <text-igniter ref={builderRef} />;
+  // Memoize the element to prevent React from touching its children during App re-renders
+  return React.useMemo(() => <text-igniter ref={builderRef} />, []);
 };
+
+// Deep compare config so we don't even enter the render phase if the config is structurally identical
+export const TextigniterReact = React.memo(TextigniterReactBase, (prevProps, nextProps) => {
+  return JSON.stringify(prevProps.config) === JSON.stringify(nextProps.config);
+});
