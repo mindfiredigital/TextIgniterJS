@@ -54,7 +54,7 @@ export function createEditor(
   toolbar.className = strings.TOOLBAR_CLASSNAME;
   toolbar.id = toolbarId;
   container.appendChild(toolbar);
-  if (!config?.showToolbar) toolbar.style.display = 'none';
+  if (config?.showToolbar === false) toolbar.style.display = 'none';
 
   const editor = document.createElement('div');
   editor.id = mainEditorId;
