@@ -19,7 +19,7 @@ const App: FC = () => {
       <div></div>
       <Textigniter
         config={{
-          showToolbar: true,
+          showToolbar: false,
           features: [
             'bold',
             'italic',
