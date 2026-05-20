@@ -598,6 +598,23 @@ class TextIgniter extends EventEmitter {
       // this.document.setFontSize(start, end, fontSize);
     });
 
+    document.getElementById('heading')?.addEventListener('change', e => {
+      this.undoRedoManager.saveUndoSnapshot();
+      const heading = (e.target as HTMLSelectElement).value || null;
+      if (this.document.dataIds.length > 1) {
+        this.document.toggleHeadingForMultipleBlocks(
+          this.document.dataIds,
+          heading
+        );
+      } else {
+        const currentBlockId =
+          this.document.selectedBlockId || this.document.dataIds[0];
+        if (currentBlockId) {
+          this.document.toggleHeading(currentBlockId, heading);
+        }
+      }
+    });
+
     document.getElementById('alignLeft')?.addEventListener('click', () => {
       console.log('alignment alignLeft', this.document.dataIds);
       this.document.dataIds.forEach(obj =>
@@ -1830,6 +1847,25 @@ class TextIgniter extends EventEmitter {
 
       this.toolbarView.updateActiveStates(this.currentAttributes);
       this.popupToolbarView.updateActiveStates(this.currentAttributes);
+    }
+
+    // Update heading select
+    const headingSelect = document.getElementById(
+      'heading'
+    ) as HTMLSelectElement;
+    if (headingSelect) {
+      if (this.document.selectedBlockId) {
+        const block = this.document.blocks.find(
+          (b: any) => b.dataId === this.document.selectedBlockId
+        );
+        if (block && block.heading) {
+          headingSelect.value = block.heading;
+        } else {
+          headingSelect.value = '';
+        }
+      } else {
+        headingSelect.value = '';
+      }
     }
   }
 
