@@ -46,6 +46,9 @@ class HtmlToJsonParser {
       this.parseParagraphText(element, pieces);
     }
 
+    const tagName = element.tagName.toLowerCase();
+    const heading = tagName.match(/^h[1-6]$/) ? tagName : null;
+
     return {
       dataId,
       class: className,
@@ -54,6 +57,7 @@ class HtmlToJsonParser {
       ...(listType ? { listType } : {}), // Only spread if listType exists
       ...(listStart !== null ? { listStart } : {}), // Only spread if listStart exists
       ...(parentId !== null ? { parentId } : {}), // Only spread if parentId is not null
+      ...(heading ? { heading } : {}),
     };
   }
 

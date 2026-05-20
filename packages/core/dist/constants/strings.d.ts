@@ -6,6 +6,7 @@ export declare const strings: {
     EDITOR_ELEMENT_NT_FOUND: string;
     FONT_FAMILY_SELECT_ID: string;
     FONT_SIZE_SELECT_ID: string;
+    HEADING_SELECT_ID: string;
     FONT_COLOR_WRAPPER_ID: string;
     FONT_COLOR_ID: string;
     FONT_COLOR_PICKER_WRAPPER_ID: string;

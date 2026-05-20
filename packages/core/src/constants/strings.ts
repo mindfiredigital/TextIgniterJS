@@ -9,6 +9,7 @@ export const strings = {
 
   FONT_FAMILY_SELECT_ID: 'fontFamily',
   FONT_SIZE_SELECT_ID: 'fontSize',
+  HEADING_SELECT_ID: 'heading',
 
   FONT_COLOR_WRAPPER_ID: 'fontColorWrapper',
   FONT_COLOR_ID: 'fontColor',

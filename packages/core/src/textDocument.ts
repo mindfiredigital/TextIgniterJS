@@ -600,6 +600,96 @@ class TextDocument extends EventEmitter {
     this.emit('documentChanged', this);
   }
 
+  getHeadingFontSize(headingType: string | null): string {
+    switch (headingType) {
+      case 'h1':
+        return '32px';
+      case 'h2':
+        return '24px';
+      case 'h3':
+        return '18px';
+      case 'h4':
+        return '16px';
+      case 'h5':
+        return '13px';
+      case 'h6':
+        return '11px';
+      default:
+        return '16px';
+    }
+  }
+
+  toggleHeading(dataId: string | null, headingType: string | null): void {
+    const index = this.blocks.findIndex(
+      (block: any) => block.dataId === dataId
+    );
+    if (index === -1) return;
+    const block = this.blocks[index];
+    block.heading = headingType;
+
+    const newFontSize = this.getHeadingFontSize(headingType);
+    if (Array.isArray(block.pieces)) {
+      const isEmpty = block.pieces.every(
+        (p: any) => p.text.trim() === '' || p.text === '\u200B'
+      );
+      if (isEmpty && headingType) {
+        block.pieces = [
+          {
+            text: `Heading ${headingType.replace('h', '')}`,
+            attributes: {
+              ...block.pieces[0]?.attributes,
+              fontSize: newFontSize,
+            },
+          },
+        ];
+      } else {
+        block.pieces.forEach((piece: any) => {
+          piece.attributes.fontSize = newFontSize;
+        });
+      }
+    }
+
+    this.emit('documentChanged', this);
+  }
+
+  toggleHeadingForMultipleBlocks(
+    dataIds: string[],
+    headingType: string | null
+  ): void {
+    dataIds.forEach(dataId => {
+      const index = this.blocks.findIndex(
+        (block: any) => block.dataId === dataId
+      );
+      if (index !== -1) {
+        const block = this.blocks[index];
+        block.heading = headingType;
+
+        const newFontSize = this.getHeadingFontSize(headingType);
+        if (Array.isArray(block.pieces)) {
+          const isEmpty = block.pieces.every(
+            (p: any) => p.text.trim() === '' || p.text === '\u200B'
+          );
+          if (isEmpty && headingType) {
+            block.pieces = [
+              {
+                text: `Heading ${headingType.replace('h', '')}`,
+                attributes: {
+                  ...block.pieces[0]?.attributes,
+                  fontSize: newFontSize,
+                },
+              },
+            ];
+          } else {
+            block.pieces.forEach((piece: any) => {
+              piece.attributes.fontSize = newFontSize;
+            });
+          }
+        }
+      }
+    });
+    this.emit('documentChanged', this);
+  }
+
   toggleOrderedListForMultipleBlocks(dataIds: string[]): void {
     if (dataIds.length === 0) return;
 
