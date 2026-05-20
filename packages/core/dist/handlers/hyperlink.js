@@ -189,7 +189,9 @@ class HyperlinkHandler {
             }
         };
         setTimeout(() => {
-            document.addEventListener('click', this.clickOutsideHandler);
+            if (typeof document !== 'undefined') {
+                document.addEventListener('click', this.clickOutsideHandler);
+            }
         }, 100);
     }
     removeClickOutsideListener() {
