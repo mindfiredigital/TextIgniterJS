@@ -6,7 +6,7 @@ const featureGroups = {
     formatting: ['bold', 'italic', 'underline', 'strikethrough'],
     alignment: ['alignLeft', 'alignCenter', 'alignRight'],
     lists: ['unorderedList', 'orderedList'],
-    media: ['hyperlink', 'image'],
+    media: ['hyperlink', 'image', 'emoji', 'insert_math'],
     utility: ['getHtmlContent', 'loadHtmlContent'],
 };
 function createSeparator() {
@@ -40,12 +40,14 @@ export function createEditor(editorId, config) {
     toolbar.className = strings.TOOLBAR_CLASSNAME;
     toolbar.id = toolbarId;
     container.appendChild(toolbar);
-    if (!(config === null || config === void 0 ? void 0 : config.showToolbar))
+    if ((config === null || config === void 0 ? void 0 : config.showToolbar) === false)
         toolbar.style.display = 'none';
     const editor = document.createElement('div');
     editor.id = mainEditorId;
     editor.className = strings.EDITOR_CLASSNAME;
     editor.contentEditable = 'true';
+    editor.spellcheck = true;
+    editor.lang = 'en';
     container.appendChild(editor);
     const featureLabels = {
         bold: '<strong>B</strong>',
@@ -65,6 +67,7 @@ export function createEditor(editorId, config) {
         justify: '&#8644;',
         insert_table: '&#8866;',
         insert_layout: '&#10064;',
+        insert_math: 'Σ',
         heading: 'H',
         image: '&#128247;',
         colors: '&#127912;',
@@ -83,8 +86,12 @@ export function createEditor(editorId, config) {
         fontColor: 'Text Color',
         bgColor: 'Highlight Color',
         image: 'Insert Image',
+        emoji: 'Emoji',
         getHtmlContent: 'Get HTML',
         loadHtmlContent: 'Load HTML',
+        insert_table: 'Insert table',
+        insert_math: 'Insert Equation',
+        textToSpeech: 'Text To Sppech',
     };
     const featuresWithPngIcon = [
         { feature: 'alignLeft', id: 'alignLeft', icon: icons.left_align },
@@ -93,10 +100,36 @@ export function createEditor(editorId, config) {
         { feature: 'unorderedList', id: 'unorderedList', icon: icons.bullet_list },
         { feature: 'orderedList', id: 'orderedList', icon: icons.numbered_list },
         { feature: 'hyperlink', id: 'hyperlink', icon: icons.hyperlink },
+        { feature: 'emoji', id: 'emoji', icon: icons.emoji },
         {
             feature: 'strikethrough',
             id: 'strikethrough',
             icon: icons.strikethrough,
+        },
+        {
+            feature: 'insert_table',
+            id: 'insert_table',
+            icon: icons.insert_table,
+        },
+        {
+            feature: 'insert_math',
+            id: 'insert_math',
+            icon: icons.insert_math,
+        },
+        {
+            feature: 'subscript',
+            id: 'subscript',
+            icon: icons.subscript,
+        },
+        {
+            feature: 'superscript',
+            id: 'superscript',
+            icon: icons.superscript,
+        },
+        {
+            feature: 'textToSpeech',
+            id: 'textToSpeech',
+            icon: icons.speaker_on,
         },
     ];
     const createSelect = (id, options) => {
@@ -280,12 +313,48 @@ export function createEditor(editorId, config) {
             toolbar.appendChild(button);
         }
         else if (feature === 'loadHtmlContent') {
-            const button = document.createElement('button');
-            button.id = strings.LOAD_HTML_BUTTON_ID;
-            button.type = 'button';
-            button.textContent = 'Load HTML';
-            button.dataset.tooltip = featureTitles['loadHtmlContent'] || 'Load HTML';
-            toolbar.appendChild(button);
+            const select = document.createElement('select');
+            select.id = strings.LOAD_HTML_BUTTON_ID;
+            select.dataset.action = 'loadHtmlContent';
+            select.dataset.tooltip = featureTitles['loadHtmlContent'] || 'Load HTML';
+            select.style.cursor = 'pointer';
+            select.style.padding = '4px 8px';
+            select.style.border = '1px solid #ccc';
+            select.style.borderRadius = '4px';
+            select.style.backgroundColor = '#f9f9f9';
+            select.style.fontSize = '13px';
+            select.style.outline = 'none';
+            select.style.color = '#333';
+            select.style.height = '28px';
+            select.addEventListener('mouseenter', () => {
+                select.style.backgroundColor = '#eaeaea';
+            });
+            select.addEventListener('mouseleave', () => {
+                select.style.backgroundColor = '#f9f9f9';
+            });
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Templates...';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            select.appendChild(defaultOption);
+            const defaultTemplates = [
+                { name: 'Default Test', html: strings.TEST_HTML_CODE },
+                { name: 'Blog Post', html: strings.TEST_BLOG_POST_HTML_CODE },
+                { name: 'Newsletter', html: strings.TEST_NEWSLATER_HTML_CODE },
+                { name: 'Resume', html: strings.TEST_RESUME_HTML_CODE },
+                { name: 'Email', html: strings.TEST_EMAIL_HTML_CODE },
+                { name: 'Meeting Notes', html: strings.TEST_MEETING_HTML_CODE },
+            ];
+            const allTemplates = [...defaultTemplates, ...(config.templates || [])];
+            allTemplates.forEach((t, i) => {
+                const option = document.createElement('option');
+                option.value = i.toString();
+                option.dataset.html = t.html;
+                option.textContent = t.name;
+                select.appendChild(option);
+            });
+            toolbar.appendChild(select);
         }
         else if (featuresWithPngIcon.map(item => item.feature).includes(feature)) {
             const featureData = featuresWithPngIcon.find(item => item.feature === feature);

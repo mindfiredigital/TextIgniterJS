@@ -144,6 +144,9 @@ declare class TextDocument extends EventEmitter {
     getCursorOffset(container: HTMLElement | null): number;
     formatAttribute(start: number, end: number, attribute: keyof Piece['attributes'], value: string | boolean): void;
     toggleOrderedList(dataId: string | null, id?: string): void;
+    getHeadingFontSize(headingType: string | null): string;
+    toggleHeading(dataId: string | null, headingType: string | null): void;
+    toggleHeadingForMultipleBlocks(dataIds: string[], headingType: string | null): void;
     toggleOrderedListForMultipleBlocks(dataIds: string[]): void;
     toggleUnorderedList(dataId: string | null): void;
     updateOrderedListNumbers(): void;

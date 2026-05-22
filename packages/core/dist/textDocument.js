@@ -7,9 +7,16 @@ class TextDocument extends EventEmitter {
     set selectedBlockId(value) {
         if (this._selectedBlockId !== value) {
             this._selectedBlockId = value;
-            const editorOffset = this.getCursorOffset(document.querySelector('[id="editor"]'));
-            const paraOffset = this.getCursorOffset(document.querySelector('[data-id="' + value + '"]'));
-            this.currentOffset = editorOffset - paraOffset;
+            const editorEl = document.querySelector('[id="editor"]');
+            const paraEl = document.querySelector('[data-id="' + value + '"]');
+            if (editorEl && paraEl) {
+                const editorOffset = this.getCursorOffset(editorEl);
+                const paraOffset = this.getCursorOffset(paraEl);
+                this.currentOffset = editorOffset - paraOffset;
+            }
+            else {
+                this.currentOffset = 0;
+            }
         }
     }
     constructor() {
@@ -51,7 +58,12 @@ class TextDocument extends EventEmitter {
         let index = 0;
         if (dataId !== '' && dataId !== null) {
             index = this.blocks.findIndex((block) => block.dataId === dataId);
+            if (index === -1 || !this.blocks[index].pieces)
+                return;
             offset = this.currentOffset;
+        }
+        else {
+            return;
         }
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
@@ -114,9 +126,12 @@ class TextDocument extends EventEmitter {
         let runBackspace = false;
         if (dataId !== '' && dataId !== null) {
             index = this.blocks.findIndex((block) => block.dataId === dataId);
-            if (index === -1)
+            if (index === -1 || !this.blocks[index].pieces)
                 return;
             offset = currentOffset;
+        }
+        else {
+            return;
         }
         let previousTextBlockIndex = -1;
         if (isBackspace &&
@@ -306,7 +321,7 @@ class TextDocument extends EventEmitter {
     }
     getCursorOffset(container) {
         const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) {
+        if (!selection || selection.rangeCount === 0 || !container) {
             return -1;
         }
         const range = selection.getRangeAt(0);
@@ -336,9 +351,12 @@ class TextDocument extends EventEmitter {
         let index = -1;
         if (this.selectedBlockId !== '' && this.selectedBlockId !== null) {
             index = this.blocks.findIndex((block) => block.dataId === this.selectedBlockId);
-            if (index === -1)
+            if (index === -1 || !this.blocks[index].pieces)
                 return;
             offset = this.currentOffset;
+        }
+        else {
+            return;
         }
         for (let piece of this.blocks[index].pieces) {
             const pieceEnd = offset + piece.text.length;
@@ -358,6 +376,8 @@ class TextDocument extends EventEmitter {
                     attribute === 'italic' ||
                     attribute === 'underline' ||
                     attribute === 'strikethrough' ||
+                    attribute === 'subscript' ||
+                    attribute == 'superscript' ||
                     attribute === 'undo' ||
                     attribute === 'redo' ||
                     attribute === 'hyperlink') &&
@@ -553,6 +573,20 @@ class TextDocument extends EventEmitter {
         const allStrike = this.isRangeEntirelyAttribute(start, end, 'strikethrough');
         this.formatAttribute(start, end, 'strikethrough', !allStrike);
     }
+    toggleSubscriptRange(start, end, id = '') {
+        const allSubscript = this.isRangeEntirelyAttribute(start, end, 'subscript');
+        if (!allSubscript) {
+            this.formatAttribute(start, end, 'superscript', false);
+        }
+        this.formatAttribute(start, end, 'subscript', !allSubscript);
+    }
+    toggleSuperscriptRange(start, end, id = '') {
+        const allSuperscript = this.isRangeEntirelyAttribute(start, end, 'superscript');
+        if (!allSuperscript) {
+            this.formatAttribute(start, end, 'subscript', false);
+        }
+        this.formatAttribute(start, end, 'superscript', !allSuperscript);
+    }
     toggleUndoRange(start, end, id = '') {
         const allUndo = this.isRangeEntirelyAttribute(start, end, 'undo');
         this.formatAttribute(start, end, 'undo', !allUndo);
@@ -577,7 +611,7 @@ class TextDocument extends EventEmitter {
         let allHaveAttr = true;
         if (this.selectedBlockId !== '' && this.selectedBlockId !== null) {
             const index = this.blocks.findIndex((block) => block.dataId === this.selectedBlockId);
-            if (index === -1)
+            if (index === -1 || !this.blocks[index].pieces)
                 return false;
             for (let piece of this.blocks[index].pieces) {
                 const pieceEnd = offset + piece.text.length;
@@ -609,6 +643,8 @@ class TextDocument extends EventEmitter {
         let currentOffset = 0;
         if (dataId !== '' && dataId !== null) {
             for (let block of this.blocks) {
+                if (block.type === 'table' || block.type === 'layout' || !block.pieces)
+                    continue;
                 const blockLength = block.pieces.reduce((acc, curr) => acc + curr.text.length, 0);
                 if (block.dataId == dataId) {
                     let prevPiece = null;

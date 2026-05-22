@@ -1,6 +1,7 @@
-import { FC, useState } from 'react';
-// @ts-expect-error - Missing type definitions for the package
-import { Textigniter } from '@mindfiredigital/textigniter-react';
+import { ElementType, FC, useState } from 'react';
+import { Textigniter as OriginalComponent } from '@mindfiredigital/textigniter-react';
+
+const Textigniter = OriginalComponent as ElementType;
 
 const App: FC = () => {
   const [htmlContent, setHtmlContent] = useState('');
@@ -14,7 +15,8 @@ const App: FC = () => {
 
   return (
     <>
-      <h1>TextIgniter React Example</h1>
+      {/* <h1>TextIgniter React Example</h1> */}
+      <div></div>
       <Textigniter
         config={{
           showToolbar: true,
@@ -22,7 +24,9 @@ const App: FC = () => {
             'bold',
             'italic',
             'underline',
+            'strikethrough',
             'hyperlink',
+
             'fontFamily',
             'fontSize',
             'alignLeft',
@@ -35,6 +39,14 @@ const App: FC = () => {
             'bgColor',
             'getHtmlContent',
             'loadHtmlContent',
+            "insert_table",
+            "insert_layout",
+            'speechToText',
+            'emoji',
+            "subscript",
+            "superscript",
+            "insert_math",
+            "textToSpeech"
           ],
         }}
         onContentChange={handleContentChange}

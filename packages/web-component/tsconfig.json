@@ -15,10 +15,9 @@
     "forceConsistentCasingInFileNames": true, // Ensure consistent casing for file names
     "resolveJsonModule": true, // Allow importing JSON files
     "allowSyntheticDefaultImports": true, // Allow synthetic default imports for better compatibility
-    "composite": true, // Enable project references
+    "composite": false, // Enable project references
     "declarationMap": true // Generate declaration maps
   },
   "include": ["src/**/*"], // Include all files in the src directory and subdirectories
-  "exclude": ["node_modules", "dist"], // Exclude node_modules and dist folders
-  "types": ["./types/textigniter.d.ts"]
+  "exclude": ["node_modules", "dist"] // Exclude node_modules and dist folders
 }
