@@ -180,6 +180,17 @@
   color: #1f2937;
 }
 
+#editor h1,
+#editor h2,
+#editor h3,
+#editor h4,
+#editor h5,
+#editor h6 {
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
+}
+
 #editor:focus {
   border-color: #d1d5db;
   box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.1);

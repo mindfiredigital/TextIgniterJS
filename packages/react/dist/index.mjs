@@ -1,44 +1,46 @@
 // src/components/TextIgniter.tsx
-import React, { useEffect, useRef, useState } from "react";
-var TextigniterReact = ({
+import React, { useEffect, useRef } from "react";
+var TextigniterReactBase = ({
   config,
   onContentChange
 }) => {
   const builderRef = useRef(null);
-  const [processedConfig, setProcessedConfig] = useState(config);
+  const onContentChangeRef = useRef(onContentChange);
+  useEffect(() => {
+    onContentChangeRef.current = onContentChange;
+  }, [onContentChange]);
   useEffect(() => {
     import("@mindfiredigital/textigniter-web-component").catch((error) => {
       console.error("Failed to load web component:", error);
     });
   }, []);
   useEffect(() => {
-    const modifiedConfig = JSON.parse(JSON.stringify(config));
-    setProcessedConfig(modifiedConfig);
-  }, [config]);
-  useEffect(() => {
     if (builderRef.current) {
-      try {
-        const configString = JSON.stringify(processedConfig);
+      const configString = JSON.stringify(config);
+      if (builderRef.current.getAttribute("config") !== configString) {
         builderRef.current.setAttribute("config", configString);
-      } catch (error) {
-        console.error("Error setting config-data:", error);
       }
     }
-  }, [processedConfig]);
+  }, [config]);
   useEffect(() => {
     const element = builderRef.current;
-    if (!element || !onContentChange)
+    if (!element)
       return;
     const handleContentChange = (event) => {
-      onContentChange(event.detail);
+      if (onContentChangeRef.current) {
+        onContentChangeRef.current(event.detail);
+      }
     };
     element.addEventListener("content-change", handleContentChange);
     return () => {
       element.removeEventListener("content-change", handleContentChange);
     };
-  }, [onContentChange]);
-  return /* @__PURE__ */ React.createElement("text-igniter", { ref: builderRef });
+  }, []);
+  return React.useMemo(() => /* @__PURE__ */ React.createElement("text-igniter", { ref: builderRef }), []);
 };
+var TextigniterReact = React.memo(TextigniterReactBase, (prevProps, nextProps) => {
+  return JSON.stringify(prevProps.config) === JSON.stringify(nextProps.config);
+});
 export {
   TextigniterReact as Textigniter
 };

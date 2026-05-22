@@ -36,45 +36,47 @@ module.exports = __toCommonJS(src_exports);
 
 // src/components/TextIgniter.tsx
 var import_react = __toESM(require("react"));
-var TextigniterReact = ({
+var TextigniterReactBase = ({
   config,
   onContentChange
 }) => {
   const builderRef = (0, import_react.useRef)(null);
-  const [processedConfig, setProcessedConfig] = (0, import_react.useState)(config);
+  const onContentChangeRef = (0, import_react.useRef)(onContentChange);
+  (0, import_react.useEffect)(() => {
+    onContentChangeRef.current = onContentChange;
+  }, [onContentChange]);
   (0, import_react.useEffect)(() => {
     import("@mindfiredigital/textigniter-web-component").catch((error) => {
       console.error("Failed to load web component:", error);
     });
   }, []);
   (0, import_react.useEffect)(() => {
-    const modifiedConfig = JSON.parse(JSON.stringify(config));
-    setProcessedConfig(modifiedConfig);
-  }, [config]);
-  (0, import_react.useEffect)(() => {
     if (builderRef.current) {
-      try {
-        const configString = JSON.stringify(processedConfig);
+      const configString = JSON.stringify(config);
+      if (builderRef.current.getAttribute("config") !== configString) {
         builderRef.current.setAttribute("config", configString);
-      } catch (error) {
-        console.error("Error setting config-data:", error);
       }
     }
-  }, [processedConfig]);
+  }, [config]);
   (0, import_react.useEffect)(() => {
     const element = builderRef.current;
-    if (!element || !onContentChange)
+    if (!element)
       return;
     const handleContentChange = (event) => {
-      onContentChange(event.detail);
+      if (onContentChangeRef.current) {
+        onContentChangeRef.current(event.detail);
+      }
     };
     element.addEventListener("content-change", handleContentChange);
     return () => {
       element.removeEventListener("content-change", handleContentChange);
     };
-  }, [onContentChange]);
-  return /* @__PURE__ */ import_react.default.createElement("text-igniter", { ref: builderRef });
+  }, []);
+  return import_react.default.useMemo(() => /* @__PURE__ */ import_react.default.createElement("text-igniter", { ref: builderRef }), []);
 };
+var TextigniterReact = import_react.default.memo(TextigniterReactBase, (prevProps, nextProps) => {
+  return JSON.stringify(prevProps.config) === JSON.stringify(nextProps.config);
+});
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   Textigniter

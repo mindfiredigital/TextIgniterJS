@@ -98,7 +98,7 @@ class EditorView {
                         wrapperDiv = document.createElement('ul');
                     }
                     else {
-                        wrapperDiv = document.createElement('div');
+                        wrapperDiv = document.createElement(block.heading || 'div');
                     }
                     wrapperDiv.setAttribute('data-id', block.dataId);
                     wrapperDiv.setAttribute('class', block.class);
