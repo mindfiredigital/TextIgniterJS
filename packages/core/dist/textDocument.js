@@ -421,6 +421,78 @@ class TextDocument extends EventEmitter {
         this.updateOrderedListNumbers();
         this.emit('documentChanged', this);
     }
+    getHeadingFontSize(headingType) {
+        switch (headingType) {
+            case 'h1':
+                return '32px';
+            case 'h2':
+                return '24px';
+            case 'h3':
+                return '18px';
+            case 'h4':
+                return '16px';
+            case 'h5':
+                return '13px';
+            case 'h6':
+                return '11px';
+            default:
+                return '16px';
+        }
+    }
+    toggleHeading(dataId, headingType) {
+        var _a;
+        const index = this.blocks.findIndex((block) => block.dataId === dataId);
+        if (index === -1)
+            return;
+        const block = this.blocks[index];
+        block.heading = headingType;
+        const newFontSize = this.getHeadingFontSize(headingType);
+        if (Array.isArray(block.pieces)) {
+            const isEmpty = block.pieces.every((p) => p.text.trim() === '' || p.text === '\u200B');
+            if (isEmpty && headingType) {
+                block.pieces = [
+                    {
+                        text: `Heading ${headingType.replace('h', '')}`,
+                        attributes: Object.assign(Object.assign({}, (_a = block.pieces[0]) === null || _a === void 0 ? void 0 : _a.attributes), { fontSize: newFontSize }),
+                    },
+                ];
+            }
+            else {
+                block.pieces.forEach((piece) => {
+                    piece.attributes.fontSize = newFontSize;
+                });
+            }
+        }
+        this.emit('documentChanged', this);
+    }
+    toggleHeadingForMultipleBlocks(dataIds, headingType) {
+        dataIds.forEach(dataId => {
+            var _a;
+            const index = this.blocks.findIndex((block) => block.dataId === dataId);
+            if (index !== -1) {
+                const block = this.blocks[index];
+                block.heading = headingType;
+                const newFontSize = this.getHeadingFontSize(headingType);
+                if (Array.isArray(block.pieces)) {
+                    const isEmpty = block.pieces.every((p) => p.text.trim() === '' || p.text === '\u200B');
+                    if (isEmpty && headingType) {
+                        block.pieces = [
+                            {
+                                text: `Heading ${headingType.replace('h', '')}`,
+                                attributes: Object.assign(Object.assign({}, (_a = block.pieces[0]) === null || _a === void 0 ? void 0 : _a.attributes), { fontSize: newFontSize }),
+                            },
+                        ];
+                    }
+                    else {
+                        block.pieces.forEach((piece) => {
+                            piece.attributes.fontSize = newFontSize;
+                        });
+                    }
+                }
+            }
+        });
+        this.emit('documentChanged', this);
+    }
     toggleOrderedListForMultipleBlocks(dataIds) {
         if (dataIds.length === 0)
             return;

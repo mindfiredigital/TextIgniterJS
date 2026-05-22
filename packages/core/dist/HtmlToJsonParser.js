@@ -37,8 +37,10 @@ class HtmlToJsonParser {
         else {
             this.parseParagraphText(element, pieces);
         }
-        return Object.assign(Object.assign(Object.assign({ dataId, class: className, alignment,
-            pieces }, (listType ? { listType } : {})), (listStart !== null ? { listStart } : {})), (parentId !== null ? { parentId } : {}));
+        const tagName = element.tagName.toLowerCase();
+        const heading = tagName.match(/^h[1-6]$/) ? tagName : null;
+        return Object.assign(Object.assign(Object.assign(Object.assign({ dataId, class: className, alignment,
+            pieces }, (listType ? { listType } : {})), (listStart !== null ? { listStart } : {})), (parentId !== null ? { parentId } : {})), (heading ? { heading } : {}));
     }
     parseListItems(element, pieces) {
         const listItems = element.querySelectorAll('li');

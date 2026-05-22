@@ -1,5 +1,7 @@
-import { FC, useState } from 'react';
-import { Textigniter } from '@mindfiredigital/textigniter-react';
+import { ElementType, FC, useState } from 'react';
+import { Textigniter as OriginalComponent } from '@mindfiredigital/textigniter-react';
+
+const Textigniter = OriginalComponent as ElementType;
 
 const App: FC = () => {
   const [htmlContent, setHtmlContent] = useState('');

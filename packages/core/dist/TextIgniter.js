@@ -25,7 +25,7 @@ import { InsertMathHandler } from './insertMath';
 import { TextToSpeechHandler } from './handlers/textToSppech';
 class TextIgniter extends EventEmitter {
     constructor(editorId, config) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
         super();
         this.savedSelection = null;
         this.debounceTimer = null;
@@ -395,15 +395,28 @@ class TextIgniter extends EventEmitter {
                 this.document.setFontSize(start, end, fontSize);
             }
         });
-        (_l = document.getElementById('alignLeft')) === null || _l === void 0 ? void 0 : _l.addEventListener('click', () => {
+        (_l = document.getElementById('heading')) === null || _l === void 0 ? void 0 : _l.addEventListener('change', e => {
+            this.undoRedoManager.saveUndoSnapshot();
+            const heading = e.target.value || null;
+            if (this.document.dataIds.length > 1) {
+                this.document.toggleHeadingForMultipleBlocks(this.document.dataIds, heading);
+            }
+            else {
+                const currentBlockId = this.document.selectedBlockId || this.document.dataIds[0];
+                if (currentBlockId) {
+                    this.document.toggleHeading(currentBlockId, heading);
+                }
+            }
+        });
+        (_m = document.getElementById('alignLeft')) === null || _m === void 0 ? void 0 : _m.addEventListener('click', () => {
             console.log('alignment alignLeft', this.document.dataIds);
             this.document.dataIds.forEach(obj => this.document.setAlignment('left', obj));
         });
-        (_m = document.getElementById('alignCenter')) === null || _m === void 0 ? void 0 : _m.addEventListener('click', () => {
+        (_o = document.getElementById('alignCenter')) === null || _o === void 0 ? void 0 : _o.addEventListener('click', () => {
             console.log('alignment alignCenter', this.document.dataIds);
             this.document.dataIds.forEach(obj => this.document.setAlignment('center', obj));
         });
-        (_o = document.getElementById('alignRight')) === null || _o === void 0 ? void 0 : _o.addEventListener('click', () => {
+        (_p = document.getElementById('alignRight')) === null || _p === void 0 ? void 0 : _p.addEventListener('click', () => {
             console.log('alignment alignRight', this.document.dataIds);
             this.document.dataIds.forEach(obj => this.document.setAlignment('right', obj));
         });
@@ -1302,6 +1315,21 @@ class TextIgniter extends EventEmitter {
             };
             this.toolbarView.updateActiveStates(this.currentAttributes);
             this.popupToolbarView.updateActiveStates(this.currentAttributes);
+        }
+        const headingSelect = document.getElementById('heading');
+        if (headingSelect) {
+            if (this.document.selectedBlockId) {
+                const block = this.document.blocks.find((b) => b.dataId === this.document.selectedBlockId);
+                if (block && block.heading) {
+                    headingSelect.value = block.heading;
+                }
+                else {
+                    headingSelect.value = '';
+                }
+            }
+            else {
+                headingSelect.value = '';
+            }
         }
     }
     setCursorPosition(position, dataId = '') {

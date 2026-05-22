@@ -1,7 +1,7 @@
 import { icons } from '../assets/icons';
 import { strings } from '../constants/strings';
 const featureGroups = {
-    dropdowns: ['fontFamily', 'fontSize'],
+    dropdowns: ['fontFamily', 'fontSize', 'heading'],
     colors: ['fontColor', 'bgColor'],
     formatting: ['bold', 'italic', 'underline', 'strikethrough'],
     alignment: ['alignLeft', 'alignCenter', 'alignRight'],
@@ -352,6 +352,38 @@ export function createEditor(editorId, config) {
                 option.value = i.toString();
                 option.dataset.html = t.html;
                 option.textContent = t.name;
+                select.appendChild(option);
+            });
+            toolbar.appendChild(select);
+        }
+        else if (feature === 'heading') {
+            const select = document.createElement('select');
+            select.id = strings.HEADING_SELECT_ID;
+            select.dataset.action = 'heading';
+            select.dataset.tooltip = featureTitles['heading'] || 'Heading';
+            select.style.cursor = 'pointer';
+            select.style.padding = '4px 8px';
+            select.style.border = '1px solid #ccc';
+            select.style.borderRadius = '4px';
+            select.style.backgroundColor = '#f9f9f9';
+            select.style.fontSize = '13px';
+            select.style.outline = 'none';
+            select.style.color = '#333';
+            select.style.height = '28px';
+            select.addEventListener('mouseenter', () => {
+                select.style.backgroundColor = '#eaeaea';
+            });
+            select.addEventListener('mouseleave', () => {
+                select.style.backgroundColor = '#f9f9f9';
+            });
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Normal';
+            select.appendChild(defaultOption);
+            ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].forEach((h, index) => {
+                const option = document.createElement('option');
+                option.value = h.toLowerCase();
+                option.textContent = `Heading ${index + 1}`;
                 select.appendChild(option);
             });
             toolbar.appendChild(select);

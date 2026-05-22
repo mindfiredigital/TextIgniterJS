@@ -6,6 +6,7 @@ export const strings = {
     EDITOR_ELEMENT_NT_FOUND: 'Editor element not found or incorrect element type.',
     FONT_FAMILY_SELECT_ID: 'fontFamily',
     FONT_SIZE_SELECT_ID: 'fontSize',
+    HEADING_SELECT_ID: 'heading',
     FONT_COLOR_WRAPPER_ID: 'fontColorWrapper',
     FONT_COLOR_ID: 'fontColor',
     FONT_COLOR_PICKER_WRAPPER_ID: 'colorWrapper',
