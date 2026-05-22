@@ -1,7 +1,5 @@
-import { ElementType, FC, useState } from 'react';
-import { Textigniter as OriginalComponent } from '@mindfiredigital/textigniter-react';
-
-const Textigniter = OriginalComponent as ElementType;
+import { FC, useState } from 'react';
+import { Textigniter } from '@mindfiredigital/textigniter-react';
 
 const App: FC = () => {
   const [htmlContent, setHtmlContent] = useState('');
@@ -39,14 +37,14 @@ const App: FC = () => {
             'bgColor',
             'getHtmlContent',
             'loadHtmlContent',
-            "insert_table",
-            "insert_layout",
+            'insert_table',
+            'insert_layout',
             'speechToText',
             'emoji',
-            "subscript",
-            "superscript",
-            "insert_math",
-            "textToSpeech"
+            'subscript',
+            'superscript',
+            'insert_math',
+            'textToSpeech',
           ],
         }}
         onContentChange={handleContentChange}
