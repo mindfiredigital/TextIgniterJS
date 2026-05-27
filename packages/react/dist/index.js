@@ -38,6 +38,8 @@ module.exports = __toCommonJS(src_exports);
 var import_react = __toESM(require("react"));
 var TextigniterReactBase = ({
   config,
+  value,
+  initialValue,
   onContentChange
 }) => {
   const builderRef = (0, import_react.useRef)(null);
@@ -59,6 +61,20 @@ var TextigniterReactBase = ({
     }
   }, [config]);
   (0, import_react.useEffect)(() => {
+    if (builderRef.current && initialValue !== void 0) {
+      if (!builderRef.current.getAttribute("value")) {
+        builderRef.current.setAttribute("value", initialValue);
+      }
+    }
+  }, []);
+  (0, import_react.useEffect)(() => {
+    if (builderRef.current && value !== void 0) {
+      if (builderRef.current.getAttribute("value") !== value) {
+        builderRef.current.setAttribute("value", value);
+      }
+    }
+  }, [value]);
+  (0, import_react.useEffect)(() => {
     const element = builderRef.current;
     if (!element)
       return;
@@ -75,7 +91,7 @@ var TextigniterReactBase = ({
   return import_react.default.useMemo(() => /* @__PURE__ */ import_react.default.createElement("text-igniter", { ref: builderRef }), []);
 };
 var TextigniterReact = import_react.default.memo(TextigniterReactBase, (prevProps, nextProps) => {
-  return JSON.stringify(prevProps.config) === JSON.stringify(nextProps.config);
+  return JSON.stringify(prevProps.config) === JSON.stringify(nextProps.config) && prevProps.value === nextProps.value && prevProps.initialValue === nextProps.initialValue;
 });
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

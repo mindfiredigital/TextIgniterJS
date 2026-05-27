@@ -86,5 +86,6 @@ declare class TextIgniter extends EventEmitter {
     }) => void): void;
     getContent(): string;
     getTextContent(): string;
+    loadHtmlContent(html: string): void;
 }
 export { TextIgniter };
