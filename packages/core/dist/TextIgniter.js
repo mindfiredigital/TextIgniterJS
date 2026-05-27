@@ -1436,6 +1436,21 @@ class TextIgniter extends EventEmitter {
         var _a;
         return ((_a = this.editorContainer) === null || _a === void 0 ? void 0 : _a.textContent) || '';
     }
+    loadHtmlContent(html) {
+        this.undoRedoManager.saveUndoSnapshot();
+        this.htmlToJsonParser = new HtmlToJsonParser(html);
+        const jsonOutput = this.htmlToJsonParser.parse();
+        this.document.blocks = jsonOutput;
+        if (jsonOutput.length > 0) {
+            this.document.dataIds[0] = jsonOutput[0].dataId;
+            this.document.selectedBlockId = jsonOutput[0].dataId;
+        }
+        else {
+            this.document.dataIds = [];
+            this.document.selectedBlockId = null;
+        }
+        this.document.emit('documentChanged', this.document);
+    }
 }
 window.TextIgniter = TextIgniter;
 export { TextIgniter };

@@ -2021,6 +2021,25 @@ class TextIgniter extends EventEmitter {
   public getTextContent(): string {
     return this.editorContainer?.textContent || '';
   }
+
+  /**
+   * Load HTML content into the editor
+   * @param html - The HTML string to load
+   */
+  public loadHtmlContent(html: string): void {
+    this.undoRedoManager.saveUndoSnapshot();
+    this.htmlToJsonParser = new HtmlToJsonParser(html);
+    const jsonOutput = this.htmlToJsonParser.parse();
+    this.document.blocks = jsonOutput;
+    if (jsonOutput.length > 0) {
+      this.document.dataIds[0] = jsonOutput[0].dataId;
+      this.document.selectedBlockId = jsonOutput[0].dataId;
+    } else {
+      this.document.dataIds = [];
+      this.document.selectedBlockId = null;
+    }
+    this.document.emit('documentChanged', this.document);
+  }
 }
 (window as any).TextIgniter = TextIgniter;
 export { TextIgniter };

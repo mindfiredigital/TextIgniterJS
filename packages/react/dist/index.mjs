@@ -2,6 +2,8 @@
 import React, { useEffect, useRef } from "react";
 var TextigniterReactBase = ({
   config,
+  value,
+  initialValue,
   onContentChange
 }) => {
   const builderRef = useRef(null);
@@ -23,6 +25,20 @@ var TextigniterReactBase = ({
     }
   }, [config]);
   useEffect(() => {
+    if (builderRef.current && initialValue !== void 0) {
+      if (!builderRef.current.getAttribute("value")) {
+        builderRef.current.setAttribute("value", initialValue);
+      }
+    }
+  }, []);
+  useEffect(() => {
+    if (builderRef.current && value !== void 0) {
+      if (builderRef.current.getAttribute("value") !== value) {
+        builderRef.current.setAttribute("value", value);
+      }
+    }
+  }, [value]);
+  useEffect(() => {
     const element = builderRef.current;
     if (!element)
       return;
@@ -39,7 +55,7 @@ var TextigniterReactBase = ({
   return React.useMemo(() => /* @__PURE__ */ React.createElement("text-igniter", { ref: builderRef }), []);
 };
 var TextigniterReact = React.memo(TextigniterReactBase, (prevProps, nextProps) => {
-  return JSON.stringify(prevProps.config) === JSON.stringify(nextProps.config);
+  return JSON.stringify(prevProps.config) === JSON.stringify(nextProps.config) && prevProps.value === nextProps.value && prevProps.initialValue === nextProps.initialValue;
 });
 export {
   TextigniterReact as Textigniter
