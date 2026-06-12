@@ -1,65 +1,103 @@
 # Javascript
 
-- **Initialization**: Follow these steps to initialize and configure TextIgniterJS in your project.
-Follow these steps to initialize and configure TextIgniterJS in your project.
+Follow these steps to initialize and configure TextIgniter in your Javascript/Typescript project.
 
 ## Example Code
-```javascript
+```html
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TextIgniterJS</title>
+    <title>TextIgniter JS Example</title>
+    <!-- Include Stylesheet -->
+    <link rel="stylesheet" href="node_modules/@mindfiredigital/textigniter/dist/styles/text-igniter.css" />
   </head>
   <body>
-    <div id="editor"></div>
+    <!-- Editor Container -->
+    <div id="editor-container"></div>
 
-    <script src="node_modules/@mindfiredigital/textigniterjs/dist/index.js"></script>
+    <button id="get-content-btn">Get Content</button>
+
+    <!-- Include TextIgniter Script -->
+    <script src="node_modules/@mindfiredigital/textigniter/dist/index.js"></script>
 
     <script>
-      // Initialize the RichTextEditor with specific features
+      // Initialize the editor with desired features
       const config = {
+        showToolbar: true,
         features: [
           'bold',
           'italic',
           'underline',
           'subscript',
           'superscript',
-          'left_align',
-          'center_align',
-          'right_align',
+          'alignLeft',
+          'alignCenter',
+          'alignRight',
           'justify',
-          'bullet_list',
-          'numbered_list',
+          'unorderedList',
+          'orderedList',
           'insert_table',
           'insert_layout',
+          'insert_math',
+          'emoji',
           'heading',
           'hyperlink',
           'image',
         ],
       };
-      const editor = new TextIgniter('editor', config);
 
-      // Example usage of getHtml and getJson methods
-      function getEditorContent() {
-        console.log('HTML content:', editor.getHtml());
-        console.log('JSON content:', editor.getJson());
-      }
-      const contentButton = document.createElement('button');
-      contentButton.innerText = 'Get Content';
-      contentButton.onclick = getEditorContent;
-      document.body.appendChild(contentButton);
+      const editor = new TextIgniter('editor-container', config);
+
+      // Listen for content changes in real-time
+      editor.onContentChange((data) => {
+        console.log('Real-time HTML:', data.html);
+        console.log('Real-time Plain Text:', data.text);
+      });
+
+      // Retrieve content on button click
+      document.getElementById('get-content-btn').addEventListener('click', () => {
+        const html = editor.getContent();
+        const text = editor.getTextContent();
+        console.log('HTML content:', html);
+        console.log('Plain Text content:', text);
+      });
     </script>
   </body>
 </html>
 ```
 
-## Retrieve Editor Content
-### Add functionality to extract editor content using the provided methods:
+## API Reference
+
+### Retrieve Editor Content
+
+Use the following methods to retrieve content from the editor instance:
 
 ```javascript
-console.log('HTML content:', editor.getHtml());
-console.log('JSON content:', editor.getJson());
+// Get formatted HTML content
+const htmlContent = editor.getContent();
+
+// Get plain text content (without HTML tags)
+const textContent = editor.getTextContent();
 ```
-### The example above demonstrates how to initialize the editor, configure it with specific features, and retrieve content in HTML and JSON formats.
+
+### Load Initial/HTML Content
+
+Use `loadHtmlContent(html)` to programmatically set the editor content:
+
+```javascript
+editor.loadHtmlContent('<p>Hello <strong>World</strong>!</p>');
+```
+
+### Subscribe to Content Changes
+
+Listen to real-time changes using `onContentChange`:
+
+```javascript
+editor.onContentChange((data) => {
+  console.log('HTML:', data.html);
+  console.log('Text:', data.text);
+});
+```
+

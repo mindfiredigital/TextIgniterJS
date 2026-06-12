@@ -14,10 +14,11 @@
     "write-heading-ids": "docusaurus write-heading-ids"
   },
   "dependencies": {
-    "@docusaurus/core": "3.5.2",
-    "@docusaurus/preset-classic": "3.5.2",
+    "@docusaurus/core": "^3.10.1",
+    "@docusaurus/preset-classic": "^3.10.1",
     "@mdx-js/react": "^3.0.0",
-    "@mindfiredigital/react-text-igniter": "^1.2.11",
+    "@mindfiredigital/textigniter": "^1.3.2",
+    "@mindfiredigital/textigniter-react": "^1.3.2",
     "clsx": "^2.0.0",
     "lucide-react": "^0.468.0",
     "prism-react-renderer": "^2.3.0",
@@ -25,8 +26,8 @@
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "3.5.2",
-    "@docusaurus/types": "3.5.2"
+    "@docusaurus/module-type-aliases": "^3.10.1",
+    "@docusaurus/types": "^3.10.1"
   },
   "browserslist": {
     "production": [

@@ -8,55 +8,125 @@ We want to extend our heartfelt gratitude to the contributors who have made `@mi
 
 import React from 'react';
 
-export default function Contributors() {
+export function Contributors() {
 const contributorsData = {
-'lakin-mohapatra': {
-name: 'Lakin Mohapatra',
-title: 'Tech Lead @ Mindfire Solutions',
-url: 'https://github.com/lakinmindfire',
-image_url: 'https://github.com/lakinmindfire.png',
-},
-'deepak-yadav': {
-name: 'Deepak Yadav',
-title: 'Software Engineer @ Mindfire Solutions',
-url: 'https://github.com/deepakyadav-01',
-image_url: 'https://github.com/deepakyadav-01.png',
-},
-'subhendu-swain': {
-name: 'Subhendu Swain',
-title: 'Senior Software Engineer @ Mindfire Solutions',
-url: 'https://github.com/SubhenduS1999',
-image_url: 'https://github.com/SubhenduS1999.png',
-},
-'jagdish-pal': {
-name: 'Jagdish Pal',
-title: 'Senior Software Engineer @ Mindfire Solutions',
-url: 'https://github.com/jagdish-mindfire',
-image_url: 'https://github.com/jagdish-mindfire.png',
-},
+  'sobhan-sahoo': {
+    name: 'Sobhan Sahoo',
+    title: 'Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/sobhan-s',
+    image_url: 'https://github.com/sobhan-s.png',
+  },
+  'sarada-sahoo': {
+    name: 'Sarada Prasanna Sahoo',
+    title: 'Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/saradab-mindfire',
+    image_url: 'https://github.com/saradab-mindfire.png',
+  },
+  'lakin-mohapatra': {
+    name: 'Lakin Mohapatra',
+    title: 'Tech Lead @ Mindfire Solutions',
+    url: 'https://github.com/lakinmindfire',
+    image_url: 'https://github.com/lakinmindfire.png',
+  },
+  'deepak-yadav': {
+    name: 'Deepak Yadav',
+    title: 'Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/deepakyadav-01',
+    image_url: 'https://github.com/deepakyadav-01.png',
+  },
+  'subhendu-swain': {
+    name: 'Subhendu Swain',
+    title: 'Senior Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/SubhenduS1999',
+    image_url: 'https://github.com/SubhenduS1999.png',
+  },
+  'jagdish-pal': {
+    name: 'Jagdish Pal',
+    title: 'Senior Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/jagdish-mindfire',
+    image_url: 'https://github.com/jagdish-mindfire.png',
+  },
+  'parth-dhemeliya': {
+    name: 'Parth Dhemeliya',
+    title: 'Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/ParthDhemeliya',
+    image_url: 'https://github.com/ParthDhemeliya.png',
+  },
 };
 
 return (
-<div>
-<h1>Our Contributors</h1>
-<div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-{Object.entries(contributorsData).map(([key, contributor]) => (
-<div key={key} style={{ display: 'flex', alignItems: 'center' }}>
-<img
-src={contributor.image_url}
-alt={contributor.name}
-style={{ borderRadius: '50%', width: '60px', height: '60px', marginRight: '20px' }}
-/>
-<div>
-<h3>{contributor.name}</h3>
-<p>{contributor.title}</p>
-<a href={contributor.url} target="_blank" rel="noopener noreferrer">
-GitHub Profile
-</a>
-</div>
-</div>
-))}
-</div>
-</div>
+  <div style={{
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+    gap: '24px',
+    margin: '2rem 0'
+  }}>
+    {Object.entries(contributorsData).map(([key, contributor]) => (
+      <div key={key} style={{
+        backgroundColor: 'var(--ifm-card-background-color, #ffffff)',
+        border: '1px solid var(--ifm-toc-border-color, #ebedf0)',
+        borderRadius: '12px',
+        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        textAlign: 'center',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease'
+      }}
+      className="contributor-card"
+      >
+        <img
+          src={contributor.image_url}
+          alt={contributor.name}
+          style={{
+            borderRadius: '50%',
+            width: '80px',
+            height: '80px',
+            border: '3px solid var(--ifm-color-primary, #e62e2d)',
+            marginBottom: '16px',
+            objectFit: 'cover'
+          }}
+        />
+        <h3 style={{ 
+          fontSize: '1.15rem', 
+          fontWeight: '700', 
+          margin: '0 0 6px 0', 
+          color: 'var(--ifm-font-color-base, #1c1e21)' 
+        }}>
+          {contributor.name}
+        </h3>
+        <p style={{ 
+          fontSize: '0.85rem', 
+          color: 'var(--ifm-color-emphasis-700, #57606a)', 
+          margin: '0 0 20px 0', 
+          minHeight: '36px', 
+          lineHeight: '1.4' 
+        }}>
+          {contributor.title}
+        </p>
+        <a
+          href={contributor.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-block',
+            padding: '8px 18px',
+            borderRadius: '6px',
+            backgroundColor: 'var(--ifm-color-primary, #e62e2d)',
+            color: '#ffffff',
+            fontSize: '0.85rem',
+            fontWeight: 'bold',
+            textDecoration: 'none',
+            transition: 'background-color 0.2s'
+          }}
+        >
+          GitHub Profile
+        </a>
+      </div>
+    ))}
+  </div>
 );
 }
+
+<Contributors />

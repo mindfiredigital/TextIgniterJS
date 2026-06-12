@@ -9,7 +9,7 @@ const sidebars = {
     {
       type: 'category',
       label: 'Configuration',
-      items: ['javascript', 'react', 'angular'],
+      items: ['javascript', 'react', 'angular', 'web-component'],
     },
     'contributing',
     'our-contributors',

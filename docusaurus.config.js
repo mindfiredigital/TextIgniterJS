@@ -66,12 +66,12 @@ const config = {
           },
           // { to: '/blog', label: 'Blog', position: 'left' },
           {
-            href: 'https://www.npmjs.com/package/@mindfiredigital/textigniterjs',
+            href: 'https://www.npmjs.com/package/@mindfiredigital/textigniter',
             position: 'right',
             html: `
-              <a href="https://www.npmjs.com/package/@mindfiredigital/textigniterjs" style="display: flex; align-items: center;">
-                <img src="https://img.shields.io/npm/v/@mindfiredigital/textigniterjs.svg" alt="npm version" style="vertical-align: middle; margin-right: 5px;" />
-                <img src="https://img.shields.io/npm/dt/@mindfiredigital/textigniterjs.svg" alt="total downloads" style="vertical-align: middle;" />
+              <a href="https://www.npmjs.com/package/@mindfiredigital/textigniter" style="display: flex; align-items: center;">
+                <img src="https://img.shields.io/npm/v/@mindfiredigital/textigniter.svg" alt="npm version" style="vertical-align: middle; margin-right: 5px;" />
+                <img src="https://img.shields.io/npm/dt/@mindfiredigital/textigniter.svg" alt="total downloads" style="vertical-align: middle;" />
               </a>
             `,
           },
