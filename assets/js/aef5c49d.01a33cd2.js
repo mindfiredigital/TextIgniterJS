@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunktextigniterjs=globalThis.webpackChunktextigniterjs||[]).push([[596],{7974(t){t.exports=JSON.parse('{"metadata":{"permalink":"/TextIgniterJS/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":0,"blogDescription":"Blog","blogTitle":"Blog"}}')}}]);

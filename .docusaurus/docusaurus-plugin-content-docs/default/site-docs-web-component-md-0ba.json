@@ -1,0 +1,24 @@
+{
+  "id": "web-component",
+  "title": "Web Component",
+  "description": "TextIgniter provides a native Web Component wrapper @mindfiredigital/textigniter-web-component to easily build rich text editing experiences in any environment, without dependencies on specific frameworks.",
+  "source": "@site/docs/web-component.md",
+  "sourceDirName": ".",
+  "slug": "/web-component",
+  "permalink": "/TextIgniterJS/docs/web-component",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/mindfiredigital/TextIgniterJS/edit/main/docs/web-component.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docsSidebar",
+  "previous": {
+    "title": "Angular",
+    "permalink": "/TextIgniterJS/docs/angular"
+  },
+  "next": {
+    "title": "Contributing",
+    "permalink": "/TextIgniterJS/docs/contributing"
+  }
+}
