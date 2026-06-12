@@ -10,29 +10,36 @@ import React from 'react';
 
 export function Contributors() {
 const contributorsData = {
-  'sobhan-sahoo': {
-    name: 'Sobhan Sahoo',
-    title: 'Software Engineer @ Mindfire Solutions',
-    url: 'https://github.com/sobhan-s',
-    image_url: 'https://github.com/sobhan-s.png',
-  },
-  'sarada-sahoo': {
-    name: 'Sarada Prasanna Sahoo',
-    title: 'Software Engineer @ Mindfire Solutions',
-    url: 'https://github.com/saradab-mindfire',
-    image_url: 'https://github.com/saradab-mindfire.png',
-  },
+  
   'lakin-mohapatra': {
     name: 'Lakin Mohapatra',
     title: 'Tech Lead @ Mindfire Solutions',
     url: 'https://github.com/lakinmindfire',
     image_url: 'https://github.com/lakinmindfire.png',
   },
+  'Vicky-Sharma': {
+    name: 'Vicky Sharma',
+    title: 'Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/vickysmf',
+    image_url: 'https://github.com/vickysmf.png',
+  },
+  'sarada-sahoo': {
+    name: 'Sarada prasad biswal',
+    title: 'Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/saradab-mindfire',
+    image_url: 'https://github.com/saradab-mindfire.png',
+  },
   'deepak-yadav': {
     name: 'Deepak Yadav',
     title: 'Software Engineer @ Mindfire Solutions',
     url: 'https://github.com/deepakyadav-01',
     image_url: 'https://github.com/deepakyadav-01.png',
+  },
+  'sobhan-sahoo': {
+    name: 'Sobhan Sahoo',
+    title: 'Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/sobhan-s',
+    image_url: 'https://github.com/sobhan-s.png',
   },
   'subhendu-swain': {
     name: 'Subhendu Swain',
@@ -52,6 +59,32 @@ const contributorsData = {
     url: 'https://github.com/ParthDhemeliya',
     image_url: 'https://github.com/ParthDhemeliya.png',
   },
+  'Paras-Bhatia': {
+    name: 'Paras Bhatia',
+    title: 'Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/ParasMindfire',
+    image_url: 'https://github.com/ParasMindfire.png',
+  },
+  'Jyoti-Prakash-Panda': {
+    name: 'Jyoti Prakash Panda',
+    title: 'Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/jyotiprakashmfsi',
+    image_url: 'https://github.com/jyotiprakashmfsi.png',
+  },
+  'Mohd-Aasim ': {
+    name: 'Mohd Aasim ',
+    title: 'Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/MohdAasim',
+    image_url: 'https://github.com/MohdAasim.png',
+  },
+  'rohitrg-96': {
+    name: 'rohitrg',
+    title: 'Software Engineer @ Mindfire Solutions',
+    url: 'https://github.com/rohitrg96',
+    image_url: 'https://github.com/rohitrg96.png',
+  },
+  
+  
 };
 
 return (
