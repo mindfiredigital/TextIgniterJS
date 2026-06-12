@@ -6,6 +6,7 @@ export class TextIgniterComponent extends HTMLElement {
   private initialized = false;
   private config = {};
   private template = `<div id="editor-container"></div>`;
+  private initialValue = '';
 
   constructor() {
     super();
@@ -14,8 +15,24 @@ export class TextIgniterComponent extends HTMLElement {
     }
   }
 
+  get value() {
+    if (this.textIgniter) {
+      return this.textIgniter.getContent();
+    }
+    return this.initialValue;
+  }
+
+  set value(val: string) {
+    this.initialValue = val;
+    if (this.textIgniter) {
+      if (this.textIgniter.getContent() !== val) {
+        this.textIgniter.loadHtmlContent(val);
+      }
+    }
+  }
+
   static get observedAttributes() {
-    return ['config'];
+    return ['config', 'value'];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -28,12 +45,18 @@ export class TextIgniterComponent extends HTMLElement {
       } catch (e) {
         console.error('Failed to parse config: ', e);
       }
+    } else if (name === 'value' && newValue !== oldValue) {
+      this.value = newValue;
     }
   }
 
   connectedCallback() {
     if (this.initialized) {
       return;
+    }
+    const attrValue = this.getAttribute('value');
+    if (attrValue) {
+      this.initialValue = attrValue;
     }
     this.initializeEditor();
   }
@@ -55,6 +78,10 @@ export class TextIgniterComponent extends HTMLElement {
         editorContainer as any,
         this.config as any
       );
+
+      if (this.initialValue) {
+        this.textIgniter.loadHtmlContent(this.initialValue);
+      }
 
       // Subscribe to content changes and dispatch custom event
       this.textIgniter.onContentChange(data => {

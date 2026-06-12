@@ -15,11 +15,15 @@ import React, { useEffect, useRef } from 'react';
 
 interface TextigniterReactProps {
   config: any;
+  value?: string;
+  initialValue?: string;
   onContentChange?: (data: { html: string; text: string }) => void;
 }
 
 const TextigniterReactBase: React.FC<TextigniterReactProps> = ({
   config,
+  value,
+  initialValue,
   onContentChange,
 }) => {
   const builderRef = useRef<HTMLElement>(null);
@@ -47,6 +51,24 @@ const TextigniterReactBase: React.FC<TextigniterReactProps> = ({
     }
   }, [config]);
 
+  // Set initial value once on mount
+  useEffect(() => {
+    if (builderRef.current && initialValue !== undefined) {
+      if (!builderRef.current.getAttribute('value')) {
+        builderRef.current.setAttribute('value', initialValue);
+      }
+    }
+  }, []);
+
+  // Sync value attribute when it changes
+  useEffect(() => {
+    if (builderRef.current && value !== undefined) {
+      if (builderRef.current.getAttribute('value') !== value) {
+        builderRef.current.setAttribute('value', value);
+      }
+    }
+  }, [value]);
+
   // Setup event listener once
   useEffect(() => {
     const element = builderRef.current;
@@ -69,7 +91,11 @@ const TextigniterReactBase: React.FC<TextigniterReactProps> = ({
   return React.useMemo(() => <text-igniter ref={builderRef} />, []);
 };
 
-// Deep compare config so we don't even enter the render phase if the config is structurally identical
+// Deep compare config and value props to ensure React re-renders appropriately
 export const TextigniterReact = React.memo(TextigniterReactBase, (prevProps, nextProps) => {
-  return JSON.stringify(prevProps.config) === JSON.stringify(nextProps.config);
+  return (
+    JSON.stringify(prevProps.config) === JSON.stringify(nextProps.config) &&
+    prevProps.value === nextProps.value &&
+    prevProps.initialValue === nextProps.initialValue
+  );
 });

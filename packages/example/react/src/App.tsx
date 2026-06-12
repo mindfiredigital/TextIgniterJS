@@ -6,6 +6,7 @@ const Textigniter = OriginalComponent as ElementType;
 const App: FC = () => {
   const [htmlContent, setHtmlContent] = useState('');
   const [textContent, setTextContent] = useState('');
+  const [editorValue, setEditorValue] = useState<string | undefined>(undefined);
 
   const handleContentChange = (data: { html: string; text: string }) => {
     console.log('Content changed:', data);
@@ -13,11 +14,41 @@ const App: FC = () => {
     setTextContent(data.text);
   };
 
+  const loadTemplate1 = () => {
+    setEditorValue('<div data-id="block-template-1" class="paragraph-block" type="text" style="text-align: left;"><span style="font-family: Arial; font-size: 12px; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);">Loaded <strong>Template One</strong> successfully! 🎉</span></div>');
+  };
+
+  const loadTemplate2 = () => {
+    setEditorValue('<div data-id="block-template-2" class="paragraph-block" type="text" style="text-align: left;"><span style="font-family: Arial; font-size: 12px; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);">This is <em>Template Two</em> with some inline italicized styling.</span></div>');
+  };
+
   return (
     <>
-      {/* <h1>TextIgniter React Example</h1> */}
-      <div></div>
+      {/* Test Interactive Controls */}
+      <div style={{ marginBottom: '15px', display: 'flex', gap: '10px' }}>
+        <button 
+          onClick={loadTemplate1}
+          style={{ padding: '8px 16px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          Load Template 1 (Reactive Prop)
+        </button>
+        <button 
+          onClick={loadTemplate2}
+          style={{ padding: '8px 16px', background: '#008CBA', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          Load Template 2 (Reactive Prop)
+        </button>
+        <button 
+          onClick={() => setEditorValue(undefined)}
+          style={{ padding: '8px 16px', background: '#f44336', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          Reset / Clear value prop
+        </button>
+      </div>
+
       <Textigniter
+        initialValue="<div data-id='block-initial' class='paragraph-block' type='text' style='text-align: left;'><span style='font-family: Arial; font-size: 12px; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);'>Welcome to <strong>TextIgniter React</strong>! This was loaded via <code>initialValue</code> prop.</span></div>"
+        value={editorValue}
         config={{
           showToolbar: true,
           features: [
